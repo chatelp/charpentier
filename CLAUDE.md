@@ -35,8 +35,14 @@ Miroir Markdown (desktop) : un `.md` par scène, appariement par id dans le fron
 - Garder ce fichier court et à jour.
 
 ## Commandes
-À créer en phase 1.1 :
 - `pnpm install` : installation
-- `pnpm check` : lint + typecheck + tests + vérification des licences
-- `pnpm dev:web` : hôte web
-- `pnpm dev:desktop` : hôte Electron (étape 2)
+- `pnpm check` : tout ce que fait la CI (format, lint, typecheck, tests, `check:guards`, `check:licenses`) ; doit passer avant chaque commit
+- `pnpm check:guards` : auto-test des garde-fous anti-fuite (ESLint et TypeScript doivent rejeter une fuite Node/Electron dans chaque paquet agnostique)
+- `pnpm check:licenses` : licences de toutes les dépendances ; exceptions revues dans `licenses.exceptions.json`
+- `pnpm dev:web` (phase 1.2), `pnpm dev:desktop` (étape 2)
+
+## Repères techniques
+- Paquets internes exportés en source TS (`exports: ./src/index.ts`), pas d'étape de build.
+- Paquets agnostiques : `tsconfig.json` (src, sans types Node) + `tsconfig.test.json` (tests). Nouveau paquet agnostique → l'ajouter aux couches d'`eslint.config.js` et à `scripts/guard-selftest.mjs`.
+- TypeScript reste en 6.0.x tant que typescript-eslint ne supporte pas la 7.
+- Markdown exclu de Prettier (prose formatée à la main).
