@@ -1,0 +1,17 @@
+{
+  "//": "Dependencies whose license is outside the allowlist but accepted after review. Each entry must say why. Strong copyleft (GPL, AGPL, SSPL...) is never accepted. 'scope: dev' entries must not appear among production dependencies.",
+  "exceptions": [
+    {
+      "package": "lightningcss",
+      "license": "MPL-2.0",
+      "scope": "dev",
+      "reason": "CSS tooling pulled in by Vite/Vitest at build and test time only. Weak, file-level copyleft; not modified and not redistributed with Charpentier."
+    },
+    {
+      "package": "lightningcss-*",
+      "license": "MPL-2.0",
+      "scope": "dev",
+      "reason": "Platform-specific native binaries of lightningcss (see above)."
+    }
+  ]
+}
