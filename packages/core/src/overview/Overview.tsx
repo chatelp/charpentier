@@ -1,11 +1,9 @@
 import { moveScene, moveSceneStep, readProjectMeta, setActiveVariant } from '@charpentier/schema';
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { usePlatform } from '../app/platform-context';
 import { variantLabel } from '../commands/variant-commands';
 import { sceneNumbers } from '../atelier/atelier-data';
 import type { WorkspaceContext } from '../workspace/workspace-context';
-import { useSceneWords } from './use-scene-words';
 import './overview.css';
 
 export interface OverviewProps {
@@ -23,9 +21,8 @@ export interface OverviewProps {
  */
 export function Overview({ ctx, active, onOpen, onClose }: OverviewProps) {
   const { t, i18n } = useTranslation();
-  const platform = usePlatform();
   const { outline } = ctx;
-  const words = useSceneWords(platform, ctx.projectId, outline);
+  const words = ctx.sceneWords;
   const numbers = useMemo(() => sceneNumbers(outline), [outline]);
   const [selectedId, setSelectedId] = useState(ctx.sceneId);
   const cards = useRef(new Map<string, HTMLElement>());

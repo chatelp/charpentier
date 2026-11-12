@@ -127,8 +127,9 @@ describe('Atelier', () => {
     const fear = { module: 'characters', entityId: id, field: 'fear' } as const;
 
     await userEvent.keyboard(mod('2'));
-    const entry = await screen.findByRole('option', { name: 'Paul Vasseur' });
+    const entry = await screen.findByRole('option', { name: /Paul Vasseur/ });
     expect(entry.className).toContain('is-proposed');
+    expect(entry.textContent).toContain('proposé · scène II.1');
     const row = field('Lieu de vie').closest('.ch-fld') as HTMLElement;
     expect(row.getAttribute('data-status')).toBe('proposed');
     expect(within(row).getByText('Proposée · d’après la scène II.1')).toBeTruthy();
@@ -160,7 +161,7 @@ describe('Atelier', () => {
     entry.focus();
     await userEvent.keyboard('v');
     await waitFor(() =>
-      expect(screen.getByRole('option', { name: 'Paul Vasseur' }).className).not.toContain(
+      expect(screen.getByRole('option', { name: /Paul Vasseur/ }).className).not.toContain(
         'is-proposed',
       ),
     );

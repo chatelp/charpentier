@@ -12,10 +12,9 @@ import {
 import { Fragment, useEffect, useRef, useState, type DragEvent, type KeyboardEvent } from 'react';
 import { formatCheckpointDate, variantLabel } from '../commands/variant-commands';
 import { useDocSnapshot } from '../hooks/use-doc-snapshot';
-import { useSceneWords } from '../overview/use-scene-words';
 import { variantLetter } from '../workspace/SceneChrome';
 import { toRoman } from '../workspace/roman';
-import { usePlatform } from '../app/platform-context';
+
 import { useTranslation } from 'react-i18next';
 import * as Y from 'yjs';
 import {
@@ -216,8 +215,7 @@ export function Navigator({ ctx, outline, active, onClose, signals }: NavigatorP
 
   const sceneById = new Map(outline.flatMap((c) => c.scenes).map((s) => [s.id, s]));
   const currentScene = sceneById.get(ctx.sceneId);
-  const platform = usePlatform();
-  const words = useSceneWords(platform, ctx.projectId, outline);
+  const words = ctx.sceneWords;
   const number = new Intl.NumberFormat(ctx.language);
   const history = useDocSnapshot(ctx.sceneDocs?.historyDoc ?? noHistory, readCheckpoints);
   const checkpoints = history

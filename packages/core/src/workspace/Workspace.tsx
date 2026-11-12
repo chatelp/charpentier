@@ -15,7 +15,7 @@ import { usePlatform } from '../app/platform-context';
 import { Atelier, type AtelierLocation } from '../atelier/Atelier';
 import { sheetScope } from '../atelier/sheet-scope';
 import { Overview } from '../overview/Overview';
-import { useSceneWords } from '../overview/use-scene-words';
+import { useSceneTexts, useWordsOf } from '../overview/use-scene-words';
 import { toRoman } from './roman';
 import { Conversation } from '../mentor/Conversation';
 import { InterventionSlider } from '../mentor/InterventionSlider';
@@ -96,7 +96,13 @@ export function ProjectWorkspace({
   );
   const agentsStatus = useSyncExternalStore(subscribeAgents, () => agents.status());
   const words = useWordCount(editor);
-  const sceneWords = useSceneWords(platform, projectId, outline);
+  const storedTexts = useSceneTexts(platform, projectId, outline);
+  const storedWords = useWordsOf(storedTexts);
+  // The open scene counts live, from its editor.
+  const sceneWords = useMemo(
+    () => (editor ? new Map(storedWords).set(sceneId, words) : storedWords),
+    [storedWords, editor, sceneId, words],
+  );
   const wordsToday = useWordsToday(
     platform.preferences,
     projectId,
@@ -221,6 +227,8 @@ export function ProjectWorkspace({
     openSignalNote: (id) => marks.openNote(id, true),
     mentorLevel,
     analyze,
+    sceneWords,
+    sceneTexts: storedTexts,
     shortcutLabel: (id) => registry.shortcutLabel(id),
     notify,
     prefs,

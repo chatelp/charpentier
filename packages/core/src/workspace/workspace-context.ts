@@ -29,6 +29,10 @@ export interface WorkspaceContext {
   toggleMentorPanel(tab?: 'points' | 'conversation'): void;
   /** Unfolds a remark's note in the margin and gives it the focus. */
   openSignalNote(signalId: string): void;
+  /** Words of each scene (the open one live). */
+  readonly sceneWords: ReadonlyMap<string, number>;
+  /** Plain text of each scene's active variant (as last read). */
+  readonly sceneTexts: ReadonlyMap<string, string>;
   /** The Compagnon's intervention level for this project (D-19). */
   readonly mentorLevel: 1 | 2 | 3 | 4;
   /** Asks the Compagnon to read scenes (automatic: skips unchanged ones, may use the light model). */

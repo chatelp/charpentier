@@ -357,7 +357,7 @@
     "fromScene": "dès la scène {{number}} · {{title}}",
     "reader": "Le lecteur",
     "knownByNote": "À partir de quelle scène chacun a connaissance de l’élément.",
-    "appearancesNote": "Remplies automatiquement par le Compagnon (étape 3).",
+    "appearancesNote": "(remplies automatiquement)",
     "sections": {
       "meta": {
         "story": "Le roman",
@@ -464,7 +464,15 @@
       "proposed": "proposée",
       "validated": "validée",
       "rejected": "rejetée"
-    }
+    },
+    "noAppearance": "Ce personnage n’est encore nommé dans aucune scène.",
+    "sceneCount_one": "{{count}} scène",
+    "sceneCount_other": "{{count}} scènes",
+    "contradictions_one": "{{count}} contradiction",
+    "contradictions_other": "{{count}} contradictions",
+    "proposedEntry": "proposé",
+    "inScene": "scène {{number}}",
+    "filterKey": "/"
   },
   "overview": {
     "label": "Vue d’ensemble du manuscrit",

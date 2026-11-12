@@ -322,3 +322,33 @@
   font-family: var(--ch-font-ui);
   font-size: var(--ch-ui-sm);
 }
+
+.ch-filter {
+  position: relative;
+}
+
+.ch-filter-key {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.ch-section-aside {
+  font-variant-caps: normal;
+  letter-spacing: 0;
+  font-family: var(--ch-font-ui);
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.ch-chips {
+  margin: 0;
+}
+
+.ch-chips .ch-chip {
+  border: 0;
+  background: var(--ch-bg);
+  color: var(--ch-ink-2);
+  cursor: pointer;
+}

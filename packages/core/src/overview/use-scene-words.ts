@@ -5,40 +5,39 @@ import {
   variantFragment,
   type OutlineChapter,
 } from '@charpentier/schema';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { countWords } from '../editor/word-count';
 
 /**
- * Words of each scene's active variant, read from the scene documents one
- * after the other (each scene text lives in its own document, D-4).
+ * Plain text of each scene's active variant, read from the scene documents
+ * one after the other (each scene lives in its own document, D-4). Read again
+ * when scenes or active variants change; the open scene is kept live by its
+ * editor elsewhere.
  */
-export function useSceneWords(
+export function useSceneTexts(
   platform: Platform,
   projectId: string,
   outline: readonly OutlineChapter[],
-): ReadonlyMap<string, number> {
-  const [words, setWords] = useState<ReadonlyMap<string, number>>(new Map());
+): ReadonlyMap<string, string> {
+  const [texts, setTexts] = useState<ReadonlyMap<string, string>>(new Map());
   const key = outline.flatMap((c) => c.scenes.map((s) => `${s.id}/${s.activeVariantId}`)).join(',');
 
   useEffect(() => {
     let cancelled = false;
     const scenes = outline.flatMap((c) => c.scenes);
     void (async () => {
-      const counts = new Map<string, number>();
+      const read = new Map<string, string>();
       for (const scene of scenes) {
         if (cancelled) return;
         const handle = await platform.documents.open(guids.scene(projectId, scene.id));
         try {
           await handle.whenLoaded;
-          counts.set(
-            scene.id,
-            countWords(fragmentPlainText(variantFragment(handle.doc, scene.activeVariantId))),
-          );
+          read.set(scene.id, fragmentPlainText(variantFragment(handle.doc, scene.activeVariantId)));
         } finally {
           await handle.close();
         }
       }
-      if (!cancelled) setWords(counts);
+      if (!cancelled) setTexts(read);
     })();
     return () => {
       cancelled = true;
@@ -46,5 +45,10 @@ export function useSceneWords(
     // `key` stands for the scenes and their active variants.
   }, [platform, projectId, key]);
 
-  return words;
+  return texts;
+}
+
+/** Words of each scene, from its text. */
+export function useWordsOf(texts: ReadonlyMap<string, string>): ReadonlyMap<string, number> {
+  return useMemo(() => new Map([...texts].map(([id, text]) => [id, countWords(text)])), [texts]);
 }

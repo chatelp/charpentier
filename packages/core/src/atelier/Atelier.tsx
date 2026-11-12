@@ -7,6 +7,7 @@ import {
   type EntityInfo,
   type EntityModule,
   type FieldState,
+  type OutlineChapter,
 } from '@charpentier/schema';
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -95,7 +96,7 @@ export function Atelier({
   const listRef = useRef<HTMLDivElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
 
-  const entries = useEntries(data, location.rail);
+  const entries = useEntries(data, location.rail, numbers);
   const hasList = location.rail !== 'meta';
   const shown = filterByQuery(entries, query, (e) => `${e.title} ${e.subtitle ?? ''}`);
   const selected =
@@ -270,23 +271,26 @@ export function Atelier({
 
       {hasList && (
         <div ref={listRef} className="ch-atl-list" onKeyDown={onListKeyDown}>
-          <input
-            className="ch-field"
-            value={query}
-            placeholder={t('atelier.filter')}
-            aria-label={t('atelier.filter')}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'ArrowDown' || e.key === 'Enter') {
-                e.preventDefault();
-                select(shown[0]);
-                setTimeout(() => focusWithin(listRef));
-              } else if (e.key === 'Escape' && query) {
-                e.preventDefault();
-                setQuery('');
-              }
-            }}
-          />
+          <div className="ch-filter">
+            <input
+              className="ch-field"
+              value={query}
+              placeholder={t('atelier.filter')}
+              aria-label={t('atelier.filter')}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowDown' || e.key === 'Enter') {
+                  e.preventDefault();
+                  select(shown[0]);
+                  setTimeout(() => focusWithin(listRef));
+                } else if (e.key === 'Escape' && query) {
+                  e.preventDefault();
+                  setQuery('');
+                }
+              }}
+            />
+            <kbd className="ch-filter-key">{t('atelier.filterKey')}</kbd>
+          </div>
           <ul
             className="ch-atl-entries"
             role="listbox"
@@ -371,7 +375,11 @@ function newEntityModule(
   return rail;
 }
 
-function useEntries(data: AtelierData, rail: AtelierModule): Entry[] {
+function useEntries(
+  data: AtelierData,
+  rail: AtelierModule,
+  numbers: ReadonlyMap<string, string>,
+): Entry[] {
   const { t } = useTranslation();
   const entityEntries = (module: EntityModule, group?: string): Entry[] => {
     const def = moduleDefs[module];
@@ -388,11 +396,25 @@ function useEntries(data: AtelierData, rail: AtelierModule): Entry[] {
         subtitleRaw && subtitleField?.kind === 'choice'
           ? t(`atelier.options.${subtitleField.key}.${subtitleRaw}` as 'atelier.options.kind.clue')
           : subtitleRaw;
+      const conflicts = data.conflicts.filter(
+        (s) => s.fieldRef && 'entityId' in s.fieldRef && s.fieldRef.entityId === entity.id,
+      ).length;
+      const proposedIn = entity.fields[def.titleField]?.proposal?.evidence[0]?.sceneId;
+      const details =
+        entity.status === 'proposed'
+          ? [
+              t('atelier.proposedEntry'),
+              proposedIn &&
+                numbers.get(proposedIn) &&
+                t('atelier.inScene', { number: numbers.get(proposedIn) }),
+            ]
+          : [subtitle, conflicts > 0 && t('atelier.contradictions', { count: conflicts })];
+      const line = details.filter(Boolean).join(' · ');
       return {
         key: `${module}:${entity.id}`,
         target: { module, entityId: entity.id },
         title: title || t(`atelier.untitled.${module}`),
-        ...(subtitle && { subtitle }),
+        ...(line && { subtitle: line }),
         proposed: entity.status === 'proposed',
         ...(group && { group }),
       };
@@ -426,6 +448,27 @@ function useEntries(data: AtelierData, rail: AtelierModule): Entry[] {
 }
 
 const EMPTY: FieldState = { status: undefined, rejected: [] };
+
+/**
+ * Scenes where a character appears (filled automatically, docs/SPEC.md §5.5):
+ * those whose text names them, by full name or first name.
+ */
+export function appearancesOf(
+  name: string,
+  outline: readonly OutlineChapter[],
+  texts: ReadonlyMap<string, string>,
+): string[] {
+  const names = [name.trim(), name.trim().split(/\s+/)[0] ?? '']
+    .filter((n) => n.length > 2)
+    .map(
+      (n) =>
+        new RegExp(`(?<![\\p{L}])${n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}])`, 'u'),
+    );
+  if (names.length === 0) return [];
+  return outline
+    .flatMap((c) => c.scenes.map((s) => s.id))
+    .filter((id) => names.some((re) => re.test(texts.get(id) ?? '')));
+}
 
 function Sheet({
   ctx,
@@ -463,11 +506,25 @@ function Sheet({
       />
     );
   };
+  const characters = data.entities.characters;
+  const appearances =
+    target.module === 'characters' ? appearancesOf(title, ctx.outline, ctx.sceneTexts) : [];
+  const occupation =
+    target.module === 'characters'
+      ? asText(shownValue(fieldState(data, target, 'occupation')))
+      : '';
   const lead =
     target.module === 'meta'
       ? t(`atelier.projectKind.${data.project?.kind ?? 'novel'}`)
-      : t(`atelier.lead.${target.module}`);
-  const characters = data.entities.characters;
+      : target.module === 'characters'
+        ? [
+            t('atelier.lead.characters'),
+            occupation,
+            appearances.length > 0 && t('atelier.sceneCount', { count: appearances.length }),
+          ]
+            .filter(Boolean)
+            .join(' · ')
+        : t(`atelier.lead.${target.module}`);
 
   return (
     <article className="ch-sheet-body" aria-label={title}>
@@ -517,8 +574,26 @@ function Sheet({
         )}
         {target.module === 'characters' && (
           <section className="ch-section is-wide">
-            <h3 className="ch-label">{t('atelier.sections.characters.appearances')}</h3>
-            <p className="ch-section-note">{t('atelier.appearancesNote')}</p>
+            <h3 className="ch-label">
+              {t('atelier.sections.characters.appearances')}{' '}
+              <span className="ch-section-aside">{t('atelier.appearancesNote')}</span>
+            </h3>
+            {appearances.length === 0 ? (
+              <p className="ch-section-note">{t('atelier.noAppearance')}</p>
+            ) : (
+              <p className="ch-chips">
+                {appearances.map((id) => (
+                  <button
+                    key={id}
+                    type="button"
+                    className="ch-chip"
+                    onClick={() => onShowPassage(id)}
+                  >
+                    {sceneNumber(id)}
+                  </button>
+                ))}
+              </p>
+            )}
           </section>
         )}
       </div>
