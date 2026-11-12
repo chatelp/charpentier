@@ -6,6 +6,10 @@
 export interface KeybindingsService {
   /** `Meta` (⌘) on macOS, `Control` elsewhere. */
   readonly primaryModifier: 'Meta' | 'Control';
-  /** Shortcuts the host owns and core must not bind, e.g. `Meta+Q`. */
+  /**
+   * Shortcuts the host owns and core must not bind, in the registry's syntax
+   * (`Meta-q`, `Mod-Alt-ArrowLeft`). A browser keeps ⌘W, ⌘T, ⌘N…: commands
+   * then fall back to their other shortcuts, or to the command line alone.
+   */
   readonly reserved: readonly string[];
 }

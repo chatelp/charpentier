@@ -69,6 +69,45 @@ describe('CommandRegistry', () => {
     expect(() => registry.register({ id: 'a', scope: 'global', ...noop })).toThrow(/Duplicate/);
   });
 
+  it('binds every non-reserved alternative and shows the first one', () => {
+    const registry = new CommandRegistry<null>('Meta', ['Meta-n']).register({
+      id: 'newScene',
+      scope: 'global',
+      keybinding: ['Mod-n', 'Mod-Alt-n'],
+      ...noop,
+    });
+    expect(registry.shortcutLabel('newScene')).toBe('⌥⌘N');
+    expect(registry.forEvent(event({ key: 'n', metaKey: true }), null)).toBeUndefined();
+    expect(
+      registry.forEvent(event({ key: '˜', code: 'KeyN', metaKey: true, altKey: true }), null)?.id,
+    ).toBe('newScene');
+    // Without the reservation, both are bound and ⌘N is shown.
+    const desktop = new CommandRegistry<null>('Meta').register({
+      id: 'newScene',
+      scope: 'global',
+      keybinding: ['Mod-n', 'Mod-Alt-n'],
+      ...noop,
+    });
+    expect(desktop.shortcutLabel('newScene')).toBe('⌘N');
+    expect(desktop.forEvent(event({ key: 'n', metaKey: true }), null)?.id).toBe('newScene');
+  });
+
+  it('keeps a command whose every alternative is reserved, without shortcut', () => {
+    const registry = new CommandRegistry<null>('Meta', ['Meta-Alt-ArrowLeft']).register({
+      id: 'narrow',
+      scope: 'global',
+      keybinding: ['Mod-Alt-ArrowLeft'],
+      ...noop,
+    });
+    expect(registry.shortcutLabel('narrow')).toBeUndefined();
+  });
+
+  it('parses the minus key and rejects malformed shortcuts', () => {
+    expect(parseKeybinding('Mod--', 'Meta')).toMatchObject({ key: '-', meta: true });
+    expect(formatChord(parseKeybinding('Mod--', 'Meta'), 'Meta')).toBe('⌘−');
+    expect(() => parseKeybinding('Meta+W', 'Meta')).toThrow(/Invalid/);
+  });
+
   it('dispatches only enabled global commands', () => {
     let enabled = false;
     const registry = new CommandRegistry<null>('Meta')

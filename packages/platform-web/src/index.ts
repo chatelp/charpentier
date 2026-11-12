@@ -15,14 +15,26 @@ const disabledAgents: AgentsService = {
 
 const isApple = (userAgent: string) => /Mac|iPhone|iPad/.test(userAgent);
 
+/** Shortcuts the browser keeps whatever the page does (windows, tabs). */
+export function webReservedShortcuts(apple: boolean): string[] {
+  const mod = apple ? 'Meta' : 'Control';
+  const tabs = Array.from({ length: 9 }, (_, i) => `${mod}-${i + 1}`);
+  return [
+    `${mod}-w`,
+    `${mod}-t`,
+    `${mod}-n`,
+    `${mod}-Shift-n`,
+    `${mod}-Shift-t`,
+    ...tabs,
+    ...(apple ? ['Meta-q', 'Meta-Alt-ArrowLeft', 'Meta-Alt-ArrowRight'] : ['Control-Tab']),
+  ];
+}
+
 export function createWebKeybindings(userAgent: string): KeybindingsService {
   const apple = isApple(userAgent);
   return {
     primaryModifier: apple ? 'Meta' : 'Control',
-    // The browser keeps these whatever we do.
-    reserved: apple
-      ? ['Meta+W', 'Meta+Q', 'Meta+T', 'Meta+N']
-      : ['Control+W', 'Control+T', 'Control+N'],
+    reserved: webReservedShortcuts(apple),
   };
 }
 

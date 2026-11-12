@@ -14,9 +14,13 @@ export interface Chord {
 }
 
 export function parseKeybinding(binding: string, primary: PrimaryModifier): Chord {
-  const parts = binding.split('-');
-  const rawKey = parts.pop();
-  if (!rawKey) throw new Error(`Invalid keybinding: ${binding}`);
+  // A trailing `--` is the minus key itself (`Mod--`).
+  const minus = binding.endsWith('--');
+  const parts = binding.slice(0, minus ? -2 : undefined).split('-');
+  const rawKey = minus ? '-' : parts.pop();
+  // A single character, or a KeyboardEvent.key name (ArrowUp, Enter, F2…).
+  if (!rawKey || (rawKey.length > 1 && !/^[A-Z][A-Za-z0-9]*$/.test(rawKey)))
+    throw new Error(`Invalid keybinding: ${binding}`);
   const mods = new Set(parts.map((p) => p.toLowerCase()));
   for (const m of mods) {
     if (!['mod', 'alt', 'shift', 'ctrl', 'meta'].includes(m))
@@ -77,6 +81,7 @@ const KEY_LABELS: Record<string, string> = {
   Backspace: '⌫',
   Delete: 'Suppr',
   ' ': 'Espace',
+  '-': '−',
 };
 
 /** Human label: `⌥⇧⌘↑` on macOS, `Ctrl+Alt+Maj+↑` elsewhere. */

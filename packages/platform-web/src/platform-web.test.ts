@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { createWebKeybindings, LocalStoragePreferences, MemoryDocumentService } from './index';
+import {
+  createWebKeybindings,
+  LocalStoragePreferences,
+  MemoryDocumentService,
+  webReservedShortcuts,
+} from './index';
 
 describe('LocalStoragePreferences', () => {
   it('round-trips values through storage', async () => {
@@ -52,5 +57,13 @@ describe('createWebKeybindings', () => {
       createWebKeybindings('Mozilla/5.0 (Macintosh; Intel Mac OS X 15_0)').primaryModifier,
     ).toBe('Meta');
     expect(createWebKeybindings('Mozilla/5.0 (X11; Linux x86_64)').primaryModifier).toBe('Control');
+  });
+
+  it('writes reserved shortcuts in the registry syntax (modifiers joined by -)', () => {
+    for (const apple of [true, false]) {
+      for (const shortcut of webReservedShortcuts(apple)) {
+        expect(shortcut).toMatch(/^((Meta|Control|Alt|Shift)-)+([a-z0-9]|[A-Z][A-Za-z]+)$/);
+      }
+    }
   });
 });
