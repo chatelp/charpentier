@@ -1,9 +1,9 @@
 import type { AgentsService, KeybindingsService, Platform } from '@charpentier/platform';
-import { MemoryDocumentService } from './documents';
+import { IndexedDbDocumentService, MemoryDocumentService } from './documents';
 import { MemoryLibrary } from './library';
 import { LocalStoragePreferences } from './preferences';
 
-export { MemoryDocumentService } from './documents';
+export { IndexedDbDocumentService, MemoryDocumentService } from './documents';
 export { MemoryLibrary } from './library';
 export { LocalStoragePreferences } from './preferences';
 
@@ -29,7 +29,10 @@ export function createWebKeybindings(userAgent: string): KeybindingsService {
 export function createWebPlatform(): Platform {
   return {
     host: 'web',
-    documents: new MemoryDocumentService(),
+    documents:
+      typeof indexedDB === 'undefined'
+        ? new MemoryDocumentService()
+        : new IndexedDbDocumentService(),
     library: new MemoryLibrary(),
     preferences: new LocalStoragePreferences(),
     keybindings: createWebKeybindings(globalThis.navigator?.userAgent ?? ''),
