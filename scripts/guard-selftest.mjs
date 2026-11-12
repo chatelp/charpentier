@@ -121,6 +121,31 @@ for (const pkg of packages) {
   }
 }
 
+// 5. No untranslated UI text in React code (all UI strings go through i18n).
+for (const pkg of ['packages/core', 'apps/web']) {
+  const filePath = path.join(root, pkg, 'src', '__guard_fixture__.tsx');
+  const uiLeaks = [
+    'export const A = () => <p>Bonjour</p>;',
+    "export const B = () => <p>{'Bonjour'}</p>;",
+    'export const C = () => <button title="Fermer" />;',
+    "export const D = () => <input aria-label={'Nom'} />;",
+  ];
+  const [result] = await eslint.lintText(uiLeaks.join('\n') + '\n', { filePath });
+  const flagged = new Set(
+    result.messages.filter((m) => m.ruleId === 'charpentier/no-ui-literal').map((m) => m.line),
+  );
+  uiLeaks.forEach((line, i) => {
+    if (!flagged.has(i + 1)) failures.push(`${pkg}: ESLint accepts untranslated UI text: ${line}`);
+  });
+  const [ok] = await eslint.lintText(
+    'export const E = ({ t }: { t: (k: string) => string }) => <p className="x">{t(\'k\')} 42</p>;\n',
+    { filePath },
+  );
+  if (ok.messages.some((m) => m.ruleId === 'charpentier/no-ui-literal')) {
+    failures.push(`${pkg}: no-ui-literal rejects translated text`);
+  }
+}
+
 if (failures.length) {
   console.error('Guardrail self-test FAILED:\n' + failures.map((f) => `  - ${f}`).join('\n'));
   process.exit(1);

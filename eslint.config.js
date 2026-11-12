@@ -1,8 +1,10 @@
 // @ts-check
 import { builtinModules } from 'node:module';
 import js from '@eslint/js';
+import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
+import charpentier from './tools/eslint/no-ui-literal.js';
 
 /**
  * Architecture guardrails (see CLAUDE.md and docs/SPEC.md §13, §21).
@@ -110,7 +112,13 @@ export default tseslint.config(
   },
   // Node tooling: root config files and scripts.
   {
-    files: ['*.{js,mjs,cjs,ts}', 'scripts/**', '**/vite.config.ts', '**/vitest.config.ts'],
+    files: [
+      '*.{js,mjs,cjs,ts}',
+      'scripts/**',
+      'tools/**',
+      '**/vite.config.ts',
+      '**/vitest.config.ts',
+    ],
     languageOptions: { globals: { ...globals.node } },
   },
   // Host-agnostic and browser code: no Node globals, no Node/Electron imports, layering.
@@ -123,6 +131,19 @@ export default tseslint.config(
       'no-restricted-globals': ['error', ...nodeGlobals],
     },
   })),
+  // React UI: hooks rules, and no user-facing literal string in JSX (all UI text goes through i18n).
+  {
+    files: ['packages/core/src/**/*.tsx', 'apps/web/src/**/*.tsx'],
+    plugins: { 'react-hooks': reactHooks, charpentier },
+    rules: {
+      ...reactHooks.configs.recommended.rules,
+      'charpentier/no-ui-literal': 'error',
+    },
+  },
+  {
+    files: ['**/*.test.tsx', '**/testing/**'],
+    rules: { 'charpentier/no-ui-literal': 'off' },
+  },
   // Agents also run in the Electron main process and on the server: no browser-only globals.
   {
     files: ['packages/agents/**'],

@@ -8,6 +8,8 @@
     "node": ">=22.12"
   },
   "scripts": {
+    "dev:web": "pnpm --filter @charpentier/web dev",
+    "build": "turbo run build",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -15,11 +17,12 @@
     "test": "vitest run",
     "check:guards": "node scripts/guard-selftest.mjs",
     "check:licenses": "node scripts/check-licenses.mjs",
-    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm check:guards && pnpm check:licenses"
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm check:guards && pnpm check:licenses"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "eslint": "^10.14.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.14.0",
     "prettier": "^3.10.1",
     "turbo": "^2.11.11",
