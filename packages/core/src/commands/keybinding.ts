@@ -21,7 +21,10 @@ export function parseKeybinding(binding: string, primary: PrimaryModifier): Chor
   // A single character, or a KeyboardEvent.key name (ArrowUp, Enter, F2…).
   if (!rawKey || (rawKey.length > 1 && !/^[A-Z][A-Za-z0-9]*$/.test(rawKey)))
     throw new Error(`Invalid keybinding: ${binding}`);
-  const mods = new Set(parts.map((p) => p.toLowerCase()));
+  // `Control` (a KeyboardEvent modifier name, used by hosts) is `Ctrl`.
+  const mods = new Set(
+    parts.map((p) => p.toLowerCase()).map((p) => (p === 'control' ? 'ctrl' : p)),
+  );
   for (const m of mods) {
     if (!['mod', 'alt', 'shift', 'ctrl', 'meta'].includes(m))
       throw new Error(`Invalid modifier in ${binding}: ${m}`);

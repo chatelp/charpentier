@@ -142,8 +142,19 @@ describe('filterByQuery', () => {
 describe('workspace commands', () => {
   it('register without shortcut clashes, with the web host reserved keys, on every platform', async () => {
     const { createWorkspaceRegistry } = await import('./workspace-commands');
-    const webReserved = ['Mod-w', 'Mod-q', 'Mod-t', 'Mod-n'];
-    expect(() => createWorkspaceRegistry('Meta', webReserved)).not.toThrow();
-    expect(() => createWorkspaceRegistry('Control', webReserved)).not.toThrow();
+    // Same lists as platform-web's webReservedShortcuts (core cannot import it).
+    const reserved = (mod: 'Meta' | 'Control', apple: boolean) => [
+      `${mod}-w`,
+      `${mod}-t`,
+      `${mod}-n`,
+      `${mod}-Shift-n`,
+      `${mod}-Shift-t`,
+      ...Array.from({ length: 9 }, (_, i) => `${mod}-${i + 1}`),
+      ...(apple ? ['Meta-q', 'Meta-Alt-ArrowLeft', 'Meta-Alt-ArrowRight'] : ['Control-Tab']),
+    ];
+    expect(() => createWorkspaceRegistry('Meta', reserved('Meta', true))).not.toThrow();
+    expect(() => createWorkspaceRegistry('Control', reserved('Control', false))).not.toThrow();
+    const linux = createWorkspaceRegistry('Control', reserved('Control', false));
+    expect(linux.shortcutLabel('newScene')).toBe('Ctrl+Alt+N');
   });
 });
