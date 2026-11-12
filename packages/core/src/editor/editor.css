@@ -69,3 +69,20 @@
   height: 0;
   pointer-events: none;
 }
+
+/* Language issues (decorations): wavy for spelling, dotted for typography. */
+.ch-prose .ch-lang {
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+
+.ch-prose .ch-lang-spelling {
+  text-decoration-style: wavy;
+  text-decoration-color: var(--ch-mentor);
+}
+
+.ch-prose .ch-lang-typography {
+  text-decoration-style: dotted;
+  text-decoration-color: color-mix(in srgb, var(--ch-mentor) 70%, transparent);
+}

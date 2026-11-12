@@ -75,7 +75,11 @@
     "newProject": "Nouveau projet (roman ou nouvelle)…",
     "renameProject": "Renommer le projet…",
     "chooseLibraryFolder": "Changer le dossier de la bibliothèque…",
-    "revealLibraryFolder": "Afficher la bibliothèque dans le Finder"
+    "revealLibraryFolder": "Afficher la bibliothèque dans le Finder",
+    "fixLanguage": "Corriger le mot ou la typographie sous le curseur",
+    "nextLanguageIssue": "Aller à la correction suivante",
+    "fixAllTypography": "Corriger toute la typographie de la scène",
+    "fixAllSpelling": "Accepter toutes les corrections d’orthographe de la scène"
   },
   "palette": {
     "label": "Ligne de commande",
@@ -368,5 +372,15 @@
     "folder": "Dossier : {{folder}}",
     "chooseFolder": "Changer de dossier…",
     "revealFolder": "Afficher dans le Finder"
+  },
+  "language": {
+    "fixWord": "Remplacer « {{word}} » par…",
+    "addToDictionary": "Ajouter « {{word}} » au dictionnaire du projet",
+    "added": "« {{word}} » ajouté au dictionnaire du projet.",
+    "noIssue": "Aucune correction à proposer dans cette scène.",
+    "fixedTypography_one": "{{count}} correction typographique appliquée.",
+    "fixedTypography_other": "{{count}} corrections typographiques appliquées.",
+    "fixedSpelling_one": "{{count}} correction d’orthographe appliquée.",
+    "fixedSpelling_other": "{{count}} corrections d’orthographe appliquées."
   }
 }

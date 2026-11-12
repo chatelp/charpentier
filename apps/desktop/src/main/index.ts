@@ -8,6 +8,7 @@ import {
   PreferencesFile,
   ProjectMirror,
   RendererSession,
+  SpellClient,
   type MirrorStrings,
 } from '@charpentier/platform-desktop/main';
 import {
@@ -17,6 +18,7 @@ import {
   type Request,
 } from '@charpentier/platform-desktop/shared';
 import { appMenu } from './menu';
+import spellWorkerPath from '@charpentier/platform-desktop/main/spell-worker?modulePath';
 
 /** The library folder: `CHARPENTIER_LIBRARY` (tests), the saved choice, or ~/Documents/Charpentier. */
 const LIBRARY_PREF = 'desktop.libraryFolder';
@@ -34,6 +36,15 @@ const libraryFolder =
 const library = new FolderLibrary(libraryFolder);
 const store = new DocStore(documentLocator(library));
 const sessions = new Map<WebContents, RendererSession>();
+
+// Hunspell French dictionary (MPL 2.0, resources/dictionaries/fr), loaded in a worker on first use.
+const dictionaryDir = app.isPackaged
+  ? path.join(process.resourcesPath, 'dictionaries', 'fr')
+  : path.join(app.getAppPath(), 'resources', 'dictionaries', 'fr');
+const spell = new SpellClient(spellWorkerPath, {
+  aff: path.join(dictionaryDir, 'fr.aff'),
+  dic: path.join(dictionaryDir, 'fr.dic'),
+});
 
 // ─── Markdown mirror: runs while a window has the project open (docs/SPEC.md §17) ───
 
@@ -76,7 +87,7 @@ function syncMirrors() {
 function sessionOf(contents: WebContents): RendererSession {
   let session = sessions.get(contents);
   if (!session) {
-    const created = new RendererSession({ store, library, preferences }, (message) => {
+    const created = new RendererSession({ store, library, preferences, spell }, (message) => {
       if (!contents.isDestroyed()) contents.send(IPC_MESSAGE, message);
     });
     sessions.set(contents, created);
@@ -187,4 +198,5 @@ app.on('will-quit', () => {
   for (const mirror of mirrors.values()) mirror.stop();
   mirrors.clear();
   store.closeAll();
+  void spell.close();
 });

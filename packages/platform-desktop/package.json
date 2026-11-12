@@ -8,7 +8,8 @@
   "exports": {
     "./main": "./src/main/index.ts",
     "./renderer": "./src/renderer/index.ts",
-    "./shared": "./src/shared/ipc.ts"
+    "./shared": "./src/shared/ipc.ts",
+    "./main/spell-worker": "./src/main/spell-worker.ts"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.main.json && tsc -p tsconfig.renderer.json && tsc -p tsconfig.test.json"
@@ -17,9 +18,11 @@
     "@charpentier/platform": "workspace:*",
     "@charpentier/schema": "workspace:*",
     "@tiptap/y-tiptap": "^3.3.0",
+    "nspell": "2.1.5",
     "yjs": "^13.6.33"
   },
   "devDependencies": {
-    "@types/node": "^26.6.6"
+    "@types/node": "^26.6.6",
+    "@types/nspell": "^2.1.6"
   }
 }

@@ -24,6 +24,7 @@ import type { PrimaryModifier } from './keybinding';
 import { trashedVariantItems, variantCommands } from './variant-commands';
 import { writingCommands } from './writing-commands';
 import { atelierCommands } from './atelier-commands';
+import { languageCommands } from './language-commands';
 import { trashedEntityItems } from '../atelier/atelier-actions';
 import { CommandRegistry, type Command } from './registry';
 
@@ -374,6 +375,7 @@ export function createWorkspaceRegistry(primary: PrimaryModifier, reserved: read
     ...variantCommands,
     ...writingCommands,
     ...atelierCommands,
+    ...languageCommands,
   ])
     registry.register(command);
   return registry;

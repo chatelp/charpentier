@@ -3,6 +3,7 @@ import type { Message, Request, Responses } from '../shared/ipc';
 import type { DocStore } from './doc-store';
 import type { FolderLibrary } from './projects';
 import type { PreferencesFile } from './preferences';
+import type { SpellClient } from './spell-client';
 
 /**
  * The main-process side of one renderer: answers its requests, applies the
@@ -18,6 +19,7 @@ export class RendererSession {
       readonly store: DocStore;
       readonly library: FolderLibrary;
       readonly preferences: PreferencesFile;
+      readonly spell?: SpellClient;
     },
     private readonly push: (message: Message) => void,
   ) {}
@@ -69,6 +71,10 @@ export class RendererSession {
       case 'prefs.set':
         preferences.set(request.key, request.value);
         return null;
+      case 'spell.misspelled':
+        return this.services.spell?.misspelled(request.words, request.language) ?? [];
+      case 'spell.suggest':
+        return this.services.spell?.suggest(request.word, request.language) ?? [];
       default:
         throw new Error(`Not handled by the session: ${request.type}`);
     }

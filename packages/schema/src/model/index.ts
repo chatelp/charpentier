@@ -1,6 +1,7 @@
 // Yjs model of a project (docs/SPEC.md §15).
 export * from './agent-writer';
 export * from './authorship-guard';
+export * from './dictionary';
 export * from './fields';
 export * from './history';
 export * from './ids';

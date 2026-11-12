@@ -20,6 +20,12 @@ export type Request =
   | { readonly type: 'library.restore'; readonly projectId: string }
   | { readonly type: 'prefs.get'; readonly key: string }
   | { readonly type: 'prefs.set'; readonly key: string; readonly value: unknown }
+  | {
+      readonly type: 'spell.misspelled';
+      readonly words: readonly string[];
+      readonly language: string;
+    }
+  | { readonly type: 'spell.suggest'; readonly word: string; readonly language: string }
   // Handled by the Electron host itself (dialogs, Finder).
   | { readonly type: 'host.libraryFolder' }
   | { readonly type: 'host.chooseLibraryFolder' }
@@ -37,6 +43,8 @@ export interface Responses {
   'library.restore': null;
   'prefs.get': unknown;
   'prefs.set': null;
+  'spell.misspelled': readonly string[];
+  'spell.suggest': readonly string[];
   'host.libraryFolder': string;
   'host.chooseLibraryFolder': boolean;
   'host.revealLibraryFolder': null;

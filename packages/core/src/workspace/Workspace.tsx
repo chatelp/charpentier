@@ -16,6 +16,8 @@ import { sheetScope } from '../atelier/sheet-scope';
 import { Overview } from '../overview/Overview';
 import { variantLabel } from '../commands/variant-commands';
 import { createWorkspaceRegistry } from '../commands/workspace-commands';
+import { createLanguageChecker } from '../language/checker';
+import { knownWordsOf } from '../language/known-words';
 import { SceneEditor } from '../editor/SceneEditor';
 import { useDocSnapshot } from '../hooks/use-doc-snapshot';
 import { Navigator } from '../navigator/Navigator';
@@ -70,6 +72,15 @@ export function ProjectWorkspace({
   const sceneDocs = useSceneDocs(platform, projectId, sceneId, scene?.activeVariantId ?? '');
   const [status, setStatus] = useState<{ key: number; text: string } | null>(null);
   const words = useWordCount(editor);
+  const languageCheck = useMemo(
+    () =>
+      createLanguageChecker({
+        spellcheck: platform.spellcheck,
+        language,
+        knownWords: () => knownWordsOf(root),
+      }),
+    [platform, language, root],
+  );
   useTypewriterScroll(editor, scroller, prefs.typewriter);
 
   const openScene = useCallback(
@@ -259,6 +270,7 @@ export function ProjectWorkspace({
               fragment={sceneDocs.fragment}
               language={language}
               onEditor={setEditor}
+              languageCheck={languageCheck}
             />
           )}
         </main>

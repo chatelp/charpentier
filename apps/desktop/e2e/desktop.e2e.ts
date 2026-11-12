@@ -101,4 +101,14 @@ describe('desktop app', () => {
       .poll(() => editor.textContent(), { timeout: 10_000 })
       .toBe('Il pleuvait sur Nantes, encore.Hélène regardait la Loire.');
   });
+
+  it('checks French spelling offline with the bundled dictionary', async () => {
+    const dirs = folders();
+    const { editor, window } = await launch(dirs);
+    await editor.click();
+    await window.keyboard.type('Il pleuvai sur Nantes depuis trois jours.');
+    await expect
+      .poll(() => window.locator('.ch-lang-spelling').allTextContents(), { timeout: 20_000 })
+      .toEqual(['pleuvai']);
+  });
 });

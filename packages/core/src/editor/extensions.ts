@@ -9,6 +9,8 @@ import { Placeholder } from '@tiptap/extensions';
 import { markInputRule, type AnyExtension } from '@tiptap/core';
 import type * as Y from 'yjs';
 import { CurrentBlock } from './current-block';
+import { LanguageCheck } from './language-check';
+import type { LanguageCheck as LanguageCheckFn } from '../language/checker';
 import { SanitizePaste } from './sanitize-paste';
 import { SceneBreak } from './scene-break';
 
@@ -49,6 +51,8 @@ export const sceneSchemaExtensions: AnyExtension[] = [
 export function sceneEditorExtensions(options: {
   fragment: Y.XmlFragment;
   placeholder: string;
+  /** Spelling and typography, when available. */
+  languageCheck?: LanguageCheckFn | null;
 }): AnyExtension[] {
   return [
     ...sceneSchemaExtensions,
@@ -57,5 +61,6 @@ export function sceneEditorExtensions(options: {
     Placeholder.configure({ placeholder: options.placeholder }),
     SanitizePaste,
     CurrentBlock,
+    LanguageCheck.configure({ check: options.languageCheck ?? null, delayMs: 800 }),
   ];
 }

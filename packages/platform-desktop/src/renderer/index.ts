@@ -75,7 +75,10 @@ export function createDesktopPlatform(bridge: DesktopBridge): Platform {
     llm: null,
     fileMirror: null,
     secrets: null,
-    spellcheck: null,
+    spellcheck: {
+      misspelled: (words, language) => bridge.invoke({ type: 'spell.misspelled', words, language }),
+      suggest: (word, language) => bridge.invoke({ type: 'spell.suggest', word, language }),
+    },
     system: null,
     // docs/DESIGN.md §4.1: a 34 px title bar merged with the background.
     titleBarHeight: bridge.platform === 'darwin' ? 34 : 0,
