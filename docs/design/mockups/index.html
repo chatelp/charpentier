@@ -1306,6 +1306,148 @@
         grid-column: 1;
       }
 
+      /* ───────────── Personality levers (A, B, C) ───────────── */
+      /* A · Pierre chaude: the Perle structure on a warm stone neutral. */
+      .app[data-dir='perle'][data-warm='true'][data-theme='light'] {
+        --bg: #e5e2dc;
+        --ink: #262320;
+        --ink-2: #4a4540;
+        --muted: #7d766d;
+        --faint: #aaa398;
+        --hl: #ffffff;
+        --sh: #c4beb4;
+      }
+      .app[data-dir='perle'][data-warm='true'][data-theme='dark'] {
+        --bg: #2a2825;
+        --ink: #e6e1d9;
+        --ink-2: #bfb8ad;
+        --muted: #8f877c;
+        --faint: #5f5953;
+        --hl: #36332f;
+        --sh: #1b1a18;
+      }
+      /* B · Deux encres: vermilion for the author, Prussian blue for the Compagnon. */
+      .app {
+        --author: var(--ink);
+      }
+      .app[data-ink='true'][data-theme='light'] {
+        --author: #b2432a;
+      }
+      .app[data-ink='true'][data-theme='dark'] {
+        --author: #e3876a;
+      }
+      .app[data-ink='true'] ::selection {
+        background: color-mix(in srgb, var(--author) 24%, transparent);
+      }
+      .app[data-ink='true'] .caret {
+        width: 2px;
+        background: var(--author);
+      }
+      .app[data-ink='true'] .whead .cur,
+      .app[data-ink='true'] .today,
+      .app[data-ink='true'] .seg button.on,
+      .app[data-ink='true'] .nav.on,
+      .app[data-ink='true'] .ent.on,
+      .app[data-ink='true'] .ms .sc.act,
+      .app[data-ink='true'] .chip.on,
+      .app[data-ink='true'] .ms .sub .v.on,
+      .app[data-ink='true'] .tb .ttl {
+        color: var(--author);
+      }
+      .app[data-ink='true'] .ms .sc.act,
+      .app[data-ink='true'] .nav.on,
+      .app[data-ink='true'] .ent.on {
+        box-shadow:
+          var(--inset),
+          inset 3px 0 0 var(--author);
+      }
+      .app[data-ink='true'] .card.act {
+        outline-color: var(--author);
+      }
+      .app[data-ink='true'] .fld[data-st='validated'] .fv {
+        box-shadow:
+          var(--inset),
+          inset 2px 0 0 color-mix(in srgb, var(--author) 70%, transparent);
+      }
+      .app[data-ink='true'] .msg.a .who2 {
+        color: var(--author);
+      }
+      /* C · Signature: editorial typography (small caps, scene opener, serif labels). */
+      .opener {
+        grid-column: 2;
+        margin: 0 0 3.2rem;
+        text-align: center;
+        font-family: var(--font-text);
+        color: var(--ink-2);
+      }
+      .opener .cn {
+        font-size: 2.6rem;
+        font-weight: 400;
+        line-height: 1;
+        color: var(--author);
+      }
+      .opener .ct {
+        margin-top: 0.4rem;
+        font-variant-caps: all-small-caps;
+        letter-spacing: 0.14em;
+        font-size: 1.15rem;
+      }
+      .opener .orn {
+        margin: 0.9rem 0 0.5rem;
+        color: var(--faint);
+        font-size: 1.1rem;
+      }
+      .opener .st {
+        font-style: italic;
+        font-size: 1.25rem;
+        color: var(--ink);
+      }
+      .app[data-sig='true'] .whead,
+      .app[data-sig='true'] .tb .ttl {
+        font-family: var(--font-text);
+        font-variant-caps: all-small-caps;
+        letter-spacing: 0.1em;
+        font-size: 14.5px;
+      }
+      .app[data-sig='true'] .whead .cur {
+        font-variant-caps: normal;
+        font-style: italic;
+        letter-spacing: 0.01em;
+        font-size: 14px;
+      }
+      .app[data-sig='true'] .nk,
+      .app[data-sig='true'] .gh,
+      .app[data-sig='true'] .rg,
+      .app[data-sig='true'] .sec h2,
+      .app[data-sig='true'] .ms .sub .h,
+      .app[data-sig='true'] .strip .h,
+      .app[data-sig='true'] .pt .k,
+      .app[data-sig='true'] .ex .lab,
+      .app[data-sig='true'] .msg .who2 {
+        font-family: var(--font-text);
+        font-weight: 500;
+        text-transform: none;
+        font-variant-caps: all-small-caps;
+        letter-spacing: 0.08em;
+        font-size: 13.5px;
+      }
+      .app[data-sig='true'] .nk span:last-child {
+        font-variant-caps: normal;
+        font-style: italic;
+        letter-spacing: 0;
+        font-size: 12.5px;
+      }
+      .app[data-sig='true'] .ms .ch,
+      .app[data-sig='true'] .col h3 {
+        font-family: var(--font-text);
+        font-weight: 500;
+        font-size: 15px;
+      }
+      .app[data-sig='true'] .nt {
+        font-family: var(--font-text);
+        font-weight: 500;
+        font-size: 16px;
+      }
       @media (prefers-reduced-motion: reduce) {
         .app *,
         .app *::before,
@@ -1359,6 +1501,9 @@
         focus: false,
         sound: false,
         still: false,
+        warm: false,
+        ink: false,
+        sig: false,
         tab: 'points',
         open: 'p6',
         sel: 0,
@@ -1551,8 +1696,8 @@
         const count = signals
           ? `<span class="cnt" data-go="points">4 remarques du Compagnon</span>`
           : '';
-        return `<section class="${cls}">${head}<div class="wbody">${rows}</div></section>
-          <footer class="wfoot"><span>${fmt(1284)} mots · +${fmt(312)} aujourd’hui</span><span class="r">${count}<span>${status}</span></span></footer>`;
+        return `<section class="${cls}">${head}<div class="wbody">${S.sig ? `<div class="row"><div class="opener"><div class="cn">III</div><div class="ct">La serre</div><div class="orn">⁂</div><div class="st">Le bureau de Vasseur</div></div></div>` : ''}${rows}</div></section>
+          <footer class="wfoot"><span>${fmt(1284)} mots · <span class="today">+${fmt(312)} aujourd’hui</span></span><span class="r">${count}<span>${status}</span></span></footer>`;
       }
 
       // ───────────── Right panel: points & conversation ─────────────
@@ -1729,7 +1874,7 @@
             .join('');
           return `<div class="ch"><span>${c.n} · ${c.t}</span><span>${fmt(total)}</span></div>${sc}`;
         }).join('');
-        return `<aside class="panel left"><div class="seg"><button class="on">Manuscrit</button><button>Plan</button></div><div class="ms">${chapters}</div><div class="pfoot"><span><kbd>↑↓</kbd>parcourir</span><span><kbd>⏎</kbd>ouvrir</span><span><kbd>⌥↑↓</kbd>déplacer</span><span><kbd>V</kbd>variantes</span><span><kbd>⌘N</kbd>nouvelle scène</span></div></aside>`;
+        return `<aside class="panel left"><div class="seg"><button class="on">Manuscrit</button><button data-plan="1">Plan <kbd>⌘⇧P</kbd></button></div><div class="ms">${chapters}</div><div class="pfoot"><span><kbd>↑↓</kbd>parcourir</span><span><kbd>⏎</kbd>ouvrir</span><span><kbd>⌥↑↓</kbd>déplacer</span><span><kbd>V</kbd>variantes</span><span><kbd>⌘N</kbd>nouvelle scène</span></div></aside>`;
       }
       function board() {
         const cols = MS.map((c) => {
@@ -1748,7 +1893,7 @@
         const cps = CHECKPOINTS.slice(0, 3)
           .map(([d]) => `<span class="chip">${d}</span>`)
           .join('');
-        return `<section class="board"><h2>Les Serres d’Hespéride</h2><div class="sub2">Plan du manuscrit · 4 chapitres · 10 scènes · ${fmt(13984)} mots</div><div class="cols">${cols}</div>
+        return `<section class="board">${S.dir === 'perle' ? `<div class="seg" style="position:absolute;right:28px;top:18px;width:18rem;margin:0"><button data-plan="0">Tiroir <kbd>⌘\\</kbd></button><button class="on">Plan</button></div>` : ''}<h2>Les Serres d’Hespéride</h2><div class="sub2">Plan du manuscrit · 4 chapitres · 10 scènes · ${fmt(13984)} mots</div><div class="cols">${cols}</div>
           <div class="strip"><div><span class="h">Variantes</span>${vars}</div><div><span class="h">Restauration</span>${cps}</div><div class="pfoot" style="padding:0;margin-left:auto"><span><kbd>←→↑↓</kbd>parcourir</span><span><kbd>⌥ flèches</kbd>déplacer</span><span><kbd>⏎</kbd>écrire</span><span><kbd>Échap</kbd>revenir</span></div></div></section>`;
       }
       function gresNav() {
@@ -1892,10 +2037,13 @@
           <span class="grp"><span class="lbl">Écran <kbd>1–7</kbd></span>${SCREENS.map(([k, l]) => b('screen', k, l)).join('')}</span>
           <span class="grp"><span class="lbl">Thème <kbd>T</kbd></span>${b('theme', 'light', 'Clair')}${b('theme', 'dark', 'Sombre')}</span>
           <span class="grp"><span class="lbl">Cadre</span>${b('frame', 'mac', 'Mac')}${b('frame', 'x250', 'X250')}</span>
+          <span class="grp"><span class="lbl">Personnalité <kbd>A B C</kbd></span>${b('warm', !S.warm, 'A · Pierre chaude')}${b('ink', !S.ink, 'B · Deux encres')}${b('sig', !S.sig, 'C · Signature')}</span>
           <span class="grp">${b('focus', !S.focus, S.focus ? 'Focus : oui' : 'Focus : non')}${b('sound', !S.sound, S.sound ? 'Sons : oui' : 'Sons : non')}${b('still', !S.still, S.still ? 'Animations : non' : 'Animations : oui')}</span>
           <span class="info">${DIRS[S.dir].info}</span>`;
         document
-          .querySelectorAll('.mk [data-k="focus"], .mk [data-k="sound"], .mk [data-k="still"]')
+          .querySelectorAll(
+            '.mk [data-k="focus"], .mk [data-k="sound"], .mk [data-k="still"], .mk [data-k="warm"], .mk [data-k="ink"], .mk [data-k="sig"]',
+          )
           .forEach((el) => el.setAttribute('aria-pressed', S[el.dataset.k]));
       }
       function render() {
@@ -1904,6 +2052,9 @@
         app.dataset.dir = S.dir;
         app.dataset.theme = S.theme;
         app.dataset.frame = S.frame;
+        app.dataset.warm = S.warm;
+        app.dataset.ink = S.ink;
+        app.dataset.sig = S.sig;
         app.classList.toggle('still', S.still);
         let body = '';
         switch (S.screen) {
@@ -1930,7 +2081,7 @@
             body = atelier();
             break;
           case 'manuscrit':
-            if (S.dir === 'perle') body = scene({ behind: true }) + drawer();
+            if (S.dir === 'perle') body = S.plan ? board() : scene({ behind: true }) + drawer();
             else if (S.dir === 'velin') body = board();
             else body = scene({ behind: true, crumbs: true }) + gresNav();
             break;
@@ -1941,7 +2092,8 @@
         // Typewriter scrolling: the current paragraph sits a little above the middle.
         const w = app.querySelector('.write');
         const cur = w && w.querySelector('.para.cur');
-        if (cur) w.scrollTop = cur.offsetTop - w.clientHeight * 0.42;
+        if (cur && !(S.sig && S.screen === 'ecrire'))
+          w.scrollTop = cur.offsetTop - w.clientHeight * 0.42;
         const q = document.getElementById('q');
         if (q && typing) {
           q.focus();
@@ -1957,6 +2109,7 @@
           S[k.dataset.k] = v === 'true' ? true : v === 'false' ? false : v;
           if (k.dataset.k === 'screen') {
             S.sel = 0;
+            S.plan = false;
             S.q = v === 'manuscrit' ? 'bur' : 'va';
           }
           return render();
@@ -1965,6 +2118,11 @@
         if (p) {
           S.open = S.open === p.dataset.open ? null : p.dataset.open;
           tock(620);
+          return render();
+        }
+        const plan = e.target.closest('[data-plan]');
+        if (plan) {
+          S.plan = plan.dataset.plan === '1';
           return render();
         }
         const tab = e.target.closest('[data-tab]');
@@ -2026,6 +2184,9 @@
           const ks = Object.keys(DIRS);
           S.dir = ks[(ks.indexOf(S.dir) + 1) % ks.length];
         } else if (e.key === 't') S.theme = S.theme === 'light' ? 'dark' : 'light';
+        else if (e.key === 'a') S.warm = !S.warm;
+        else if (e.key === 'b') S.ink = !S.ink;
+        else if (e.key === 'c') S.sig = !S.sig;
         else if (e.key === 'f') S.focus = !S.focus;
         else return;
         e.preventDefault();
