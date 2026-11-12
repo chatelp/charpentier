@@ -292,7 +292,7 @@ Toutes les clés et identifiants sont en anglais. Les identifiants sont des cha�
 | Document (guid) | Contenu |
 |---|---|
 | `project:<pid>` | Racine : métadonnées, arbre du manuscrit, modules, signalements |
-| `project:<pid>/scene:<sid>` | Contenu de la scène : une `Y.XmlFragment` par variante |
+| `project:<pid>/scene:<sid>` | Contenu de la scène : une `Y.XmlFragment` de premier niveau par variante (`variant:<vid>`) |
 | `project:<pid>/scene:<sid>/history` | Points de restauration de la scène |
 | `project:<pid>/mentor` | Fils de chat, (v2) mémoire de progression |
 
@@ -300,32 +300,41 @@ Ce découpage permet le chargement paresseux et correspond aux documents que Hoc
 
 ### 15.2 Document racine
 
+Règle de construction : tout ce que deux répliques pourraient créer en même temps est un **type de premier niveau nommé** (Yjs fusionne deux types de premier niveau de même nom, alors que deux sous-types créés sous la même clé s'écrasent). Les sous-types imbriqués ne sont créés que sous une clé aléatoire unique (un chapitre, une scène, une entité, un signalement).
+
 ```
-meta: Y.Map { id, title, kind: 'novel' | 'short-story', language: 'fr', schemaVersion, createdAt }
-chapters: Y.Map<chapterId, Y.Map { title, order }>
-scenes: Y.Map<sceneId, Y.Map {
-  title, chapterId, order,
-  activeVariantId,
-  variants: Y.Map<variantId, Y.Map { name, createdAt, origin: 'author' | 'external-edit' | 'checkpoint' }>
-}>
-modules: Y.Map {
-  meta:       Y.Map<fieldKey, Field>
-  characters: Y.Map<entityId, Entity>
-  structure:  Y.Map { narrativeModel: Field, acts: Y.Map<id, Entity>, arcs: Y.Map<id, Entity> }
-  worldRules: Y.Map<entityId, Entity>
-  clues:      Y.Map<entityId, Entity {
-                kind: 'clue' | 'red-herring' | 'reveal',
-                plantedIn: [sceneRef], resolvedIn: [sceneRef], appearsIn: [sceneRef],
-                knownBy: Y.Map<characterId | 'reader', Field { value: { fromSceneId } }>
-              }>
-}
-signals: Y.Map<signalId, Signal>
+meta:               Y.Map { id, title, kind: 'novel' | 'short-story', language: 'fr', schemaVersion, createdAt }
+chapters:           Y.Map<chapterId, Y.Map { title, order, createdAt, trashedAt? }>
+scenes:             Y.Map<sceneId, Y.Map {
+                      title, chapterId, order, createdAt, trashedAt?,
+                      activeVariantId,
+                      variants: Y.Map<variantId, Y.Map { name, createdAt, origin: 'author' | 'external-edit' | 'checkpoint', trashedAt? }>
+                    }>
+module:meta         Y.Map — champs directement (pitch, summary, intention, themes, tone, genres, audience)
+module:structure    Y.Map — champs directement (narrativeModel)
+module:characters   Y.Map<entityId, Entity>
+module:acts         Y.Map<entityId, Entity>   (title, summary, sceneIds)
+module:arcs         Y.Map<entityId, Entity>   (title, kind, summary, sceneIds)
+module:worldRules   Y.Map<entityId, Entity>   (title, statement, consequences)
+module:clues        Y.Map<entityId, Entity>   (kind: 'clue' | 'red-herring' | 'reveal', title, description,
+                                               plantedIn, resolvedIn, appearsIn : [sceneId],
+                                               knownBy:<characterId> et knownBy:reader : { fromSceneId })
+signals:            Y.Map<signalId, Y.Map Signal>
 ```
 
-- **Ordre** : chapitres et scènes portent une clé `order` en indexation fractionnaire, et la scène porte son `chapterId`. Un déplacement est l'écriture de deux champs : deux déplacements concurrents ne dupliquent jamais une scène (le dernier gagne).
-- **Entity** : `Y.Map { status, source, createdAt, fields: Y.Map<fieldKey, Field> }` (le statut de l'entité couvre son existence, chaque champ a le sien).
-- **Field** : `Y.Map { value, status: 'proposed' | 'validated' | 'rejected', source: 'author' | 'agent', updatedAt, evidence: [anchor], rejectedValues: Y.Array<{ value, evidenceHash, at }> }`.
-- **Contredite** n'est pas stocké : un champ est contredit s'il est validé et visé par un `Signal` de type `conflict` ouvert.
+- **Ordre** : chapitres et scènes portent une clé `order` en indexation fractionnaire, et la scène porte son `chapterId`. Tri par `(order, id)` : deux insertions concurrentes au même endroit produisent parfois la même clé, et l'id départage de la même façon partout ; une insertion ultérieure entre deux clés égales ré-indexe la fratrie. Un déplacement est l'écriture de deux champs : deux déplacements concurrents ne dupliquent jamais une scène (le dernier gagne).
+- **Corbeille** : chapitres, scènes, variantes et entités ne sont jamais supprimés, seulement marqués `trashedAt` / `$trashedAt` et restaurables.
+- **Champ** : trois emplacements dans la map qui le contient, chacun avec un seul type d'auteur :
+
+  | Clé | Contenu | Écrit par |
+  |---|---|---|
+  | `<champ>#value` | `{ value, at }` : la valeur de l'auteur | l'auteur seulement |
+  | `<champ>#proposal` | `{ value, agent, at, evidence: [{ sceneId, variantId, quote }], evidenceHash }` | les agents ; effacé par l'auteur |
+  | `<champ>#rejected` | `[{ value, evidenceHash, at }]` : propositions refusées | l'auteur seulement |
+
+  Le statut est **dérivé** : validé s'il existe une valeur de l'auteur, sinon proposé s'il existe une proposition, sinon rejeté. Comme la valeur de l'auteur et la proposition d'un agent ne partagent jamais un emplacement, aucune écriture ni aucune fusion entre appareils ne peut laisser un agent écraser une décision de l'auteur. Un agent ne repropose une valeur rejetée que si `evidenceHash` diffère (élément nouveau dans le texte).
+- **Entity** : `Y.Map { $createdBy: 'author' | 'agent:<name>', $createdAt, $validatedAt?, $rejectedAt?, $trashedAt?, …emplacements des champs }`. Statut de l'entité dérivé : rejetée si `$rejectedAt`, validée si créée par l'auteur ou `$validatedAt`, proposée sinon. Un agent ne peut pas proposer de champ sur une entité rejetée.
+- **Contredite** n'est pas stocké : un champ est contredit s'il est validé et visé par un `Signal` de type `conflict` ouvert (`displayStatus`).
 
 ### 15.3 Signalements
 
@@ -334,30 +343,30 @@ Signal: Y.Map {
   kind: 'language' | 'conflict' | 'craft' | 'clue' | 'external-edit',
   state: 'open' | 'resolved' | 'dismissed',
   author: 'mentor' | <personId>,           // ouvre la porte aux annotations humaines
-  textAnchor?: { sceneId, variantId, start: RelativePosition, end: RelativePosition },
-  entityRef?: { module, entityId, fieldKey? },
+  textAnchor?: { sceneId, variantId, start, end },   // Y.RelativePosition au format JSON
+  fieldRef?: { module, entityId?, field },
   message, principle?,                      // le « pourquoi » (principe n°5)
   suggestion?: { kind: 'correction' | 'example', text },
-  createdAt
+  createdAt, closedAt?
 }
 ```
 
-Les positions relatives sont résolues dans le document de la scène visée ; elles survivent aux éditions concurrentes. Le rendu passe par des décorations ProseMirror.
+Les positions relatives sont résolues dans le document de la scène visée ; elles survivent aux éditions concurrentes. Le rendu passe par des décorations ProseMirror. Un agent peut résoudre ses propres signalements ouverts, jamais rouvrir un signalement écarté par l'auteur.
 
 ### 15.4 Scène, variantes, historique
 
-- Document de scène : `variants: Y.Map<variantId, Y.XmlFragment>`. L'éditeur se lie au fragment de la variante active.
-- Créer une variante = copier le contenu d'une variante (ou d'un point de restauration) dans un nouveau fragment, dans une transaction.
-- Point de restauration : `Y.Array<{ id, variantId, createdAt, reason: 'manual' | 'interval' | 'scene-end' | 'before-restore' | 'before-external-merge' | 'before-variant-delete', label?, state: Uint8Array }>` dans le document d'historique.
-- Restaurer = remplacer le contenu du fragment par celui du point, dans une **nouvelle transaction** (précédée d'un point `before-restore`). L'historique n'est jamais réécrit ; GC Yjs activé.
+- Document de scène : une `Y.XmlFragment` **de premier niveau** par variante, nommée `variant:<variantId>`. L'éditeur se lie au fragment de la variante active. Deux appareils qui ouvrent la même variante pour la première fois fusionnent leurs saisies au lieu de s'écraser.
+- Créer une variante = copier le contenu d'une variante (ou d'un point de restauration) dans un nouveau fragment, puis l'inscrire dans le document racine. Le texte est écrit d'abord : une interruption laisse au pire un fragment non référencé, invisible. La variante active ne peut pas être mise à la corbeille.
+- Point de restauration : `checkpoints: Y.Array<{ id, variantId, createdAt, reason: 'manual' | 'interval' | 'scene-end' | 'before-restore' | 'before-external-merge' | 'before-variant-delete', label?, state: Uint8Array }>` dans le document d'historique ; `state` encode une copie du fragment.
+- Restaurer = remplacer le contenu du fragment par celui du point, dans une **nouvelle transaction** (précédée d'un point `before-restore`, lui-même restaurable). L'historique n'est jamais réécrit ; GC Yjs activé.
 - Le mentor n'analyse que la variante active [D-6] ; les signalements d'une variante inactive restent attachés à elle.
 
 ### 15.5 Origines des transactions et droits d'écriture
 
 Chaque transaction porte une origine : `author`, `agent:<name>`, `mirror`, `system`, `migration`.
 
-- Un agent n'écrit **jamais** dans un document de scène. Il n'a accès qu'aux modules (propositions), aux signalements et au document mentor, via une API restreinte.
-- Un agent ne modifie **jamais** un champ validé ou rejeté : l'API le refuse, et des tests vérifient qu'aucune transaction d'origine `agent:*` ne touche un tel champ.
+- Les agents écrivent **uniquement** via `createAgentWriter(rootDoc, agent)` : liée au seul document racine, elle permet de proposer (champs, entités), lever des signalements et résoudre les siens. Elle n'offre aucun accès aux documents de scène.
+- Défense en profondeur : `watchAuthorship(doc, onViolation)` inspecte chaque transaction d'origine `agent:*` et signale toute écriture interdite (emplacement de l'auteur, statut d'entité, manuscrit, document de scène, suppression). Des tests vérifient qu'elle ne signale rien pour ce que fait `AgentWriter` et qu'elle attrape les écritures interdites.
 - Les corrections et les exemples acceptés sont appliqués par une transaction d'origine `author`, déclenchée par une action explicite de l'auteur.
 
 ### 15.6 Schéma ProseMirror du texte [D-13]
