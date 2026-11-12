@@ -21,11 +21,12 @@
 | D-9 | Statut « contredite » | **État dérivé**, non stocké : validée + au moins un signalement de conflit ouvert. |
 | D-10 | Correction de la langue | **Hunspell fr + règles typographiques maison**, hors ligne ; le LLM ne traite que la grammaire et les cas douteux. Grammalecte exclu (GPL). |
 | D-11 | Frontière « l'IA n'écrit pas » | Deux voies, et deux seulement, par lesquelles un texte d'origine IA entre dans le manuscrit, **toujours sur action explicite de l'auteur** : (a) une correction de langue acceptée, (b) l'insertion d'une **phrase d'exemple** du mentor (une phrase au maximum). Aucun agent n'écrit directement dans un document de scène. |
-| D-12 | Premier fournisseur LLM | **Anthropic**, via le SDK `ai`, clé BYOK dans le trousseau de l'OS. |
+| D-12 | Premier fournisseur LLM | **Anthropic**, clé BYOK dans le trousseau de l'OS. Révisé le 12 novembre 2026 : appel par le **SDK officiel d'Anthropic** (`@anthropic-ai/sdk`) derrière le service `LLM` de la plateforme (au lieu du SDK `ai`) ; un autre fournisseur sera une autre implémentation de ce service. |
 | D-13 | Mise en forme du texte | Paragraphes, **italique**, **citation en bloc**, **séparateur interne de scène**. Pas de gras ni de titres dans le texte. |
 | D-14 | Machine d'écriture initiale | **Le Mac de l'auteur** : la fin de l'étape 2 produit une `.app` macOS non signée. |
 | D-15 | Titulaire des droits | **Pierre Chatel**. Dépôt public **github.com/chatelp/charpentier** (créé le 12 novembre 2026), CLA actif. |
 | D-16 | Design language | **Direction « Perle »** (neumorphisme doux : page plate, outils en relief), deux encres (vermillon pour l'auteur, bleu de Prusse pour le mentor), Literata + Inter embarquées (SIL OFL 1.1). Référence : [DESIGN.md](DESIGN.md). Décidé le 12 novembre 2026. |
+| D-20 | Modèles du Compagnon | **Claude Opus 5.5 partout** (analyses, conversation, remarques). Option dans les réglages, **désactivée par défaut** : confier les remarques légères pendant l'écriture et la grammaire à **Claude Haiku 5.5**, moins cher. Décidé le 12 novembre 2026. |
 | D-19 | Niveau d'intervention du Compagnon | **Une réglette à 4 crans** (Discret, Attentif, Accompagnant, Tuteur), un seul réglage qui fixe à la fois ce que le Compagnon dit pendant l'écriture, ce qui déclenche l'analyse complète d'une scène, le délai avant une pastille et la profondeur des explications (§6.3). Réglage par projet, **cran 3 « Accompagnant » par défaut**. Aucun cran ne fait écrire le Compagnon à la place de l'auteur. Répond aux questions ouvertes n°1 et n°2 ; avance la v2 prévue au §6.3. Décidé le 12 novembre 2026. |
 | D-18 | Raccourcis du tiroir et du panneau droit | **`⌘J` ouvre le tiroir du manuscrit** (au lieu du `⌘\` des maquettes, qui demande quatre touches sur un Mac AZERTY). Les points à traiter et la conversation du Compagnon partagent le panneau droit sur **`⌘L`**, avec un contrôle segmenté pour passer de l'un à l'autre. Décidé le 12 novembre 2026. |
 | D-17 | Nom du mentor | **Le Compagnon** (le compagnon charpentier qui transmet le métier) ; vouvoie l'auteur, signe ses notes en bleu de Prusse. Répond à la question ouverte n°4. |
@@ -288,7 +289,7 @@ Services (à affiner) :
 | Hébergement | Tout auto-hébergé (homelab Docker, VPS possible au lancement public) |
 | Desktop | Electron ; pouvoirs natifs dans le main, IPC via preload, `contextIsolation` activé |
 | Document de référence sur desktop | Dans le processus main ; l'interface est un pair Yjs via IPC [D-7] |
-| IA | Multi-fournisseurs derrière une abstraction, SDK `ai` ; Anthropic implémenté en premier [D-12] |
+| IA | Multi-fournisseurs derrière le service `LLM` de la plateforme ; Anthropic implémenté en premier avec son SDK officiel [D-12], Claude Opus 5.5 [D-20] |
 | Exécution des agents | Paquet `agents` agnostique de l'environnement, exécuté côté serveur (web) et dans le main Electron (desktop) ; BYOK via `safeStorage` en local |
 | Annotations | Positions relatives Yjs stockées dans le document racine, rendues en **décorations** ProseMirror (aucune marque dans le contenu) |
 | Correction hors ligne | Hunspell fr (dictionnaire sous MPL 2.0) + règles typographiques maison [D-10] |
