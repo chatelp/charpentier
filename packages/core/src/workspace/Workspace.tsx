@@ -13,6 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { usePlatform } from '../app/platform-context';
 import { Atelier, type AtelierLocation } from '../atelier/Atelier';
 import { sheetScope } from '../atelier/sheet-scope';
+import { Overview } from '../overview/Overview';
 import { variantLabel } from '../commands/variant-commands';
 import { createWorkspaceRegistry } from '../commands/workspace-commands';
 import { SceneEditor } from '../editor/SceneEditor';
@@ -40,7 +41,7 @@ export function ProjectWorkspace({ session }: { readonly session: ProjectSession
   const [editor, setEditor] = useState<Editor | null>(null);
   const [palette, setPalette] = useState<{ key: number; request: PaletteRequest } | null>(null);
   const [navigatorOpen, setNavigatorOpen] = useState(false);
-  const [view, setView] = useState<'write' | 'atelier'>('write');
+  const [view, setView] = useState<WorkspaceContext['view']>('write');
   const [atelierLocation, setAtelierLocation] = useState<AtelierLocation>({ rail: 'meta' });
   const [atelierFocus, setAtelierFocus] = useState(0);
   const paletteReturn = useRef<Element | null>(null);
@@ -92,6 +93,10 @@ export function ProjectWorkspace({ session }: { readonly session: ProjectSession
       setAtelierFocus((n) => n + 1);
     },
     openWriting: () => setView('write'),
+    openOverview: () => {
+      setNavigatorOpen(false);
+      setView('overview');
+    },
     toggleNavigator: () => setNavigatorOpen((open) => !open),
     shortcutLabel: (id) => registry.shortcutLabel(id),
     notify: (text) => setStatus({ key: ++paletteSequence, text }),
@@ -148,7 +153,7 @@ export function ProjectWorkspace({ session }: { readonly session: ProjectSession
   // Back from the Atelier: the text, cursor where it was.
   const previousView = useRef(view);
   useEffect(() => {
-    if (previousView.current === 'atelier' && view === 'write' && !paletteOpenRef.current)
+    if (previousView.current !== 'write' && view === 'write' && !paletteOpenRef.current)
       focusTextIfIdle();
     previousView.current = view;
   }, [view, focusTextIfIdle]);
@@ -174,10 +179,9 @@ export function ProjectWorkspace({ session }: { readonly session: ProjectSession
     if (navigatorOpen) return;
     const back = paletteReturn.current;
     paletteReturn.current = null;
-    if (view === 'atelier') {
-      if (back instanceof HTMLElement && back.isConnected) back.focus();
-      else setAtelierFocus((n) => n + 1);
-    } else focusTextIfIdle();
+    if (view === 'write') focusTextIfIdle();
+    else if (back instanceof HTMLElement && back.isConnected) back.focus();
+    else if (view === 'atelier') setAtelierFocus((n) => n + 1);
   };
 
   const paletteCommands = registry
@@ -261,6 +265,17 @@ export function ProjectWorkspace({ session }: { readonly session: ProjectSession
             if (focus) setAtelierFocus((n) => n + 1);
           }}
           onWrite={() => setView('write')}
+        />
+      )}
+      {view === 'overview' && (
+        <Overview
+          ctx={ctx}
+          active={palette === null && !navigatorOpen}
+          onOpen={(id) => {
+            openScene(id);
+            setView('write');
+          }}
+          onClose={() => setView('write')}
         />
       )}
       <WritingFooter

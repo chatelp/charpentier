@@ -130,6 +130,12 @@ export const workspaceCommands: readonly WorkspaceCommand[] = [
     run: (ctx) => ctx.toggleNavigator(),
   },
   {
+    id: 'toggleOverview',
+    scope: 'global',
+    keybinding: 'Mod-Shift-p',
+    run: (ctx) => (ctx.view === 'overview' ? ctx.openWriting() : ctx.openOverview()),
+  },
+  {
     id: 'goToScene',
     scope: 'global',
     keybinding: 'Mod-p',

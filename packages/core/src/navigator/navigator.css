@@ -11,8 +11,15 @@
   animation: ch-slide-from-left var(--ch-dur-panel) var(--ch-ease) both;
 }
 
+.ch-nav-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: var(--ch-space-4) var(--ch-space-4) var(--ch-space-1) var(--ch-space-5);
+}
+
 .ch-nav-title {
-  margin: var(--ch-space-5) var(--ch-space-5) var(--ch-space-1);
+  margin: 0;
   color: var(--ch-author);
 }
 

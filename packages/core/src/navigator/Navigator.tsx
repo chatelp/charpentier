@@ -183,7 +183,12 @@ export function Navigator({ ctx, outline, active, onClose }: NavigatorProps) {
 
   return (
     <aside className="ch-navigator ch-raised" aria-label={t('navigator.label')}>
-      <h2 className="ch-nav-title ch-label">{t('navigator.title')}</h2>
+      <div className="ch-nav-head">
+        <h2 className="ch-nav-title ch-label">{t('navigator.title')}</h2>
+        <button type="button" tabIndex={-1} className="ch-btn" onClick={ctx.openOverview}>
+          {t('navigator.overview')} <kbd>{ctx.shortcutLabel('toggleOverview')}</kbd>
+        </button>
+      </div>
       <ul
         className="ch-nav-tree"
         role="tree"

@@ -25,10 +25,11 @@ export interface WorkspaceContext {
   shortcutLabel(commandId: string): string | undefined;
   /** A short, discreet confirmation (read by screen readers). */
   notify(message: string): void;
-  /** Writing surface, or the Atelier (modules). */
-  readonly view: 'write' | 'atelier';
+  /** Writing surface, the Atelier (modules), or the overview of the manuscript. */
+  readonly view: 'write' | 'atelier' | 'overview';
   openAtelier(location?: AtelierLocation): void;
   openWriting(): void;
+  openOverview(): void;
   readonly prefs: WritingPrefs;
   updatePrefs(change: PrefsUpdate): void;
 }

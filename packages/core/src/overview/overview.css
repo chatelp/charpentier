@@ -1,0 +1,113 @@
+/* Overview of the manuscript (docs/DESIGN.md §4.4). */
+.ch-overview {
+  position: absolute;
+  inset: 0 0 36px;
+  display: flex;
+  flex-direction: column;
+  padding: 22px 28px 0;
+  animation: ch-atelier-in var(--ch-dur-view) var(--ch-ease) both;
+}
+
+.ch-overview-title {
+  margin: 0 0 4px;
+  font: 500 26px var(--ch-font-text);
+}
+
+.ch-overview-sub {
+  margin: 0 0 20px;
+  color: var(--ch-muted);
+}
+
+.ch-overview-cols {
+  flex: 1;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(14rem, 1fr);
+  gap: 22px;
+  overflow: auto;
+  padding: 6px;
+}
+
+.ch-overview-col h3 {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 4px 12px;
+  font: 500 15px var(--ch-font-text);
+}
+
+.ch-overview-col h3 span {
+  color: var(--ch-faint);
+  font: 500 var(--ch-ui-xs) var(--ch-font-ui);
+}
+
+.ch-card {
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border-radius: var(--ch-radius-md);
+  box-shadow: var(--ch-raise-s);
+  cursor: pointer;
+  outline: none;
+  transition: box-shadow var(--ch-dur-press) var(--ch-ease);
+}
+
+.ch-card.is-selected {
+  box-shadow: var(--ch-inset);
+}
+
+/* The scene being written: engraved, ringed in vermilion. */
+.ch-card.is-current {
+  box-shadow: var(--ch-inset);
+  outline: 1.5px solid var(--ch-author);
+  outline-offset: 3px;
+}
+
+.ch-card-n {
+  color: var(--ch-faint);
+  font-size: 11px;
+}
+
+.ch-card-t {
+  margin: 2px 0 8px;
+  font: 500 17px / 1.25 var(--ch-font-text);
+}
+
+.ch-card-m {
+  display: flex;
+  justify-content: space-between;
+  color: var(--ch-muted);
+  font-size: var(--ch-ui-xs);
+}
+
+.ch-overview-strip {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+  align-items: center;
+  margin: 10px 0 8px;
+  padding: 12px 18px;
+  color: var(--ch-ink-2);
+}
+
+.ch-overview-strip .ch-label {
+  color: var(--ch-muted);
+}
+
+.ch-strip-variant {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.ch-strip-variant.is-active {
+  color: var(--ch-author);
+}
+
+.ch-overview-hint {
+  margin-left: auto;
+  color: var(--ch-faint);
+  font-size: var(--ch-ui-2xs);
+}
