@@ -169,3 +169,29 @@ describe('keyboard-friendly moves', () => {
     expect(listTrash(doc)).toEqual({ chapters: [], scenes: [] });
   });
 });
+
+describe('trashed variants', () => {
+  it('lists and restores them', async () => {
+    const {
+      addVariantMeta,
+      setActiveVariant,
+      trashVariant,
+      listTrashedVariants,
+      restoreVariant,
+      getScene,
+    } = await import('./manuscript');
+    const doc = newProjectDoc();
+    const c = createChapter(doc, { title: 'Un' });
+    const { sceneId, variantId } = createScene(doc, { chapterId: c, title: 'A' });
+    addVariantMeta(doc, sceneId, { variantId: 'v2', name: 'Sombre', origin: 'author' });
+    setActiveVariant(doc, sceneId, 'v2');
+    trashVariant(doc, sceneId, variantId);
+    expect(listTrashedVariants(doc, sceneId).map((v) => v.id)).toEqual([variantId]);
+    restoreVariant(doc, sceneId, variantId);
+    expect(
+      getScene(doc, sceneId)
+        ?.variants.map((v) => v.id)
+        .sort(),
+    ).toEqual([variantId, 'v2'].sort());
+  });
+});

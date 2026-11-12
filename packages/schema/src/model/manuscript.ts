@@ -403,3 +403,33 @@ export function restoreSceneWithChapter(
       ?.delete('trashedAt');
   }, origin);
 }
+
+// ─── Trashed variants ────────────────────────────────────────────────────
+
+/** Variants of a scene that are in the trash. */
+export function listTrashedVariants(
+  doc: Y.Doc,
+  sceneId: string,
+): (VariantInfo & { readonly trashedAt: string })[] {
+  return [...variantsOf(doc, sceneId).entries()]
+    .filter(([, v]) => !isLive(v))
+    .map(([vid, v]) => ({
+      id: vid,
+      name: String(v.get('name') ?? ''),
+      createdAt: String(v.get('createdAt') ?? ''),
+      origin: (v.get('origin') as VariantOrigin | undefined) ?? 'author',
+      trashedAt: String(v.get('trashedAt')),
+    }));
+}
+
+export function restoreVariant(
+  doc: Y.Doc,
+  sceneId: string,
+  variantId: string,
+  origin: Origin = AUTHOR,
+): void {
+  doc.transact(
+    () => requireMap(variantsOf(doc, sceneId), variantId, 'variant').delete('trashedAt'),
+    origin,
+  );
+}

@@ -29,6 +29,19 @@ export interface CheckpointInfo {
 
 interface StoredCheckpoint extends CheckpointInfo {
   readonly state: Uint8Array;
+  /** Fingerprint of the content, to skip automatic checkpoints that change nothing. */
+  readonly digest?: string;
+}
+
+/** FNV-1a of the fragment's XML: equal content gives an equal digest. */
+function digestOf(fragment: Y.XmlFragment): string {
+  const text = fragment.toString();
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < text.length; i++) {
+    hash ^= text.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return `${text.length}:${(hash >>> 0).toString(16)}`;
 }
 
 const CONTENT = 'content';
@@ -46,12 +59,26 @@ function decodeFragment(state: Uint8Array): Y.XmlFragment {
   return snapshot.getXmlFragment(CONTENT);
 }
 
+/**
+ * Saves the variant's current content. With `skipIfUnchanged`, nothing is
+ * saved (and undefined returned) when the content equals the variant's latest
+ * checkpoint: automatic checkpoints use it, manual ones never do.
+ */
 export function createCheckpoint(
   sceneDoc: Y.Doc,
   historyDoc: Y.Doc,
-  input: { variantId: string; reason: CheckpointReason; label?: string },
+  input: { variantId: string; reason: CheckpointReason; label?: string; skipIfUnchanged?: boolean },
   origin: Origin = AUTHOR,
-): string {
+): string | undefined {
+  const fragment = variantFragment(sceneDoc, input.variantId);
+  const digest = digestOf(fragment);
+  if (input.skipIfUnchanged) {
+    const latest = checkpoints(historyDoc)
+      .toArray()
+      .filter((c) => c.variantId === input.variantId)
+      .at(-1);
+    if (latest?.digest === digest) return undefined;
+  }
   const id = newId();
   const entry: StoredCheckpoint = {
     id,
@@ -59,10 +86,68 @@ export function createCheckpoint(
     createdAt: nowIso(),
     reason: input.reason,
     ...(input.label !== undefined && { label: input.label }),
-    state: encodeFragment(variantFragment(sceneDoc, input.variantId)),
+    state: encodeFragment(fragment),
+    digest,
   };
   historyDoc.transact(() => checkpoints(historyDoc).push([entry]), origin);
   return id;
+}
+
+/** Plain text of a checkpoint (paragraphs joined by line breaks), for previews. */
+export function checkpointText(historyDoc: Y.Doc, checkpointId: string): string {
+  const fragment = decodeFragment(findCheckpoint(historyDoc, checkpointId).state);
+  return fragmentPlainText(fragment);
+}
+
+/** Plain text of a fragment: one line per block. */
+export function fragmentPlainText(fragment: Y.XmlFragment): string {
+  const lines: string[] = [];
+  const walk = (node: unknown): string => {
+    if (node instanceof Y.XmlText) return node.toString().replace(/<[^>]*>/g, '');
+    if (node instanceof Y.XmlElement) return node.toArray().map(walk).join('');
+    return '';
+  };
+  for (const block of fragment.toArray()) lines.push(walk(block));
+  return lines.join('\n');
+}
+
+/** Automatic checkpoints kept per variant, besides the first one of each day. */
+export const KEEP_RECENT_AUTOMATIC = 50;
+const AUTOMATIC: readonly CheckpointReason[] = ['interval'];
+
+/**
+ * Keeps history from growing without bound. Only automatic checkpoints are
+ * pruned: per variant, the most recent `keepRecent` are kept, and of older
+ * ones the first of each day. Manual and safety checkpoints (before a
+ * restore, a merge, a deletion) are never removed.
+ */
+export function pruneCheckpoints(
+  historyDoc: Y.Doc,
+  keepRecent = KEEP_RECENT_AUTOMATIC,
+  origin: Origin = AUTHOR,
+): number {
+  const all = checkpoints(historyDoc).toArray();
+  const doomed = new Set<string>();
+  const byVariant = new Map<string, StoredCheckpoint[]>();
+  for (const c of all) {
+    if (!AUTOMATIC.includes(c.reason)) continue;
+    byVariant.set(c.variantId, [...(byVariant.get(c.variantId) ?? []), c]);
+  }
+  for (const list of byVariant.values()) {
+    const older = list.slice(0, Math.max(0, list.length - keepRecent));
+    const seenDays = new Set<string>();
+    for (const c of older) {
+      const day = c.createdAt.slice(0, 10);
+      if (seenDays.has(day)) doomed.add(c.id);
+      else seenDays.add(day);
+    }
+  }
+  if (doomed.size === 0) return 0;
+  historyDoc.transact(() => {
+    const array = checkpoints(historyDoc);
+    for (let i = array.length - 1; i >= 0; i--) if (doomed.has(array.get(i).id)) array.delete(i, 1);
+  }, origin);
+  return doomed.size;
 }
 
 /** Restore points, newest first, optionally for one variant. */

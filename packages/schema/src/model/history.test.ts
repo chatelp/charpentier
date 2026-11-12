@@ -2,9 +2,11 @@ import * as Y from 'yjs';
 import { describe, expect, it } from 'vitest';
 import { appendParagraph, newProjectDoc, replicaOf, sync } from '../testing/yjs';
 import {
+  checkpointText,
   createCheckpoint,
   createVariantFromCheckpoint,
   listCheckpoints,
+  pruneCheckpoints,
   restoreCheckpoint,
 } from './history';
 import { createChapter, createScene, getScene, setActiveVariant, trashVariant } from './manuscript';
@@ -76,11 +78,12 @@ describe('restore points', () => {
     const fragment = variantFragment(sceneDoc, variantId);
     appendParagraph(fragment, 'Premier jet.');
     const before = fragment.toString();
-    const checkpoint = createCheckpoint(sceneDoc, historyDoc, {
-      variantId,
-      reason: 'manual',
-      label: 'Avant réécriture',
-    });
+    const checkpoint =
+      createCheckpoint(sceneDoc, historyDoc, {
+        variantId,
+        reason: 'manual',
+        label: 'Avant réécriture',
+      }) ?? '';
     appendParagraph(fragment, 'Ajout regretté.');
     const regretted = fragment.toString();
 
@@ -100,7 +103,8 @@ describe('restore points', () => {
   it('survives encoding of the history document and can seed a new variant', () => {
     const { root, sceneId, variantId, sceneDoc, historyDoc } = setup();
     appendParagraph(variantFragment(sceneDoc, variantId), 'Version de mardi.', true);
-    const checkpoint = createCheckpoint(sceneDoc, historyDoc, { variantId, reason: 'scene-end' });
+    const checkpoint =
+      createCheckpoint(sceneDoc, historyDoc, { variantId, reason: 'scene-end' }) ?? '';
     appendParagraph(variantFragment(sceneDoc, variantId), 'Mercredi.');
 
     const reloaded = replicaOf(historyDoc);
@@ -115,5 +119,73 @@ describe('restore points', () => {
     expect(getScene(root, sceneId)?.variants.find((v) => v.id === fromCheckpoint)?.origin).toBe(
       'checkpoint',
     );
+  });
+});
+
+describe('automatic checkpoints', () => {
+  it('skip saving when nothing changed since the variant’s last checkpoint', () => {
+    const { variantId, sceneDoc, historyDoc } = setup();
+    appendParagraph(variantFragment(sceneDoc, variantId), 'Un.');
+    expect(
+      createCheckpoint(sceneDoc, historyDoc, {
+        variantId,
+        reason: 'interval',
+        skipIfUnchanged: true,
+      }),
+    ).toBeDefined();
+    expect(
+      createCheckpoint(sceneDoc, historyDoc, {
+        variantId,
+        reason: 'interval',
+        skipIfUnchanged: true,
+      }),
+    ).toBeUndefined();
+    // A manual checkpoint is always saved.
+    expect(createCheckpoint(sceneDoc, historyDoc, { variantId, reason: 'manual' })).toBeDefined();
+    appendParagraph(variantFragment(sceneDoc, variantId), 'Deux.');
+    expect(
+      createCheckpoint(sceneDoc, historyDoc, {
+        variantId,
+        reason: 'interval',
+        skipIfUnchanged: true,
+      }),
+    ).toBeDefined();
+  });
+
+  it('gives a plain-text preview of a checkpoint', () => {
+    const { variantId, sceneDoc, historyDoc } = setup();
+    appendParagraph(variantFragment(sceneDoc, variantId), 'Il pleuvait.');
+    appendParagraph(variantFragment(sceneDoc, variantId), 'Odyssée', true);
+    const id = createCheckpoint(sceneDoc, historyDoc, { variantId, reason: 'manual' }) ?? '';
+    expect(checkpointText(historyDoc, id)).toBe('Il pleuvait.\nOdyssée');
+  });
+
+  it('prunes old automatic checkpoints but keeps one per day and every manual or safety one', () => {
+    const { variantId, sceneDoc, historyDoc } = setup();
+    const days = ['2026-11-01', '2026-11-01', '2026-11-01', '2026-11-02', '2026-11-02'];
+    const original = Date.prototype.toISOString;
+    try {
+      days.forEach((day, i) => {
+        Date.prototype.toISOString = () => `${day}T10:0${i}:00.000Z`;
+        appendParagraph(variantFragment(sceneDoc, variantId), `v${i}`);
+        createCheckpoint(sceneDoc, historyDoc, {
+          variantId,
+          reason: i === 1 ? 'manual' : 'interval',
+        });
+      });
+    } finally {
+      Date.prototype.toISOString = original;
+    }
+    // Keep the 1 most recent automatic one; older ones: first of each day.
+    expect(pruneCheckpoints(historyDoc, 1)).toBe(1);
+    const kept = listCheckpoints(historyDoc, variantId).map(
+      (c) => `${c.createdAt.slice(0, 16)} ${c.reason}`,
+    );
+    expect(kept).toEqual([
+      '2026-11-02T10:04 interval', // most recent
+      '2026-11-02T10:03 interval', // first of its day
+      '2026-11-01T10:01 manual', // never pruned
+      '2026-11-01T10:00 interval', // first of its day
+    ]);
   });
 });
