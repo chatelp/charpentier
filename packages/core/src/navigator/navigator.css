@@ -1,0 +1,61 @@
+.ch-navigator {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: min(20rem, 80vw);
+  display: flex;
+  flex-direction: column;
+  background: var(--ch-bg);
+  border-right: 1px solid color-mix(in srgb, var(--ch-fg) 12%, transparent);
+  font-family: var(--ch-font-ui);
+  font-size: 0.9rem;
+  z-index: 10;
+}
+
+.ch-nav-tree {
+  flex: 1;
+  list-style: none;
+  margin: 0;
+  padding: 1.5rem 0 1rem;
+  overflow-y: auto;
+}
+
+.ch-nav-item {
+  padding: 0.3rem 1rem;
+  cursor: pointer;
+  outline: none;
+  border-left: 2px solid transparent;
+}
+
+.ch-nav-chapter {
+  margin-top: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.ch-nav-scene {
+  padding-left: 1.75rem;
+}
+
+.ch-nav-item:focus-visible,
+.ch-nav-item[aria-selected='true']:focus {
+  background: color-mix(in srgb, var(--ch-fg) 9%, transparent);
+}
+
+.ch-nav-item.is-current {
+  border-left-color: var(--ch-fg);
+}
+
+.ch-nav-item.is-drop-target {
+  box-shadow: inset 0 2px 0 var(--ch-fg);
+}
+
+.ch-nav-hint {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  color: var(--ch-muted);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  border-top: 1px solid color-mix(in srgb, var(--ch-fg) 8%, transparent);
+}

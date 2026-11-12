@@ -1,0 +1,73 @@
+.ch-palette-backdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 14vh;
+  background: color-mix(in srgb, var(--ch-bg) 55%, transparent);
+  z-index: 20;
+}
+
+.ch-palette {
+  width: min(36rem, calc(100vw - 2rem));
+  background: var(--ch-bg);
+  color: var(--ch-fg);
+  border: 1px solid color-mix(in srgb, var(--ch-fg) 18%, transparent);
+  border-radius: 8px;
+  box-shadow: 0 12px 40px color-mix(in srgb, #000 18%, transparent);
+  font-family: var(--ch-font-ui);
+  font-size: 0.95rem;
+  overflow: hidden;
+}
+
+.ch-palette-input {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--ch-fg) 12%, transparent);
+  padding: 0.8rem 1rem;
+  font: inherit;
+  font-size: 1rem;
+  color: inherit;
+  background: transparent;
+  outline: none;
+}
+
+.ch-palette-list {
+  list-style: none;
+  margin: 0;
+  padding: 0.3rem 0;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.ch-palette-item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.45rem 1rem;
+  cursor: pointer;
+}
+
+.ch-palette-item[aria-selected='true'] {
+  background: color-mix(in srgb, var(--ch-fg) 9%, transparent);
+}
+
+.ch-palette-label {
+  flex: 1;
+}
+
+.ch-palette-detail,
+.ch-palette-shortcut,
+.ch-palette-empty {
+  color: var(--ch-muted);
+  font-size: 0.85em;
+}
+
+.ch-palette-shortcut {
+  font-family: inherit;
+}
+
+.ch-palette-empty {
+  padding: 0.6rem 1rem;
+}
