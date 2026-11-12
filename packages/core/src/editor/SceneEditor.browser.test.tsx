@@ -110,4 +110,11 @@ describe('<SceneEditor> in a real browser', () => {
       ],
     });
   });
+
+  it('keeps the space between two words at the end of a line, never at the start of the next', async () => {
+    const fragment = new Y.Doc().getXmlFragment('variant:v1');
+    await mountEditor(fragment);
+    const editor = screen.getByRole('textbox', { name: 'Texte de la scène' });
+    expect(getComputedStyle(editor).whiteSpace).toBe('pre-wrap');
+  });
 });

@@ -135,6 +135,11 @@
   pointer-events: none;
 }
 
+/* A panel on the right: the footer stops before it. */
+.ch-app[data-mentor-panel] .ch-footer {
+  right: calc(var(--ch-panel-w) + 36px);
+}
+
 .ch-footer-right {
   display: flex;
   align-items: baseline;

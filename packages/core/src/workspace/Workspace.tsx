@@ -163,7 +163,10 @@ export function ProjectWorkspace({
   });
   const nameOptions = useMemo(() => ({ names: () => namesRef.current }), []);
   useEffect(() => {
-    if (editor && !editor.isDestroyed) editor.commands.refreshCharacterNames();
+    if (!editor || editor.isDestroyed) return;
+    editor.commands.refreshCharacterNames();
+    // A new character's name is no longer a spelling mistake.
+    editor.commands.refreshLanguageCheck();
   }, [editor, knownNames]);
 
   const marks = useMentorMarks({

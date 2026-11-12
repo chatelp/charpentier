@@ -17,6 +17,12 @@
   overflow-wrap: break-word;
 }
 
+/* TipTap injects break-spaces (later in the page), which pushes a space to the
+   start of the next line: pre-wrap keeps it hanging at the end, as in a book. */
+.ch-editor .ch-prose.ProseMirror {
+  white-space: pre-wrap;
+}
+
 .ch-prose p {
   margin: 0;
   text-indent: var(--ch-text-indent);

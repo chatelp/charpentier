@@ -278,6 +278,7 @@
 
 .ch-points-empty {
   flex: 1;
+  padding-top: 18px !important;
   color: var(--ch-muted);
   font-size: var(--ch-ui-sm);
 }

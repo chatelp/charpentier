@@ -77,6 +77,7 @@ export function MentorPanel(props: MentorPanelProps) {
   const atelier = useDocSnapshot(root, readAtelier);
   const [selectedId, setSelectedId] = useState<string>();
   const list = useRef<HTMLUListElement>(null);
+  const panel = useRef<HTMLElement>(null);
 
   const proposals = useMemo((): Proposal[] => {
     const found: Proposal[] = [];
@@ -165,7 +166,8 @@ export function MentorPanel(props: MentorPanelProps) {
   useEffect(() => {
     if (!props.active || props.tab !== 'points') return;
     const item = list.current?.querySelector<HTMLElement>('[aria-selected="true"]');
-    (item ?? list.current)?.focus();
+    // Nothing to deal with: the panel itself takes the focus (Échap still closes it).
+    (item ?? panel.current)?.focus();
   }, [props.active, props.tab, selected?.id]);
 
   const decide = (proposal: Proposal, accept: boolean) => {
@@ -200,7 +202,10 @@ export function MentorPanel(props: MentorPanelProps) {
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
-    if (event.metaKey || event.ctrlKey || event.altKey) return;
+    if (event.metaKey || event.ctrlKey || event.altKey || event.defaultPrevented) return;
+    // Typing in the conversation, or moving the slider, is not for this list.
+    const target = event.target as HTMLElement;
+    if (props.tab !== 'points' || target.closest('textarea, input, [role="slider"]')) return;
     const key = event.key.toLowerCase();
     const index = selected ? flat.indexOf(selected) : -1;
     const next = flat[index + 1] ?? flat[index - 1];
@@ -240,7 +245,13 @@ export function MentorPanel(props: MentorPanelProps) {
         : undefined;
 
   return (
-    <aside className="ch-mentor-panel ch-raised" aria-label={t('mentor.panel')}>
+    <aside
+      ref={panel}
+      className="ch-mentor-panel ch-raised"
+      aria-label={t('mentor.panel')}
+      tabIndex={-1}
+      onKeyDown={onKeyDown}
+    >
       <div className="ch-seg" role="tablist" aria-label={t('mentor.panel')}>
         {(['points', 'conversation'] as const).map((tab) => (
           <button
@@ -266,11 +277,11 @@ export function MentorPanel(props: MentorPanelProps) {
         <>
           <ul
             ref={list}
+            hidden={flat.length === 0}
             className="ch-points"
             role="listbox"
             tabIndex={flat.length ? -1 : 0}
             aria-label={t('mentor.tabs.points')}
-            onKeyDown={onKeyDown}
           >
             {groups.map((group) => (
               <li key={group.key} role="presentation">

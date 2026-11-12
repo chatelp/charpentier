@@ -176,3 +176,9 @@ kbd,
   font-variant-caps: all-small-caps;
   letter-spacing: 0.1em;
 }
+
+/* Quiet scrollbars, in the material's colours. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--ch-shade) 80%, transparent) transparent;
+}
