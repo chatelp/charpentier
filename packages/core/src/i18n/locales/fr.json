@@ -169,7 +169,7 @@
     "revealLibraryFolder": "Afficher la bibliothèque dans le Finder",
     "fixAllTypography": "Corriger toute la typographie de la scène",
     "fixAllSpelling": "Accepter toutes les corrections d’orthographe de la scène",
-    "passageAction": "Corriger le passage ou déplier sa remarque",
+    "passageAction": "Corriger le passage, déplier sa remarque ou ouvrir la fiche du nom",
     "nextRemark": "Aller à la remarque ou correction suivante",
     "toggleMentorPanel": "Points à traiter et conversation",
     "setApiKey": "Saisir la clé d’API Anthropic du Compagnon…",
@@ -472,7 +472,9 @@
     "contradictions_other": "{{count}} contradictions",
     "proposedEntry": "proposé",
     "inScene": "scène {{number}}",
-    "filterKey": "/"
+    "filterKey": "/",
+    "sheetPanel": "Fiche",
+    "sheetPanelHint": "↑↓ parcourir · ↵ modifier · ⌘⏎ ouvrir dans l’Atelier · Échap fermer"
   },
   "overview": {
     "label": "Vue d’ensemble du manuscrit",

@@ -5,6 +5,7 @@ import {
   placedIssues,
   type PlacedIssue,
 } from '../editor/language-check';
+import { nameAtCursor } from '../mentor/character-names';
 import { placedSignals, signalAtCursor } from '../mentor/signal-decorations';
 import type { WorkspaceContext } from '../workspace/workspace-context';
 import type { CommandId } from './command-id';
@@ -14,6 +15,9 @@ type LanguageCommand = Command<WorkspaceContext> & { readonly id: CommandId };
 
 const signalHere = (ctx: WorkspaceContext) =>
   ctx.editor && !ctx.editor.isDestroyed ? signalAtCursor(ctx.editor.state) : undefined;
+
+const nameHere = (ctx: WorkspaceContext) =>
+  ctx.editor && !ctx.editor.isDestroyed ? nameAtCursor(ctx.editor.state) : undefined;
 
 const issueHere = (ctx: WorkspaceContext) =>
   ctx.editor && !ctx.editor.isDestroyed ? issueAtCursor(ctx.editor.state) : undefined;
@@ -58,7 +62,8 @@ export const languageCommands: readonly LanguageCommand[] = [
     id: 'passageAction',
     scope: 'global',
     keybinding: 'Alt-Enter',
-    isEnabled: (ctx) => issueHere(ctx) !== undefined || signalHere(ctx) !== undefined,
+    isEnabled: (ctx) =>
+      issueHere(ctx) !== undefined || signalHere(ctx) !== undefined || nameHere(ctx) !== undefined,
     run: async (ctx) => {
       const issue = issueHere(ctx);
       if (issue) {
@@ -66,7 +71,12 @@ export const languageCommands: readonly LanguageCommand[] = [
         return;
       }
       const signal = signalHere(ctx);
-      if (signal) ctx.openSignalNote(signal.signal.id);
+      if (signal) {
+        ctx.openSignalNote(signal.signal.id);
+        return;
+      }
+      const name = nameHere(ctx);
+      if (name) ctx.openSheet({ module: 'characters', entityId: name.entityId });
     },
   },
   {

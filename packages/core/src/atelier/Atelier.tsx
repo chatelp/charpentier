@@ -470,7 +470,7 @@ export function appearancesOf(
     .filter((id) => names.some((re) => re.test(texts.get(id) ?? '')));
 }
 
-function Sheet({
+export function Sheet({
   ctx,
   data,
   target,

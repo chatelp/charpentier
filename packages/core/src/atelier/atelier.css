@@ -352,3 +352,45 @@
   color: var(--ch-ink-2);
   cursor: pointer;
 }
+
+/* ── Sheet beside the text (« fiche en volet ») ── */
+.ch-volet-body {
+  flex: 1;
+  overflow: auto;
+  padding: 18px 18px 10px;
+}
+
+.ch-volet .ch-sheet-title {
+  font-size: 24px;
+}
+
+.ch-volet .ch-legend {
+  display: none;
+}
+
+.ch-volet .ch-sections {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.ch-volet .ch-fld {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 3px;
+}
+
+.ch-volet .ch-fm {
+  grid-column: 1;
+}
+
+.ch-volet .ch-fl {
+  padding-top: 0;
+}
+
+/* Known names in the text: a wash on hover, a click opens the sheet. */
+.ch-prose .ch-who {
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.ch-prose .ch-who:hover {
+  background: var(--ch-mentor-soft);
+}

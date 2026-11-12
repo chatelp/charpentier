@@ -4,6 +4,7 @@ import type { Editor } from '@tiptap/core';
 import type { TFunction } from 'i18next';
 import type * as Y from 'yjs';
 import type { AtelierLocation } from '../atelier/Atelier';
+import type { SheetTarget } from '../atelier/atelier-data';
 import type { PaletteRequest } from '../palette/palette-request';
 import type { PrefsUpdate, WritingPrefs } from './writing-prefs';
 
@@ -29,6 +30,8 @@ export interface WorkspaceContext {
   toggleMentorPanel(tab?: 'points' | 'conversation'): void;
   /** Unfolds a remark's note in the margin and gives it the focus. */
   openSignalNote(signalId: string): void;
+  /** Opens a sheet beside the text (« fiche en volet »). */
+  openSheet(target: SheetTarget): void;
   /** Words of each scene (the open one live). */
   readonly sceneWords: ReadonlyMap<string, number>;
   /** Plain text of each scene's active variant (as last read). */

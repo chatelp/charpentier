@@ -1,4 +1,5 @@
-import { readMentorLevel, readOutline } from '@charpentier/schema';
+import { listEntities, readMentorLevel, readOutline } from '@charpentier/schema';
+import type * as Y from 'yjs';
 import type { Editor } from '@tiptap/core';
 import {
   useCallback,
@@ -9,10 +10,14 @@ import {
   useState,
   useSyncExternalStore,
   type CSSProperties,
+  type SetStateAction,
 } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePlatform } from '../app/platform-context';
 import { Atelier, type AtelierLocation } from '../atelier/Atelier';
+import type { SheetTarget } from '../atelier/atelier-data';
+import { SheetPanel } from '../atelier/SheetPanel';
+import type { KnownName } from '../mentor/character-names';
 import { sheetScope } from '../atelier/sheet-scope';
 import { Overview } from '../overview/Overview';
 import { useSceneTexts, useWordsOf } from '../overview/use-scene-words';
@@ -44,6 +49,17 @@ import './workspace.css';
 
 let paletteSequence = 0;
 
+/** Characters' names as recognised in the text: full name, then first name. */
+const readKnownNames = (doc: Y.Doc): KnownName[] =>
+  listEntities(doc, 'characters')
+    .filter((c) => c.status !== 'rejected')
+    .flatMap((c) => {
+      const name = c.fields['name']?.value ?? c.fields['name']?.proposal?.value;
+      if (typeof name !== 'string' || !name.trim()) return [];
+      const first = name.trim().split(/\s+/)[0] ?? '';
+      return [{ entityId: c.id, forms: [...new Set([name.trim(), first])] }];
+    });
+
 /** The writing workspace of one project: editor, drawer, command line, shortcuts. */
 export function ProjectWorkspace({
   session,
@@ -68,7 +84,13 @@ export function ProjectWorkspace({
   const [prefs, updatePrefs] = useWritingPrefs(platform.preferences);
   const scroller = useRef<HTMLDivElement>(null);
   const page = useRef<HTMLElement>(null);
-  const [mentorPanel, setMentorPanel] = useState<'points' | 'conversation' | null>(null);
+  const [mentorPanel, setMentorPanelState] = useState<'points' | 'conversation' | null>(null);
+  // The sheet beside the text (« fiche en volet »): shares the right side with the Compagnon's panel.
+  const [sheetPanel, setSheetPanel] = useState<SheetTarget | null>(null);
+  const setMentorPanel = useCallback((tab: SetStateAction<'points' | 'conversation' | null>) => {
+    setSheetPanel(null);
+    setMentorPanelState(tab);
+  }, []);
   // A remark to show once its scene's editor is ready (going there from the panel).
   const pendingSignal = useRef<string | null>(null);
 
@@ -98,6 +120,17 @@ export function ProjectWorkspace({
   const words = useWordCount(editor);
   const storedTexts = useSceneTexts(platform, projectId, outline);
   const storedWords = useWordsOf(storedTexts);
+  // The open scene's text is live (its word count changes with every edit).
+  const sceneTexts = useMemo(
+    () =>
+      editor && !editor.isDestroyed && words >= 0
+        ? new Map(storedTexts).set(
+            sceneId,
+            editor.state.doc.textBetween(0, editor.state.doc.content.size, '\n', ' '),
+          )
+        : storedTexts,
+    [storedTexts, editor, sceneId, words],
+  );
   // The open scene counts live, from its editor.
   const sceneWords = useMemo(
     () => (editor ? new Map(storedWords).set(sceneId, words) : storedWords),
@@ -122,6 +155,17 @@ export function ProjectWorkspace({
     [platform, language, root, languageOn],
   );
   useTypewriterScroll(editor, scroller, prefs.typewriter);
+  // Known characters' names in the text (the editor reads them through a ref).
+  const knownNames = useDocSnapshot(root, readKnownNames);
+  const namesRef = useRef(knownNames);
+  useLayoutEffect(() => {
+    namesRef.current = knownNames;
+  });
+  const nameOptions = useMemo(() => ({ names: () => namesRef.current }), []);
+  useEffect(() => {
+    if (editor && !editor.isDestroyed) editor.commands.refreshCharacterNames();
+  }, [editor, knownNames]);
+
   const marks = useMentorMarks({
     root,
     sceneId,
@@ -225,10 +269,14 @@ export function ProjectWorkspace({
     mentorPanel,
     toggleMentorPanel: (tab = 'points') => setMentorPanel((open) => (open === tab ? null : tab)),
     openSignalNote: (id) => marks.openNote(id, true),
+    openSheet: (target) => {
+      setMentorPanelState(null);
+      setSheetPanel(target);
+    },
     mentorLevel,
     analyze,
     sceneWords,
-    sceneTexts: storedTexts,
+    sceneTexts,
     shortcutLabel: (id) => registry.shortcutLabel(id),
     notify,
     prefs,
@@ -375,7 +423,7 @@ export function ProjectWorkspace({
       style={surfaceStyle}
       data-focus={prefs.focusMode || undefined}
       data-typewriter={prefs.typewriter || undefined}
-      data-mentor-panel={mentorPanel ?? undefined}
+      data-mentor-panel={mentorPanel ?? (sheetPanel ? 'sheet' : undefined)}
       data-mentor-level={mentorLevel}
     >
       <div
@@ -392,7 +440,17 @@ export function ProjectWorkspace({
           onOutline={() => setNavigatorOpen(true)}
           onVariants={() => void registry.execute('switchVariant', ctx)}
         />
-        <main className="ch-page" ref={page}>
+        <main
+          className="ch-page"
+          ref={page}
+          onClick={(event) => {
+            // A click on a known name (without selecting text) opens the sheet beside the text.
+            const name = (event.target as HTMLElement).closest<HTMLElement>('.ch-who');
+            const entityId = name?.dataset['entityId'];
+            if (entityId && document.getSelection()?.isCollapsed)
+              ctx.openSheet({ module: 'characters', entityId });
+          }}
+        >
           <h1 className="ch-visually-hidden">{t('app.name')}</h1>
           <SceneOpener chapter={chapter} chapterIndex={chapterIndex} scene={scene} />
           {sceneDocs && (
@@ -403,6 +461,7 @@ export function ProjectWorkspace({
               onEditor={setEditor}
               languageCheck={languageCheck}
               signals={marks.signalOptions}
+              names={nameOptions}
             />
           )}
           {marks.noteSignal && marks.noteTop !== null && !mentorPanel && (
@@ -469,6 +528,21 @@ export function ProjectWorkspace({
             if (focus) setAtelierFocus((n) => n + 1);
           }}
           onWrite={() => setView('write')}
+        />
+      )}
+      {sheetPanel && !mentorPanel && (
+        <SheetPanel
+          ctx={ctx}
+          target={sheetPanel}
+          active={palette === null}
+          onOpenInAtelier={() => {
+            setSheetPanel(null);
+            ctx.openAtelier({ rail: 'characters', target: sheetPanel });
+          }}
+          onClose={() => {
+            setSheetPanel(null);
+            focusTextIfIdle();
+          }}
         />
       )}
       {mentorPanel && (

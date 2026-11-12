@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import type * as Y from 'yjs';
 import type { LanguageCheck } from '../language/checker';
 import type { SignalDecorationsOptions } from '../mentor/signal-decorations';
+import type { CharacterNamesOptions } from '../mentor/character-names';
 import { sceneEditorExtensions } from './extensions';
 import './editor.css';
 
@@ -19,6 +20,8 @@ export interface SceneEditorProps {
   readonly languageCheck?: LanguageCheck | null;
   /** The Compagnon's remarks; must be stable. */
   readonly signals?: SignalDecorationsOptions;
+  /** Known characters' names; must be stable. */
+  readonly names?: CharacterNamesOptions;
 }
 
 /** The writing surface: one scene variant, nothing else. */
@@ -28,6 +31,7 @@ export function SceneEditor({
   onEditor,
   languageCheck,
   signals,
+  names,
 }: SceneEditorProps) {
   const { t } = useTranslation();
   const editor = useEditor(
@@ -37,6 +41,7 @@ export function SceneEditor({
         placeholder: t('editor.emptyScene'),
         languageCheck: languageCheck ?? null,
         ...(signals && { signals }),
+        ...(names && { names }),
       }),
       editorProps: {
         attributes: {
@@ -48,7 +53,7 @@ export function SceneEditor({
         },
       },
     },
-    [fragment, language, languageCheck, signals],
+    [fragment, language, languageCheck, signals, names],
   );
   useEffect(() => {
     onEditor?.(editor);
