@@ -64,7 +64,7 @@ Réalisé : ⌘O ; la bibliothèque est un document Yjs `library` (index), le ti
 ### 2.1 Coquille Electron
 `apps/desktop` (main, preload, renderer), `contextIsolation`, `platform-desktop`. Tests du cœur exécutés aussi dans Electron (Playwright) en CI.
 **Vérifiable** : `pnpm dev:desktop` ouvre la même app que le web.
-Réalisé : electron-vite, preload sandboxé (`contextIsolation`, `sandbox`), barre de titre intégrée sur macOS. Écart : plutôt que d'exécuter les tests unitaires du cœur dans Electron, `pnpm test:desktop` lance l'app construite avec Playwright (ouverture, isolation, arrêt brutal, miroir) ; il tourne en CI sous xvfb.
+Réalisé : electron-vite, preload sandboxé (`contextIsolation`, `sandbox`), barre de titre intégrée sur macOS. Écart : plutôt que d'exécuter les tests unitaires du cœur dans Electron, `pnpm test:desktop` lance l'app construite avec Playwright (ouverture, isolation, arrêt brutal, miroir, orthographe, Compagnon contre un faux serveur Anthropic, plein écran) ; il tourne en CI sous xvfb.
 
 ### 2.2 Documents dans le main et persistance disque
 `Y.Doc` détenus par le main, synchronisés avec l'interface par IPC. Journal append-only + compaction, écritures atomiques. Choix du dossier de bibliothèque ; un projet = un dossier.
@@ -124,4 +124,4 @@ Contradictions avec les informations validées, indices non exploités, personna
 ### 3.7 Pendant l'écriture et à la demande
 Réglette d'intervention à 4 crans [D-19] (cran 3 par défaut) qui règle les remarques pendant l'écriture, le déclenchement de l'analyse complète et la profondeur des explications ; analyse à la demande d'une scène, d'un chapitre ou du manuscrit, grammaire par le LLM.
 **Vérifiable** : je demande l'analyse d'un chapitre entier et je reçois des remarques ancrées dans le texte. (Jalon : **v1 fonctionnelle**.)
-Réalisé : réglette dans le panneau, « Plus / Moins d'aide », lectures automatiques (en quittant une scène, après deux minutes de pause) et à la demande (scène ⌘⇧A, chapitre, manuscrit) ; option Haiku pour les lectures automatiques. Reporté : bilan de fin de chapitre du cran 4, grammaire par le LLM pendant l'écriture (elle passe par la lecture de la scène).
+Réalisé : réglette dans le panneau, « Plus / Moins d'aide », lectures automatiques (en quittant une scène, après deux minutes de pause) et à la demande (scène ⌘⇧A, chapitre, manuscrit) ; option Haiku pour les lectures automatiques. Bilan de chapitre : au cran 4 en passant de la dernière scène d'un chapitre au chapitre suivant, à tous les crans par la commande « Bilan du chapitre » ; il arrive dans la conversation. Reporté : grammaire par le LLM pendant l'écriture (elle passe par la lecture de la scène).
