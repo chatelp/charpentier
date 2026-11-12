@@ -17,14 +17,14 @@ import {
   trashChapter,
   trashScene,
 } from '@charpentier/schema';
-import type fr from '../i18n/locales/fr.json';
 import type { WorkspaceContext } from '../workspace/workspace-context';
 import { ensureScene } from '../workspace/default-scene';
+import type { CommandId } from './command-id';
 import type { PrimaryModifier } from './keybinding';
+import { trashedVariantItems, variantCommands } from './variant-commands';
 import { CommandRegistry, type Command } from './registry';
 
-/** Command ids are the keys of `commands` in the catalogue: every command has a title. */
-export type CommandId = keyof (typeof fr)['commands'];
+export type { CommandId } from './command-id';
 
 type WorkspaceCommand = Command<WorkspaceContext> & { readonly id: CommandId };
 
@@ -254,12 +254,14 @@ export const workspaceCommands: readonly WorkspaceCommand[] = [
     scope: 'global',
     run: (ctx) => {
       const trash = listTrash(ctx.root);
+      const variants = trashedVariantItems(ctx);
       const chapterTitle = (id: string) => listChapters(ctx.root).find((c) => c.id === id)?.title;
       ctx.openPalette({
         kind: 'pick',
         placeholder: ctx.t('palette.pickTrash'),
         empty: ctx.t('palette.emptyTrash'),
         items: [
+          ...variants.map(({ id, label, detail }) => ({ id, label, detail })),
           ...trash.scenes.map((s) => ({
             id: `scene:${s.id}`,
             label: s.title,
@@ -275,7 +277,9 @@ export const workspaceCommands: readonly WorkspaceCommand[] = [
         ],
         onPick: (key) => {
           const [kind, id = ''] = key.split(/:(.*)/s);
-          if (kind === 'scene') {
+          if (kind === 'variant') {
+            variants.find((v) => v.id === key)?.restore();
+          } else if (kind === 'scene') {
             restoreSceneWithChapter(ctx.root, id);
             ctx.openScene(id);
           } else {
@@ -325,6 +329,6 @@ export const workspaceCommands: readonly WorkspaceCommand[] = [
 
 export function createWorkspaceRegistry(primary: PrimaryModifier, reserved: readonly string[]) {
   const registry = new CommandRegistry<WorkspaceContext>(primary, reserved);
-  for (const command of workspaceCommands) registry.register(command);
+  for (const command of [...workspaceCommands, ...variantCommands]) registry.register(command);
   return registry;
 }

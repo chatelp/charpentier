@@ -10,7 +10,8 @@ import { Navigator } from '../navigator/Navigator';
 import { CommandPalette } from '../palette/CommandPalette';
 import type { PaletteRequest } from '../palette/palette-request';
 import { lastScenePref, type ProjectSession } from './default-scene';
-import { useSceneFragment } from './use-scene-fragment';
+import { variantLabel } from '../commands/variant-commands';
+import { useSceneDocs } from './use-scene-docs';
 import type { WorkspaceContext } from './workspace-context';
 
 let paletteSequence = 0;
@@ -36,7 +37,8 @@ export function ProjectWorkspace({ session }: { readonly session: ProjectSession
   // The requested scene may vanish (trashed on another device): fall back to the first one.
   const scene = scenes.find((s) => s.id === requestedSceneId) ?? scenes[0];
   const sceneId = scene?.id ?? requestedSceneId;
-  const fragment = useSceneFragment(platform, projectId, sceneId, scene?.activeVariantId ?? '');
+  const sceneDocs = useSceneDocs(platform, projectId, sceneId, scene?.activeVariantId ?? '');
+  const [status, setStatus] = useState<{ key: number; text: string } | null>(null);
 
   const openScene = useCallback(
     (id: string) => {
@@ -52,11 +54,14 @@ export function ProjectWorkspace({ session }: { readonly session: ProjectSession
     root,
     sceneId,
     editor,
+    sceneDocs,
+    language,
     openScene,
     openPalette: (request = { kind: 'commands' }) =>
       setPalette({ key: ++paletteSequence, request }),
     toggleNavigator: () => setNavigatorOpen((open) => !open),
     shortcutLabel: (id) => registry.shortcutLabel(id),
+    notify: (text) => setStatus({ key: ++paletteSequence, text }),
   };
 
   // Global shortcuts. The listener reads the latest context through a ref.
@@ -90,8 +95,18 @@ export function ProjectWorkspace({ session }: { readonly session: ProjectSession
   }, [editor, palette, navigatorOpen]);
 
   useEffect(() => {
-    if (scene) document.title = `${scene.title} · ${t('app.name')}`;
+    if (!scene) return;
+    const variant =
+      scene.variants.length > 1 ? ` (${variantLabel(t, scene, scene.activeVariantId)})` : '';
+    document.title = `${scene.title}${variant} · ${t('app.name')}`;
   }, [scene, t]);
+
+  // Confirmations fade after a few seconds.
+  useEffect(() => {
+    if (!status) return;
+    const timer = setTimeout(() => setStatus(null), 4000);
+    return () => clearTimeout(timer);
+  }, [status]);
 
   const closePalette = () => {
     setPalette(null);
@@ -115,15 +130,18 @@ export function ProjectWorkspace({ session }: { readonly session: ProjectSession
     <>
       <main className="ch-surface">
         <h1 className="ch-visually-hidden">{t('app.name')}</h1>
-        {fragment && (
+        {sceneDocs && (
           <SceneEditor
             key={`${sceneId}/${scene?.activeVariantId}`}
-            fragment={fragment}
+            fragment={sceneDocs.fragment}
             language={language}
             onEditor={setEditor}
           />
         )}
       </main>
+      <p className="ch-toast" role="status" aria-live="polite">
+        {status?.text}
+      </p>
       {navigatorOpen && (
         <Navigator
           ctx={ctx}

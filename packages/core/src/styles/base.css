@@ -69,3 +69,14 @@ body {
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+.ch-toast {
+  position: fixed;
+  left: 1rem;
+  bottom: 0.75rem;
+  margin: 0;
+  max-width: 40rem;
+  color: var(--ch-muted);
+  font-family: var(--ch-font-ui);
+  font-size: 0.75rem;
+}

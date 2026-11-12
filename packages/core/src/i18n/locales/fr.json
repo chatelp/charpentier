@@ -40,7 +40,16 @@
     "insertSceneBreak": "Insérer un séparateur",
     "toggleBlockquote": "Citation",
     "undo": "Annuler",
-    "redo": "Rétablir"
+    "redo": "Rétablir",
+    "switchVariant": "Changer de variante…",
+    "newVariant": "Nouvelle variante (copie de la variante active)",
+    "newEmptyVariant": "Nouvelle variante vide",
+    "renameVariant": "Renommer la variante…",
+    "trashVariant": "Mettre la variante à la corbeille",
+    "createCheckpoint": "Créer un point de restauration",
+    "createNamedCheckpoint": "Créer un point de restauration nommé…",
+    "restoreCheckpoint": "Revenir à un point de restauration…",
+    "variantFromCheckpoint": "Créer une variante depuis un point de restauration…"
   },
   "palette": {
     "label": "Palette de commandes",
@@ -53,11 +62,39 @@
     "pickTrash": "Que restaurer ?",
     "trashedScene": "Scène",
     "trashedChapter": "Chapitre",
-    "emptyTrash": "La corbeille est vide."
+    "emptyTrash": "La corbeille est vide.",
+    "pickVariant": "Quelle variante ?",
+    "variantName": "Nom de la variante",
+    "checkpointLabel": "Nom du point de restauration",
+    "pickCheckpoint": "Revenir à quel moment ?",
+    "pickCheckpointForVariant": "Partir de quel moment ?",
+    "noCheckpoints": "Aucun point de restauration pour cette variante.",
+    "trashedVariant": "Variante de la scène ouverte",
+    "activeVariant": "variante active"
   },
   "navigator": {
     "label": "Plan du manuscrit",
     "hint": "↑↓ parcourir · ↵ ouvrir · ⌥↑↓ déplacer · R renommer · N scène · ⇧N chapitre · ⌫ corbeille · Échap fermer",
     "current": "scène ouverte"
+  },
+  "variants": {
+    "defaultName": "Version {{n}}"
+  },
+  "history": {
+    "today": "Aujourd’hui, {{time}}",
+    "reason": {
+      "manual": "Point manuel",
+      "interval": "Automatique",
+      "scene-end": "Fin de scène",
+      "before-restore": "Avant une restauration",
+      "before-external-merge": "Avant une modification externe",
+      "before-variant-delete": "Avant la suppression d’une variante"
+    },
+    "emptyText": "(scène vide)"
+  },
+  "status": {
+    "checkpointCreated": "Point de restauration créé.",
+    "checkpointRestored": "Version restaurée ({{date}}). L’état précédent reste dans l’historique.",
+    "variantCreated": "Variante « {{name}} » créée."
   }
 }

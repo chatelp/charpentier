@@ -359,6 +359,7 @@ Les positions relatives sont résolues dans le document de la scène visée ; el
 - Créer une variante = copier le contenu d'une variante (ou d'un point de restauration) dans un nouveau fragment, puis l'inscrire dans le document racine. Le texte est écrit d'abord : une interruption laisse au pire un fragment non référencé, invisible. La variante active ne peut pas être mise à la corbeille.
 - Point de restauration : `checkpoints: Y.Array<{ id, variantId, createdAt, reason: 'manual' | 'interval' | 'scene-end' | 'before-restore' | 'before-external-merge' | 'before-variant-delete', label?, state: Uint8Array }>` dans le document d'historique ; `state` encode une copie du fragment.
 - Restaurer = remplacer le contenu du fragment par celui du point, dans une **nouvelle transaction** (précédée d'un point `before-restore`, lui-même restaurable). L'historique n'est jamais réécrit ; GC Yjs activé.
+- **Points automatiques** (`interval`) : à l'ouverture d'une scène, toutes les 5 minutes si le texte a changé, quand on quitte la scène et quand l'app passe en arrière-plan. Un contenu identique au dernier point de la variante n'est jamais réenregistré. Purge : par variante, les 50 derniers points automatiques, puis le premier de chaque jour pour les plus anciens. Les points manuels (`⌘S`, avec ou sans nom) et les points de sécurité (`before-*`) ne sont jamais purgés.
 - Le mentor n'analyse que la variante active [D-6] ; les signalements d'une variante inactive restent attachés à elle.
 
 ### 15.5 Origines des transactions et droits d'écriture
