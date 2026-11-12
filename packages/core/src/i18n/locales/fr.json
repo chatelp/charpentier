@@ -14,6 +14,50 @@
   "manuscript": {
     "defaultProjectTitle": "Mon roman",
     "defaultChapterTitle": "Chapitre 1",
-    "defaultSceneTitle": "Scène 1"
+    "defaultSceneTitle": "Scène 1",
+    "newSceneTitle": "Nouvelle scène",
+    "newChapterTitle": "Nouveau chapitre"
+  },
+  "commands": {
+    "openPalette": "Ouvrir la palette de commandes",
+    "toggleNavigator": "Afficher ou masquer le plan",
+    "goToScene": "Aller à la scène…",
+    "nextScene": "Scène suivante",
+    "previousScene": "Scène précédente",
+    "newScene": "Nouvelle scène",
+    "newChapter": "Nouveau chapitre",
+    "renameScene": "Renommer la scène…",
+    "renameChapter": "Renommer le chapitre…",
+    "moveSceneUp": "Monter la scène",
+    "moveSceneDown": "Descendre la scène",
+    "moveSceneToChapter": "Déplacer la scène vers le chapitre…",
+    "moveChapterUp": "Monter le chapitre",
+    "moveChapterDown": "Descendre le chapitre",
+    "trashScene": "Mettre la scène à la corbeille",
+    "trashChapter": "Mettre le chapitre à la corbeille",
+    "restoreFromTrash": "Restaurer depuis la corbeille…",
+    "toggleItalic": "Italique",
+    "insertSceneBreak": "Insérer un séparateur",
+    "toggleBlockquote": "Citation",
+    "undo": "Annuler",
+    "redo": "Rétablir"
+  },
+  "palette": {
+    "label": "Palette de commandes",
+    "searchCommands": "Rechercher une commande…",
+    "noResults": "Aucun résultat",
+    "sceneTitle": "Titre de la scène",
+    "chapterTitle": "Titre du chapitre",
+    "pickScene": "Aller à la scène…",
+    "pickChapter": "Vers quel chapitre ?",
+    "pickTrash": "Que restaurer ?",
+    "trashedScene": "Scène",
+    "trashedChapter": "Chapitre",
+    "emptyTrash": "La corbeille est vide."
+  },
+  "navigator": {
+    "label": "Plan du manuscrit",
+    "hint": "↑↓ parcourir · ↵ ouvrir · ⌥↑↓ déplacer · R renommer · N scène · ⇧N chapitre · ⌫ corbeille · Échap fermer",
+    "current": "scène ouverte"
   }
 }

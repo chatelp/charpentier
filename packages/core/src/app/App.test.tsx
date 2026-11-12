@@ -10,7 +10,7 @@ afterEach(cleanup);
 describe('<App>', () => {
   it('opens the default scene in a French writing surface', async () => {
     render(<App platform={createTestPlatform()} i18n={await createI18n('fr')} />);
-    expect(screen.getByRole('heading', { name: 'Charpentier' })).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: 'Charpentier' })).toBeTruthy();
     const editor = await screen.findByRole('textbox', { name: 'Texte de la scène' });
     expect(editor.getAttribute('lang')).toBe('fr');
   });

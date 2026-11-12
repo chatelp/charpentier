@@ -1,4 +1,6 @@
+import type { Editor } from '@tiptap/core';
 import { EditorContent, useEditor } from '@tiptap/react';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import type * as Y from 'yjs';
 import { sceneEditorExtensions } from './extensions';
@@ -9,15 +11,16 @@ export interface SceneEditorProps {
   readonly fragment: Y.XmlFragment;
   /** BCP 47 language of the book (for hyphenation and spellcheck). */
   readonly language: string;
+  /** Receives the editor once created, and null when it goes away. */
+  readonly onEditor?: (editor: Editor | null) => void;
 }
 
 /** The writing surface: one scene variant, nothing else. */
-export function SceneEditor({ fragment, language }: SceneEditorProps) {
+export function SceneEditor({ fragment, language, onEditor }: SceneEditorProps) {
   const { t } = useTranslation();
   const editor = useEditor(
     {
       extensions: sceneEditorExtensions({ fragment, placeholder: t('editor.emptyScene') }),
-      autofocus: 'end',
       editorProps: {
         attributes: {
           class: 'ch-prose',
@@ -30,5 +33,10 @@ export function SceneEditor({ fragment, language }: SceneEditorProps) {
     },
     [fragment, language],
   );
+  useEffect(() => {
+    onEditor?.(editor);
+    return () => onEditor?.(null);
+  }, [editor, onEditor]);
+
   return <EditorContent editor={editor} className="ch-editor" />;
 }
