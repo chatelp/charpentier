@@ -15,6 +15,7 @@ const disabledAgents: AgentsService = {
   forgetApiKey: async () => {},
   ask: async () => 'unavailable',
   analyze: async () => 'unavailable',
+  reviewChapter: async () => 'unavailable',
   lightModel: async () => 'opus',
   setLightModel: async () => {},
 };

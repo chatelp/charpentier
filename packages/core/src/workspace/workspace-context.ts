@@ -40,6 +40,8 @@ export interface WorkspaceContext {
   readonly mentorLevel: 1 | 2 | 3 | 4;
   /** Asks the Compagnon to read scenes (automatic: skips unchanged ones, may use the light model). */
   analyze(sceneIds: readonly string[], automatic: boolean): void;
+  /** Asks the Compagnon for its review of a chapter, left in the conversation. */
+  reviewChapter(chapterId: string, automatic: boolean): void;
   shortcutLabel(commandId: string): string | undefined;
   /** A short, discreet confirmation (read by screen readers). */
   notify(message: string): void;

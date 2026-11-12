@@ -30,6 +30,16 @@ export interface AgentsService {
     readonly sceneIds: readonly string[];
     readonly automatic: boolean;
   }): Promise<AskResult>;
+  /**
+   * The Compagnon's review of a whole chapter, left in the conversation (D-19:
+   * at the end of each chapter at level 4, on demand at every level).
+   * `automatic` skips a chapter unchanged since its last review.
+   */
+  reviewChapter(input: {
+    readonly projectId: string;
+    readonly chapterId: string;
+    readonly automatic: boolean;
+  }): Promise<AskResult>;
   /** D-20: the model of the light, frequent work. */
   lightModel(): Promise<'opus' | 'haiku'>;
   setLightModel(model: 'opus' | 'haiku'): Promise<void>;

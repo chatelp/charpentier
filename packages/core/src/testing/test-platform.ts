@@ -33,6 +33,7 @@ export function createTestPlatform(overrides: Partial<Platform> = {}): Platform 
       forgetApiKey: async () => {},
       ask: async () => 'unavailable',
       analyze: async () => 'unavailable',
+      reviewChapter: async () => 'unavailable',
       lightModel: async () => 'opus',
       setLightModel: async () => {},
     },

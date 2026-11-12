@@ -180,6 +180,17 @@ export const languageCommands: readonly LanguageCommand[] = [
     },
   },
   {
+    id: 'reviewChapter',
+    scope: 'global',
+    isEnabled: (ctx) => ctx.platform.agents.status() !== 'disabled',
+    run: (ctx) => {
+      const chapter = ctx.outline.find((c) => c.scenes.some((s) => s.id === ctx.sceneId));
+      if (!chapter) return;
+      ctx.notify(ctx.t('mentor.reviewing'));
+      ctx.reviewChapter(chapter.id, false);
+    },
+  },
+  {
     id: 'analyzeManuscript',
     scope: 'global',
     isEnabled: (ctx) => ctx.platform.agents.status() !== 'disabled',

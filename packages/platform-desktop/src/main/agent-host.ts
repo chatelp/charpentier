@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { analyzeScene, answerAuthor } from '@charpentier/agents';
+import { analyzeScene, answerAuthor, reviewChapter } from '@charpentier/agents';
 import type { ApiKeyResult, AskResult, LlmStatus } from '@charpentier/platform';
 import {
   agentOrigin,
@@ -8,6 +8,7 @@ import {
   guids,
   hashEvidence,
   readMentorLevel,
+  readOutline,
   variantFragment,
 } from '@charpentier/schema';
 import type * as Y from 'yjs';
@@ -100,6 +101,66 @@ export class AgentHost {
     }
   }
 
+  /** The review of a chapter, queued like the analyses (one reading at a time per project). */
+  async #reviewChapter(
+    projectId: string,
+    chapterId: string,
+    automatic: boolean,
+  ): Promise<AskResult> {
+    if (this.llm.status() === 'unconfigured') return 'unavailable';
+    if (automatic && this.llm.status() === 'offline') return 'offline';
+    const previous = this.#running.get(projectId) ?? Promise.resolve();
+    const run = previous.then(() => this.#reviewChapterNow(projectId, chapterId, automatic));
+    this.#running.set(
+      projectId,
+      run.catch(() => {}),
+    );
+    return run;
+  }
+
+  async #reviewChapterNow(
+    projectId: string,
+    chapterId: string,
+    automatic: boolean,
+  ): Promise<AskResult> {
+    const rootGuid = guids.project(projectId);
+    const mentorGuid = guids.mentor(projectId);
+    try {
+      return await this.#withDocs([rootGuid, mentorGuid], async (docs) => {
+        const root = docs.get(rootGuid);
+        const mentorDoc = docs.get(mentorGuid);
+        if (!root || !mentorDoc) throw new Error('Documents missing');
+        const sceneIds =
+          readOutline(root)
+            .find((c) => c.id === chapterId)
+            ?.scenes.map((s) => s.id) ?? [];
+        const sceneGuids = sceneIds.map((id) => guids.scene(projectId, id));
+        return this.#withDocs(sceneGuids, async (sceneDocs) => {
+          await reviewChapter({
+            llm: this.llm,
+            root,
+            mentorDoc,
+            sceneDocs: new Map(
+              sceneIds.flatMap((id, i) => {
+                const doc = sceneDocs.get(sceneGuids[i] ?? '');
+                return doc ? [[id, doc] as const] : [];
+              }),
+            ),
+            chapterId,
+            automatic,
+          });
+          return 'answered' as const;
+        });
+      });
+    } catch (error) {
+      if (error instanceof LlmUnconfiguredError) return 'unavailable';
+      if (error instanceof LlmRefusalError) return 'refused';
+      if (error instanceof Anthropic.APIConnectionError) return 'offline';
+      console.error('Charpentier: the chapter review failed', error);
+      return 'failed';
+    }
+  }
+
   /** Holds the documents an agent needs for the time of its work. */
   async #withDocs<T>(
     guidsNeeded: readonly string[],
@@ -167,6 +228,8 @@ export class AgentHost {
         return this.#ask(request.projectId, request.sceneId);
       case 'agents.analyze':
         return this.#analyze(request.projectId, request.sceneIds, request.automatic);
+      case 'agents.reviewChapter':
+        return this.#reviewChapter(request.projectId, request.chapterId, request.automatic);
       case 'agents.lightModel':
         return this.lightModel.get();
       case 'agents.setLightModel':

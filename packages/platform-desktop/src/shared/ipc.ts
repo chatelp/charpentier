@@ -42,6 +42,12 @@ export type Request =
       readonly sceneIds: readonly string[];
       readonly automatic: boolean;
     }
+  | {
+      readonly type: 'agents.reviewChapter';
+      readonly projectId: string;
+      readonly chapterId: string;
+      readonly automatic: boolean;
+    }
   | { readonly type: 'agents.lightModel' }
   | { readonly type: 'agents.setLightModel'; readonly model: 'opus' | 'haiku' }
   // Handled by the Electron host itself (dialogs, Finder).
@@ -68,6 +74,7 @@ export interface Responses {
   'agents.forgetKey': null;
   'agents.ask': AskResult;
   'agents.analyze': AskResult;
+  'agents.reviewChapter': AskResult;
   'agents.lightModel': 'opus' | 'haiku';
   'agents.setLightModel': null;
   'host.libraryFolder': string;

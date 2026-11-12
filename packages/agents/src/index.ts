@@ -20,3 +20,4 @@ export {
   remarkKindsFor,
   type AnalysisResult,
 } from './analysis';
+export { chapterReviewKey, reviewChapter } from './review';

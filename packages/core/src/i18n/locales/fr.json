@@ -71,6 +71,8 @@
     "correctionLabel": "Correction proposée",
     "analysing": "Le Compagnon lit…",
     "analysisDone": "Le Compagnon a lu. Ses remarques sont dans la marge et dans les points (⌘L).",
+    "reviewing": "Le Compagnon relit le chapitre…",
+    "reviewDone": "Le bilan du chapitre est dans la conversation avec le Compagnon (⌘L).",
     "level": {
       "label": "Intervention du Compagnon",
       "changed": "Compagnon : {{name}}.",
@@ -179,6 +181,7 @@
     "lessHelp": "Moins d’aide du Compagnon",
     "analyzeScene": "Avis du Compagnon sur la scène",
     "analyzeChapter": "Avis du Compagnon sur tout le chapitre",
+    "reviewChapter": "Bilan du chapitre par le Compagnon",
     "analyzeManuscript": "Avis du Compagnon sur tout le manuscrit",
     "toggleLightModel": "Remarques légères : Opus ou Haiku (moins cher)"
   },

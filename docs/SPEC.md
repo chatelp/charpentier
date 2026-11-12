@@ -184,7 +184,7 @@ Suivi des faiblesses récurrentes d'un chapitre à l'autre ; signale progrès et
 L'auteur peut dialoguer librement avec le mentor.
 
 ### 6.8 Exécution (desktop)
-Le Compagnon tourne dans le processus principal (paquet `agents`) : conversation (document `project:<pid>/mentor`, tableau `chat`), lecture d'une scène (une analyse structurée : propositions de fiches, conflits, remarques), une à la fois par projet. Une lecture automatique saute une scène inchangée depuis sa dernière lecture (empreinte dans `analyses` du document mentor).
+Le Compagnon tourne dans le processus principal (paquet `agents`) : conversation (document `project:<pid>/mentor`, tableau `chat`), lecture d'une scène (une analyse structurée : propositions de fiches, conflits, remarques), une à la fois par projet. Une lecture automatique saute une scène inchangée depuis sa dernière lecture (empreinte dans `analyses` du document mentor). Le bilan d'un chapitre (cran 4, ou à la demande) relit toutes ses scènes et arrive dans la conversation, sous les mêmes garde-fous qu'une réponse ; empreinte `chapter:<id>` dans `analyses`.
 
 ## 7. Synchronisation des modules
 

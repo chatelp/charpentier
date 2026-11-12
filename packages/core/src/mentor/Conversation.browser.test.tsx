@@ -40,6 +40,7 @@ describe('conversation with the Compagnon', () => {
         setApiKey: async () => 'saved',
         forgetApiKey: async () => {},
         analyze: async () => 'answered',
+        reviewChapter: async () => 'answered',
         lightModel: async () => 'opus',
         setLightModel: async () => {},
         // What the main process does: answer in the mentor document.

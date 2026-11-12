@@ -192,13 +192,39 @@ export function ProjectWorkspace({
     },
     [platform, projectId, t],
   );
-  // Leaving a scene (level 2 and up) analyses it.
+  const reviewChapter = useCallback(
+    (chapterId: string, automatic: boolean) => {
+      void platform.agents.reviewChapter({ projectId, chapterId, automatic }).then((result) => {
+        if (!automatic)
+          setStatus({
+            key: ++paletteSequence,
+            text: t(result === 'answered' ? 'mentor.reviewDone' : `mentor.ask.${result}`),
+          });
+      });
+    },
+    [platform, projectId, t],
+  );
+  // Leaving a scene (level 2 and up) analyses it. Leaving the last scene of a
+  // chapter for another chapter (level 4) also brings the chapter's review.
+  // (Runs again when the outline changes, but then the scene has not changed.)
   const previousScene = useRef(sceneId);
   useEffect(() => {
     const left = previousScene.current;
     previousScene.current = sceneId;
-    if (left !== sceneId && mentorLevel >= 2 && agentsStatus === 'available') analyze([left], true);
-  }, [sceneId, mentorLevel, agentsStatus, analyze]);
+    if (left === sceneId || mentorLevel < 2 || agentsStatus !== 'available') return;
+    analyze([left], true);
+    // Going on to a later chapter, not back to an earlier one.
+    const chapters = outline;
+    const indexOf = (id: string) => chapters.findIndex((c) => c.scenes.some((s) => s.id === id));
+    const finished = chapters[indexOf(left)];
+    if (
+      mentorLevel === 4 &&
+      finished &&
+      finished.scenes.at(-1)?.id === left &&
+      indexOf(sceneId) > indexOf(left)
+    )
+      reviewChapter(finished.id, true);
+  }, [sceneId, mentorLevel, agentsStatus, analyze, reviewChapter, outline]);
   // Two minutes without writing (level 3 and up) analyses the open scene.
   useEffect(() => {
     if (!editor || mentorLevel < 3 || agentsStatus !== 'available') return;
@@ -278,6 +304,7 @@ export function ProjectWorkspace({
     },
     mentorLevel,
     analyze,
+    reviewChapter,
     sceneWords,
     sceneTexts,
     shortcutLabel: (id) => registry.shortcutLabel(id),

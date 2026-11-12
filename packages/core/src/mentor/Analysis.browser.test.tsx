@@ -1,11 +1,15 @@
 import {
   anchorForQuote,
   createAgentWriter,
+  createChapter,
   createEntity,
+  createScene,
   getScene,
   guids,
   listSignals,
   readMentorLevel,
+  readOutline,
+  setMentorLevel,
 } from '@charpentier/schema';
 import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import { userEvent } from 'vitest/browser';
@@ -53,6 +57,7 @@ describe('the Compagnon reads a scene', () => {
         ask: async () => 'answered',
         lightModel: async () => 'opus',
         setLightModel: async () => {},
+        reviewChapter: async () => 'answered',
         // What the main process's analysis does on this scene.
         analyze: async ({ projectId, sceneIds, automatic }) => {
           analyses.push({ sceneIds, automatic });
@@ -130,5 +135,62 @@ describe('the Compagnon reads a scene', () => {
     expect(screen.getByText('Tuteur')).toBeTruthy();
     await userEvent.keyboard('{ArrowLeft}{ArrowLeft}{ArrowLeft}{ArrowLeft}');
     await waitFor(() => expect(readMentorLevel(root)).toBe(1));
+  });
+
+  it('at level 4, reviews a chapter when the author leaves its last scene for the next chapter', async () => {
+    const prefs = new Map<string, unknown>();
+    const docs = new Map<string, Y.Doc>();
+    const analyses: { sceneIds: readonly string[]; automatic: boolean }[] = [];
+    const reviews: { chapterId: string; automatic: boolean }[] = [];
+    const platform = createTestPlatform({
+      keybindings: { primaryModifier: isMac ? 'Meta' : 'Control', reserved: [] },
+      preferences: {
+        get: async <T,>(key: string) => prefs.get(key) as T | undefined,
+        set: async (key, value) => void prefs.set(key, value),
+      },
+      documents: {
+        open: async (guid) => {
+          const d = docs.get(guid) ?? new Y.Doc({ guid });
+          docs.set(guid, d);
+          return { guid, doc: d, whenLoaded: Promise.resolve(), close: async () => {} };
+        },
+      },
+      agents: {
+        status: () => 'available',
+        onStatusChange: () => () => {},
+        setApiKey: async () => 'saved',
+        forgetApiKey: async () => {},
+        ask: async () => 'answered',
+        lightModel: async () => 'opus',
+        setLightModel: async () => {},
+        analyze: async ({ sceneIds, automatic }) => (
+          analyses.push({ sceneIds, automatic }),
+          'answered'
+        ),
+        reviewChapter: async ({ chapterId, automatic }) => (
+          reviews.push({ chapterId, automatic }),
+          'answered'
+        ),
+      },
+    });
+    render(<App platform={platform} i18n={await createI18n('fr')} />);
+    await screen.findByRole('textbox', { name: 'Texte de la scène' });
+    const root = docs.get(guids.project(String(prefs.get('lastProjectId')))) as Y.Doc;
+    const [first] = readOutline(root);
+    const chapterId = createChapter(root, { title: 'Deux' });
+    createScene(root, { chapterId, title: 'La gare' });
+
+    // Level 3: leaving the scene analyses it, no review.
+    await userEvent.keyboard(mod('{Alt>}{ArrowDown}{/Alt}'));
+    await waitFor(() => expect(analyses).toHaveLength(1));
+    expect(reviews).toEqual([]);
+
+    // Level 4: back to the first chapter's last scene, then on to the next chapter.
+    setMentorLevel(root, 4);
+    await userEvent.keyboard(mod('{Alt>}{ArrowUp}{/Alt}'));
+    await waitFor(() => expect(analyses).toHaveLength(2));
+    expect(reviews).toEqual([]); // Leaving chapter 2's only scene backwards: not its end.
+    await userEvent.keyboard(mod('{Alt>}{ArrowDown}{/Alt}'));
+    await waitFor(() => expect(reviews).toEqual([{ chapterId: first?.id, automatic: true }]));
   });
 });

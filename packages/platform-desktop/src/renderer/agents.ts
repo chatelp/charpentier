@@ -46,6 +46,14 @@ export class IpcAgentsService implements AgentsService {
     return this.bridge.invoke({ type: 'agents.analyze', ...input });
   }
 
+  reviewChapter(input: {
+    readonly projectId: string;
+    readonly chapterId: string;
+    readonly automatic: boolean;
+  }) {
+    return this.bridge.invoke({ type: 'agents.reviewChapter', ...input });
+  }
+
   lightModel() {
     return this.bridge.invoke({ type: 'agents.lightModel' });
   }
