@@ -300,6 +300,8 @@ Toutes les clés et identifiants sont en anglais. Les identifiants sont des cha�
 
 Ce découpage permet le chargement paresseux et correspond aux documents que Hocuspocus multiplexera sur une seule connexion à l'étape 4.
 
+Hors projet, un document `library` tient l'index des projets de l'auteur : une `Y.Map` `projects` avec une entrée par projet (sous son id) : titre, type, dates, `trashedAt`. Le titre de référence reste celui de la racine du projet ; le cœur garde les deux en accord. Sur desktop, l'index pourra être reconstruit depuis les dossiers de projets.
+
 ### 15.2 Document racine
 
 Règle de construction : tout ce que deux répliques pourraient créer en même temps est un **type de premier niveau nommé** (Yjs fusionne deux types de premier niveau de même nom, alors que deux sous-types créés sous la même clé s'écrasent). Les sous-types imbriqués ne sont créés que sous une clé aléatoire unique (un chapitre, une scène, une entité, un signalement).

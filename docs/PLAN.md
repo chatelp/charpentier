@@ -2,7 +2,7 @@
 
 Chaque phase est courte, se termine par un résultat vérifiable dans l'app (ou par des tests quand la phase n'a pas d'interface), puis par un arrêt pour le feu vert. Les tests prioritaires sont écrits dans la phase qui introduit le code concerné.
 
-Statut : **proposé, en attente de validation.**
+Statut : étape 1 réalisée jusqu'à la phase 1.10 (12 novembre 2026) ; étape 2 à venir.
 
 ---
 
@@ -39,18 +39,22 @@ Créer, dupliquer, renommer, activer et supprimer une variante. Points de restau
 ### 1.7 bis Design language
 Intégration de [DESIGN.md](DESIGN.md) : tokens et thèmes clair et sombre, polices embarquées, en-tête et ouverture de scène, pied (compteur de mots), ligne de commande en pied (`#` scènes, `>` commandes), tiroir du manuscrit, réglages de confort (taille du texte, largeur de colonne, mode focus, défilement machine à écrire, réduction des animations).
 **Vérifiable** : l'écran d'écriture ressemble à la maquette Perle ; ⌘+ / ⌘− changent la taille du texte, ⇧⌘F active le mode focus, et ces réglages survivent au rechargement.
-Reporté : vue d'ensemble du manuscrit (⌘⇧P, avec la phase 1.9), compteur « +n aujourd'hui », barre de titre macOS (étape 2), pastilles et panneau droit (étape 3).
+Reporté : compteur « +n aujourd'hui », barre de titre macOS (étape 2), pastilles et panneau droit (étape 3). La vue d'ensemble du manuscrit (⇧⌘P) est livrée avec la phase 1.9.
 
 ### 1.8 Modules Méta et Personnages
 L'Atelier (⌘E, rail des modules, liste, fiche) selon [DESIGN.md](DESIGN.md) §4.5 : écrans de saisie, champs à statut rendus par le relief (saisie de l'auteur = validée), navigation au clavier.
 **Vérifiable** : je remplis le pitch et la fiche de mon personnage principal ; tout survit au rechargement.
+Réalisé : ⌘E, ⌘1…5 (⌥⌘1…5 dans un navigateur, qui garde ⌘1…9), `@` dans la ligne de commande, N nouvelle entrée, V / X sur une proposition, corbeille des fiches. Les apparitions d'un personnage seront remplies par le Compagnon (étape 3).
 
 ### 1.9 Structure, Règles du monde, Indices
 Actes, arcs, modèle narratif optionnel (liste de modèles), règles du monde, panneau Indices (pose, apparitions, résolution, et « qui sait » à partir de quelle scène, lecteur compris).
 **Vérifiable** : je choisis « trois actes », je place mes scènes dans les actes, je pose un indice dans la scène 2, je le relie à sa résolution, et j'indique que l'enquêteur le connaît dès la scène 2 mais le lecteur seulement à la scène 5.
 
+Réalisé : rail Structure (modèle narratif, actes, arcs), Règles du monde, Indices et révélations avec « qui sait » (lecteur et chaque personnage) ; vue d'ensemble du manuscrit (⇧⌘P), une colonne par chapitre, ⌥ + flèches pour déplacer.
+
 ### 1.10 Projets multiples
 Bibliothèque : créer (roman ou nouvelle), ouvrir, renommer, mettre à la corbeille.
+Réalisé : ⌘O ; la bibliothèque est un document Yjs `library` (index), le titre reste aussi dans la racine du projet ; corbeille avec restauration ; le projet des phases précédentes est adopté au premier démarrage.
 **Vérifiable** : je crée un roman et une nouvelle et je passe de l'un à l'autre.
 
 ---
