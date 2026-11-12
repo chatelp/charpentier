@@ -25,6 +25,8 @@
 | D-13 | Mise en forme du texte | Paragraphes, **italique**, **citation en bloc**, **séparateur interne de scène**. Pas de gras ni de titres dans le texte. |
 | D-14 | Machine d'écriture initiale | **Le Mac de l'auteur** : la fin de l'étape 2 produit une `.app` macOS non signée. |
 | D-15 | Titulaire des droits | **Pierre Chatel**. Dépôt GitHub pas encore choisi (configuration CLA prête, à compléter). |
+| D-16 | Design language | **Direction « Perle »** (neumorphisme doux : page plate, outils en relief), deux encres (vermillon pour l'auteur, bleu de Prusse pour le mentor), Literata + Inter embarquées (SIL OFL 1.1). Référence : [DESIGN.md](DESIGN.md). Décidé le 12 novembre 2026. |
+| D-17 | Nom du mentor | **Le Compagnon** (le compagnon charpentier qui transmet le métier) ; vouvoie l'auteur, signe ses notes en bleu de Prusse. Répond à la question ouverte n°4. |
 
 Choix par défaut annoncés et non contestés : i18next pour l'i18n ; Vitest (+ mode navigateur, + Playwright Electron) ; signalements rendus en **décorations** ProseMirror (pas de marques dans le contenu) ; un projet = un dossier dans une bibliothèque locale ; IA désactivée dans `apps/web` jusqu'à l'étape 4 ; prompts système en anglais avec réponse imposée dans la langue du projet.
 
@@ -423,7 +425,8 @@ Le mentor s'exprime dans la langue du projet. Sans réseau, les fonctions IA se 
 
 ## 19. Exigences transverses
 
-- **Clavier d'abord** : toute action accessible au clavier, palette de commandes, registre de raccourcis central dans le cœur (y compris réorganisation des scènes et chapitres).
+- **Clavier d'abord** : toute action accessible au clavier, ligne de commande (`⌘K`), registre de raccourcis central dans le cœur (y compris réorganisation des scènes et chapitres). Un raccourci que l'hôte se réserve (⌘N dans un navigateur) bascule sur son autre raccourci ou sur la ligne de commande.
+- **Design** : [DESIGN.md](DESIGN.md) fait foi pour l'apparence, les composants et les raccourcis proposés.
 - **Distraction-free** : aucun chrome non essentiel ; l'état (synchro, réseau, batterie) est discret, voire masqué.
 - **Offline-first absolu** : une coupure réseau ne bloque jamais l'écriture.
 - **i18n** : aucune chaîne d'interface en dur.
@@ -474,8 +477,8 @@ Garde-fous, contrôlés mécaniquement :
 À trancher avant l'étape 3 :
 1. Définition de la « fin de scène » qui déclenche l'analyse complète (action explicite, changement de scène, inactivité).
 2. Types de remarques assez importants pour apparaître pendant l'écriture.
-3. Place de la marge d'annotations et de la liste de points dans une interface distraction-free.
-4. Nom ou personnalité du mentor.
+3. Place de la marge d'annotations et de la liste de points dans une interface distraction-free. *Piste retenue par le design : la « marge qui respire » (pastilles en marge, note dépliée à la pause) et le panneau droit Points / Conversation, [DESIGN.md](DESIGN.md) §4.2 et §4.3 ; détails à confirmer avant l'étape 3.*
+4. ~~Nom ou personnalité du mentor.~~ Tranché : le Compagnon [D-17].
 
 À trancher plus tard :
 5. Réimport des YAML de modules modifiés hors de l'app.

@@ -36,8 +36,13 @@ Créer, renommer, réordonner, supprimer chapitres et scènes, au clavier et à 
 Créer, dupliquer, renommer, activer et supprimer une variante. Points de restauration automatiques (intervalle, avant opération lourde) et manuels ; restaurer ; créer une variante depuis un point.
 **Vérifiable** : je crée une variante d'une scène, je bascule de l'une à l'autre, je restaure la version d'il y a dix minutes.
 
+### 1.7 bis Design language
+Intégration de [DESIGN.md](DESIGN.md) : tokens et thèmes clair et sombre, polices embarquées, en-tête et ouverture de scène, pied (compteur de mots), ligne de commande en pied (`#` scènes, `>` commandes), tiroir du manuscrit, réglages de confort (taille du texte, largeur de colonne, mode focus, défilement machine à écrire, réduction des animations).
+**Vérifiable** : l'écran d'écriture ressemble à la maquette Perle ; ⌘+ / ⌘− changent la taille du texte, ⇧⌘F active le mode focus, et ces réglages survivent au rechargement.
+Reporté : vue d'ensemble du manuscrit (⌘⇧P, avec la phase 1.9), compteur « +n aujourd'hui », barre de titre macOS (étape 2), pastilles et panneau droit (étape 3).
+
 ### 1.8 Modules Méta et Personnages
-Écrans de saisie, statuts visibles par champ (saisie de l'auteur = validée), navigation au clavier.
+L'Atelier (⌘E, rail des modules, liste, fiche) selon [DESIGN.md](DESIGN.md) §4.5 : écrans de saisie, champs à statut rendus par le relief (saisie de l'auteur = validée), navigation au clavier.
 **Vérifiable** : je remplis le pitch et la fiche de mon personnage principal ; tout survit au rechargement.
 
 ### 1.9 Structure, Règles du monde, Indices

@@ -1,6 +1,6 @@
 # CLAUDE.md : Charpentier
 
-Outil d'aide à l'écriture de romans piloté par des agents IA : un mentor « par-dessus l'épaule » qui structure, vérifie la cohérence et explique le métier, **sans jamais écrire le roman**. Référence unique : [docs/SPEC.md](docs/SPEC.md) (fusion des deux specs d'origine, journal des décisions au §0). Plan en cours : [docs/PLAN.md](docs/PLAN.md).
+Outil d'aide à l'écriture de romans piloté par des agents IA : un mentor, **le Compagnon**, « par-dessus l'épaule » qui structure, vérifie la cohérence et explique le métier, **sans jamais écrire le roman**. Référence unique : [docs/SPEC.md](docs/SPEC.md) (fusion des deux specs d'origine, journal des décisions au §0). Apparence : [docs/DESIGN.md](docs/DESIGN.md). Plan en cours : [docs/PLAN.md](docs/PLAN.md).
 
 **Boussole** : l'auteur doit pouvoir écrire son roman avec le mentor le plus tôt possible. Tout arbitrage se fait à cette aune.
 
@@ -29,7 +29,7 @@ Miroir Markdown (desktop) : un `.md` par scène, appariement par id dans le fron
 - Code, identifiants, commentaires en **anglais** ; interface en **français**, aucune chaîne en dur (i18n).
 - Commits petits et fréquents, **Conventional Commits**. **Ne jamais pousser** vers un dépôt distant sans demande explicite.
 - Les tests prioritaires s'écrivent avec le code concerné : aller-retour CRDT ↔ Markdown, réimport d'un `.md` modifié, fusion offline/online (étape 4).
-- Chaque dépendance ajoutée : vérifier sa licence. MIT/ISC/BSD/Apache OK ; MPL/LGPL au cas par cas, documenté ; GPL/AGPL refusé.
+- Chaque dépendance ajoutée : vérifier sa licence. MIT/ISC/BSD/Apache OK ; MPL/LGPL au cas par cas, documenté ; GPL/AGPL refusé. Polices : SIL OFL 1.1 acceptée (fichiers dans `packages/core/src/fonts`, licence jointe, hors `check:licenses`).
 - Questions ouvertes : proposer 2 ou 3 options argumentées, ne pas trancher seul.
 - Fin de chaque phase : résumer fait / testé / restant, puis attendre le feu vert.
 - Garder ce fichier court et à jour.
@@ -49,6 +49,7 @@ Miroir Markdown (desktop) : un `.md` par scène, appariement par id dans le fron
 - Markdown exclu de Prettier (prose formatée à la main).
 - Éditeur : `sceneSchemaExtensions` doit produire exactement `sceneSchema` (test `schema-conformity`). Les règles de saisie doivent marcher en français (`l’*Odyssée*`). Toute commande qui insère un nœud feuille place le curseur après lui (sinon la frappe suivante le remplace).
 - Services de plateforme absents = `null` : le cœur vérifie et masque la fonction, il ne suppose jamais un service présent. Tests du cœur : `createTestPlatform()` (jamais `platform-web`).
-- Commandes : toute action passe par `packages/core/src/commands/workspace-commands.ts` (id = clé de `commands` dans `fr.json`, donc un titre obligatoire). Le registre refuse un raccourci en double ou réservé par l'hôte ; les raccourcis de TipTap y sont déclarés en portée `editor`. Raccourcis : `Mod-…` ; avec Alt, la lettre vient de la touche physique (AZERTY, ⌥ sur Mac).
+- Commandes : toute action passe par le registre de `packages/core/src/commands/` (id = clé de `commands` dans `fr.json`, donc un titre obligatoire). Le registre refuse un raccourci en double, ou un raccourci unique réservé par l'hôte ; une liste de raccourcis (`['Mod-n', 'Mod-Alt-n']`) lie tous ceux que l'hôte laisse libres. Les raccourcis de TipTap y sont déclarés en portée `editor`. Syntaxe : `Mod-…`, `Mod--` pour la touche moins, réservations de l'hôte dans la même syntaxe (`Meta-q`) ; avec Alt, la lettre vient de la touche physique (AZERTY, ⌥ sur Mac).
+- Styles : tokens `--ch-*` de `packages/core/src/styles/tokens.css` uniquement (aucune couleur en dur) ; vermillon `--ch-author` pour l'auteur, bleu `--ch-mentor` réservé au Compagnon. Rendre le focus au texte avec `editor.view.focus()` (synchrone) : `editor.commands.focus()` attend une frame et peut voler le focus d'un panneau ouvert entre-temps.
 - Tests en navigateur : déclarer toute nouvelle dépendance chargée dans `optimizeDeps.include` de `vitest.browser.config.ts` (sinon Vite recharge la page et le premier lancement échoue, en CI notamment).
 - i18n : catalogue `packages/core/src/i18n/locales/fr.json`, clés typées ; la règle locale `charpentier/no-ui-literal` (`tools/eslint/`) interdit tout texte en dur dans le JSX. `eslint-plugin-i18next` est inopérant avec ESLint 10 : ne pas le réintroduire.
