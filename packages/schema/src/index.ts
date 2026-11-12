@@ -3,3 +3,4 @@ export { sceneSchema, type SceneSchema } from './prosemirror/scene-schema';
 export { parseSceneMarkdown } from './markdown/parse';
 export { serializeSceneMarkdown } from './markdown/serialize';
 export { isSanitizedSceneText, sanitizeSceneText } from './prosemirror/scene-text';
+export * from './model';
