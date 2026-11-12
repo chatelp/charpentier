@@ -26,6 +26,7 @@
 | D-14 | Machine d'écriture initiale | **Le Mac de l'auteur** : la fin de l'étape 2 produit une `.app` macOS non signée. |
 | D-15 | Titulaire des droits | **Pierre Chatel**. Dépôt GitHub pas encore choisi (configuration CLA prête, à compléter). |
 | D-16 | Design language | **Direction « Perle »** (neumorphisme doux : page plate, outils en relief), deux encres (vermillon pour l'auteur, bleu de Prusse pour le mentor), Literata + Inter embarquées (SIL OFL 1.1). Référence : [DESIGN.md](DESIGN.md). Décidé le 12 novembre 2026. |
+| D-18 | Raccourcis du tiroir et du panneau droit | **`⌘J` ouvre le tiroir du manuscrit** (au lieu du `⌘\` des maquettes, qui demande quatre touches sur un Mac AZERTY). Les points à traiter et la conversation du Compagnon partagent le panneau droit sur **`⌘L`**, avec un contrôle segmenté pour passer de l'un à l'autre. Décidé le 12 novembre 2026. |
 | D-17 | Nom du mentor | **Le Compagnon** (le compagnon charpentier qui transmet le métier) ; vouvoie l'auteur, signe ses notes en bleu de Prusse. Répond à la question ouverte n°4. |
 
 Choix par défaut annoncés et non contestés : i18next pour l'i18n ; Vitest (+ mode navigateur, + Playwright Electron) ; signalements rendus en **décorations** ProseMirror (pas de marques dans le contenu) ; un projet = un dossier dans une bibliothèque locale ; IA désactivée dans `apps/web` jusqu'à l'étape 4 ; prompts système en anglais avec réponse imposée dans la langue du projet.

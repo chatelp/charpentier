@@ -109,13 +109,13 @@ Sons : **désactivés par défaut**, discrets, hors ligne. Un déclic clair à l
 - **Comportement** : une seule note dépliée à la fois ; elle se déplie quand le curseur entre dans le passage après une pause, ou au raccourci ; se replie quand le curseur s'éloigne ou à `Échap`. Fenêtre étroite (< 1180 px) : la note se déplie sous son paragraphe et pousse le texte, sans le recouvrir.
 
 ### 4.3 Panneau droit : Points à traiter / Conversation
-- Panneau en relief de 25,5 rem, détaché des bords (10–12 px), ouvert par `⌘J` (points) ou `⌘L` (conversation). Il **remplace la marge** : les pastilles disparaissent et le texte se recentre dans l'espace restant.
+- Panneau en relief de 25,5 rem, détaché des bords (10–12 px), ouvert par `⌘L`, sur l'onglet Points ; le contrôle segmenté passe à la conversation [D-18]. Il **remplace la marge** : les pastilles disparaissent et le texte se recentre dans l'espace restant.
 - **Contrôle segmenté** en tête : rail en creux, onglet actif en relief, libellé vermillon, compteur bleu.
 - **Points** : groupes « Cette scène », « Chapitre », « Fiches proposées » (libellés en petites capitales) ; chaque point est une carte en relief avec sa pastille, son type et sa scène, un titre, une phrase. Le point sélectionné est gravé. Les propositions de fiche portent « Valider `V` » et « Rejeter `X` ». Pied : `J K` parcourir, `⏎` aller au passage, `R` résolu, `I` ignorer.
 - **Conversation** : pas de bulles. Transcription sobre : « Vous » (petites capitales vermillon), « Le Compagnon » (petites capitales bleues), texte en Inter 13,5 px. Champ de saisie gravé en pied.
 
 ### 4.4 Manuscrit : tiroir et vue d'ensemble
-- **Tiroir** (`⌘\`) : panneau gauche en relief de 22 rem, la scène derrière s'estompe. Contrôle segmenté « Manuscrit | Plan ». Chapitres en Literata, scènes en lignes ; scène active gravée avec un filet vermillon à gauche ; pastilles bleues `•••` et nombre de mots à droite. Sous la scène active : variantes (active en vermillon) et derniers points de restauration. Clavier : `↑↓`, `⏎` ouvrir, `⌥↑↓` déplacer, `V` variantes, `⌘N` nouvelle scène.
+- **Tiroir** (`⌘J`, [D-18]) : panneau gauche en relief de 22 rem, la scène derrière s'estompe. Contrôle segmenté « Manuscrit | Plan ». Chapitres en Literata, scènes en lignes ; scène active gravée avec un filet vermillon à gauche ; pastilles bleues `•••` et nombre de mots à droite. Sous la scène active : variantes (active en vermillon) et derniers points de restauration. Clavier : `↑↓`, `⏎` ouvrir, `⌥↑↓` déplacer, `V` variantes, `⌘N` nouvelle scène.
 - **Vue d'ensemble** (`⌘⇧P` ou « Plan ») : plein cadre, titre du roman en Literata, une colonne par chapitre, une carte en relief par scène (numéro, titre en Literata, mots, variantes, pastilles). Scène active gravée et cerclée de vermillon. Bandeau en pied : variantes et points de restauration de la scène sélectionnée. Clavier : flèches, `⌥` + flèches pour déplacer, `⏎` écrire, `Échap` revenir.
 
 ### 4.5 Atelier (modules) et fiches
@@ -169,9 +169,9 @@ Registre central dans le cœur, tous modifiables. `⌘` = `Ctrl` sur le X250.
 | Action | Touche |
 |---|---|
 | Ligne de commande / aller à une scène | `⌘K` / `⌘P` |
-| Tiroir du manuscrit / vue d'ensemble | `⌘\` / `⌘⇧P` |
+| Tiroir du manuscrit / vue d'ensemble | `⌘J` / `⌘⇧P` |
 | Écrire ↔ Atelier ; modules | `⌘E` ; `⌘1…5` |
-| Points à traiter / conversation | `⌘J` / `⌘L` |
+| Points à traiter et conversation (panneau droit) | `⌘L` |
 | Déplier la remarque du passage / remarque suivante, précédente | `⌥⏎` / `⌘'`, `⌘⇧'` |
 | Insérer la phrase d'exemple | `⌘⏎` |
 | Nouvelle scène / nouvelle variante / changer de variante | `⌘N` / `⌘⇧N` / `⌘⌥V` |
