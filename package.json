@@ -19,7 +19,8 @@
     "check:licenses": "node scripts/check-licenses.mjs",
     "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm check:guards && pnpm check:licenses",
     "dev:desktop": "pnpm --filter @charpentier/desktop dev",
-    "test:desktop": "pnpm --filter @charpentier/desktop test:e2e"
+    "test:desktop": "pnpm --filter @charpentier/desktop test:e2e",
+    "package:desktop": "pnpm --filter @charpentier/desktop package"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

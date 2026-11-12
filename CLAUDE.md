@@ -40,9 +40,11 @@ Miroir Markdown (desktop) : un `.md` par scène, appariement par id dans le fron
 - `pnpm check:guards` : auto-test des garde-fous anti-fuite (ESLint et TypeScript doivent rejeter une fuite Node/Electron dans chaque paquet agnostique)
 - `pnpm check:licenses` : licences de toutes les dépendances ; exceptions revues dans `licenses.exceptions.json`
 - Tests en navigateur (`*.browser.test.ts[x]`, Chromium headless) : une fois `pnpm --filter @charpentier/core exec playwright install chromium`
-- `pnpm dev:web` : hôte web sur http://localhost:5173 (config de prévisualisation dans `.claude/launch.json`) · `pnpm build` : build web · `pnpm dev:desktop` (étape 2)
+- `pnpm dev:web` : hôte web sur http://localhost:5173 (config de prévisualisation dans `.claude/launch.json`) · `pnpm build` : builds web et desktop
+- `pnpm dev:desktop` : app Electron en développement · `pnpm test:desktop` : build + tests Playwright de l'app (ouvre des fenêtres ; en CI sous xvfb, hors `pnpm check`) · `pnpm package:desktop` : `.app` macOS non signée dans `apps/desktop/dist`
 
 ## Repères techniques
+- Desktop : `platform-desktop/src/main` (Node : `DocStore`, `DocFile`, `FolderLibrary`, `ProjectMirror`, `RendererSession`, sans import d'Electron, testé sous Node) · `src/renderer` (agnostique, passe par le pont du preload) · `src/shared/ipc.ts` (contrat). `apps/desktop` câble Electron. Main et preload sont entièrement bundlés : l'app empaquetée n'embarque aucun `node_modules`. Dans le renderer, `electron` résout vers un module vide (`types/no-electron.d.ts`).
 - Paquets internes exportés en source TS (`exports: ./src/index.ts`), pas d'étape de build.
 - Paquets agnostiques : `tsconfig.json` (src, sans types Node) + `tsconfig.test.json` (tests). Nouveau paquet agnostique → l'ajouter aux couches d'`eslint.config.js` et à `scripts/guard-selftest.mjs`.
 - TypeScript reste en 6.0.x tant que typescript-eslint ne supporte pas la 7.

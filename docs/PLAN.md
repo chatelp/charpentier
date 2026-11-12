@@ -2,7 +2,7 @@
 
 Chaque phase est courte, se termine par un résultat vérifiable dans l'app (ou par des tests quand la phase n'a pas d'interface), puis par un arrêt pour le feu vert. Les tests prioritaires sont écrits dans la phase qui introduit le code concerné.
 
-Statut : étape 1 réalisée jusqu'à la phase 1.10 (12 novembre 2026) ; étape 2 à venir.
+Statut : étapes 1 et 2 réalisées (12 novembre 2026) ; étape 3 (mentor) à venir.
 
 ---
 
@@ -64,22 +64,27 @@ Réalisé : ⌘O ; la bibliothèque est un document Yjs `library` (index), le ti
 ### 2.1 Coquille Electron
 `apps/desktop` (main, preload, renderer), `contextIsolation`, `platform-desktop`. Tests du cœur exécutés aussi dans Electron (Playwright) en CI.
 **Vérifiable** : `pnpm dev:desktop` ouvre la même app que le web.
+Réalisé : electron-vite, preload sandboxé (`contextIsolation`, `sandbox`), barre de titre intégrée sur macOS. Écart : plutôt que d'exécuter les tests unitaires du cœur dans Electron, `pnpm test:desktop` lance l'app construite avec Playwright (ouverture, isolation, arrêt brutal, miroir) ; il tourne en CI sous xvfb.
 
 ### 2.2 Documents dans le main et persistance disque
 `Y.Doc` détenus par le main, synchronisés avec l'interface par IPC. Journal append-only + compaction, écritures atomiques. Choix du dossier de bibliothèque ; un projet = un dossier.
 **Vérifiable** : j'écris, je tue l'app brutalement, je relance : rien n'est perdu (scénario aussi couvert par un test automatique).
+Réalisé : chaque mise à jour est écrite (appel système synchrone) avant la suivante, `fsync` sous 300 ms, compaction atomique ; testé par SIGKILL d'un processus écrivain et de l'app. Bibliothèque par défaut `~/Documents/Charpentier`, modifiable (commande et écran Bibliothèque) ; le dossier d'un projet garde son nom de création.
 
 ### 2.3 Miroir Markdown sortant
 Un `.md` par scène, dossiers par chapitre, frontmatter avec ids, modules en YAML ; écriture différée.
 **Vérifiable** : j'ouvre le dossier du projet dans le Finder et je lis mon roman en Markdown, à jour.
+Réalisé : `manuscrit/01-chapitre/01-scene.md` (frontmatter `scene`, `variant`), `modules/*.yaml` ; écriture 0,8 s après la dernière modification, tant qu'une fenêtre a le projet ouvert ; la scène mise à la corbeille perd son fichier (pas ses données).
 
 ### 2.4 Réimport des modifications externes
 Surveillance des fichiers, fusion à trois voies appliquée en transaction `mirror`, point de restauration préalable ; chevauchement → variante « Modif. externe » + signalement. Tests prioritaires de réimport.
 **Vérifiable** : je corrige une phrase dans un autre éditeur, l'app la reprend ; si j'ai modifié la même phrase dans l'app, je retrouve une variante « Modif. externe ».
+Réalisé : fusion par paragraphe ; seuls les blocs modifiés sont réécrits dans le CRDT. Un nouveau fichier `.md` sans identifiant est ignoré (import après la v1, D-1).
 
 ### 2.5 Application installable
 `.app` macOS non signée.
 **Vérifiable** : j'installe Charpentier dans Applications et **je commence à écrire mon roman pour de vrai**. (Jalon : écriture réelle sans risque de perte.)
+Réalisé : `pnpm package:desktop` produit `apps/desktop/dist/mac-arm64/Charpentier.app` (Apple Silicon, signature ad hoc, sans runtime renforcé ni notarisation), à glisser dans Applications. Icône Electron par défaut.
 
 ---
 

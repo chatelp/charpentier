@@ -1,0 +1,23 @@
+# Packaging of the desktop app (phase 2.5): an unsigned macOS .app.
+# Main, preload and renderer are fully bundled in out/: no node_modules shipped.
+appId: app.charpentier.desktop
+productName: Charpentier
+copyright: Copyright © 2026 Pierre Chatel
+directories:
+  output: dist
+files:
+  - out/**/*
+  - package.json
+npmRebuild: false
+nodeGypRebuild: false
+mac:
+  category: public.app-category.productivity
+  target:
+    - target: dir
+      arch: [arm64]
+  # No Developer ID yet: ad-hoc signature only (D-14). Without notarization the
+  # hardened runtime brings nothing, and its library validation would refuse
+  # Electron's frameworks under an ad-hoc signature.
+  identity: '-'
+  hardenedRuntime: false
+  darkModeSupport: true

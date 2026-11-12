@@ -12,6 +12,12 @@
       "license": "MPL-2.0",
       "scope": "dev",
       "reason": "Platform-specific native binaries of lightningcss (see above)."
+    },
+    {
+      "package": "truncate-utf8-bytes",
+      "license": "WTFPL",
+      "scope": "dev",
+      "reason": "Pulled in by electron-builder (packaging tool, build time only). WTFPL is a permissive public-domain-like license with no copyleft; not shipped inside the app."
     }
   ]
 }
