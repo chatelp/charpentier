@@ -74,6 +74,7 @@ export interface EntityInfo {
   readonly id: string;
   readonly status: EntityStatus;
   readonly createdBy: string;
+  readonly createdAt: string;
   readonly fields: Readonly<Record<string, FieldState>>;
 }
 
@@ -106,6 +107,7 @@ function toEntityInfo(id: string, entity: YMap): EntityInfo {
     id,
     status: entityStatus(entity),
     createdBy: String(entity.get('$createdBy') ?? ''),
+    createdAt: String(entity.get('$createdAt') ?? ''),
     fields: Object.fromEntries(fieldKeys(entity).map((f) => [f, readField(entity, f)])),
   };
 }
@@ -121,12 +123,29 @@ export function readSingleton(doc: Y.Doc, module: SingletonModule): Record<strin
   return Object.fromEntries(fieldKeys(container).map((f) => [f, readField(container, f)]));
 }
 
-/** Entities of a module, trashed ones excluded. */
+const byCreation = (a: EntityInfo, b: EntityInfo) =>
+  a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : a.id < b.id ? -1 : 1;
+
+/** Entities of a module in creation order, trashed ones excluded. */
 export function listEntities(doc: Y.Doc, module: EntityModule): EntityInfo[] {
   return [...moduleMap(doc, module).entries()]
     .filter((e): e is [string, YMap] => e[1] instanceof Y.Map && !isTrashed(e[1] as YMap))
     .map(([id, entity]) => toEntityInfo(id, entity))
-    .sort((a, b) => (a.id < b.id ? -1 : 1));
+    .sort(byCreation);
+}
+
+/** Trashed entities of a module, most recently trashed first. */
+export function listTrashedEntities(
+  doc: Y.Doc,
+  module: EntityModule,
+): (EntityInfo & { readonly trashedAt: string })[] {
+  return [...moduleMap(doc, module).entries()]
+    .filter((e): e is [string, YMap] => e[1] instanceof Y.Map && isTrashed(e[1] as YMap))
+    .map(([id, entity]) => ({
+      ...toEntityInfo(id, entity),
+      trashedAt: String(entity.get('$trashedAt')),
+    }))
+    .sort((a, b) => (a.trashedAt < b.trashedAt ? 1 : a.trashedAt > b.trashedAt ? -1 : 0));
 }
 
 export function getEntity(
@@ -215,6 +234,15 @@ export function trashEntity(
   origin: Origin = AUTHOR,
 ): void {
   doc.transact(() => entityMap(doc, module, entityId).set('$trashedAt', nowIso()), origin);
+}
+
+export function restoreEntity(
+  doc: Y.Doc,
+  module: EntityModule,
+  entityId: string,
+  origin: Origin = AUTHOR,
+): void {
+  doc.transact(() => entityMap(doc, module, entityId).delete('$trashedAt'), origin);
 }
 
 // ─── Agent operations (used through AgentWriter only) ────────────────────

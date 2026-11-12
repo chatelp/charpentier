@@ -8,11 +8,14 @@ import {
   getEntity,
   knownByField,
   listEntities,
+  listTrashedEntities,
   readFieldRef,
   readSingleton,
   rejectEntity,
   rejectProposal,
+  restoreEntity,
   setField,
+  trashEntity,
   validateEntity,
   type FieldRef,
 } from './modules';
@@ -100,6 +103,28 @@ describe('field statuses', () => {
 });
 
 describe('entities', () => {
+  it('are listed in creation order and come back from the trash', () => {
+    const doc = newProjectDoc();
+    const original = Date.prototype.toISOString;
+    const ids: string[] = [];
+    try {
+      for (const [i, name] of ['Hélène', 'Paul', 'Inès'].entries()) {
+        Date.prototype.toISOString = () => `2026-11-12T10:0${i}:00.000Z`;
+        ids.push(createEntity(doc, 'characters', { name }));
+      }
+    } finally {
+      Date.prototype.toISOString = original;
+    }
+    const names = () => listEntities(doc, 'characters').map((c) => c.fields['name']?.value);
+    expect(names()).toEqual(['Hélène', 'Paul', 'Inès']);
+    trashEntity(doc, 'characters', ids[1] ?? '');
+    expect(names()).toEqual(['Hélène', 'Inès']);
+    expect(listTrashedEntities(doc, 'characters').map((c) => c.id)).toEqual([ids[1]]);
+    restoreEntity(doc, 'characters', ids[1] ?? '');
+    expect(names()).toEqual(['Hélène', 'Paul', 'Inès']);
+    expect(listTrashedEntities(doc, 'characters')).toEqual([]);
+  });
+
   it('an author-created character is validated with its fields', () => {
     const doc = newProjectDoc();
     const id = createEntity(doc, 'characters', { name: 'Anna', fear: 'Le silence' });
