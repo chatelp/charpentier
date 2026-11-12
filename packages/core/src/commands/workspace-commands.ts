@@ -22,6 +22,8 @@ import type { CommandId } from './command-id';
 import type { PrimaryModifier } from './keybinding';
 import { trashedVariantItems, variantCommands } from './variant-commands';
 import { writingCommands } from './writing-commands';
+import { atelierCommands } from './atelier-commands';
+import { trashedEntityItems } from '../atelier/atelier-actions';
 import { CommandRegistry, type Command } from './registry';
 
 export type { CommandId } from './command-id';
@@ -249,6 +251,7 @@ export const workspaceCommands: readonly WorkspaceCommand[] = [
     run: (ctx) => {
       const trash = listTrash(ctx.root);
       const variants = trashedVariantItems(ctx);
+      const entities = trashedEntityItems(ctx);
       const chapterTitle = (id: string) => listChapters(ctx.root).find((c) => c.id === id)?.title;
       ctx.openPalette({
         kind: 'pick',
@@ -256,6 +259,7 @@ export const workspaceCommands: readonly WorkspaceCommand[] = [
         empty: ctx.t('palette.emptyTrash'),
         items: [
           ...variants.map(({ id, label, detail }) => ({ id, label, detail })),
+          ...entities.map(({ id, label, detail }) => ({ id, label, detail })),
           ...trash.scenes.map((s) => ({
             id: `scene:${s.id}`,
             label: s.title,
@@ -273,6 +277,8 @@ export const workspaceCommands: readonly WorkspaceCommand[] = [
           const [kind, id = ''] = key.split(/:(.*)/s);
           if (kind === 'variant') {
             variants.find((v) => v.id === key)?.restore();
+          } else if (kind === 'entity') {
+            entities.find((e) => e.id === key)?.restore();
           } else if (kind === 'scene') {
             restoreSceneWithChapter(ctx.root, id);
             ctx.openScene(id);
@@ -323,7 +329,12 @@ export const workspaceCommands: readonly WorkspaceCommand[] = [
 
 export function createWorkspaceRegistry(primary: PrimaryModifier, reserved: readonly string[]) {
   const registry = new CommandRegistry<WorkspaceContext>(primary, reserved);
-  for (const command of [...workspaceCommands, ...variantCommands, ...writingCommands])
+  for (const command of [
+    ...workspaceCommands,
+    ...variantCommands,
+    ...writingCommands,
+    ...atelierCommands,
+  ])
     registry.register(command);
   return registry;
 }

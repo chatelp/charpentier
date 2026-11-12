@@ -1,0 +1,324 @@
+/* Atelier (docs/DESIGN.md §4.5): rail, list, sheet. */
+.ch-atelier {
+  position: absolute;
+  inset: 0 0 36px;
+  display: grid;
+  grid-template-columns: 13.5rem 16.5rem minmax(0, 1fr);
+  gap: 22px;
+  padding: var(--ch-space-5) 22px 0;
+  animation: ch-atelier-in var(--ch-dur-view) var(--ch-ease) both;
+}
+
+@keyframes ch-atelier-in {
+  from {
+    opacity: 0;
+    transform: scale(1.03);
+  }
+}
+
+.ch-atelier:not(:has(.ch-atl-list)) {
+  grid-template-columns: 13.5rem minmax(0, 1fr);
+}
+
+@media (max-width: 1100px) {
+  .ch-atelier {
+    grid-template-columns: 12rem 14rem minmax(0, 1fr);
+  }
+}
+
+.ch-atl-rail,
+.ch-atl-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ch-space-2);
+  min-height: 0;
+}
+
+.ch-atl-rail .ch-seg {
+  margin-bottom: var(--ch-space-3);
+}
+
+.ch-atl-modules,
+.ch-atl-entries {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+}
+
+.ch-atl-module {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  padding: 9px 12px;
+  border-radius: var(--ch-radius-sm);
+  color: var(--ch-ink-2);
+  font-size: 13.5px;
+  cursor: pointer;
+  outline: none;
+}
+
+.ch-atl-module[aria-selected='true'] {
+  box-shadow:
+    var(--ch-inset),
+    inset 3px 0 0 var(--ch-author);
+  color: var(--ch-author);
+  font-weight: 500;
+}
+
+.ch-atl-module:focus-visible:not([aria-selected='true']) {
+  box-shadow: var(--ch-inset);
+}
+
+.ch-atl-count {
+  color: var(--ch-mentor);
+  font-size: var(--ch-ui-xs);
+}
+
+.ch-atl-entries {
+  flex: 1;
+  padding: 2px;
+}
+
+.ch-atl-group {
+  margin: var(--ch-space-3) 4px 4px;
+  color: var(--ch-muted);
+}
+
+.ch-atl-entry {
+  margin-bottom: 4px;
+  padding: 10px 12px;
+  border-radius: var(--ch-radius-md);
+  font-size: 13.5px;
+  cursor: pointer;
+  outline: none;
+}
+
+.ch-atl-entry[aria-selected='true'] {
+  box-shadow:
+    var(--ch-inset),
+    inset 3px 0 0 var(--ch-author);
+  color: var(--ch-author);
+}
+
+/* Proposed by the Compagnon: raised, in its ink. */
+.ch-atl-entry.is-proposed {
+  box-shadow: var(--ch-raise-s);
+  color: var(--ch-mentor);
+}
+
+.ch-atl-sub {
+  color: var(--ch-muted);
+  font-size: 11.5px;
+}
+
+.ch-atl-empty,
+.ch-section-note {
+  margin: 0 0 var(--ch-space-2);
+  color: var(--ch-muted);
+  font-size: var(--ch-ui-xs);
+}
+
+.ch-atl-hint {
+  margin: auto 0 0;
+  color: var(--ch-faint);
+  font-size: var(--ch-ui-2xs);
+  line-height: 1.6;
+}
+
+/* ── Sheet ── */
+.ch-sheet {
+  overflow: auto;
+  padding: 4px 16px 30px 10px;
+  container-type: inline-size;
+}
+
+.ch-sheet-title {
+  margin: 0;
+  font: 500 var(--ch-title-sheet) / 1.15 var(--ch-font-text);
+}
+
+.ch-sheet-lead {
+  margin: 4px 0 12px;
+  color: var(--ch-muted);
+}
+
+.ch-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: 0 0 18px;
+  color: var(--ch-muted);
+  font-size: var(--ch-ui-xs);
+}
+
+.ch-legend i {
+  display: inline-block;
+  width: 26px;
+  height: 14px;
+  margin-right: 6px;
+  border-radius: 4px;
+  vertical-align: -2px;
+}
+
+.ch-legend .is-proposed {
+  box-shadow: var(--ch-raise-s);
+}
+
+.ch-legend .is-validated,
+.ch-legend .is-contradicted {
+  box-shadow: var(--ch-inset);
+}
+
+.ch-legend .is-rejected {
+  border: 1px dashed var(--ch-faint);
+  opacity: 0.7;
+}
+
+.ch-sections {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 30px;
+}
+
+@container (max-width: 46rem) {
+  .ch-sections {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.ch-section.is-wide {
+  grid-column: 1 / -1;
+}
+
+.ch-section h3 {
+  margin: 14px 0 8px;
+  color: var(--ch-muted);
+}
+
+/* ── Field with status (relief = status) ── */
+.ch-fld {
+  display: grid;
+  grid-template-columns: 8.5rem minmax(0, 1fr);
+  align-items: start;
+  gap: 4px 12px;
+  margin-bottom: 10px;
+}
+
+@container (max-width: 24rem) {
+  .ch-fld {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ch-fm {
+    grid-column: 1;
+  }
+}
+
+.ch-fl {
+  padding-top: 8px;
+  color: var(--ch-ink-2);
+  font-size: 12.5px;
+}
+
+.ch-fv,
+.ch-fv-input {
+  position: relative;
+  min-height: 2.3em;
+  padding: 7px 12px;
+  border-radius: var(--ch-radius-sm);
+  font-family: var(--ch-font-text);
+  font-size: 15.5px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  cursor: text;
+  outline: none;
+  transition:
+    box-shadow var(--ch-dur-relief) var(--ch-ease),
+    color var(--ch-dur-relief),
+    opacity var(--ch-dur-relief);
+}
+
+.ch-fv:focus-visible {
+  outline: 1.5px solid var(--ch-author);
+  outline-offset: 2px;
+}
+
+.ch-fv-input {
+  display: block;
+  width: 100%;
+  border: 0;
+  background: var(--ch-bg);
+  box-shadow:
+    var(--ch-inset),
+    inset 2px 0 0 var(--ch-author);
+  color: var(--ch-ink);
+  resize: none;
+  field-sizing: content;
+}
+
+.ch-fm {
+  grid-column: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  color: var(--ch-muted);
+  font-size: 11.5px;
+}
+
+.ch-fm:empty {
+  display: none;
+}
+
+.ch-fld[data-status='validated'] .ch-fv,
+.ch-fld[data-status='contradicted'] .ch-fv {
+  box-shadow:
+    var(--ch-inset),
+    inset 2px 0 0 color-mix(in srgb, var(--ch-author) 70%, transparent);
+}
+
+.ch-fld[data-status='proposed'] .ch-fv {
+  box-shadow: var(--ch-raise-s);
+  color: var(--ch-mentor);
+  font-style: italic;
+}
+
+.ch-fld[data-status='proposed'] .ch-fm,
+.ch-fld[data-status='contradicted'] .ch-fm {
+  color: var(--ch-mentor);
+}
+
+.ch-fld[data-status='rejected'] .ch-fv {
+  opacity: 0.45;
+  text-decoration: line-through;
+  text-decoration-color: var(--ch-muted);
+}
+
+.ch-fld[data-status='contradicted'] .ch-fv {
+  padding-right: 30px;
+}
+
+.ch-fld[data-status='contradicted'] .ch-fv::after {
+  content: '!';
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  box-shadow: var(--ch-raise-s);
+  color: var(--ch-mentor);
+  font: 700 11px var(--ch-font-ui);
+}
+
+.ch-fld[data-status='empty'] .ch-fv {
+  border: 1px dashed color-mix(in srgb, var(--ch-faint) 70%, transparent);
+  color: var(--ch-faint);
+  font-family: var(--ch-font-ui);
+  font-size: var(--ch-ui-sm);
+}

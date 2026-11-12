@@ -58,7 +58,18 @@
     "toggleFocusMode": "Mode focus",
     "toggleTypewriter": "Défilement machine à écrire",
     "cycleTheme": "Changer de thème (système, clair, sombre)",
-    "toggleReducedMotion": "Réduire les animations"
+    "toggleReducedMotion": "Réduire les animations",
+    "toggleAtelier": "Basculer entre Écrire et l’Atelier",
+    "atelierMeta": "Atelier : Méta",
+    "atelierCharacters": "Atelier : Personnages",
+    "atelierStructure": "Atelier : Structure",
+    "atelierWorldRules": "Atelier : Règles du monde",
+    "atelierClues": "Atelier : Indices et révélations",
+    "newCharacter": "Nouveau personnage…",
+    "newAct": "Nouvel acte…",
+    "newArc": "Nouvel arc…",
+    "newWorldRule": "Nouvelle règle du monde…",
+    "newClue": "Nouvel indice ou révélation…"
   },
   "palette": {
     "label": "Ligne de commande",
@@ -81,7 +92,8 @@
     "activeVariant": "variante active",
     "commandsGroup": "Commandes",
     "scenesGroup": "Scènes",
-    "prefixHint": "# scènes · > commandes"
+    "prefixHint": "# scènes · @ fiches · > commandes",
+    "sheetsGroup": "Fiches"
   },
   "navigator": {
     "label": "Plan du manuscrit",
@@ -115,10 +127,214 @@
       "dark": "Thème sombre."
     },
     "motionReduced": "Animations réduites.",
-    "motionNormal": "Animations rétablies."
+    "motionNormal": "Animations rétablies.",
+    "entityTrashed": "« {{title}} » mis à la corbeille. « Restaurer depuis la corbeille… » le ramène."
   },
   "footer": {
     "words_one": "{{count, number}} mot",
     "words_other": "{{count, number}} mots"
+  },
+  "atelier": {
+    "label": "Atelier",
+    "write": "Écrire",
+    "modulesLabel": "Modules",
+    "modules": {
+      "meta": "Méta",
+      "characters": "Personnages",
+      "structure": "Structure",
+      "worldRules": "Règles du monde",
+      "clues": "Indices et révélations"
+    },
+    "kind": {
+      "characters": "Personnage",
+      "acts": "Acte",
+      "arcs": "Arc",
+      "worldRules": "Règle du monde",
+      "clues": "Indice ou révélation"
+    },
+    "railHint": "{{toggle}} écrire · {{modules}} modules · Échap revenir au texte",
+    "listHint": "↑↓ parcourir · ↵ fiche · N nouveau · ⌫ corbeille · V valider · X rejeter · / filtrer",
+    "filter": "Filtrer…",
+    "emptyList": {
+      "characters": "Aucun personnage. N en crée un.",
+      "structure": "",
+      "worldRules": "Aucune règle du monde. N en crée une.",
+      "clues": "Aucun indice. N en crée un.",
+      "meta": ""
+    },
+    "structureModel": "Modèle narratif",
+    "groups": {
+      "model": "Modèle",
+      "acts": "Actes",
+      "arcs": "Arcs"
+    },
+    "untitled": {
+      "characters": "Personnage sans nom",
+      "acts": "Acte sans titre",
+      "arcs": "Arc sans titre",
+      "worldRules": "Règle sans titre",
+      "clues": "Élément sans titre"
+    },
+    "newPrompt": {
+      "characters": "Nom du personnage",
+      "acts": "Titre de l’acte",
+      "arcs": "Titre de l’arc",
+      "worldRules": "Titre de la règle",
+      "clues": "Titre de l’indice ou de la révélation"
+    },
+    "trashed": {
+      "characters": "Personnage",
+      "acts": "Acte",
+      "arcs": "Arc",
+      "worldRules": "Règle du monde",
+      "clues": "Indice ou révélation"
+    },
+    "projectKind": {
+      "novel": "Roman",
+      "short-story": "Nouvelle"
+    },
+    "lead": {
+      "meta": "",
+      "structure": "La charpente du récit. Le découpage en chapitres reste celui du manuscrit.",
+      "characters": "Personnage",
+      "acts": "Acte",
+      "arcs": "Arc",
+      "worldRules": "Règle du monde",
+      "clues": "Indice, fausse piste ou révélation"
+    },
+    "legend": {
+      "proposed": "en relief : proposée",
+      "validated": "gravée : validée",
+      "rejected": "estompée : rejetée",
+      "contradicted": "contredite"
+    },
+    "status": {
+      "proposed": "Proposée par le Compagnon.",
+      "validated": "Validée.",
+      "rejected": "Rejetée.",
+      "contradicted": "Validée, mais contredite par le texte.",
+      "empty": "Vide."
+    },
+    "empty": "À écrire, ou laissez le Compagnon proposer",
+    "noScene": "Aucune scène",
+    "proposed": "Proposée",
+    "proposedFrom": "Proposée · d’après la scène {{scenes}}",
+    "accept": "Valider",
+    "reject": "Rejeter",
+    "rejectedOn": "Rejetée le {{date}} · conservée pour ne pas être reproposée",
+    "contradicted": "Contredite : {{message}}",
+    "showPassage": "Voir le passage",
+    "current": "valeur actuelle",
+    "clearChoice": "Aucun",
+    "pickScenes": "{{field}} : ajouter ou retirer une scène",
+    "sceneChosen": "choisie · la choisir à nouveau la retire",
+    "pickFromScene": "{{who}} le sait à partir de quelle scène ?",
+    "doesNotKnow": "Ne le sait pas",
+    "fromScene": "dès la scène {{number}} · {{title}}",
+    "reader": "Le lecteur",
+    "knownByNote": "À partir de quelle scène chacun a connaissance de l’élément.",
+    "appearancesNote": "Remplies automatiquement par le Compagnon (étape 3).",
+    "sections": {
+      "meta": {
+        "story": "Le roman",
+        "shape": "Ton et public"
+      },
+      "characters": {
+        "identity": "Identité et apparence",
+        "psychology": "Psychologie",
+        "voice": "Voix",
+        "relations": "Relations",
+        "arc": "Arc",
+        "appearances": "Apparitions"
+      },
+      "structure": {
+        "model": "Modèle narratif"
+      },
+      "acts": {
+        "act": "Acte"
+      },
+      "arcs": {
+        "arc": "Arc"
+      },
+      "worldRules": {
+        "rule": "Règle"
+      },
+      "clues": {
+        "clue": "Élément",
+        "path": "Du point de pose à la résolution",
+        "knownBy": "Qui sait"
+      }
+    },
+    "fields": {
+      "meta": {
+        "pitch": "Pitch",
+        "summary": "Résumé",
+        "intention": "Intention",
+        "themes": "Thèmes principaux",
+        "tone": "Ton",
+        "genres": "Genre(s)",
+        "audience": "Public visé"
+      },
+      "characters": {
+        "name": "Nom",
+        "age": "Âge",
+        "appearance": "Physique",
+        "occupation": "Métier",
+        "residence": "Lieu de vie",
+        "desire": "Désir",
+        "fear": "Peur",
+        "wound": "Blessure",
+        "contradiction": "Contradiction",
+        "secret": "Secret",
+        "voice": "Manière de parler",
+        "relations": "Liens",
+        "arc": "Évolution"
+      },
+      "structure": {
+        "narrativeModel": "Modèle"
+      },
+      "acts": {
+        "title": "Titre",
+        "summary": "Résumé",
+        "sceneIds": "Scènes"
+      },
+      "arcs": {
+        "title": "Titre",
+        "kind": "Type",
+        "summary": "Résumé",
+        "sceneIds": "Scènes"
+      },
+      "worldRules": {
+        "title": "Titre",
+        "statement": "Énoncé",
+        "consequences": "Conséquences"
+      },
+      "clues": {
+        "kind": "Type",
+        "title": "Titre",
+        "description": "Description",
+        "plantedIn": "Posé dans",
+        "appearsIn": "Réapparaît dans",
+        "resolvedIn": "Résolu dans"
+      }
+    },
+    "options": {
+      "narrativeModel": {
+        "threeActs": "Trois actes",
+        "fiveActs": "Cinq actes",
+        "herosJourney": "Voyage du héros",
+        "saveTheCat": "Save the Cat",
+        "kishotenketsu": "Kishōtenketsu"
+      },
+      "kind": {
+        "clue": "Indice",
+        "redHerring": "Fausse piste",
+        "revelation": "Révélation",
+        "main": "Arc principal",
+        "secondary": "Arc secondaire"
+      }
+    },
+    "acceptKey": "V",
+    "rejectKey": "X"
   }
 }

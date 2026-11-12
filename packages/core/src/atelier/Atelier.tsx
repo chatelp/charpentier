@@ -1,0 +1,518 @@
+import {
+  knownByField,
+  rejectEntity,
+  validateEntity,
+  type EntityInfo,
+  type EntityModule,
+  type FieldState,
+} from '@charpentier/schema';
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type RefObject } from 'react';
+import { useTranslation } from 'react-i18next';
+import { filterByQuery } from '../commands/registry';
+import { useDocSnapshot } from '../hooks/use-doc-snapshot';
+import type { WorkspaceContext } from '../workspace/workspace-context';
+import {
+  conflictFor,
+  fieldRefOf,
+  fieldState,
+  pendingCount,
+  readAtelier,
+  sceneNumbers,
+  shownValue,
+  type AtelierData,
+  type SheetTarget,
+} from './atelier-data';
+import { createEntityPrompt, trashEntityAndNotify } from './atelier-actions';
+import { FieldRow } from './FieldRow';
+import { ATELIER_MODULES, moduleDefs, type AtelierModule, type FieldDef } from './module-defs';
+import './atelier.css';
+
+export interface AtelierLocation {
+  readonly rail: AtelierModule;
+  readonly target?: SheetTarget;
+}
+
+export interface AtelierProps {
+  readonly ctx: WorkspaceContext;
+  readonly location: AtelierLocation;
+  /** False while the command line is open on top: focus comes back when it closes. */
+  readonly active: boolean;
+  /** Bumped to put the focus back on the list (⌘E, ⌘1…5). */
+  readonly focusRequest: number;
+  /** `focus`: put the focus on the selected entry once shown (after a creation). */
+  readonly onLocation: (location: AtelierLocation, focus?: boolean) => void;
+  readonly onWrite: () => void;
+}
+
+interface Entry {
+  readonly key: string;
+  readonly target: SheetTarget;
+  readonly title: string;
+  readonly subtitle?: string;
+  readonly proposed: boolean;
+  readonly group?: string;
+}
+
+const asText = (v: unknown) => (typeof v === 'string' ? v : '');
+
+const FOCUSABLE = '[data-atl-focus]';
+
+function focusWithin(ref: RefObject<HTMLElement | null>, selector = FOCUSABLE) {
+  const container = ref.current;
+  const target =
+    container?.querySelector<HTMLElement>(`${selector}[aria-selected="true"]`) ??
+    container?.querySelector<HTMLElement>(selector);
+  target?.focus();
+}
+
+/** Moves the focus to the previous or next element matching `selector` in `container`. */
+function moveFocus(container: HTMLElement | null, selector: string, step: 1 | -1) {
+  if (!container) return;
+  const items = [...container.querySelectorAll<HTMLElement>(selector)];
+  const index = items.findIndex((el) => el === document.activeElement);
+  items[Math.max(0, Math.min(items.length - 1, index + step))]?.focus();
+}
+
+/**
+ * The Atelier (docs/DESIGN.md §4.5): rail of modules, list of entries, sheet.
+ * Everything is reachable from the keyboard; Échap goes back to the text.
+ */
+export function Atelier({
+  ctx,
+  location,
+  active,
+  focusRequest,
+  onLocation,
+  onWrite,
+}: AtelierProps) {
+  const { t } = useTranslation();
+  const data = useDocSnapshot(ctx.root, readAtelier);
+  const numbers = useMemo(() => sceneNumbers(ctx.outline), [ctx.outline]);
+  const [query, setQuery] = useState('');
+  const railRef = useRef<HTMLUListElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const sheetRef = useRef<HTMLDivElement>(null);
+
+  const entries = useEntries(data, location.rail);
+  const hasList = location.rail !== 'meta';
+  const shown = filterByQuery(entries, query, (e) => `${e.title} ${e.subtitle ?? ''}`);
+  const selected =
+    entries.find(
+      (e) =>
+        e.target.module === location.target?.module &&
+        e.target.entityId === location.target.entityId,
+    ) ?? entries[0];
+
+  const select = (entry: Entry | undefined) =>
+    entry && onLocation({ rail: location.rail, target: entry.target });
+
+  // Focus: on the list (or the sheet when there is none) when asked.
+  useEffect(() => {
+    if (!active) return;
+    if (hasList && selected) focusWithin(listRef);
+    else if (hasList) focusWithin(railRef);
+    else sheetRef.current?.querySelector<HTMLElement>('[data-field-value]')?.focus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only when asked
+  }, [focusRequest]);
+
+  const onRootKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+    if (event.defaultPrevented) return;
+    const typing =
+      event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement;
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      onWrite();
+    } else if (
+      event.key.toLowerCase() === 'n' &&
+      !typing &&
+      !event.metaKey &&
+      !event.ctrlKey &&
+      !event.altKey &&
+      !(event.target instanceof HTMLElement && event.target.hasAttribute('data-field-value'))
+    ) {
+      // N: a new entry, from the rail or the list.
+      const module = newEntityModule(location.rail, selected);
+      if (!module) return;
+      event.preventDefault();
+      createEntityPrompt(ctx, module, (id) =>
+        onLocation({ rail: location.rail, target: { module, entityId: id } }, true),
+      );
+    }
+  };
+
+  const onRailKeyDown = (event: KeyboardEvent<HTMLUListElement>) => {
+    const index = ATELIER_MODULES.indexOf(location.rail);
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      const next =
+        ATELIER_MODULES[
+          Math.max(
+            0,
+            Math.min(ATELIER_MODULES.length - 1, index + (event.key === 'ArrowDown' ? 1 : -1)),
+          )
+        ];
+      if (next) {
+        onLocation({ rail: next });
+        setQuery('');
+        setTimeout(() => focusWithin(railRef));
+      }
+    } else if (event.key === 'Enter' || event.key === 'ArrowRight') {
+      event.preventDefault();
+      if (hasList) focusWithin(listRef);
+      else sheetRef.current?.querySelector<HTMLElement>('[data-field-value]')?.focus();
+    }
+  };
+
+  const onListKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.target instanceof HTMLInputElement) return;
+    if (event.metaKey || event.ctrlKey || event.altKey) return;
+    const index = shown.findIndex((e) => e.key === selected?.key);
+    const key = event.key;
+    const entity = selected?.target.entityId;
+    const module = selected?.target.module as EntityModule;
+    if (key === 'ArrowDown' || key === 'ArrowUp') {
+      event.preventDefault();
+      const next =
+        shown[Math.max(0, Math.min(shown.length - 1, index + (key === 'ArrowDown' ? 1 : -1)))];
+      select(next);
+      setTimeout(() => focusWithin(listRef));
+    } else if (key === 'Enter' || key === 'ArrowRight') {
+      event.preventDefault();
+      sheetRef.current?.querySelector<HTMLElement>('[data-field-value]')?.focus();
+    } else if (key === 'ArrowLeft') {
+      event.preventDefault();
+      focusWithin(railRef);
+    } else if (key === '/') {
+      event.preventDefault();
+      listRef.current?.querySelector<HTMLInputElement>('input')?.focus();
+    } else if ((key === 'Delete' || key === 'Backspace') && entity) {
+      event.preventDefault();
+      const next = shown[index + 1] ?? shown[index - 1];
+      trashEntityAndNotify(ctx, module, entity, selected.title);
+      select(next);
+    } else if (key.toLowerCase() === 'v' && entity && selected.proposed) {
+      event.preventDefault();
+      validateEntity(ctx.root, module, entity);
+    } else if (key.toLowerCase() === 'x' && entity && selected.proposed) {
+      event.preventDefault();
+      rejectEntity(ctx.root, module, entity);
+    }
+  };
+
+  const onSheetKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (!(event.target instanceof HTMLElement) || !event.target.hasAttribute('data-field-value'))
+      return;
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      moveFocus(sheetRef.current, '[data-field-value]', event.key === 'ArrowDown' ? 1 : -1);
+    } else if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      focusWithin(hasList ? listRef : railRef);
+    }
+  };
+
+  return (
+    <section className="ch-atelier" aria-label={t('atelier.label')} onKeyDown={onRootKeyDown}>
+      <nav className="ch-atl-rail">
+        <div className="ch-seg" role="group">
+          <button type="button" tabIndex={-1} onClick={onWrite}>
+            {t('atelier.write')}
+          </button>
+          <button type="button" tabIndex={-1} className="is-on" aria-pressed="true">
+            {t('atelier.label')}
+          </button>
+        </div>
+        <ul
+          ref={railRef}
+          className="ch-atl-modules"
+          role="listbox"
+          aria-label={t('atelier.modulesLabel')}
+          onKeyDown={onRailKeyDown}
+        >
+          {ATELIER_MODULES.map((m) => {
+            const pending = pendingCount(data, m);
+            return (
+              <li
+                key={m}
+                role="option"
+                aria-selected={m === location.rail}
+                tabIndex={m === location.rail ? 0 : -1}
+                data-atl-focus=""
+                className="ch-atl-module"
+                onClick={() => {
+                  onLocation({ rail: m });
+                  setQuery('');
+                }}
+              >
+                <span>{t(`atelier.modules.${m}`)}</span>
+                {pending > 0 && <span className="ch-atl-count">{pending}</span>}
+              </li>
+            );
+          })}
+        </ul>
+        <p className="ch-atl-hint">
+          {t('atelier.railHint', {
+            toggle: ctx.shortcutLabel('toggleAtelier') ?? '',
+            // ⌘1 or ⌥⌘1 (where a browser keeps ⌘1…9) → ⌘1…5
+            modules: `${ctx.shortcutLabel('atelierMeta') ?? ''}…${ATELIER_MODULES.length}`,
+          })}
+        </p>
+      </nav>
+
+      {hasList && (
+        <div ref={listRef} className="ch-atl-list" onKeyDown={onListKeyDown}>
+          <input
+            className="ch-field"
+            value={query}
+            placeholder={t('atelier.filter')}
+            aria-label={t('atelier.filter')}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowDown' || e.key === 'Enter') {
+                e.preventDefault();
+                select(shown[0]);
+                setTimeout(() => focusWithin(listRef));
+              } else if (e.key === 'Escape' && query) {
+                e.preventDefault();
+                setQuery('');
+              }
+            }}
+          />
+          <ul
+            className="ch-atl-entries"
+            role="listbox"
+            aria-label={t(`atelier.modules.${location.rail}`)}
+          >
+            {shown.map((entry, i) => (
+              <EntryItem
+                key={entry.key}
+                entry={entry}
+                showGroup={entry.group !== undefined && entry.group !== shown[i - 1]?.group}
+                selected={entry.key === selected?.key}
+                onSelect={() => select(entry)}
+              />
+            ))}
+          </ul>
+          {entries.length === 0 && (
+            <p className="ch-atl-empty">{t(`atelier.emptyList.${location.rail}`)}</p>
+          )}
+          <p className="ch-atl-hint">{t('atelier.listHint')}</p>
+        </div>
+      )}
+
+      <div ref={sheetRef} className="ch-sheet" onKeyDown={onSheetKeyDown}>
+        {selected && (
+          <Sheet
+            ctx={ctx}
+            data={data}
+            target={selected.target}
+            title={selected.title}
+            sceneNumber={(id) => numbers.get(id)}
+            onShowPassage={(sceneId) => {
+              ctx.openScene(sceneId);
+              onWrite();
+            }}
+          />
+        )}
+      </div>
+    </section>
+  );
+}
+
+function EntryItem({
+  entry,
+  showGroup,
+  selected,
+  onSelect,
+}: {
+  readonly entry: Entry;
+  readonly showGroup: boolean;
+  readonly selected: boolean;
+  readonly onSelect: () => void;
+}) {
+  return (
+    <>
+      {showGroup && (
+        <li role="presentation" className="ch-atl-group ch-label">
+          {entry.group}
+        </li>
+      )}
+      <li
+        role="option"
+        aria-selected={selected}
+        tabIndex={selected ? 0 : -1}
+        data-atl-focus=""
+        className={`ch-atl-entry${entry.proposed ? ' is-proposed' : ''}`}
+        onClick={onSelect}
+      >
+        <div>{entry.title}</div>
+        {entry.subtitle && <div className="ch-atl-sub">{entry.subtitle}</div>}
+      </li>
+    </>
+  );
+}
+
+/** Which entity N creates from the list of a rail entry. */
+function newEntityModule(
+  rail: AtelierModule,
+  selected: Entry | undefined,
+): EntityModule | undefined {
+  if (rail === 'structure') return selected?.target.module === 'arcs' ? 'arcs' : 'acts';
+  if (rail === 'meta') return undefined;
+  return rail;
+}
+
+function useEntries(data: AtelierData, rail: AtelierModule): Entry[] {
+  const { t } = useTranslation();
+  const entityEntries = (module: EntityModule, group?: string): Entry[] => {
+    const def = moduleDefs[module];
+    if (def.kind !== 'entity') return [];
+    return data.entities[module].map((entity: EntityInfo) => {
+      const title = asText(shownValue(entity.fields[def.titleField] ?? EMPTY));
+      const subtitleRaw = def.subtitleField
+        ? asText(shownValue(entity.fields[def.subtitleField] ?? EMPTY))
+        : '';
+      const subtitleField = def.sections
+        .flatMap((s) => s.fields)
+        .find((f) => f.key === def.subtitleField);
+      const subtitle =
+        subtitleRaw && subtitleField?.kind === 'choice'
+          ? t(`atelier.options.${subtitleField.key}.${subtitleRaw}` as 'atelier.options.kind.clue')
+          : subtitleRaw;
+      return {
+        key: `${module}:${entity.id}`,
+        target: { module, entityId: entity.id },
+        title: title || t(`atelier.untitled.${module}`),
+        ...(subtitle && { subtitle }),
+        proposed: entity.status === 'proposed',
+        ...(group && { group }),
+      };
+    });
+  };
+  switch (rail) {
+    case 'meta':
+      return [
+        {
+          key: 'meta',
+          target: { module: 'meta' },
+          title: data.project?.title ?? '',
+          proposed: false,
+        },
+      ];
+    case 'structure':
+      return [
+        {
+          key: 'structure',
+          target: { module: 'structure' },
+          title: t('atelier.structureModel'),
+          proposed: false,
+          group: t('atelier.groups.model'),
+        },
+        ...entityEntries('acts', t('atelier.groups.acts')),
+        ...entityEntries('arcs', t('atelier.groups.arcs')),
+      ];
+    default:
+      return entityEntries(rail);
+  }
+}
+
+const EMPTY: FieldState = { status: undefined, rejected: [] };
+
+function Sheet({
+  ctx,
+  data,
+  target,
+  title,
+  sceneNumber,
+  onShowPassage,
+}: {
+  readonly ctx: WorkspaceContext;
+  readonly data: AtelierData;
+  readonly target: SheetTarget;
+  readonly title: string;
+  readonly sceneNumber: (sceneId: string) => string | undefined;
+  readonly onShowPassage: (sceneId: string) => void;
+}) {
+  const { t } = useTranslation();
+  const def = moduleDefs[target.module];
+  const row = (
+    field: FieldDef,
+    label = t(`atelier.fields.${target.module}.${field.key}` as 'atelier.fields.meta.pitch'),
+  ) => {
+    const ref = fieldRefOf(target, field.key);
+    return (
+      <FieldRow
+        key={field.key}
+        ctx={ctx}
+        fieldRef={ref}
+        def={field}
+        label={label}
+        state={fieldState(data, target, field.key)}
+        conflict={conflictFor(data, ref)}
+        sceneNumber={sceneNumber}
+        onShowPassage={onShowPassage}
+      />
+    );
+  };
+  const lead =
+    target.module === 'meta'
+      ? t(`atelier.projectKind.${data.project?.kind ?? 'novel'}`)
+      : t(`atelier.lead.${target.module}`);
+  const characters = data.entities.characters;
+
+  return (
+    <article className="ch-sheet-body" aria-label={title}>
+      <h2 className="ch-sheet-title">{title}</h2>
+      <p className="ch-sheet-lead">{lead}</p>
+      <p className="ch-legend" aria-hidden="true">
+        <span>
+          <i className="is-proposed" />
+          {t('atelier.legend.proposed')}
+        </span>
+        <span>
+          <i className="is-validated" />
+          {t('atelier.legend.validated')}
+        </span>
+        <span>
+          <i className="is-rejected" />
+          {t('atelier.legend.rejected')}
+        </span>
+        <span>
+          <i className="is-contradicted" />
+          {t('atelier.legend.contradicted')}
+        </span>
+      </p>
+      <div className="ch-sections">
+        {def.sections.map((section) => (
+          <section key={section.key} className={`ch-section${section.wide ? ' is-wide' : ''}`}>
+            <h3 className="ch-label">
+              {t(
+                `atelier.sections.${target.module}.${section.key}` as 'atelier.sections.meta.story',
+              )}
+            </h3>
+            {section.fields.map((f) => row(f))}
+          </section>
+        ))}
+        {target.module === 'clues' && (
+          <section className="ch-section is-wide">
+            <h3 className="ch-label">{t('atelier.sections.clues.knownBy')}</h3>
+            <p className="ch-section-note">{t('atelier.knownByNote')}</p>
+            {row({ key: knownByField('reader'), kind: 'scene' }, t('atelier.reader'))}
+            {characters.map((c) =>
+              row(
+                { key: knownByField(c.id), kind: 'scene' },
+                asText(shownValue(c.fields['name'] ?? EMPTY)) || t('atelier.untitled.characters'),
+              ),
+            )}
+          </section>
+        )}
+        {target.module === 'characters' && (
+          <section className="ch-section is-wide">
+            <h3 className="ch-label">{t('atelier.sections.characters.appearances')}</h3>
+            <p className="ch-section-note">{t('atelier.appearancesNote')}</p>
+          </section>
+        )}
+      </div>
+    </article>
+  );
+}

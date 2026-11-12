@@ -66,3 +66,87 @@ kbd,
     transform: translateY(16px);
   }
 }
+
+/* ── Basic elements (docs/DESIGN.md §4.7) ── */
+.ch-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border: 0;
+  border-radius: var(--ch-radius-sm);
+  background: var(--ch-bg);
+  box-shadow: var(--ch-raise-s);
+  color: var(--ch-ink);
+  font: 500 11.5px / 1.2 var(--ch-font-ui);
+  cursor: pointer;
+  transition: box-shadow var(--ch-dur-press) var(--ch-ease);
+}
+
+.ch-btn:active {
+  box-shadow: var(--ch-inset);
+}
+
+.ch-btn.is-mentor {
+  color: var(--ch-mentor);
+}
+
+.ch-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.ch-field {
+  width: 100%;
+  padding: 9px 12px;
+  border: 0;
+  border-radius: var(--ch-radius-md);
+  background: var(--ch-bg);
+  box-shadow: var(--ch-inset);
+  color: var(--ch-ink);
+  font: var(--ch-ui-sm) var(--ch-font-ui);
+  outline: none;
+}
+
+.ch-field::placeholder {
+  color: var(--ch-faint);
+}
+
+.ch-seg {
+  display: flex;
+  padding: 4px;
+  border-radius: var(--ch-radius-md);
+  box-shadow: var(--ch-inset);
+}
+
+.ch-seg button {
+  flex: 1;
+  padding: 8px 0;
+  border: 0;
+  border-radius: calc(var(--ch-radius-md) - 3px);
+  background: transparent;
+  color: var(--ch-muted);
+  font: 500 var(--ch-ui-sm) var(--ch-font-ui);
+  cursor: pointer;
+}
+
+.ch-seg button.is-on {
+  box-shadow: var(--ch-raise-s);
+  color: var(--ch-author);
+}
+
+.ch-chip {
+  display: inline-block;
+  margin: 2px 4px 2px 0;
+  padding: 3px 9px;
+  border-radius: var(--ch-radius-sm);
+  box-shadow: var(--ch-raise-s);
+  font: var(--ch-ui-xs) var(--ch-font-ui);
+  font-style: normal;
+}

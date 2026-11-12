@@ -67,14 +67,17 @@ export function WritingFooter({
   status,
   mentorNote,
 }: {
-  readonly words: number;
+  /** Hidden outside the writing surface. */
+  readonly words: number | undefined;
   readonly status: string | undefined;
   readonly mentorNote: string | undefined;
 }) {
   const { t } = useTranslation();
   return (
     <footer className="ch-footer">
-      <span className="ch-footer-words">{t('footer.words', { count: words })}</span>
+      <span className="ch-footer-words">
+        {words !== undefined && t('footer.words', { count: words })}
+      </span>
       <span className="ch-footer-right">
         <span role="status" aria-live="polite">
           {status}

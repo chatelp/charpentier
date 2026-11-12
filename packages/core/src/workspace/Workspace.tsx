@@ -11,6 +11,8 @@ import {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePlatform } from '../app/platform-context';
+import { Atelier, type AtelierLocation } from '../atelier/Atelier';
+import { sheetScope } from '../atelier/sheet-scope';
 import { variantLabel } from '../commands/variant-commands';
 import { createWorkspaceRegistry } from '../commands/workspace-commands';
 import { SceneEditor } from '../editor/SceneEditor';
@@ -38,6 +40,10 @@ export function ProjectWorkspace({ session }: { readonly session: ProjectSession
   const [editor, setEditor] = useState<Editor | null>(null);
   const [palette, setPalette] = useState<{ key: number; request: PaletteRequest } | null>(null);
   const [navigatorOpen, setNavigatorOpen] = useState(false);
+  const [view, setView] = useState<'write' | 'atelier'>('write');
+  const [atelierLocation, setAtelierLocation] = useState<AtelierLocation>({ rail: 'meta' });
+  const [atelierFocus, setAtelierFocus] = useState(0);
+  const paletteReturn = useRef<Element | null>(null);
   const [prefs, updatePrefs] = useWritingPrefs(platform.preferences);
   const scroller = useRef<HTMLDivElement>(null);
 
@@ -71,12 +77,21 @@ export function ProjectWorkspace({ session }: { readonly session: ProjectSession
     projectId,
     root,
     sceneId,
+    outline,
     editor,
     sceneDocs,
     language,
     openScene,
     openPalette: (request = { kind: 'commands' }) =>
       setPalette({ key: ++paletteSequence, request }),
+    view,
+    openAtelier: (location) => {
+      if (location) setAtelierLocation(location);
+      setView('atelier');
+      setNavigatorOpen(false);
+      setAtelierFocus((n) => n + 1);
+    },
+    openWriting: () => setView('write'),
     toggleNavigator: () => setNavigatorOpen((open) => !open),
     shortcutLabel: (id) => registry.shortcutLabel(id),
     notify: (text) => setStatus({ key: ++paletteSequence, text }),
@@ -85,18 +100,26 @@ export function ProjectWorkspace({ session }: { readonly session: ProjectSession
   };
 
   // Global shortcuts. The listener reads the latest context through a ref.
-  const latest = useRef({ ctx, paletteOpen: false });
+  const latest = useRef(ctx);
+  const paletteOpenRef = useRef(false);
+  const paletteOpen = palette !== null;
   useLayoutEffect(() => {
-    latest.current = { ctx, paletteOpen: palette !== null };
+    latest.current = ctx;
+    paletteOpenRef.current = paletteOpen;
   });
+  // Where the focus goes back when the command line closes (an Atelier field…).
+  // A layout effect runs before the command line takes the focus.
+  useLayoutEffect(() => {
+    if (paletteOpen) paletteReturn.current = document.activeElement;
+  }, [paletteOpen]);
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.defaultPrevented || event.isComposing || latest.current.paletteOpen) return;
-      const command = registry.forEvent(event, latest.current.ctx);
+      if (event.defaultPrevented || event.isComposing || paletteOpenRef.current) return;
+      const command = registry.forEvent(event, latest.current);
       if (!command) return;
       event.preventDefault();
       event.stopPropagation();
-      void command.run(latest.current.ctx);
+      void command.run(latest.current);
     };
     window.addEventListener('keydown', onKeyDown, true);
     return () => window.removeEventListener('keydown', onKeyDown, true);
@@ -106,15 +129,29 @@ export function ProjectWorkspace({ session }: { readonly session: ProjectSession
   // purpose: TipTap's `focus()` waits a frame and could then take the focus
   // from a command line opened in between.
   const focusTextIfIdle = useCallback(() => {
-    if (!latest.current.paletteOpen && editor && !editor.isDestroyed) editor.view.focus();
+    if (!paletteOpenRef.current && editor && !editor.isDestroyed) editor.view.focus();
   }, [editor]);
   const lastFocusedEditor = useRef<Editor | null>(null);
   useEffect(() => {
-    if (editor && editor !== lastFocusedEditor.current && !palette && !navigatorOpen) {
+    if (
+      editor &&
+      editor !== lastFocusedEditor.current &&
+      !palette &&
+      !navigatorOpen &&
+      view === 'write'
+    ) {
       lastFocusedEditor.current = editor;
       editor.commands.focus('end');
     }
-  }, [editor, palette, navigatorOpen]);
+  }, [editor, palette, navigatorOpen, view]);
+
+  // Back from the Atelier: the text, cursor where it was.
+  const previousView = useRef(view);
+  useEffect(() => {
+    if (previousView.current === 'atelier' && view === 'write' && !paletteOpenRef.current)
+      focusTextIfIdle();
+    previousView.current = view;
+  }, [view, focusTextIfIdle]);
 
   useEffect(() => {
     if (!scene) return;
@@ -133,8 +170,14 @@ export function ProjectWorkspace({ session }: { readonly session: ProjectSession
   const closePalette = () => {
     setPalette(null);
     // A command chosen in the palette may open another one right after.
-    latest.current.paletteOpen = false;
-    if (!navigatorOpen) focusTextIfIdle();
+    paletteOpenRef.current = false;
+    if (navigatorOpen) return;
+    const back = paletteReturn.current;
+    paletteReturn.current = null;
+    if (view === 'atelier') {
+      if (back instanceof HTMLElement && back.isConnected) back.focus();
+      else setAtelierFocus((n) => n + 1);
+    } else focusTextIfIdle();
   };
 
   const paletteCommands = registry
@@ -150,15 +193,21 @@ export function ProjectWorkspace({ session }: { readonly session: ProjectSession
       };
     });
 
-  const paletteScopes: Record<string, PaletteScope> = {
-    '#': {
-      label: t('palette.scenesGroup'),
-      items: outline.flatMap((c) =>
-        c.scenes.map((s) => ({ id: s.id, label: s.title, detail: c.title })),
-      ),
-      onPick: openScene,
-    },
-  };
+  const paletteScopes: Record<string, PaletteScope> = !palette
+    ? {}
+    : {
+        '#': {
+          label: t('palette.scenesGroup'),
+          items: outline.flatMap((c) =>
+            c.scenes.map((s) => ({ id: s.id, label: s.title, detail: c.title })),
+          ),
+          onPick: (id) => {
+            openScene(id);
+            setView('write');
+          },
+        },
+        '@': sheetScope(ctx),
+      };
 
   const mentorNote =
     platform.agents.status() === 'disabled' ? t('mentor.unavailableOnHost') : undefined;
@@ -177,6 +226,7 @@ export function ProjectWorkspace({ session }: { readonly session: ProjectSession
     >
       <div
         ref={scroller}
+        hidden={view !== 'write'}
         className={`ch-write${navigatorOpen ? ' is-behind' : ''}`}
         // A click on the faded page puts the drawer away.
         onMouseDown={navigatorOpen ? () => setNavigatorOpen(false) : undefined}
@@ -200,7 +250,24 @@ export function ProjectWorkspace({ session }: { readonly session: ProjectSession
           )}
         </main>
       </div>
-      <WritingFooter words={words} status={status?.text} mentorNote={mentorNote} />
+      {view === 'atelier' && (
+        <Atelier
+          ctx={ctx}
+          location={atelierLocation}
+          active={palette === null && !navigatorOpen}
+          focusRequest={atelierFocus}
+          onLocation={(location, focus) => {
+            setAtelierLocation(location);
+            if (focus) setAtelierFocus((n) => n + 1);
+          }}
+          onWrite={() => setView('write')}
+        />
+      )}
+      <WritingFooter
+        words={view === 'write' ? words : undefined}
+        status={status?.text}
+        mentorNote={mentorNote}
+      />
       {navigatorOpen && (
         <Navigator
           ctx={ctx}
