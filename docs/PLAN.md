@@ -41,8 +41,8 @@ Créer, dupliquer, renommer, activer et supprimer une variante. Points de restau
 **Vérifiable** : je remplis le pitch et la fiche de mon personnage principal ; tout survit au rechargement.
 
 ### 1.9 Structure, Règles du monde, Indices
-Actes, arcs, modèle narratif optionnel (liste de modèles), règles du monde, panneau Indices (pose → résolution, liés à des scènes).
-**Vérifiable** : je choisis « trois actes », je place mes scènes dans les actes, je pose un indice dans la scène 2 et je le relie à sa résolution.
+Actes, arcs, modèle narratif optionnel (liste de modèles), règles du monde, panneau Indices (pose, apparitions, résolution, et « qui sait » à partir de quelle scène, lecteur compris).
+**Vérifiable** : je choisis « trois actes », je place mes scènes dans les actes, je pose un indice dans la scène 2, je le relie à sa résolution, et j'indique que l'enquêteur le connaît dès la scène 2 mais le lecteur seulement à la scène 5.
 
 ### 1.10 Projets multiples
 Bibliothèque : créer (roman ou nouvelle), ouvrir, renommer, mettre à la corbeille.
@@ -99,7 +99,7 @@ Analyse de fin de scène → propositions dans Personnages, Méta, Structure, R�
 **Vérifiable** : je termine une scène où apparaît un nouveau personnage ; une fiche proposée apparaît, je la valide ou la rejette.
 
 ### 3.6 Conflits, indices et remarques de métier
-Contradictions avec les informations validées, indices non exploités, remarques justifiées par un principe, phrases d'exemple insérables sur action explicite.
+Contradictions avec les informations validées, indices non exploités, personnage qui agit sur une information avant de l'apprendre, apparitions d'indices proposées, remarques justifiées par un principe, phrases d'exemple insérables sur action explicite.
 **Vérifiable** : j'écris que mon héroïne a les yeux verts alors que sa fiche validée dit bleus ; une annotation apparaît en marge et je tranche (corriger le texte, mettre à jour la fiche, ignorer).
 
 ### 3.7 Pendant l'écriture et à la demande

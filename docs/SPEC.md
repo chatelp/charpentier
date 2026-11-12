@@ -12,7 +12,7 @@
 |---|---|---|
 | D-1 | Import d'un premier jet | **Reporté après la v1.** L'auteur part de zéro ; l'import n'est pas sur le chemin critique. |
 | D-2 | Indices et révélations | **Hybride** : entité de premier rang dans Yjs (indice, fausse piste, révélation), affichée comme un panneau de la vue Structure. |
-| D-3 | Portée du suivi des indices en v1 | **Pose → résolution** : liens entre la scène où l'élément est posé et celle où il est exploité ou résolu. Le « savoir du lecteur à chaque instant » est hors v1. |
+| D-3 | Portée du suivi des indices en v1 | **Pose → résolution + apparitions + « qui sait »** : scènes de pose et de résolution, scènes où l'élément réapparaît, et à partir de quelle scène chaque personnage (et le lecteur) en a connaissance. Le modèle complet du savoir du lecteur (croyances erronées, vérification scène par scène) est hors v1. Révisé le 12 novembre 2026 (première version : pose → résolution seulement). |
 | D-4 | Découpage en documents Yjs | **Un document racine par projet + un document par scène** (qui contient ses variantes) + un document d'historique par scène + un document mentor. |
 | D-5 | Historique des scènes | **Points de restauration explicites** (automatiques et manuels). Restaurer = nouvelle transaction. GC Yjs activé. |
 | D-6 | Variante analysée par le mentor | Uniquement la **variante active**. |
@@ -134,9 +134,11 @@ Chaque champ porte son propre statut.
 
 - Une fiche par élément, de type **indice**, **fausse piste** ou **révélation**.
 - Chaque fiche relie une ou plusieurs **scènes de pose** à une ou plusieurs **scènes de résolution** (exploitation de l'indice, résolution de la fausse piste, préparation de la révélation).
-- Le mentor signale : un indice posé jamais exploité, une révélation non préparée, une fausse piste non résolue.
+- **Apparitions** : les scènes où l'élément réapparaît entre la pose et la résolution (remplies automatiquement en « proposée », ajustables).
+- **Qui sait** : pour chaque personnage concerné, et pour le **lecteur**, la scène à partir de laquelle il a connaissance de l'élément. C'est ce qui permet de suivre l'écart « l'enquêteur sait, le lecteur pas encore » (ou l'inverse).
+- Le mentor signale : un indice posé jamais exploité, une révélation non préparée, une fausse piste non résolue, et un personnage qui agit sur une information avant la scène où il l'apprend.
 - Affichage : panneau de la vue Structure, à côté des actes et arcs.
-- Hors v1 : modélisation de ce que le lecteur sait à chaque moment du récit ; vue sur la Chronologie (v2).
+- Hors v1 : modèle complet du savoir du lecteur (ce qu'il croit à tort, vérification de chaque scène) ; vue sur la Chronologie (v2).
 
 ## 6. Le mentor
 
@@ -212,7 +214,7 @@ Bêta-lecteurs (lecture, commentaires) et éditeur humain (annotations distingua
 ### v1
 - Projets multiples, création vide.
 - Éditeur par scènes et chapitres, variantes, historique (points de restauration).
-- Modules Méta, Personnages, Structure (avec modèles narratifs optionnels), Règles du monde, Indices et révélations (pose → résolution).
+- Modules Méta, Personnages, Structure (avec modèles narratifs optionnels), Règles du monde, Indices et révélations (pose → résolution, apparitions, qui sait).
 - Mentor : voix unique, mode mixte, statuts, bottom-up, annotations en marge, liste de points à traiter, chat libre, aide rédactionnelle minimale (pistes + exemples d'une phrase insérables).
 - Correction de la langue (orthographe et typographie hors ligne, grammaire par LLM).
 - Hôte desktop macOS avec miroir Markdown ; hôte web compilable et lançable (sans IA).
@@ -311,7 +313,11 @@ modules: Y.Map {
   characters: Y.Map<entityId, Entity>
   structure:  Y.Map { narrativeModel: Field, acts: Y.Map<id, Entity>, arcs: Y.Map<id, Entity> }
   worldRules: Y.Map<entityId, Entity>
-  clues:      Y.Map<entityId, Entity { kind: 'clue' | 'red-herring' | 'reveal', plantedIn: [sceneRef], resolvedIn: [sceneRef] }>
+  clues:      Y.Map<entityId, Entity {
+                kind: 'clue' | 'red-herring' | 'reveal',
+                plantedIn: [sceneRef], resolvedIn: [sceneRef], appearsIn: [sceneRef],
+                knownBy: Y.Map<characterId | 'reader', Field { value: { fromSceneId } }>
+              }>
 }
 signals: Y.Map<signalId, Signal>
 ```
