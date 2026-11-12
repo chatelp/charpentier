@@ -24,7 +24,12 @@ describe('<App>', () => {
 
   it('stays silent about the mentor when it is available', async () => {
     const platform = createTestPlatform({
-      agents: { status: () => 'available', onStatusChange: () => () => {} },
+      agents: {
+        status: () => 'available',
+        onStatusChange: () => () => {},
+        setApiKey: async () => 'saved',
+        forgetApiKey: async () => {},
+      },
     });
     render(<App platform={platform} i18n={await createI18n('fr')} />);
     await screen.findByRole('textbox', { name: 'Texte de la scène' });

@@ -1,22 +1,16 @@
 // Renderer side of the desktop platform: everything goes through the preload bridge.
 import type {
-  AgentsService,
   KeybindingsService,
   LibraryService,
   Platform,
   PreferencesService,
 } from '@charpentier/platform';
 import type { DesktopBridge } from '../shared/ipc';
+import { IpcAgentsService } from './agents';
 import { IpcDocumentService } from './documents';
 
 export { IpcDocumentService } from './documents';
 export type { DesktopBridge } from '../shared/ipc';
-
-/** The Compagnon arrives at step 3. */
-const agentsNotYet: AgentsService = {
-  status: () => 'disabled',
-  onStatusChange: () => () => {},
-};
 
 function library(bridge: DesktopBridge): LibraryService {
   return {
@@ -71,7 +65,7 @@ export function createDesktopPlatform(bridge: DesktopBridge): Platform {
     },
     preferences: preferences(bridge),
     keybindings: desktopKeybindings(bridge.platform),
-    agents: agentsNotYet,
+    agents: new IpcAgentsService(bridge),
     llm: null,
     fileMirror: null,
     secrets: null,

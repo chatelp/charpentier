@@ -5,4 +5,7 @@ export { PreferencesFile } from './preferences';
 export { documentLocator, folderName, FolderLibrary, STATE_DIR } from './projects';
 export { RendererSession } from './renderer-session';
 export { SpellClient } from './spell-client';
+export { AgentHost, API_KEY_SECRET } from './agent-host';
+export { AnthropicLlmService, HAIKU, OPUS, type ModelChoice } from './anthropic-llm';
+export { SecretStore, type Encryption } from './secret-store';
 export { ProjectMirror, type ImportResult, type MirrorStrings } from './project-mirror';

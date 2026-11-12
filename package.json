@@ -20,7 +20,8 @@
     "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm check:guards && pnpm check:licenses",
     "dev:desktop": "pnpm --filter @charpentier/desktop dev",
     "test:desktop": "pnpm --filter @charpentier/desktop test:e2e",
-    "package:desktop": "pnpm --filter @charpentier/desktop package"
+    "package:desktop": "pnpm --filter @charpentier/desktop package",
+    "test:llm": "vitest run packages/platform-desktop/src/main/compagnon.live.test.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

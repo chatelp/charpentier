@@ -36,7 +36,19 @@
     "dismiss": "Ignorer",
     "dismissKey": "I",
     "close": "Replier",
-    "closeKey": "Échap"
+    "closeKey": "Échap",
+    "status": {
+      "unconfigured": "Le Compagnon attend votre clé d’API (ligne de commande : « clé »).",
+      "offline": "Compagnon hors ligne"
+    },
+    "apiKeyPlaceholder": "Clé d’API Anthropic (sk-ant-…), gardée dans le trousseau du Mac",
+    "apiKeyChecking": "Vérification de la clé auprès d’Anthropic…",
+    "apiKey": {
+      "saved": "Clé enregistrée dans le trousseau. Le Compagnon est prêt.",
+      "invalid": "Anthropic refuse cette clé. Vérifiez-la dans votre console Anthropic.",
+      "offline": "Pas de réseau : la clé n’a pas pu être vérifiée."
+    },
+    "apiKeyForgotten": "Clé oubliée. Le Compagnon attend une nouvelle clé."
   },
   "manuscript": {
     "defaultProjectTitle": "Mon roman",
@@ -107,7 +119,9 @@
     "fixAllSpelling": "Accepter toutes les corrections d’orthographe de la scène",
     "passageAction": "Corriger le passage ou déplier sa remarque",
     "nextRemark": "Aller à la remarque ou correction suivante",
-    "toggleMentorPanel": "Points à traiter et conversation"
+    "toggleMentorPanel": "Points à traiter et conversation",
+    "setApiKey": "Saisir la clé d’API Anthropic du Compagnon…",
+    "forgetApiKey": "Oublier la clé d’API Anthropic"
   },
   "palette": {
     "label": "Ligne de commande",

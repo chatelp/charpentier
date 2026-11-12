@@ -138,6 +138,8 @@ export function CommandPalette({ request, commands, scopes = {}, onClose }: Comm
           <input
             ref={inputRef}
             className="ch-cmd-input"
+            type={request.kind === 'input' && request.secret ? 'password' : 'text'}
+            autoComplete="off"
             value={query}
             placeholder={placeholder}
             aria-label={placeholder}

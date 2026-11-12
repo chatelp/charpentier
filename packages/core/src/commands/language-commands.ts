@@ -91,6 +91,37 @@ export const languageCommands: readonly LanguageCommand[] = [
     },
   },
   {
+    id: 'setApiKey',
+    scope: 'global',
+    isEnabled: (ctx) => ctx.platform.agents.status() !== 'disabled',
+    run: (ctx) =>
+      ctx.openPalette({
+        kind: 'input',
+        placeholder: ctx.t('mentor.apiKeyPlaceholder'),
+        initial: '',
+        secret: true,
+        onSubmit: (key) => {
+          if (!key.trim()) return;
+          ctx.notify(ctx.t('mentor.apiKeyChecking'));
+          void ctx.platform.agents
+            .setApiKey(key)
+            .then((result) => ctx.notify(ctx.t(`mentor.apiKey.${result}`)));
+        },
+      }),
+  },
+  {
+    id: 'forgetApiKey',
+    scope: 'global',
+    isEnabled: (ctx) => {
+      const status = ctx.platform.agents.status();
+      return status === 'available' || status === 'offline';
+    },
+    run: async (ctx) => {
+      await ctx.platform.agents.forgetApiKey();
+      ctx.notify(ctx.t('mentor.apiKeyForgotten'));
+    },
+  },
+  {
     id: 'toggleMentorPanel',
     scope: 'global',
     // ⌘L where the host allows it; a browser keeps ⌘L for its address bar.

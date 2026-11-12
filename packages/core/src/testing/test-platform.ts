@@ -26,7 +26,12 @@ export function createTestPlatform(overrides: Partial<Platform> = {}): Platform 
     libraryFolder: null,
     preferences: { get: async () => undefined, set: async () => {} },
     keybindings: { primaryModifier: 'Meta', reserved: [] },
-    agents: { status: () => 'disabled', onStatusChange: () => () => {} },
+    agents: {
+      status: () => 'disabled',
+      onStatusChange: () => () => {},
+      setApiKey: async () => 'invalid',
+      forgetApiKey: async () => {},
+    },
     llm: null,
     fileMirror: null,
     secrets: null,

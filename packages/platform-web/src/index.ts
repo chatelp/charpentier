@@ -11,6 +11,8 @@ export { LocalStoragePreferences } from './preferences';
 const disabledAgents: AgentsService = {
   status: () => 'disabled',
   onStatusChange: () => () => {},
+  setApiKey: async () => 'invalid',
+  forgetApiKey: async () => {},
 };
 
 const isApple = (userAgent: string) => /Mac|iPhone|iPad/.test(userAgent);

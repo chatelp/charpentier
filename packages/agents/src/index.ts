@@ -1,2 +1,13 @@
-// Host-agnostic agent orchestration and LLM abstraction.
-export const packageName = '@charpentier/agents';
+// Host-agnostic agents of the Compagnon: prompts, guardrails, orchestration.
+// They talk to models only through the platform's LlmService.
+export { compagnonChat, type ChatAnswer, type ChatContext, type ChatTurn } from './chat';
+export {
+  changeRatio,
+  isOneSentence,
+  MAX_CORRECTION_RATIO,
+  MAX_EXAMPLE_LENGTH,
+  narrativeProseIn,
+  sentencesOf,
+  type ProseViolation,
+} from './guard';
+export { chatAnswerSchema, compagnonSystemPrompt, type MentorLevel } from './prompts';

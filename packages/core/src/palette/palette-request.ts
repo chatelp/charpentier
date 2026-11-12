@@ -16,6 +16,8 @@ export type PaletteRequest =
       readonly kind: 'input';
       readonly placeholder: string;
       readonly initial: string;
+      /** Masked input (an API key). */
+      readonly secret?: boolean;
       onSubmit(value: string): void;
     };
 

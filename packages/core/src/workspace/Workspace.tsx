@@ -7,6 +7,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
   type CSSProperties,
 } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -80,6 +81,12 @@ export function ProjectWorkspace({
   const chapter = outline[chapterIndex];
   const sceneDocs = useSceneDocs(platform, projectId, sceneId, scene?.activeVariantId ?? '');
   const [status, setStatus] = useState<{ key: number; text: string } | null>(null);
+  const { agents } = platform;
+  const subscribeAgents = useCallback(
+    (onChange: () => void) => agents.onStatusChange(onChange),
+    [agents],
+  );
+  const agentsStatus = useSyncExternalStore(subscribeAgents, () => agents.status());
   const words = useWordCount(editor);
   const languageCheck = useMemo(
     () =>
@@ -271,8 +278,12 @@ export function ProjectWorkspace({
         '@': sheetScope(ctx),
       };
 
-  const mentorNote =
-    platform.agents.status() === 'disabled' ? t('mentor.unavailableOnHost') : undefined;
+  const mentorNote = {
+    disabled: t('mentor.unavailableOnHost'),
+    unconfigured: t('mentor.status.unconfigured'),
+    offline: t('mentor.status.offline'),
+    available: undefined,
+  }[agentsStatus];
 
   const surfaceStyle = {
     '--ch-text-size': `${prefs.textSize / 16}rem`,

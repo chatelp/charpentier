@@ -1,4 +1,14 @@
-import { app, BrowserWindow, dialog, ipcMain, Menu, shell, type WebContents } from 'electron';
+import {
+  app,
+  BrowserWindow,
+  dialog,
+  ipcMain,
+  Menu,
+  net,
+  safeStorage,
+  shell,
+  type WebContents,
+} from 'electron';
 import os from 'node:os';
 import path from 'node:path';
 import {
@@ -7,7 +17,13 @@ import {
   FolderLibrary,
   PreferencesFile,
   ProjectMirror,
+  AgentHost,
+  AnthropicLlmService,
+  API_KEY_SECRET,
+  HAIKU,
+  OPUS,
   RendererSession,
+  SecretStore,
   SpellClient,
   type MirrorStrings,
 } from '@charpentier/platform-desktop/main';
@@ -57,6 +73,26 @@ const mirrorStrings: MirrorStrings = {
 };
 const mirrors = new Map<string, ProjectMirror>();
 
+// ─── The Compagnon (step 3): the author's key in the keychain, Claude via the official SDK ───
+
+/** D-20: Opus 5.5 everywhere; Haiku 5.5 for light remarks only if the author chose it. */
+const LIGHT_MODEL_PREF = 'mentor.lightModel';
+const secrets = new SecretStore(path.join(app.getPath('userData'), 'secrets.json'), safeStorage);
+const llm = new AnthropicLlmService({
+  apiKey: () => process.env['CHARPENTIER_ANTHROPIC_API_KEY'] ?? secrets.get(API_KEY_SECRET),
+  models: () => ({
+    deep: OPUS,
+    fast: preferences.get(LIGHT_MODEL_PREF) === 'haiku' ? HAIKU : OPUS,
+  }),
+});
+const agents = new AgentHost(llm, secrets);
+llm.onStatusChange((status) => {
+  for (const contents of sessions.keys())
+    if (!contents.isDestroyed()) contents.send(IPC_MESSAGE, { type: 'agents.status', status });
+});
+// The network comes and goes: the Compagnon says so discreetly, writing goes on.
+setInterval(() => llm.setOnline(net.isOnline()), 15_000).unref();
+
 /** Starts the mirror of every project a window holds, stops the others. */
 function syncMirrors() {
   const wanted = new Set<string>();
@@ -87,9 +123,12 @@ function syncMirrors() {
 function sessionOf(contents: WebContents): RendererSession {
   let session = sessions.get(contents);
   if (!session) {
-    const created = new RendererSession({ store, library, preferences, spell }, (message) => {
-      if (!contents.isDestroyed()) contents.send(IPC_MESSAGE, message);
-    });
+    const created = new RendererSession(
+      { store, library, preferences, spell, agents },
+      (message) => {
+        if (!contents.isDestroyed()) contents.send(IPC_MESSAGE, message);
+      },
+    );
     sessions.set(contents, created);
     const dispose = () => {
       created.dispose();

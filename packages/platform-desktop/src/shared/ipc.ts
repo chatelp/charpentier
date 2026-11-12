@@ -1,4 +1,4 @@
-import type { ProjectKind, ProjectSummary } from '@charpentier/platform';
+import type { ApiKeyResult, LlmStatus, ProjectKind, ProjectSummary } from '@charpentier/platform';
 
 /**
  * Messages between an Electron renderer (the interface) and the main process,
@@ -26,6 +26,9 @@ export type Request =
       readonly language: string;
     }
   | { readonly type: 'spell.suggest'; readonly word: string; readonly language: string }
+  | { readonly type: 'agents.status' }
+  | { readonly type: 'agents.setKey'; readonly key: string }
+  | { readonly type: 'agents.forgetKey' }
   // Handled by the Electron host itself (dialogs, Finder).
   | { readonly type: 'host.libraryFolder' }
   | { readonly type: 'host.chooseLibraryFolder' }
@@ -45,17 +48,19 @@ export interface Responses {
   'prefs.set': null;
   'spell.misspelled': readonly string[];
   'spell.suggest': readonly string[];
+  'agents.status': LlmStatus;
+  'agents.setKey': ApiKeyResult;
+  'agents.forgetKey': null;
   'host.libraryFolder': string;
   'host.chooseLibraryFolder': boolean;
   'host.revealLibraryFolder': null;
 }
 
 /** One-way messages, in both directions. */
-export type Message = {
-  readonly type: 'doc.update';
-  readonly guid: string;
-  readonly update: Uint8Array;
-};
+export type Message =
+  | { readonly type: 'doc.update'; readonly guid: string; readonly update: Uint8Array }
+  /** The Compagnon's availability changed (main → renderer). */
+  | { readonly type: 'agents.status'; readonly status: LlmStatus };
 
 /** What the preload script exposes to the renderer as `window.charpentier`. */
 export interface DesktopBridge {

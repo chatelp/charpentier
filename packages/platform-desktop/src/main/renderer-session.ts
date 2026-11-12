@@ -4,6 +4,7 @@ import type { DocStore } from './doc-store';
 import type { FolderLibrary } from './projects';
 import type { PreferencesFile } from './preferences';
 import type { SpellClient } from './spell-client';
+import type { AgentHost } from './agent-host';
 
 /**
  * The main-process side of one renderer: answers its requests, applies the
@@ -20,6 +21,7 @@ export class RendererSession {
       readonly library: FolderLibrary;
       readonly preferences: PreferencesFile;
       readonly spell?: SpellClient;
+      readonly agents?: AgentHost;
     },
     private readonly push: (message: Message) => void,
   ) {}
@@ -75,6 +77,11 @@ export class RendererSession {
         return this.services.spell?.misspelled(request.words, request.language) ?? [];
       case 'spell.suggest':
         return this.services.spell?.suggest(request.word, request.language) ?? [];
+      case 'agents.status':
+      case 'agents.setKey':
+      case 'agents.forgetKey':
+        if (!this.services.agents) throw new Error('No agents in this host');
+        return this.services.agents.handle(request);
       default:
         throw new Error(`Not handled by the session: ${request.type}`);
     }
@@ -83,6 +90,7 @@ export class RendererSession {
   /** An update typed in the renderer. */
   receive(message: Message): void {
     if (message.type !== 'doc.update' || !this.#unsubscribe.has(message.guid)) return;
+    // (Other messages only go from the main process to the renderer.)
     const doc = this.services.store.acquire(message.guid, this);
     Y.applyUpdate(doc, message.update, this);
   }
