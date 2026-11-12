@@ -3,9 +3,10 @@
 Ouvrir `index.html` dans un navigateur (aucune installation). La barre noire du haut ne fait pas partie du design : elle sert à comparer.
 
 - **Direction** (touche `D`) : Perle, Vélin, Grès.
-- **Écran** (touches `1` à `7`) : écrire ; écrire avec le Compagnon ; manuscrit ; fiche personnage (Atelier) ; fiche en volet ; points à traiter et conversation ; ligne de commande.
+- **Découverte** (touche `G`, direction Perle) : comment un débutant trouve les outils sans raccourci. Actuel ; 1 · Poignées (retenue) ; 2 · Établi ouvert ; 3 · Barre d'outils. **Frappe** (touche `W`) montre ce qui s'efface pendant l'écriture. Inventaire et arguments : [`../decouverte.md`](../decouverte.md).
+- **Écran** (touches `1` à `8`) : écrire ; écrire avec le Compagnon ; manuscrit ; fiche personnage (Atelier) ; fiche en volet ; points à traiter et conversation ; ligne de commande ; premier lancement.
 - **Thème** (touche `T`) : clair, sombre. **Cadre** : Mac (barre de titre intégrée) ou X250 (plein écran, état système en pied). **Focus** (touche `F`), **sons** (désactivés par défaut), **animations**.
-- À essayer : cliquer une pastille en marge, cliquer « Hélène » dans le texte, valider ou rejeter une proposition dans une fiche (le relief change), taper dans la ligne de commande (`>` commandes, `@` fiches, `#` scènes), `↑` `↓`.
+- À essayer : en cadre Mac, ouvrir les menus de la barre de menus ; au premier lancement, « Faire le tour » ; cliquer une pastille en marge, cliquer « Hélène » dans le texte, valider ou rejeter une proposition dans une fiche (le relief change), taper dans la ligne de commande (`>` commandes, `@` fiches, `#` scènes), `↑` `↓`.
 
 Taille de référence : 1536×864 px CSS (X250 en 1920×1080 à 125 %). Sous 1180 px de large, la note du Compagnon se déplie sous son paragraphe au lieu de la marge.
 
@@ -13,7 +14,7 @@ Les polices viennent de Google Fonts **pour les maquettes seulement** ; l'applic
 
 ## Direction retenue
 
-**Perle**, avec les leviers **B · Deux encres** et **C · Signature** (actifs par défaut dans la maquette ; A · Pierre chaude écarté), navigation du manuscrit par **tiroir + vue d'ensemble** (bouton « Plan » du tiroir). Le design language qui en découle est décrit dans [`../../DESIGN.md`](../../DESIGN.md).
+**Perle**, avec les leviers **B · Deux encres** et **C · Signature** (actifs par défaut dans la maquette ; A · Pierre chaude écarté), navigation du manuscrit par **tiroir + vue d'ensemble** (bouton « Plan » du tiroir), points d'entrée en **poignées** sur les bords, **zone de commande** en pied, `Aa`, barre de menus complète et premier lancement guidé (Découverte « 1 · Poignées », version 1.1). Le design language qui en découle est décrit dans [`../../DESIGN.md`](../../DESIGN.md).
 
 ## Les trois directions
 

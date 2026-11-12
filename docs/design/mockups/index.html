@@ -1615,7 +1615,7 @@
         color: var(--author, var(--ink));
       }
       /* The command zone, always in the footer: the beginner's way into everything. */
-      .wfoot .cmdz {
+      .cmdz {
         position: absolute;
         left: 50%;
         bottom: -5px;
@@ -1635,7 +1635,17 @@
         pointer-events: auto;
         cursor: text;
       }
-      .wfoot .cmdz:hover {
+      .cmdz.inl {
+        position: static;
+        transform: none;
+        width: auto;
+        margin-top: auto;
+      }
+      .list > .btn {
+        justify-content: center;
+        margin: 2px 0 10px;
+      }
+      .cmdz:hover {
         color: var(--muted);
       }
       .cmdz .pr {
@@ -2692,8 +2702,17 @@
             ([n, s, c]) => `<div class="ent ${c}"><div>${n}</div><div class="s">${s}</div></div>`,
           )
           .join('');
-        return `<section class="atelier"><div class="rail"><div class="seg"><button>Écrire</button><button class="on">Atelier</button></div>${mods}<div class="pfoot" style="margin-top:auto;padding:0"><span><kbd>⌘E</kbd>écrire / atelier</span><span><kbd>⌘1…5</kbd>modules</span></div></div>
-          <div class="list"><div class="field"><span class="grow">Filtrer les personnages…</span><kbd>/</kbd></div>${ents}<div class="pfoot" style="margin-top:auto;padding:0"><span><kbd>V</kbd>valider</span><span><kbd>X</kbd>rejeter</span><span><kbd>⏎</kbd>modifier</span></div></div>${ficheBody(false)}</section>`;
+        const disc = S.dir === 'perle' ? S.disc : 'actuel';
+        const cmd =
+          disc === 'actuel' || disc === 'barre'
+            ? ''
+            : `<button class="cmdz inl chrome" data-go="palette" title="Ligne de commande (⌘K)"><span class="pr">›</span><span class="grow">Que voulez-vous faire ?</span><kbd>⌘K</kbd></button>`;
+        const add =
+          disc === 'actuel'
+            ? ''
+            : `<button class="btn" title="Nouveau personnage (ligne de commande : « nouveau personnage »)">+ Nouveau personnage</button>`;
+        return `<section class="atelier"><div class="rail"><div class="seg"><button data-go="ecrire">Écrire</button><button class="on">Atelier</button></div>${mods}${cmd}<div class="pfoot" style="${cmd ? 'margin-top:10px' : 'margin-top:auto'};padding:0"><span><kbd>⌘E</kbd>écrire / atelier</span><span><kbd>⌘1…5</kbd>modules</span></div></div>
+          <div class="list"><div class="field"><span class="grow">Filtrer les personnages…</span><kbd>/</kbd></div>${add}${ents}<div class="pfoot" style="margin-top:auto;padding:0"><span><kbd>V</kbd>valider</span><span><kbd>X</kbd>rejeter</span><span><kbd>⏎</kbd>modifier</span></div></div>${ficheBody(false)}</section>`;
       }
 
       // ───────────── Render ─────────────

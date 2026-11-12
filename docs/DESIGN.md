@@ -1,7 +1,7 @@
 # Charpentier : design language
 
-- **Version** : 1.0 (12 novembre 2026)
-- **Direction retenue** : **Perle**, avec **Deux encres** et **Signature** ; manuscrit en **tiroir + vue d'ensemble**.
+- **Version** : 1.1 (12 novembre 2026). 1.1 : tout devient découvrable sans raccourci (§4.8, §5.1), après essai de l'app par l'auteur ; inventaire et directions comparées dans [design/decouverte.md](design/decouverte.md).
+- **Direction retenue** : **Perle**, avec **Deux encres** et **Signature** ; manuscrit en **tiroir + vue d'ensemble** ; points d'entrée en **poignées** sur les bords et **zone de commande** en pied.
 - **Sources** : brief de l'auteur ([design/brief.md](design/brief.md)), maquettes ([design/mockups/](design/mockups/), ouvrir `index.html`), tokens CSS proposés ([design/tokens.css](design/tokens.css)).
 - Complète la [SPEC](SPEC.md) (§6 mentor, §7.1 statuts, §19 exigences transverses) sans la contredire.
 
@@ -14,7 +14,7 @@
 3. **Le relief dit le statut.** En relief = proposé, à prendre ; gravé = validé, acquis ; estompé = rejeté ; gravé + médaillon « ! » = contredit. Le statut ne dépend jamais de la seule couleur.
 4. **Le Compagnon respire dans la marge.** Ses remarques apparaissent quand vous marquez une pause, se déplient à côté du passage, se replient quand vous repartez. Rien ne recouvre le texte, rien ne clignote, aucune notification.
 5. **Une typographie d'éditeur.** Literata pour le roman et pour tout ce qui « parle livre » (titres, libellés en petites capitales, ouverture de scène) ; Inter, petite et discrète, pour l'outillage.
-6. **Clavier d'abord, tout à la demande.** Pendant l'écriture ne restent que le titre de la scène, le compteur de mots et les pastilles. Le reste s'appelle au clavier et se renvoie par `Échap`.
+6. **Clavier d'abord, rien de caché.** Tout outil a un point d'entrée visible (poignée, bouton, menu) qui affiche son raccourci : on le trouve à la souris, on l'apprend en passant, on finit au clavier. Ces points d'entrée sont discrets au repos et s'effacent pendant la frappe ; `Échap` ramène toujours au texte.
 7. **Esthétique d'abord, lisibilité préservée.** Contrastes doux assumés pour l'outillage (choix de l'auteur), mais le texte du roman, l'encre de l'auteur et l'accent du Compagnon restent au-dessus de 4,5:1.
 8. **Hors ligne, toujours.** Polices embarquées, sons synthétisés ou embarqués, aucune ressource réseau.
 
@@ -97,7 +97,9 @@ Sons : **désactivés par défaut**, discrets, hors ligne. Un déclic clair à l
 - **Page plate** centrée, mesure `--ch-measure` ; marge droite réservée au Compagnon.
 - **Barre de titre (Mac)** : 34 px, fusionnée avec le fond, feux macOS visibles, titre du projet en petites capitales vermillon. Absente en plein écran et sur le X250.
 - **En-tête de scène** fixe en haut, fondu vers le texte : chapitre, scène, variante (cliquables : ouvrent le tiroir sur l'élément).
-- **Pied** : à gauche le compteur (`1 284 mots · +312 aujourd'hui`, ce dernier en vermillon) ; à droite, si besoin, « 4 remarques du Compagnon » (bleu, ouvre les points) puis l'état (« Enregistré » ; sur le X250 : réseau et batterie). Tout en 12 px `--ch-muted`.
+- **En-tête** : en haut à droite, contrôle segmenté « Écrire | Atelier » (`⌘E`), point d'entrée de l'Atelier (§4.8).
+- **Pied** : à gauche le compteur (`1 284 mots · +312 aujourd'hui`, ce dernier en vermillon) ; au centre la **zone de commande** (§4.6) ; à droite, si besoin, « 4 remarques du Compagnon » (bleu, ouvre les points), l'état (« Enregistré » ; sur le X250 : réseau et batterie ; « Compagnon : saisir la clé » si la clé manque, cliquable) puis le bouton `Aa` (§4.8). Textes en 12 px `--ch-muted`.
+- **Scène vide** : invite en italique `--ch-faint` à la place du texte (« Écrivez ici. Le titre de la scène, celui du chapitre, tout se change plus tard. »), qui disparaît à la première lettre.
 - **Défilement machine à écrire** : la ligne courante se tient vers 42 % de la hauteur.
 - **Mode focus** : paragraphes autres que le courant à 26 % d'opacité.
 - **Curseur** : 2 px, vermillon.
@@ -109,20 +111,20 @@ Sons : **désactivés par défaut**, discrets, hors ligne. Un déclic clair à l
 - **Comportement** : une seule note dépliée à la fois ; elle se déplie quand le curseur entre dans le passage après une pause, ou au raccourci ; se replie quand le curseur s'éloigne ou à `Échap`. Fenêtre étroite (< 1180 px) : la note se déplie sous son paragraphe et pousse le texte, sans le recouvrir.
 
 ### 4.3 Panneau droit : Points à traiter / Conversation
-- Panneau en relief de 25,5 rem, détaché des bords (10–12 px), ouvert par `⌘L`, sur l'onglet Points ; le contrôle segmenté passe à la conversation [D-18]. Il **remplace la marge** : les pastilles disparaissent et le texte se recentre dans l'espace restant.
+- Panneau en relief de 25,5 rem, détaché des bords (10–12 px), ouvert par `⌘L` ou la poignée « Compagnon » (§4.8), sur l'onglet Points ; le contrôle segmenté passe à la conversation [D-18]. Il **remplace la marge** : les pastilles disparaissent et le texte se recentre dans l'espace restant.
 - **Contrôle segmenté** en tête : rail en creux, onglet actif en relief, libellé vermillon, compteur bleu.
 - **Points** : groupes « Cette scène », « Chapitre », « Fiches proposées » (libellés en petites capitales) ; chaque point est une carte en relief avec sa pastille, son type et sa scène, un titre, une phrase. Le point sélectionné est gravé. Les propositions de fiche portent « Valider `V` » et « Rejeter `X` ». Pied : `J K` parcourir, `⏎` aller au passage, `R` résolu, `I` ignorer.
 - **Réglette d'intervention** [D-19] : en tête du panneau, sous le contrôle segmenté, un rail gravé à 4 crans (Discret, Attentif, Accompagnant, Tuteur), curseur en relief, libellé du cran en petites capitales et une ligne qui dit ce qu'il change. `←` `→` quand elle a le focus.
 - **Conversation** : pas de bulles. Transcription sobre : « Vous » (petites capitales vermillon), « Le Compagnon » (petites capitales bleues), texte en Inter 13,5 px. Champ de saisie gravé en pied.
 
 ### 4.4 Manuscrit : tiroir et vue d'ensemble
-- **Tiroir** (`⌘J`, [D-18]) : panneau gauche en relief de 22 rem, la scène derrière s'estompe. Contrôle segmenté « Manuscrit | Plan ». Chapitres en Literata, scènes en lignes ; scène active gravée avec un filet vermillon à gauche ; pastilles bleues `•••` et nombre de mots à droite. Sous la scène active : variantes (active en vermillon) et derniers points de restauration. Clavier : `↑↓`, `⏎` ouvrir, `⌥↑↓` déplacer, `V` variantes, `⌘N` nouvelle scène.
+- **Tiroir** (`⌘J` ou la poignée « Manuscrit », [D-18]) : panneau gauche en relief de 22 rem, la scène derrière s'estompe. Contrôle segmenté « Manuscrit | Plan ». Chapitres en Literata, scènes en lignes ; scène active gravée avec un filet vermillon à gauche ; pastilles bleues `•••` et nombre de mots à droite. Sous la scène active : variantes (active en vermillon) et derniers points de restauration. Clavier : `↑↓`, `⏎` ouvrir, `⌥↑↓` déplacer, `V` variantes, `⌘N` nouvelle scène.
 - **Vue d'ensemble** (`⌘⇧P` ou « Plan ») : plein cadre, titre du roman en Literata, une colonne par chapitre, une carte en relief par scène (numéro, titre en Literata, mots, variantes, pastilles). Scène active gravée et cerclée de vermillon. Bandeau en pied : variantes et points de restauration de la scène sélectionnée. Clavier : flèches, `⌥` + flèches pour déplacer, `⏎` écrire, `Échap` revenir.
 
 ### 4.5 Atelier (modules) et fiches
 - **Atelier** (`⌘E` bascule Écrire / Atelier) : trois colonnes, rail des modules (13,5 rem), liste des entrées (16,5 rem) avec filtre gravé, fiche.
 - **Rail** : Méta, Personnages, Structure, Règles du monde, Indices et révélations (`⌘1…5`) ; module actif gravé avec filet vermillon ; nombre de propositions en bleu.
-- **Liste** : entrée active gravée (filet vermillon) ; entrée proposée en relief, texte bleu.
+- **Liste** : bouton « + Nouveau personnage » (libellé selon le module) sous le filtre ; entrée active gravée (filet vermillon) ; entrée proposée en relief, texte bleu.
 - **Fiche** : titre Literata 30 px, ligne de contexte, légende des statuts, sections en deux colonnes (une seule en dessous de 46 rem de large), libellés en petites capitales.
 - **Champ à statut** (cœur du système) :
 
@@ -139,7 +141,8 @@ Sons : **désactivés par défaut**, discrets, hors ligne. Un déclic clair à l
 - **Fiche en volet** : depuis le texte (clic ou raccourci sur un nom connu), la fiche s'ouvre dans le panneau droit, en une colonne ; `⌘⏎` l'ouvre dans l'Atelier, `Échap` la ferme.
 
 ### 4.6 Ligne de commande
-- `⌘K`. Barre pleine largeur en pied, champ gravé, invite bleue `›` ; résultats qui montent dans une feuille en relief de 46 rem alignée à gauche.
+- **Zone de commande, toujours visible** : au centre du pied, un champ gravé (largeur min(30 rem, 38 %)) avec l'invite bleue `›`, « Que voulez-vous faire ? » en `--ch-faint` et `⌘K` à droite. Un clic ou `⌘K` l'ouvre. Dans l'Atelier, le même champ est au pied du rail des modules.
+- Ouverte : barre pleine largeur en pied, champ gravé, invite bleue `›` ; résultats qui montent dans une feuille en relief de 46 rem alignée à gauche. Champ vide : les commandes les plus utiles et les dernières utilisées, pour qu'un débutant voie ce qui existe sans rien taper.
 - Préfixes : `>` commandes, `@` fiches, `#` scènes (`⌘P` ouvre directement en `#`). Recherche approximative, insensible aux accents ; lettres trouvées en bleu, ligne choisie gravée ; raccourci de chaque commande à droite.
 - Toute action de l'app y figure, avec son raccourci : c'est aussi l'aide-mémoire du clavier.
 
@@ -150,11 +153,27 @@ Sons : **désactivés par défaut**, discrets, hors ligne. Un déclic clair à l
 - **Puce** : relief léger, 12 px ; active = creux, vermillon.
 - **Focus clavier** : l'élément focalisé passe en creux ; pour les cartes et lignes, filet vermillon. Jamais d'anneau bleu par défaut du navigateur.
 
+### 4.8 Points d'entrée et découverte
+Un débutant doit pouvoir tout trouver à la souris ; le raccourci s'affiche à côté pour qu'il l'apprenne en passant. Maquette : `index.html`, groupe « Découverte » sur « 1 · Poignées » (choix de l'auteur), écran 8 pour le premier lancement, bouton « Frappe » pour l'effacement.
+
+- **Poignées de bord** : une languette en relief (`--ch-raise-s`) collée au bord, centrée verticalement, arrondie côté page (`--ch-radius-md`), libellé vertical en petites capitales Literata 13,5 px `--ch-muted` et raccourci en `--ch-faint`. À gauche « Manuscrit `⌘J` » (ouvre le tiroir) ; à droite « Compagnon `⌘L` », surmonté du nombre de points ouverts dans un médaillon gravé bleu (ouvre le panneau, même sans remarque). Survol : encre et `--ch-raise`. Une poignée disparaît quand son panneau est ouvert : le panneau prend sa place.
+- **Écrire | Atelier** : contrôle segmenté en haut à droite de la surface d'écriture (rail creux 3 px, segment actif en relief, libellé vermillon).
+- **Zone de commande** : §4.6.
+- **`Aa` (affichage)** : bouton texte Literata en bas à droite ; ouvre une petite feuille en relief au-dessus : taille du texte (− +), largeur de colonne (← →), mode focus, thème, réduire les animations, chacun avec son raccourci. `Échap` ou un clic ailleurs la ferme.
+- **Effacement pendant la frappe** : poignées, « Écrire | Atelier », zone de commande et `Aa` passent à opacité 0 (`--ch-dur-pastille`) dès la première frappe, et reviennent au mouvement de la souris, à `Échap`, ou après 3 s sans frappe. Le compteur, l'état et les pastilles restent (§5.1). Avec « Réduire les animations », le passage est instantané.
+- **Panneaux persistants** : un panneau ouvert (tiroir, panneau du Compagnon, fiche en volet) reste ouvert à la prochaine ouverture du projet, jusqu'à ce que l'auteur le ferme. Préférence par projet, stockée dans le document du projet.
+- **Barre de menus macOS complète** : Charpentier, Fichier, Édition, Scène, Manuscrit, Atelier, Compagnon, Présentation, Fenêtre, Aide. Chaque commande du registre y figure une fois, avec son raccourci, sauf celles qui n'ont de sens qu'en contexte (actions d'une note, d'une fiche). Aide › « Que voulez-vous faire ? » ouvre la ligne de commande ; Aide › « Revoir la visite guidée ». Le détail des menus est dans la maquette (barre de menus du cadre Mac). Sur le X250, sans barre de menus, la zone de commande en tient lieu.
+- **Premier lancement** : sur la première scène d'un premier projet, une note du Compagnon est dépliée dans la marge (type « Bienvenue ») : « Je lis par-dessus votre épaule », ce qu'il fait et ne fait pas, puis les trois endroits à connaître (à gauche le manuscrit, à droite le Compagnon, en bas « Que voulez-vous faire ? »). Boutons « Faire le tour `⏎` » et « Plus tard `Échap` ».
+- **Visite guidée** : trois étapes, une bulle en relief à côté de chaque point d'entrée (Manuscrit, Compagnon, zone de commande), le point d'entrée cerclé de bleu ; titre en petites capitales bleues avec le raccourci, deux phrases, « Suivant `⏎` » et « 1 / 3 ». Jamais relancée d'elle-même.
+- **États vides** : tout panneau ou liste vide dit quoi faire et comment (« Rien à traiter pour l'instant. Demandez l'avis du Compagnon sur la scène : `⌘⇧A` » ; « Aucun personnage. + Nouveau personnage »).
+- **Bulles d'aide** : chaque bouton, poignée ou contrôle a une bulle native « Libellé (raccourci) ». Tous sont atteignables à la tabulation, dans l'ordre : poignée gauche, Écrire | Atelier, texte, zone de commande, `Aa`, poignée droite.
+
 ## 5. Règles d'UX
 
 ### 5.1 Distraction-free
-- En écriture, visibles en permanence : en-tête de scène, compteur, état, pastilles. Rien d'autre.
-- Tout outil s'ouvre au clavier et se ferme par `Échap`, qui ramène toujours au texte, curseur intact.
+- En écriture, visibles en permanence : en-tête de scène, compteur, état, pastilles. Visibles au repos et effacés pendant la frappe : les points d'entrée (§4.8 : poignées, Écrire | Atelier, zone de commande, `Aa`). Rien d'autre.
+- Aucune fonction n'est accessible seulement au clavier : chaque outil a un point d'entrée visible, au moins dans la barre de menus ou la zone de commande.
+- Tout outil s'ouvre au clavier ou d'un clic, et se ferme par `Échap`, qui ramène toujours au texte, curseur intact.
 - Aucune modale bloquante pendant l'écriture ; aucune animation, aucun son, aucune pastille qui apparaît pendant la frappe.
 - Hors réseau : l'état l'indique discrètement dans le pied (« Compagnon hors ligne ») ; l'écriture et les corrections hors ligne continuent.
 

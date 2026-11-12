@@ -57,3 +57,7 @@ Une barre à libellés dans la barre de titre (pleine largeur en haut sur le X25
 ## 4. Recommandation
 
 **Direction 1 et le socle commun.** Elle corrige le défaut sans toucher à ce que Pierre a validé : la page calme, la marge qui respire, la ligne de commande en pied. Complément possible tiré de la direction 2 : un panneau ouvert reste ouvert d'une session à l'autre, tant que l'auteur ne le ferme pas.
+
+## 5. Décision (12 nov. 2026)
+
+Pierre retient la **direction 1 · Poignées**, **tout le socle commun** (visite guidée comprise) et les **panneaux persistants** : un panneau ouvert le reste d'une session à l'autre tant que l'auteur ne le ferme pas. Reporté dans [DESIGN.md](../DESIGN.md) §1 (principe n°6), §4.1, §4.3 à §4.6, §4.8 (nouveau) et §5.1, version 1.1.
