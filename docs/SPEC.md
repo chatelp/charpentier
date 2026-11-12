@@ -183,6 +183,9 @@ Suivi des faiblesses récurrentes d'un chapitre à l'autre ; signale progrès et
 ### 6.7 Chat libre
 L'auteur peut dialoguer librement avec le mentor.
 
+### 6.8 Exécution (desktop)
+Le Compagnon tourne dans le processus principal (paquet `agents`) : conversation (document `project:<pid>/mentor`, tableau `chat`), lecture d'une scène (une analyse structurée : propositions de fiches, conflits, remarques), une à la fois par projet. Une lecture automatique saute une scène inchangée depuis sa dernière lecture (empreinte dans `analyses` du document mentor).
+
 ## 7. Synchronisation des modules
 
 ### 7.1 Statuts des informations [D-9]
@@ -363,11 +366,12 @@ Signal: Y.Map {
   fieldRef?: { module, entityId?, field },
   message, principle?,                      // le « pourquoi » (principe n°5)
   suggestion?: { kind: 'correction' | 'example', text },
+  fingerprint?,                             // identité de la remarque : jamais deux fois, jamais après « ignorer »
   createdAt, closedAt?
 }
 ```
 
-Les positions relatives sont résolues dans le document de la scène visée ; elles survivent aux éditions concurrentes. Le rendu passe par des décorations ProseMirror. Un agent peut résoudre ses propres signalements ouverts, jamais rouvrir un signalement écarté par l'auteur.
+Les agents ne donnent jamais de positions : ils citent le passage mot pour mot, et la citation est ancrée (`anchorForQuote`) ; une citation absente du texte est écartée. Les positions relatives sont résolues dans le document de la scène visée ; elles survivent aux éditions concurrentes. Le rendu passe par des décorations ProseMirror. Un agent peut résoudre ses propres signalements ouverts, jamais rouvrir un signalement écarté par l'auteur.
 
 ### 15.4 Scène, variantes, historique
 

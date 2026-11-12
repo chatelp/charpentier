@@ -2,7 +2,7 @@
 
 Chaque phase est courte, se termine par un résultat vérifiable dans l'app (ou par des tests quand la phase n'a pas d'interface), puis par un arrêt pour le feu vert. Les tests prioritaires sont écrits dans la phase qui introduit le code concerné.
 
-Statut : étapes 1 et 2 réalisées (12 novembre 2026) ; étape 3 (mentor) à venir.
+Statut : étapes 1 à 3 réalisées (12 novembre 2026). Reste à éprouver le Compagnon avec la clé de l'auteur (tests adversariaux en direct, réglage des prompts).
 
 ---
 
@@ -95,22 +95,27 @@ Avant de commencer : arbitrer les questions ouvertes 1 à 4 de la SPEC (§22 : f
 ### 3.1 Correction hors ligne
 Service `Spellcheck` (Hunspell fr), règles typographiques françaises, propositions à accepter au clavier, « tout accepter » pour l'orthographe.
 **Vérifiable** : réseau coupé, mes fautes et mes espaces manquantes sont signalées ; j'accepte une correction au clavier.
+Réalisé : Hunspell fr (Dicollecte, MPL 2.0, embarqué) dans un fil du main ; règles typographiques maison ; ⌥⏎ corrige ou propose, ⌘' va à la suivante ; dictionnaire du projet ; « tout corriger ». Sur le web : typographie seule (pas de dictionnaire).
 
 ### 3.2 Signalements ancrés et liste de points
 Décorations en marge à partir des positions relatives, liste de points à traiter navigable au clavier, résoudre / ignorer.
 **Vérifiable** : les signalements restent sur le bon passage quand je réécris autour ; je les parcours depuis la liste.
+Réalisé : ancrage par citation exacte (`anchorForQuote`) ; pastilles, note dépliée à la pause ou par ⌥⏎ ; panneau ⌘L (Points / Conversation).
 
 ### 3.3 Paquet `agents` et service LLM
 Abstraction multi-fournisseurs complète, Anthropic implémenté, exécution dans le main ; saisie et stockage de la clé (`safeStorage`) ; dégradation hors réseau. Garde-fous « l'IA n'écrit pas » : prompts système, schémas bornés, filtrage, tests adversariaux.
 **Vérifiable** : je saisis ma clé ; réseau coupé, un indicateur discret le signale et l'écriture continue ; les tests adversariaux sont verts.
+Réalisé : SDK officiel d'Anthropic, Opus 5.5 [D-12, D-20], clé vérifiée puis chiffrée par `safeStorage`, statut dans le pied. Tests des garde-fous verts hors ligne ; les tests adversariaux en direct (`CHARPENTIER_LIVE_LLM=1 pnpm test:llm`, payants) restent à lancer avec la clé de l'auteur.
 
 ### 3.4 Chat libre
 Voix unique du mentor, contexte = scène courante et modules ; historique dans le document mentor.
 **Vérifiable** : je pose une question sur ma scène, le mentor répond en français et refuse d'écrire la scène à ma place.
+Réalisé : historique dans le document mentor ; phrase d'exemple insérable par ⌘⏎ seulement.
 
 ### 3.5 Bottom-up
 Analyse de fin de scène → propositions dans Personnages, Méta, Structure, Règles du monde, Indices ; validation, correction, rejet au clavier ; pas de reproposition d'un rejet sans élément nouveau.
 **Vérifiable** : je termine une scène où apparaît un nouveau personnage ; une fiche proposée apparaît, je la valide ou la rejette.
+Réalisé avec 3.6 : une analyse structurée par scène ; propositions par l'AgentWriter ; empreinte des remarques (jamais deux fois, jamais après « ignorer »).
 
 ### 3.6 Conflits, indices et remarques de métier
 Contradictions avec les informations validées, indices non exploités, personnage qui agit sur une information avant de l'apprendre, apparitions d'indices proposées, remarques justifiées par un principe, phrases d'exemple insérables sur action explicite.
@@ -119,3 +124,4 @@ Contradictions avec les informations validées, indices non exploités, personna
 ### 3.7 Pendant l'écriture et à la demande
 Réglette d'intervention à 4 crans [D-19] (cran 3 par défaut) qui règle les remarques pendant l'écriture, le déclenchement de l'analyse complète et la profondeur des explications ; analyse à la demande d'une scène, d'un chapitre ou du manuscrit, grammaire par le LLM.
 **Vérifiable** : je demande l'analyse d'un chapitre entier et je reçois des remarques ancrées dans le texte. (Jalon : **v1 fonctionnelle**.)
+Réalisé : réglette dans le panneau, « Plus / Moins d'aide », lectures automatiques (en quittant une scène, après deux minutes de pause) et à la demande (scène ⌘⇧A, chapitre, manuscrit) ; option Haiku pour les lectures automatiques. Reporté : bilan de fin de chapitre du cran 4, grammaire par le LLM pendant l'écriture (elle passe par la lecture de la scène).
