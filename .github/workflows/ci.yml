@@ -16,6 +16,8 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # Headless Chromium for the browser test projects (editor, IndexedDB).
+      - run: pnpm --filter @charpentier/core exec playwright install --with-deps chromium
       # Format, lint (incl. host-API guardrails), typecheck, tests,
       # guardrail self-test and dependency license check.
       - run: pnpm check

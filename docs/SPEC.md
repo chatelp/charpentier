@@ -267,7 +267,7 @@ Services (à affiner) :
 | Front | React |
 | Éditeur | TipTap (ProseMirror), extensions libres uniquement (pas de TipTap Pro) |
 | Modèle de données | Local-first, CRDT **Yjs** comme source de vérité |
-| Liaison éditeur ↔ CRDT | y-prosemirror (extension Collaboration de TipTap) |
+| Liaison éditeur ↔ CRDT | Extension Collaboration de TipTap, qui s'appuie sur `@tiptap/y-tiptap` (fork maintenu de y-prosemirror, même encodage). Le schéma de l'éditeur est vérifié identique à celui de `schema` par un test. |
 | Persistance web | y-indexeddb |
 | Persistance desktop | Fichiers locaux (journal de mises à jour Yjs + compaction) ; SQLite seulement si un index s'avère utile |
 | Miroir lisible | Le CRDT fait foi ; miroir Markdown écrit en continu, métadonnées en YAML à côté ; modification externe réimportée comme une édition (§17) |

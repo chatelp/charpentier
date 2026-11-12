@@ -1,12 +1,19 @@
 {
   "app": {
     "name": "Charpentier",
-    "loading": "Ouverture…"
+    "loading": "Ouverture…",
+    "openError": "Impossible d'ouvrir le projet."
   },
   "editor": {
-    "emptyScene": "Votre manuscrit commence ici."
+    "emptyScene": "Votre manuscrit commence ici.",
+    "ariaLabel": "Texte de la scène"
   },
   "mentor": {
     "unavailableOnHost": "Le mentor n'est pas disponible dans cette version."
+  },
+  "manuscript": {
+    "defaultProjectTitle": "Mon roman",
+    "defaultChapterTitle": "Chapitre 1",
+    "defaultSceneTitle": "Scène 1"
   }
 }

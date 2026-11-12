@@ -19,7 +19,7 @@ Outil d'aide à l'écriture de romans piloté par des agents IA : un mentor « p
 - `core`, `schema`, `platform`, `agents` : pas de `@types/node`, lib DOM/ES2022 seulement, ESLint interdit `node:*`, `electron`, `fs`… Le build `apps/web` et les tests du cœur dans les deux hôtes tournent en CI.
 
 ## Décisions techniques actées
-TypeScript strict · React · TipTap (sans extensions Pro) + y-prosemirror · Yjs source de vérité · y-indexeddb (web) · Electron, `contextIsolation`, documents Yjs **dans le main**, interface synchronisée par IPC · pnpm + Turborepo · SDK `ai`, Anthropic en premier, BYOK via `safeStorage` · i18next · Vitest (+ mode navigateur, + Playwright Electron) · Hunspell fr + règles typo maison · Hocuspocus + Postgres à l'étape 4.
+TypeScript strict · React · TipTap 3 (sans extensions Pro) + `@tiptap/y-tiptap` (fork de y-prosemirror) · Yjs source de vérité · y-indexeddb (web) · Electron, `contextIsolation`, documents Yjs **dans le main**, interface synchronisée par IPC · pnpm + Turborepo · SDK `ai`, Anthropic en premier, BYOK via `safeStorage` · i18next · Vitest (+ mode navigateur, + Playwright Electron) · Hunspell fr + règles typo maison · Hocuspocus + Postgres à l'étape 4.
 
 Modèle Yjs (détail : SPEC §15) : doc racine `project:<pid>` (meta, chapitres et scènes ordonnés par indexation fractionnaire, modules, signalements) · `project:<pid>/scene:<sid>` (une `Y.XmlFragment` de premier niveau `variant:<vid>` par variante) · `…/history` (points de restauration ; restaurer = nouvelle transaction) · `project:<pid>/mentor`. **Tout ce que deux répliques peuvent créer en même temps est un type de premier niveau nommé** (`module:<nom>`, `variant:<id>`) ; un sous-type n'est créé que sous une clé aléatoire unique. Champ = trois emplacements à auteur unique (`#value` auteur, `#proposal` agent, `#rejected` auteur), statut dérivé. Agents : uniquement via `createAgentWriter` ; `watchAuthorship` vérifie. Rien n'est supprimé : corbeille (`trashedAt`). Annotations = positions relatives Yjs rendues en décorations, aucune marque dans le contenu. Texte : paragraphe, italique, citation, séparateur interne de scène ; les insécables U+00A0 et U+202F doivent survivre aux allers-retours.
 
@@ -39,6 +39,7 @@ Miroir Markdown (desktop) : un `.md` par scène, appariement par id dans le fron
 - `pnpm check` : tout ce que fait la CI (format, lint, typecheck, tests, `check:guards`, `check:licenses`) ; doit passer avant chaque commit
 - `pnpm check:guards` : auto-test des garde-fous anti-fuite (ESLint et TypeScript doivent rejeter une fuite Node/Electron dans chaque paquet agnostique)
 - `pnpm check:licenses` : licences de toutes les dépendances ; exceptions revues dans `licenses.exceptions.json`
+- Tests en navigateur (`*.browser.test.ts[x]`, Chromium headless) : une fois `pnpm --filter @charpentier/core exec playwright install chromium`
 - `pnpm dev:web` : hôte web sur http://localhost:5173 (config de prévisualisation dans `.claude/launch.json`) · `pnpm build` : build web · `pnpm dev:desktop` (étape 2)
 
 ## Repères techniques
@@ -46,5 +47,6 @@ Miroir Markdown (desktop) : un `.md` par scène, appariement par id dans le fron
 - Paquets agnostiques : `tsconfig.json` (src, sans types Node) + `tsconfig.test.json` (tests). Nouveau paquet agnostique → l'ajouter aux couches d'`eslint.config.js` et à `scripts/guard-selftest.mjs`.
 - TypeScript reste en 6.0.x tant que typescript-eslint ne supporte pas la 7.
 - Markdown exclu de Prettier (prose formatée à la main).
+- Éditeur : `sceneSchemaExtensions` doit produire exactement `sceneSchema` (test `schema-conformity`). Les règles de saisie doivent marcher en français (`l’*Odyssée*`). Toute commande qui insère un nœud feuille place le curseur après lui (sinon la frappe suivante le remplace).
 - Services de plateforme absents = `null` : le cœur vérifie et masque la fonction, il ne suppose jamais un service présent. Tests du cœur : `createTestPlatform()` (jamais `platform-web`).
 - i18n : catalogue `packages/core/src/i18n/locales/fr.json`, clés typées ; la règle locale `charpentier/no-ui-literal` (`tools/eslint/`) interdit tout texte en dur dans le JSX. `eslint-plugin-i18next` est inopérant avec ESLint 10 : ne pas le réintroduire.
