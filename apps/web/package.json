@@ -1,0 +1,15 @@
+{
+  "name": "@charpentier/web",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Browser host.",
+  "license": "SEE LICENSE IN ../../LICENSE.md",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.test.json"
+  },
+  "dependencies": {
+    "@charpentier/core": "workspace:*",
+    "@charpentier/platform-web": "workspace:*"
+  }
+}

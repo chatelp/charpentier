@@ -1,0 +1,15 @@
+{
+  "name": "@charpentier/platform",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Abstract platform service interfaces implemented by each host.",
+  "license": "SEE LICENSE IN ../../LICENSE.md",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.test.json"
+  },
+  "dependencies": {}
+}

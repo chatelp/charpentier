@@ -1,0 +1,3 @@
+pnpm-lock.yaml
+# Prose is hand-formatted: Prettier would pad tables and reflow lists.
+**/*.md

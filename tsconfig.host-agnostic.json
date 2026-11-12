@@ -1,0 +1,8 @@
+{
+  "//": "Base for code that must run in every host (browser, Electron renderer, Electron main, server). No Node or Electron types are visible: any use of process, Buffer, require or node:* fails typecheck.",
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "types": []
+  }
+}
