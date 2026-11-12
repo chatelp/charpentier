@@ -100,7 +100,7 @@ describe('writing surface', () => {
     expect(await screen.findByRole('dialog', { name: 'Ligne de commande' })).toBeTruthy();
     await userEvent.keyboard('{Escape}');
     await userEvent.keyboard(mod('k'));
-    await userEvent.keyboard('nouvelle scene');
+    await userEvent.keyboard('>nouvelle scene');
     const option = await screen.findByRole('option', { name: /Nouvelle scène/ });
     expect(option.textContent).toContain(isMac ? '⌥⌘N' : 'Ctrl+Alt+N');
   });
@@ -132,5 +132,19 @@ describe('writing surface', () => {
     } finally {
       raf.mockRestore();
     }
+  });
+});
+
+describe('command line', () => {
+  it('mixes commands and scenes when typing freely, each with its symbol', async () => {
+    await startApp();
+    await userEvent.keyboard(mod('k'));
+    await userEvent.keyboard('scene');
+    const list = await screen.findByRole('listbox');
+    expect(list.textContent).toContain('Commandes');
+    expect(list.textContent).toContain('Scènes');
+    const scene = screen.getByRole('option', { name: /I\.1 Scène 1/ });
+    expect(scene.textContent).toContain('#');
+    expect(scene.textContent).toContain('0 mot');
   });
 });

@@ -19,6 +19,17 @@ export interface CommandPaletteProps {
 }
 
 const COMMANDS_PREFIX = '>';
+/** Typing freely: at most this many results of each kind. */
+const MIXED_LIMIT = 5;
+
+interface Section {
+  readonly key: string;
+  readonly label?: string;
+  /** Symbol of the kind of result: › commands, @ sheets, # scenes. */
+  readonly icon?: string;
+  readonly items: readonly PickItem[];
+  pick(item: PickItem): void;
+}
 
 function Highlighted({ text, query }: { readonly text: string; readonly query: string }) {
   const parts: ReactNode[] = [];
@@ -63,29 +74,59 @@ export function CommandPalette({ request, commands, scopes = {}, onClose }: Comm
   const scope = request.kind === 'commands' ? scopes[prefix] : undefined;
   const search =
     request.kind === 'commands' && (scope || prefix === COMMANDS_PREFIX) ? query.slice(1) : query;
-  const items: readonly PickItem[] =
-    request.kind === 'commands'
-      ? (scope?.items ?? commands)
-      : request.kind === 'pick'
-        ? request.items
-        : [];
-  const filtered =
-    request.kind === 'input'
-      ? []
-      : filterByQuery(items, search, (i) => `${i.label} ${i.detail ?? ''}`);
-  const activeIndex = Math.min(active, Math.max(filtered.length - 1, 0));
+  const match = (items: readonly PickItem[]) =>
+    filterByQuery(items, search, (i) => `${i.label} ${i.detail ?? ''}`);
+
+  // What the line shows: one search (a prefix, a pick list) or, typing freely,
+  // commands, sheets and scenes together (docs/DESIGN.md §4.6).
+  const sections: Section[] = (() => {
+    if (request.kind === 'input') return [];
+    if (request.kind === 'pick')
+      return [
+        { key: 'pick', items: match(request.items), pick: (item) => request.onPick(item.id) },
+      ];
+    const runCommand = (item: PickItem) => commands.find((c) => c.id === item.id)?.run();
+    if (scope)
+      return [
+        {
+          key: prefix,
+          label: scope.label,
+          icon: prefix,
+          items: match(scope.items),
+          pick: (item) => scope.onPick(item.id),
+        },
+      ];
+    const commandSection: Section = {
+      key: COMMANDS_PREFIX,
+      label: t('palette.commandsGroup'),
+      icon: '›',
+      items: match(commands),
+      pick: runCommand,
+    };
+    if (prefix === COMMANDS_PREFIX || !search.trim()) return [commandSection];
+    return [
+      { ...commandSection, items: commandSection.items.slice(0, MIXED_LIMIT) },
+      ...Object.entries(scopes).map(([key, s]) => ({
+        key,
+        label: s.label,
+        icon: key,
+        items: match(s.items).slice(0, MIXED_LIMIT),
+        pick: (item: PickItem) => s.onPick(item.id),
+      })),
+    ].filter((section) => section.items.length > 0);
+  })();
+  const flat = sections.flatMap((section) => section.items.map((item) => ({ item, section })));
+  const activeIndex = Math.min(active, Math.max(flat.length - 1, 0));
   const optionId = (i: number) => `${listId}-${i}`;
 
   useEffect(() => {
     document.getElementById(optionId(activeIndex))?.scrollIntoView({ block: 'nearest' });
   });
 
-  const choose = (item: PickItem | undefined) => {
-    if (!item) return;
+  const choose = (entry: (typeof flat)[number] | undefined) => {
+    if (!entry) return;
     onClose();
-    if (scope) scope.onPick(item.id);
-    else if (request.kind === 'commands') commands.find((c) => c.id === item.id)?.run();
-    else if (request.kind === 'pick') request.onPick(item.id);
+    entry.section.pick(entry.item);
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -99,25 +140,23 @@ export function CommandPalette({ request, commands, scopes = {}, onClose }: Comm
         if (request.kind === 'input') {
           onClose();
           request.onSubmit(query);
-        } else choose(filtered[activeIndex]);
+        } else choose(flat[activeIndex]);
         break;
       case 'ArrowDown':
         event.preventDefault();
-        setActive(filtered.length ? (activeIndex + 1) % filtered.length : 0);
+        setActive(flat.length ? (activeIndex + 1) % flat.length : 0);
         break;
       case 'ArrowUp':
         event.preventDefault();
-        setActive(filtered.length ? (activeIndex - 1 + filtered.length) % filtered.length : 0);
+        setActive(flat.length ? (activeIndex - 1 + flat.length) % flat.length : 0);
         break;
     }
   };
 
   const placeholder =
     request.kind === 'commands' ? t('palette.searchCommands') : request.placeholder;
-  const groupLabel =
-    request.kind === 'commands' ? (scope?.label ?? t('palette.commandsGroup')) : undefined;
   const emptyText =
-    request.kind === 'pick' && request.empty && items.length === 0
+    request.kind === 'pick' && request.empty && request.items.length === 0
       ? request.empty
       : t('palette.noResults');
   const showHint = request.kind === 'commands' && Object.keys(scopes).length > 0;
@@ -148,7 +187,7 @@ export function CommandPalette({ request, commands, scopes = {}, onClose }: Comm
               role: 'combobox',
               'aria-expanded': true,
               'aria-controls': listId,
-              'aria-activedescendant': filtered.length ? optionId(activeIndex) : undefined,
+              'aria-activedescendant': flat.length ? optionId(activeIndex) : undefined,
             })}
             onChange={(e) => {
               setQuery(e.target.value);
@@ -160,30 +199,44 @@ export function CommandPalette({ request, commands, scopes = {}, onClose }: Comm
         </div>
         {request.kind !== 'input' && (
           <div className="ch-cmd-results ch-raised">
-            {groupLabel && (
-              <p className="ch-cmd-group ch-label" aria-hidden="true">
-                {groupLabel}
-              </p>
-            )}
             <ul className="ch-cmd-list" id={listId} role="listbox" aria-label={placeholder}>
-              {filtered.map((item, i) => (
-                <li
-                  key={item.id}
-                  id={optionId(i)}
-                  role="option"
-                  aria-selected={i === activeIndex}
-                  className="ch-cmd-item"
-                  onMouseMove={() => setActive(i)}
-                  onClick={() => choose(item)}
-                >
-                  <span className="ch-cmd-label">
-                    <Highlighted text={item.label} query={search} />
-                  </span>
-                  {item.detail && <span className="ch-cmd-detail">{item.detail}</span>}
-                  {item.shortcut && <kbd className="ch-cmd-shortcut">{item.shortcut}</kbd>}
+              {sections.map((section) => (
+                <li key={section.key} role="presentation">
+                  {section.label && (
+                    <p className="ch-cmd-group ch-label" aria-hidden="true">
+                      {section.label}
+                    </p>
+                  )}
+                  <ul role="presentation" className="ch-cmd-list">
+                    {section.items.map((item) => {
+                      const i = flat.findIndex((e) => e.item === item && e.section === section);
+                      return (
+                        <li
+                          key={item.id}
+                          id={optionId(i)}
+                          role="option"
+                          aria-selected={i === activeIndex}
+                          className="ch-cmd-item"
+                          onMouseMove={() => setActive(i)}
+                          onClick={() => choose(flat[i])}
+                        >
+                          {section.icon && (
+                            <span className="ch-cmd-icon" aria-hidden="true">
+                              {section.icon}
+                            </span>
+                          )}
+                          <span className="ch-cmd-label">
+                            <Highlighted text={item.label} query={search} />
+                          </span>
+                          {item.detail && <span className="ch-cmd-detail">{item.detail}</span>}
+                          {item.shortcut && <kbd className="ch-cmd-shortcut">{item.shortcut}</kbd>}
+                        </li>
+                      );
+                    })}
+                  </ul>
                 </li>
               ))}
-              {filtered.length === 0 && <li className="ch-cmd-empty">{emptyText}</li>}
+              {flat.length === 0 && <li className="ch-cmd-empty">{emptyText}</li>}
             </ul>
           </div>
         )}

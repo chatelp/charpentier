@@ -203,9 +203,11 @@
     "activeVariant": "variante active",
     "commandsGroup": "Commandes",
     "scenesGroup": "Scènes",
-    "prefixHint": "# scènes · @ fiches · > commandes",
+    "prefixHint": "↑↓ choisir · ↵ exécuter · Échap fermer · > commandes @ fiches # scènes",
     "sheetsGroup": "Fiches",
-    "projectTitle": "Titre du projet"
+    "projectTitle": "Titre du projet",
+    "variantCount_one": "{{count}} variante",
+    "variantCount_other": "{{count}} variantes"
   },
   "navigator": {
     "label": "Plan du manuscrit",
@@ -457,7 +459,12 @@
       }
     },
     "acceptKey": "V",
-    "rejectKey": "X"
+    "rejectKey": "X",
+    "entityStatus": {
+      "proposed": "proposée",
+      "validated": "validée",
+      "rejected": "rejetée"
+    }
   },
   "overview": {
     "label": "Vue d’ensemble du manuscrit",

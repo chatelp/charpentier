@@ -15,6 +15,8 @@ import { usePlatform } from '../app/platform-context';
 import { Atelier, type AtelierLocation } from '../atelier/Atelier';
 import { sheetScope } from '../atelier/sheet-scope';
 import { Overview } from '../overview/Overview';
+import { useSceneWords } from '../overview/use-scene-words';
+import { toRoman } from './roman';
 import { Conversation } from '../mentor/Conversation';
 import { InterventionSlider } from '../mentor/InterventionSlider';
 import { MentorPanel } from '../mentor/MentorPanel';
@@ -94,6 +96,7 @@ export function ProjectWorkspace({
   );
   const agentsStatus = useSyncExternalStore(subscribeAgents, () => agents.status());
   const words = useWordCount(editor);
+  const sceneWords = useSceneWords(platform, projectId, outline);
   const wordsToday = useWordsToday(
     platform.preferences,
     projectId,
@@ -323,8 +326,20 @@ export function ProjectWorkspace({
     : {
         '#': {
           label: t('palette.scenesGroup'),
-          items: outline.flatMap((c) =>
-            c.scenes.map((s) => ({ id: s.id, label: s.title, detail: c.title })),
+          items: outline.flatMap((c, ci) =>
+            c.scenes.map((s, si) => {
+              const count = sceneWords.get(s.id);
+              return {
+                id: s.id,
+                label: `${toRoman(ci + 1)}.${si + 1} ${s.title}`,
+                detail: [
+                  count !== undefined && t('footer.words', { count }),
+                  s.variants.length > 1 && t('palette.variantCount', { count: s.variants.length }),
+                ]
+                  .filter(Boolean)
+                  .join(' · '),
+              };
+            }),
           ),
           onPick: (id) => {
             openScene(id);

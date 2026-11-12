@@ -29,7 +29,7 @@ export function sheetScope(ctx: WorkspaceContext): PaletteScope {
         return {
           id: `${module}:${entity.id}`,
           label: typeof title === 'string' && title ? title : ctx.t(`atelier.untitled.${module}`),
-          detail: ctx.t(`atelier.kind.${module}`),
+          detail: `${ctx.t(`atelier.kind.${module}`)} · ${ctx.t(`atelier.entityStatus.${entity.status}`)}`,
         };
       });
     }),

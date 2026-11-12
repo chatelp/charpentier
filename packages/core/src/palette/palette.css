@@ -118,3 +118,14 @@
   padding: var(--ch-space-2) 10px;
   color: var(--ch-muted);
 }
+
+.ch-cmd-icon {
+  width: 1.2rem;
+  flex: none;
+  color: var(--ch-faint);
+  font-weight: 600;
+}
+
+.ch-cmd-list .ch-cmd-list {
+  padding: 0;
+}
