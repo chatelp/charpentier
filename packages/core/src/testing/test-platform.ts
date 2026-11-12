@@ -1,5 +1,6 @@
 import type { Platform } from '@charpentier/platform';
 import * as Y from 'yjs';
+import { MemoryLibrary } from './memory-library';
 
 /**
  * Minimal in-memory Platform for core tests. Core must not depend on a host
@@ -21,17 +22,7 @@ export function createTestPlatform(overrides: Partial<Platform> = {}): Platform 
         };
       },
     },
-    library: {
-      list: async () => [],
-      create: async ({ title, kind }) => ({
-        id: 'p1',
-        title,
-        kind,
-        updatedAt: new Date(0).toISOString(),
-      }),
-      rename: async () => {},
-      trash: async () => {},
-    },
+    library: new MemoryLibrary(),
     preferences: { get: async () => undefined, set: async () => {} },
     keybindings: { primaryModifier: 'Meta', reserved: [] },
     agents: { status: () => 'disabled', onStatusChange: () => () => {} },

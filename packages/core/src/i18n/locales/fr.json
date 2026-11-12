@@ -70,7 +70,10 @@
     "newArc": "Nouvel arc…",
     "newWorldRule": "Nouvelle règle du monde…",
     "newClue": "Nouvel indice ou révélation…",
-    "toggleOverview": "Vue d’ensemble du manuscrit"
+    "toggleOverview": "Vue d’ensemble du manuscrit",
+    "openLibrary": "Bibliothèque des projets",
+    "newProject": "Nouveau projet (roman ou nouvelle)…",
+    "renameProject": "Renommer le projet…"
   },
   "palette": {
     "label": "Ligne de commande",
@@ -94,7 +97,8 @@
     "commandsGroup": "Commandes",
     "scenesGroup": "Scènes",
     "prefixHint": "# scènes · @ fiches · > commandes",
-    "sheetsGroup": "Fiches"
+    "sheetsGroup": "Fiches",
+    "projectTitle": "Titre du projet"
   },
   "navigator": {
     "label": "Plan du manuscrit",
@@ -346,5 +350,18 @@
     "variants": "{{count}} variantes",
     "variantsOf": "Variantes de « {{title}} »",
     "hint": "←↑↓→ parcourir · ⌥ + flèches déplacer · ↵ écrire · Échap revenir"
+  },
+  "library": {
+    "label": "Bibliothèque",
+    "projects": "Projets",
+    "hint": "↑↓ parcourir · ↵ ouvrir ou restaurer · N nouveau · R renommer · ⌫ corbeille · Échap revenir",
+    "new": "Nouveau projet",
+    "titlePlaceholder": "Titre du projet",
+    "kind": "Type de projet",
+    "create": "Créer",
+    "enterKey": "↵",
+    "untitled": "Sans titre",
+    "trash": "Corbeille · ↵ restaure",
+    "trashedOn": "Mis à la corbeille le {{date}}"
   }
 }

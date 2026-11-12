@@ -33,7 +33,7 @@ async function startApp() {
   await waitFor(() =>
     expect(document.activeElement?.getAttribute('aria-label')).toBe('Texte de la scène'),
   );
-  const root = () => docs.get(guids.project(String(prefs.get('defaultProjectId')))) as Y.Doc;
+  const root = () => docs.get(guids.project(String(prefs.get('lastProjectId')))) as Y.Doc;
   const outline = () =>
     readOutline(root()).map((c) => `${c.title}: ${c.scenes.map((s) => s.title).join(', ')}`);
   return { outline };

@@ -1,3 +1,4 @@
+import type { Platform } from '@charpentier/platform';
 import type { OutlineChapter } from '@charpentier/schema';
 import type { Editor } from '@tiptap/core';
 import type { TFunction } from 'i18next';
@@ -9,6 +10,7 @@ import type { PrefsUpdate, WritingPrefs } from './writing-prefs';
 /** Everything a command may use. Rebuilt on every render of the workspace. */
 export interface WorkspaceContext {
   readonly t: TFunction;
+  readonly platform: Platform;
   readonly projectId: string;
   readonly root: Y.Doc;
   readonly sceneId: string;
@@ -30,6 +32,8 @@ export interface WorkspaceContext {
   openAtelier(location?: AtelierLocation): void;
   openWriting(): void;
   openOverview(): void;
+  /** The library of projects; `creating` opens the new project form. */
+  openLibrary(creating?: boolean): void;
   readonly prefs: WritingPrefs;
   updatePrefs(change: PrefsUpdate): void;
 }

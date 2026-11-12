@@ -1,8 +1,9 @@
 import type { Platform } from '@charpentier/platform';
 import type { i18n } from 'i18next';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { I18nextProvider, useTranslation } from 'react-i18next';
-import { openDefaultProject, type ProjectSession } from '../workspace/default-scene';
+import { Library } from '../library/Library';
+import { initialProjectId, openProject, type ProjectSession } from '../workspace/default-scene';
 import { ProjectWorkspace } from '../workspace/Workspace';
 import { PlatformContext, usePlatform } from './platform-context';
 
@@ -28,16 +29,40 @@ type Opening =
 function Root() {
   const { t } = useTranslation();
   const platform = usePlatform();
+  const [projectId, setProjectId] = useState<string>();
   const [opening, setOpening] = useState<Opening>({ state: 'loading' });
+  const [library, setLibrary] = useState<{ creating: boolean } | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-    let opened: ProjectSession | undefined;
-    openDefaultProject(platform, {
+  const titles = useMemo(
+    () => ({
       project: t('manuscript.defaultProjectTitle'),
       chapter: t('manuscript.defaultChapterTitle'),
       scene: t('manuscript.defaultSceneTitle'),
-    }).then(
+    }),
+    [t],
+  );
+
+  // Which project to open at start.
+  useEffect(() => {
+    let cancelled = false;
+    initialProjectId(platform, titles).then(
+      (id) => !cancelled && setProjectId(id),
+      (error: unknown) => {
+        console.error(error);
+        if (!cancelled) setOpening({ state: 'error' });
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [platform, titles]);
+
+  // Opens it, and closes it when another one is chosen.
+  useEffect(() => {
+    if (!projectId) return;
+    let cancelled = false;
+    let opened: ProjectSession | undefined;
+    openProject(platform, projectId, titles).then(
       (session) => {
         if (cancelled) void session.close();
         else {
@@ -54,12 +79,37 @@ function Root() {
       cancelled = true;
       void opened?.close();
     };
-  }, [platform, t]);
+  }, [platform, projectId, titles]);
+
+  // While another project opens, the previous session is no longer shown.
+  const shown =
+    opening.state === 'ready' && opening.session.projectId !== projectId
+      ? ({ state: 'loading' } as const)
+      : opening;
+
+  if (library)
+    return (
+      <Library
+        currentProjectId={projectId}
+        creating={library.creating}
+        onOpen={(id) => {
+          setLibrary(null);
+          setProjectId(id);
+        }}
+        onClose={() => setLibrary(null)}
+      />
+    );
 
   return (
     <>
-      {opening.state === 'ready' && <ProjectWorkspace session={opening.session} />}
-      {opening.state === 'error' && <p role="alert">{t('app.openError')}</p>}
+      {shown.state === 'ready' && (
+        <ProjectWorkspace
+          key={shown.session.projectId}
+          session={shown.session}
+          onLibrary={(creating) => setLibrary({ creating })}
+        />
+      )}
+      {shown.state === 'error' && <p role="alert">{t('app.openError')}</p>}
     </>
   );
 }

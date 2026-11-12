@@ -31,7 +31,7 @@ async function startApp() {
   render(<App platform={platform} i18n={await createI18n('fr')} />);
   const editor = await screen.findByRole('textbox', { name: 'Texte de la scène' });
   await waitFor(() => expect(document.activeElement).toBe(editor));
-  const root = docs.get(guids.project(String(prefs.get('defaultProjectId')))) as Y.Doc;
+  const root = docs.get(guids.project(String(prefs.get('lastProjectId')))) as Y.Doc;
   const outline = () =>
     readOutline(root).map((c) => `${c.title}: ${c.scenes.map((s) => s.title).join(', ')}`);
   return { root, outline };

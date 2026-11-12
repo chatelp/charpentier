@@ -6,6 +6,7 @@ import {
   listChapters,
   listScenes,
   listTrash,
+  readProjectMeta,
   moveChapterStep,
   moveScene,
   moveSceneStep,
@@ -17,7 +18,7 @@ import {
   trashScene,
 } from '@charpentier/schema';
 import type { WorkspaceContext } from '../workspace/workspace-context';
-import { ensureScene } from '../workspace/default-scene';
+import { ensureScene, renameProjectEverywhere } from '../workspace/default-scene';
 import type { CommandId } from './command-id';
 import type { PrimaryModifier } from './keybinding';
 import { trashedVariantItems, variantCommands } from './variant-commands';
@@ -128,6 +129,27 @@ export const workspaceCommands: readonly WorkspaceCommand[] = [
     scope: 'global',
     keybinding: 'Mod-j',
     run: (ctx) => ctx.toggleNavigator(),
+  },
+  {
+    id: 'openLibrary',
+    scope: 'global',
+    keybinding: 'Mod-o',
+    run: (ctx) => ctx.openLibrary(),
+  },
+  { id: 'newProject', scope: 'global', run: (ctx) => ctx.openLibrary(true) },
+  {
+    id: 'renameProject',
+    scope: 'global',
+    run: (ctx) =>
+      ctx.openPalette({
+        kind: 'input',
+        placeholder: ctx.t('palette.projectTitle'),
+        initial: readProjectMeta(ctx.root)?.title ?? '',
+        onSubmit: (title) => {
+          const trimmed = title.trim();
+          if (trimmed) void renameProjectEverywhere(ctx.platform, ctx.projectId, trimmed, ctx.root);
+        },
+      }),
   },
   {
     id: 'toggleOverview',

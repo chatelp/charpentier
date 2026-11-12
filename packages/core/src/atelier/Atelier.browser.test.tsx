@@ -42,7 +42,7 @@ function createHost() {
       },
     },
   });
-  const root = () => docs.get(guids.project(String(prefs.get('defaultProjectId')))) as Y.Doc;
+  const root = () => docs.get(guids.project(String(prefs.get('lastProjectId')))) as Y.Doc;
   const start = async () => {
     render(<App platform={platform} i18n={await createI18n('fr')} />);
     const editor = await screen.findByRole('textbox', { name: 'Texte de la scène' });

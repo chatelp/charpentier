@@ -1,0 +1,98 @@
+/* Library of projects (phase 1.10). */
+.ch-library {
+  position: fixed;
+  inset: 0;
+  overflow: auto;
+  padding: 10vh max(24px, calc(50% - 22rem)) 6vh;
+  animation: ch-atelier-in var(--ch-dur-view) var(--ch-ease) both;
+}
+
+.ch-library-title {
+  margin: 0;
+  color: var(--ch-author);
+  font: 500 var(--ch-title-sheet) var(--ch-font-text);
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.08em;
+}
+
+.ch-library-sub {
+  margin: 4px 0 28px;
+  color: var(--ch-faint);
+  font-size: var(--ch-ui-xs);
+}
+
+.ch-library-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 24px;
+  padding: 14px;
+}
+
+.ch-library-form .ch-field {
+  flex: 1 1 16rem;
+}
+
+.ch-library-form .ch-seg {
+  flex: 0 0 13rem;
+}
+
+.ch-library-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ch-library-item {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 4px 16px;
+  margin-bottom: 10px;
+  padding: 14px 18px;
+  border-radius: var(--ch-radius-md);
+  box-shadow: var(--ch-raise-s);
+  cursor: pointer;
+  outline: none;
+}
+
+.ch-library-item[aria-selected='true'] {
+  box-shadow: var(--ch-inset);
+}
+
+.ch-library-item.is-current {
+  box-shadow:
+    var(--ch-inset),
+    inset 3px 0 0 var(--ch-author);
+}
+
+.ch-library-item.is-trashed {
+  box-shadow: none;
+  opacity: 0.55;
+}
+
+.ch-library-item.is-trashed[aria-selected='true'] {
+  box-shadow: var(--ch-inset);
+  opacity: 0.8;
+}
+
+.ch-library-group {
+  flex-basis: 100%;
+  margin: 8px 0 4px;
+  color: var(--ch-muted);
+}
+
+.ch-library-name {
+  font: 500 19px var(--ch-font-text);
+}
+
+.ch-library-item .ch-field {
+  flex: 1;
+}
+
+.ch-library-meta {
+  color: var(--ch-muted);
+  font-size: var(--ch-ui-xs);
+}

@@ -1,10 +1,10 @@
 import type { AgentsService, KeybindingsService, Platform } from '@charpentier/platform';
 import { IndexedDbDocumentService, MemoryDocumentService } from './documents';
-import { MemoryLibrary } from './library';
+import { DocumentLibrary } from './library';
 import { LocalStoragePreferences } from './preferences';
 
 export { IndexedDbDocumentService, MemoryDocumentService } from './documents';
-export { MemoryLibrary } from './library';
+export { DocumentLibrary, LIBRARY_GUID } from './library';
 export { LocalStoragePreferences } from './preferences';
 
 /** No AI on the web host until the server proxy exists (step 4). */
@@ -39,13 +39,12 @@ export function createWebKeybindings(userAgent: string): KeybindingsService {
 }
 
 export function createWebPlatform(): Platform {
+  const documents =
+    typeof indexedDB === 'undefined' ? new MemoryDocumentService() : new IndexedDbDocumentService();
   return {
     host: 'web',
-    documents:
-      typeof indexedDB === 'undefined'
-        ? new MemoryDocumentService()
-        : new IndexedDbDocumentService(),
-    library: new MemoryLibrary(),
+    documents,
+    library: new DocumentLibrary(documents),
     preferences: new LocalStoragePreferences(),
     keybindings: createWebKeybindings(globalThis.navigator?.userAgent ?? ''),
     agents: disabledAgents,

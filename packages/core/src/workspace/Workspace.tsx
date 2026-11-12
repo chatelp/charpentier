@@ -32,7 +32,14 @@ import './workspace.css';
 let paletteSequence = 0;
 
 /** The writing workspace of one project: editor, drawer, command line, shortcuts. */
-export function ProjectWorkspace({ session }: { readonly session: ProjectSession }) {
+export function ProjectWorkspace({
+  session,
+  onLibrary,
+}: {
+  readonly session: ProjectSession;
+  /** Shows the library of projects (`creating`: with the new project form open). */
+  readonly onLibrary: (creating: boolean) => void;
+}) {
   const { t } = useTranslation();
   const platform = usePlatform();
   const { root, projectId, language } = session;
@@ -75,6 +82,7 @@ export function ProjectWorkspace({ session }: { readonly session: ProjectSession
 
   const ctx: WorkspaceContext = {
     t,
+    platform,
     projectId,
     root,
     sceneId,
@@ -93,6 +101,7 @@ export function ProjectWorkspace({ session }: { readonly session: ProjectSession
       setAtelierFocus((n) => n + 1);
     },
     openWriting: () => setView('write'),
+    openLibrary: (creating = false) => onLibrary(creating),
     openOverview: () => {
       setNavigatorOpen(false);
       setView('overview');

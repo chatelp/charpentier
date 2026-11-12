@@ -1,31 +1,106 @@
-import type { LibraryService, ProjectKind, ProjectSummary } from '@charpentier/platform';
+import type {
+  DocumentHandle,
+  DocumentService,
+  LibraryService,
+  ProjectKind,
+  ProjectSummary,
+} from '@charpentier/platform';
+import * as Y from 'yjs';
 
-/** In-memory library; replaced by a persistent one in phase 1.10. */
-export class MemoryLibrary implements LibraryService {
-  readonly #projects = new Map<string, ProjectSummary>();
+/** Guid of the library index document. */
+export const LIBRARY_GUID = 'library';
+
+type Entry = Y.Map<unknown>;
+
+const now = () => new Date().toISOString();
+
+function toSummary(id: string, entry: Entry): ProjectSummary {
+  const trashedAt = entry.get('trashedAt');
+  return {
+    id,
+    title: String(entry.get('title') ?? ''),
+    kind: entry.get('kind') === 'short-story' ? 'short-story' : 'novel',
+    updatedAt: String(entry.get('updatedAt') ?? ''),
+    ...(typeof trashedAt === 'string' && { trashedAt }),
+  };
+}
+
+const byDesc = (key: 'updatedAt' | 'trashedAt') => (a: ProjectSummary, b: ProjectSummary) =>
+  (b[key] ?? '').localeCompare(a[key] ?? '');
+
+/**
+ * The library kept in a Yjs document (`library`), persisted like any other
+ * document by the host's DocumentService. One entry per project, under its
+ * id: two devices creating projects never collide.
+ */
+export class DocumentLibrary implements LibraryService {
+  #handle: Promise<DocumentHandle> | undefined;
+
+  constructor(private readonly documents: DocumentService) {}
+
+  async #projects(): Promise<Y.Map<Entry>> {
+    this.#handle ??= this.documents.open(LIBRARY_GUID).then(async (handle) => {
+      await handle.whenLoaded;
+      return handle;
+    });
+    return (await this.#handle).doc.getMap<Entry>('projects');
+  }
+
+  async #update(projectId: string, change: (entry: Entry) => void): Promise<void> {
+    const projects = await this.#projects();
+    const entry = projects.get(projectId);
+    if (!entry) throw new Error(`Unknown project: ${projectId}`);
+    projects.doc?.transact(() => change(entry));
+  }
 
   async list(): Promise<readonly ProjectSummary[]> {
-    return [...this.#projects.values()];
+    const projects = await this.#projects();
+    return [...projects.entries()]
+      .map(([id, entry]) => toSummary(id, entry))
+      .filter((p) => !p.trashedAt)
+      .sort(byDesc('updatedAt'));
   }
 
-  async create(input: { title: string; kind: ProjectKind }): Promise<ProjectSummary> {
-    const project: ProjectSummary = {
-      id: crypto.randomUUID(),
-      title: input.title,
-      kind: input.kind,
-      updatedAt: new Date().toISOString(),
-    };
-    this.#projects.set(project.id, project);
-    return project;
+  async listTrashed(): Promise<readonly ProjectSummary[]> {
+    const projects = await this.#projects();
+    return [...projects.entries()]
+      .map(([id, entry]) => toSummary(id, entry))
+      .filter((p) => p.trashedAt)
+      .sort(byDesc('trashedAt'));
   }
 
-  async rename(projectId: string, title: string): Promise<void> {
-    const project = this.#projects.get(projectId);
-    if (project)
-      this.#projects.set(projectId, { ...project, title, updatedAt: new Date().toISOString() });
+  async create(input: { title: string; kind: ProjectKind; id?: string }): Promise<ProjectSummary> {
+    const projects = await this.#projects();
+    const id = input.id ?? crypto.randomUUID();
+    const existing = projects.get(id);
+    if (existing) return toSummary(id, existing);
+    const entry = new Y.Map<unknown>();
+    projects.doc?.transact(() => {
+      projects.set(id, entry);
+      entry.set('title', input.title);
+      entry.set('kind', input.kind);
+      entry.set('createdAt', now());
+      entry.set('updatedAt', now());
+    });
+    return toSummary(id, entry);
   }
 
-  async trash(projectId: string): Promise<void> {
-    this.#projects.delete(projectId);
+  rename(projectId: string, title: string): Promise<void> {
+    return this.#update(projectId, (entry) => {
+      entry.set('title', title);
+      entry.set('updatedAt', now());
+    });
+  }
+
+  touch(projectId: string): Promise<void> {
+    return this.#update(projectId, (entry) => entry.set('updatedAt', now()));
+  }
+
+  trash(projectId: string): Promise<void> {
+    return this.#update(projectId, (entry) => entry.set('trashedAt', now()));
+  }
+
+  restore(projectId: string): Promise<void> {
+    return this.#update(projectId, (entry) => entry.delete('trashedAt'));
   }
 }
