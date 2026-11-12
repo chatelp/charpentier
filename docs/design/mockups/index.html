@@ -1462,6 +1462,343 @@
         animation-duration: 0.01ms !important;
         transition-duration: 0.01ms !important;
       }
+
+      /* ───────────── Discoverability: entry points (« Découverte ») ───────────── */
+      .chrome {
+        transition:
+          opacity 0.5s var(--ease),
+          box-shadow 0.2s,
+          color 0.2s;
+      }
+      .app[data-quiet='true'] .chrome {
+        opacity: 0;
+        pointer-events: none;
+      }
+      /* macOS menu bar (Mac frame only: the system draws it above the window). */
+      .menubar {
+        flex: none;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        padding: 0 10px;
+        background: color-mix(in srgb, var(--bg) 70%, #fff 30%);
+        color: var(--ink);
+        font:
+          13px/1 -apple-system,
+          system-ui,
+          sans-serif;
+        position: relative;
+        z-index: 20;
+      }
+      .app[data-theme='dark'] .menubar {
+        background: color-mix(in srgb, var(--bg) 80%, #000 20%);
+      }
+      .menubar .mi {
+        position: relative;
+        padding: 4px 9px;
+        border-radius: 5px;
+        cursor: default;
+      }
+      .menubar .mi:first-child {
+        font-weight: 700;
+      }
+      .menubar .mi.on {
+        background: color-mix(in srgb, var(--ink) 14%, transparent);
+      }
+      .mdd {
+        position: absolute;
+        top: calc(100% + 3px);
+        left: 0;
+        min-width: 300px;
+        padding: 5px;
+        border-radius: 9px;
+        background: color-mix(in srgb, var(--bg) 88%, #fff 12%);
+        box-shadow:
+          0 10px 30px rgba(0, 0, 0, 0.22),
+          0 0 0 0.5px rgba(0, 0, 0, 0.18);
+        font-weight: 400;
+      }
+      .app[data-theme='dark'] .mdd {
+        background: #30353d;
+      }
+      .mdd div {
+        display: flex;
+        justify-content: space-between;
+        gap: 28px;
+        padding: 4px 10px;
+        border-radius: 5px;
+        white-space: nowrap;
+      }
+      .mdd div:hover {
+        background: var(--accent);
+        color: #fff;
+      }
+      .mdd div span:last-child {
+        color: var(--muted);
+      }
+      .mdd div:hover span:last-child {
+        color: #fff;
+      }
+      .mdd hr {
+        border: 0;
+        border-top: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+        margin: 5px 10px;
+      }
+      /* Direction 1: handles on the edges, where the panels come from. */
+      .edge {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 4;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        padding: 16px 8px 12px;
+        border: 0;
+        background: var(--bg);
+        box-shadow: var(--raise-s);
+        color: var(--muted);
+        cursor: pointer;
+      }
+      .edge:hover {
+        color: var(--ink);
+        box-shadow: var(--raise);
+      }
+      .edge.l {
+        left: 0;
+        border-radius: 0 var(--r-md) var(--r-md) 0;
+      }
+      .edge.r {
+        right: 0;
+        border-radius: var(--r-md) 0 0 var(--r-md);
+      }
+      .edge .v {
+        writing-mode: vertical-rl;
+        font: 500 13.5px var(--font-text);
+        font-variant-caps: all-small-caps;
+        letter-spacing: 0.08em;
+      }
+      .edge.l .v {
+        transform: rotate(180deg);
+      }
+      .edge .n {
+        min-width: 18px;
+        padding: 2px 0;
+        border-radius: 9px;
+        box-shadow: var(--inset);
+        color: var(--accent);
+        font: 600 11px var(--font-ui);
+      }
+      .modes {
+        position: absolute;
+        top: 10px;
+        right: 16px;
+        z-index: 4;
+        display: flex;
+        padding: 3px;
+        border-radius: var(--r-sm);
+        box-shadow: var(--inset);
+      }
+      .modes button {
+        padding: 5px 11px;
+        border: 0;
+        border-radius: 7px;
+        background: transparent;
+        color: var(--muted);
+        font: 500 12px var(--font-ui);
+        cursor: pointer;
+      }
+      .modes button.on {
+        box-shadow: var(--raise-s);
+        color: var(--author, var(--ink));
+      }
+      /* The command zone, always in the footer: the beginner's way into everything. */
+      .wfoot .cmdz {
+        position: absolute;
+        left: 50%;
+        bottom: -5px;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: min(30rem, 38%);
+        padding: 7px 12px;
+        border: 0;
+        border-radius: var(--r-md);
+        background: var(--bg);
+        box-shadow: var(--inset);
+        color: var(--faint);
+        font: 13px var(--font-ui);
+        text-align: left;
+        pointer-events: auto;
+        cursor: text;
+      }
+      .wfoot .cmdz:hover {
+        color: var(--muted);
+      }
+      .cmdz .pr {
+        color: var(--accent);
+        font-size: 15px;
+      }
+      .cmdz .grow {
+        flex: 1;
+      }
+      .wfoot .tbtn,
+      .tbtn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 9px;
+        border: 0;
+        border-radius: var(--r-sm);
+        background: transparent;
+        color: var(--muted);
+        font: 500 12px var(--font-ui);
+        pointer-events: auto;
+        cursor: pointer;
+      }
+      .tbtn:hover {
+        color: var(--ink);
+        box-shadow: var(--raise-s);
+      }
+      .tbtn.on {
+        box-shadow: var(--inset);
+        color: var(--ink);
+      }
+      .tbtn .n {
+        color: var(--accent);
+        font-weight: 600;
+      }
+      .tbtn.aa {
+        font: 500 13px var(--font-text);
+      }
+      /* Display popover (Aa): text size, column, focus, theme. */
+      .aapop {
+        position: absolute;
+        right: 14px;
+        bottom: 44px;
+        z-index: 7;
+        width: 19rem;
+        padding: 12px 14px;
+        border-radius: var(--r-lg);
+        background: var(--bg);
+        box-shadow: var(--raise);
+        font-size: 12.5px;
+        animation: rise 0.22s var(--ease) both;
+      }
+      .aapop.top {
+        top: 8px;
+        bottom: auto;
+      }
+      .aapop .ar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 6px 0;
+        color: var(--ink-2);
+      }
+      .aapop .ar > span:first-child {
+        flex: 1;
+      }
+      .aapop .ttl {
+        font: 500 13.5px var(--font-text);
+        font-variant-caps: all-small-caps;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+        margin-bottom: 4px;
+      }
+      /* Direction 2: panels docked open beside the page. */
+      .write.with-left {
+        left: 23.5rem;
+      }
+      .panel.docked {
+        animation: none;
+      }
+      /* Direction 3: a labelled toolbar in the title bar. */
+      .app[data-disc='barre'] .tb {
+        display: flex;
+        height: 42px;
+      }
+      .tb .tools {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-left: 14px;
+      }
+      .tb .tools.r {
+        margin-left: auto;
+      }
+      .tb .tools .modes {
+        position: static;
+        margin-right: 6px;
+      }
+      .app[data-frame='x250'] .tb .lights {
+        display: none;
+      }
+      /* First launch: placeholder and the tour. */
+      .pwelcome {
+        padding: 6px 14px;
+      }
+      .pwelcome .note {
+        position: relative;
+        left: 0;
+        top: 0;
+        width: auto;
+      }
+      .para.ph {
+        color: var(--faint);
+        font-style: italic;
+      }
+      .note.welcome ul {
+        margin: 8px 0 4px;
+        padding-left: 18px;
+        font-size: 13px;
+        line-height: 1.5;
+        color: var(--ink-2);
+      }
+      .note.welcome li + li {
+        margin-top: 4px;
+      }
+      .tour-on {
+        outline: 2px solid var(--accent);
+        outline-offset: 4px;
+        opacity: 1 !important;
+      }
+      .tip {
+        position: absolute;
+        z-index: 30;
+        width: 17rem;
+        padding: 12px 14px;
+        border-radius: var(--r-md);
+        background: var(--bg);
+        box-shadow: var(--raise);
+        font-size: 13px;
+        line-height: 1.45;
+        color: var(--ink-2);
+        animation: rise 0.22s var(--ease) both;
+      }
+      .tip b {
+        display: block;
+        margin-bottom: 4px;
+        color: var(--accent);
+        font: 500 13.5px var(--font-text);
+        font-variant-caps: all-small-caps;
+        letter-spacing: 0.08em;
+      }
+      .tip .na {
+        margin-top: 10px;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .tip .na .step {
+        margin-left: auto;
+        color: var(--faint);
+        font-size: 11.5px;
+      }
     </style>
   </head>
   <body>
@@ -1484,6 +1821,7 @@
           info: 'grès minéral · Source Serif 4 + Public Sans · manuscrit par la ligne de commande · losanges',
         },
       };
+      const DISC_KEYS = ['actuel', 'rails', 'etabli', 'barre'];
       const SCREENS = [
         ['ecrire', 'Écrire'],
         ['mentor', 'Écrire + Compagnon'],
@@ -1492,6 +1830,7 @@
         ['volet', 'Fiche en volet'],
         ['points', 'Points & conversation'],
         ['palette', 'Ligne de commande'],
+        ['accueil', 'Premier lancement'],
       ];
       const S = {
         dir: 'perle',
@@ -1508,8 +1847,14 @@
         open: 'p6',
         sel: 0,
         q: 'va',
+        disc: 'rails',
+        quiet: false,
+        menu: null,
+        aa: false,
+        tour: 0,
       };
-      const [hd, ht, hs] = location.hash.slice(1).split('/');
+      const [hd, ht, hs, hdisc] = location.hash.slice(1).split('/');
+      if (DISC_KEYS.includes(hdisc)) S.disc = hdisc;
       if (DIRS[hd]) S.dir = hd;
       if (ht === 'dark' || ht === 'light') S.theme = ht;
       if (SCREENS.some(([k]) => k === hs)) S.screen = hs;
@@ -1640,6 +1985,302 @@
       ];
       const fmt = (n) => n.toLocaleString('fr-FR').replace(/\s/g, F);
 
+      // ───────────── Discoverability: entry points (« Découverte ») ─────────────
+      const DISC = {
+        actuel: ['Actuel', 'DESIGN.md d’origine : tout s’ouvre au raccourci, rien n’est visible'],
+        rails: [
+          '1 · Poignées',
+          'poignées sur les bords + zone de commande en pied, effacées pendant la frappe',
+        ],
+        etabli: [
+          '2 · Établi ouvert',
+          'manuscrit et Compagnon ouverts à côté de la page ; « Pleine page » les range',
+        ],
+        barre: [
+          '3 · Barre d’outils',
+          'barre d’outils à libellés en haut, effacée pendant la frappe',
+        ],
+      };
+      const MENUS = [
+        [
+          'Charpentier',
+          [
+            ['À propos de Charpentier'],
+            '-',
+            ['Masquer Charpentier', '⌘H'],
+            ['Quitter Charpentier', '⌘Q'],
+          ],
+        ],
+        [
+          'Fichier',
+          [
+            ['Bibliothèque des projets', '⌘O'],
+            ['Nouveau projet…'],
+            ['Renommer le projet…'],
+            ['Afficher la bibliothèque dans le Finder'],
+            '-',
+            ['Créer un point de restauration', '⌘S'],
+            ['Créer un point de restauration nommé…'],
+            ['Revenir à un point de restauration…'],
+          ],
+        ],
+        [
+          'Édition',
+          [
+            ['Annuler', '⌘Z'],
+            ['Rétablir', '⌘⇧Z'],
+            '-',
+            ['Couper', '⌘X'],
+            ['Copier', '⌘C'],
+            ['Coller', '⌘V'],
+            ['Tout sélectionner', '⌘A'],
+            '-',
+            ['Italique', '⌘I'],
+            ['Citation', '⌘⇧B'],
+            ['Insérer un séparateur', '⌘⇧⏎'],
+            '-',
+            ['Corriger toute la typographie de la scène'],
+            ['Accepter toutes les corrections d’orthographe'],
+          ],
+        ],
+        [
+          'Scène',
+          [
+            ['Renommer la scène…'],
+            '-',
+            ['Nouvelle variante (copie)', '⌘⇧N'],
+            ['Nouvelle variante vide'],
+            ['Changer de variante…', '⌘⌥V'],
+            ['Renommer la variante…'],
+            ['Mettre la variante à la corbeille'],
+            '-',
+            ['Créer une variante depuis un point de restauration…'],
+            '-',
+            ['Scène suivante', '⌘⌥↓'],
+            ['Scène précédente', '⌘⌥↑'],
+          ],
+        ],
+        [
+          'Manuscrit',
+          [
+            ['Afficher le manuscrit', '⌘J'],
+            ['Vue d’ensemble', '⌘⇧P'],
+            ['Aller à la scène…', '⌘P'],
+            '-',
+            ['Nouvelle scène', '⌘N'],
+            ['Nouveau chapitre', '⌘⌥⇧N'],
+            ['Renommer le chapitre…'],
+            '-',
+            ['Monter la scène', '⌘⌥⇧↑'],
+            ['Descendre la scène', '⌘⌥⇧↓'],
+            ['Déplacer la scène vers le chapitre…'],
+            ['Monter le chapitre'],
+            ['Descendre le chapitre'],
+            '-',
+            ['Mettre la scène à la corbeille'],
+            ['Mettre le chapitre à la corbeille'],
+            ['Restaurer depuis la corbeille…'],
+          ],
+        ],
+        [
+          'Atelier',
+          [
+            ['Écrire ↔ Atelier', '⌘E'],
+            '-',
+            ['Méta', '⌘1'],
+            ['Personnages', '⌘2'],
+            ['Structure', '⌘3'],
+            ['Règles du monde', '⌘4'],
+            ['Indices et révélations', '⌘5'],
+            '-',
+            ['Nouveau personnage…'],
+            ['Nouvel acte…'],
+            ['Nouvel arc…'],
+            ['Nouvelle règle du monde…'],
+            ['Nouvel indice ou révélation…'],
+          ],
+        ],
+        [
+          'Compagnon',
+          [
+            ['Points à traiter et conversation', '⌘L'],
+            ['Parler au Compagnon'],
+            '-',
+            ['Avis sur la scène', '⌘⇧A'],
+            ['Avis sur tout le chapitre'],
+            ['Avis sur tout le manuscrit'],
+            '-',
+            ['Remarque suivante', '⌘’'],
+            ['Déplier la remarque du passage', '⌥⏎'],
+            '-',
+            ['Plus d’aide'],
+            ['Moins d’aide'],
+            '-',
+            ['Clé d’API Anthropic…'],
+            ['Remarques légères : Opus ou Haiku'],
+          ],
+        ],
+        [
+          'Présentation',
+          [
+            ['Agrandir le texte', '⌘+'],
+            ['Réduire le texte', '⌘−'],
+            ['Taille du texte par défaut', '⌘0'],
+            '-',
+            ['Élargir la colonne', '⌘⌥→'],
+            ['Rétrécir la colonne', '⌘⌥←'],
+            '-',
+            ['Pleine page (ranger les panneaux)', '⌘\\'],
+            ['Mode focus', '⌘⇧F'],
+            ['Défilement machine à écrire'],
+            ['Thème : système, clair, sombre', '⌘⌥T'],
+            ['Réduire les animations'],
+            '-',
+            ['Plein écran', '⌃⌘F'],
+          ],
+        ],
+        ['Fenêtre', [['Réduire', '⌘M'], ['Zoom'], '-', ['Fermer', '⌘W']]],
+        [
+          'Aide',
+          [['Que voulez-vous faire ?', '⌘K'], ['Raccourcis clavier'], ['Revoir la visite guidée']],
+        ],
+      ];
+      function menubar() {
+        if (S.frame !== 'mac') return '';
+        const items = MENUS.map(([name, list], i) => {
+          const dd =
+            S.menu === i
+              ? `<div class="mdd">${list
+                  .map((it) =>
+                    it === '-'
+                      ? '<hr />'
+                      : `<div><span>${it[0]}</span><span>${it[1] || ''}</span></div>`,
+                  )
+                  .join('')}</div>`
+              : '';
+          return `<span class="mi${S.menu === i ? ' on' : ''}" data-menu="${i}">${name}${dd}</span>`;
+        }).join('');
+        return `<div class="menubar">${items}</div>`;
+      }
+
+      /** Display popover: the author's comfort settings, one click away. */
+      function aaPop(top) {
+        const seg = (k, v, l) =>
+          `<button class="tbtn${S[k] === v ? ' on' : ''}" data-k="${k}" data-v="${v}">${l}</button>`;
+        return `<div class="aapop${top ? ' top' : ''}"><div class="ttl">Affichage</div>
+          <div class="ar"><span>Taille du texte</span><button class="btn">−</button><button class="btn">+</button><kbd>⌘− ⌘+</kbd></div>
+          <div class="ar"><span>Largeur de colonne</span><button class="btn">←</button><button class="btn">→</button><kbd>⌘⌥← →</kbd></div>
+          <div class="ar"><span>Mode focus</span>${seg('focus', true, 'Oui')}${seg('focus', false, 'Non')}<kbd>⌘⇧F</kbd></div>
+          <div class="ar"><span>Thème</span>${seg('theme', 'light', 'Clair')}${seg('theme', 'dark', 'Sombre')}<kbd>⌘⌥T</kbd></div>
+          <div class="ar"><span>Réduire les animations</span>${seg('still', true, 'Oui')}${seg('still', false, 'Non')}</div></div>`;
+      }
+
+      /** Footer entry points: command zone (centre), Aa and « Pleine page » (right). */
+      function footTools() {
+        if (S.disc === 'actuel' || S.disc === 'barre') return { mid: '', right: '' };
+        const mid = `<button class="cmdz chrome" data-go="palette" data-tour="3" title="Ligne de commande (⌘K)"><span class="pr">›</span><span class="grow">Que voulez-vous faire ?</span><kbd>⌘K</kbd></button>`;
+        const full =
+          S.disc === 'etabli'
+            ? `<button class="tbtn chrome" title="Ranger les panneaux (⌘\\)">Pleine page</button>`
+            : '';
+        const right = `${full}<button class="tbtn aa chrome${S.aa ? ' on' : ''}" data-aa="1" title="Affichage : taille, colonne, focus, thème">Aa</button>`;
+        return { mid, right };
+      }
+
+      /** Edge handles and the Écrire / Atelier switch (direction 1, and 2 once panels are put away). */
+      function edges(screen) {
+        if (S.disc !== 'rails') return '';
+        const left =
+          screen === 'manuscrit'
+            ? ''
+            : `<button class="edge l chrome" data-go="manuscrit" data-tour="1" title="Manuscrit : chapitres et scènes (⌘J)"><span class="v">Manuscrit</span><kbd>⌘J</kbd></button>`;
+        const right = ['points', 'volet'].includes(screen)
+          ? ''
+          : `<button class="edge r chrome" data-go="points" data-tour="2" title="Compagnon : points à traiter et conversation (⌘L)"><span class="n">4</span><span class="v">Compagnon</span><kbd>⌘L</kbd></button>`;
+        const modes = `<div class="modes chrome" title="Écrire ↔ Atelier (⌘E)"><button class="on">Écrire</button><button data-go="fiche">Atelier</button></div>`;
+        return left + right + modes;
+      }
+
+      /** Direction 3: labelled toolbar in the title bar. */
+      function toolbar() {
+        const t = (label, go, key, tour, extra = '') =>
+          `<button class="tbtn chrome"${go ? ` data-go="${go}"` : ''}${tour ? ` data-tour="${tour}"` : ''} title="${label}${key ? ` (${key})` : ''}">${label}${extra}</button>`;
+        const atelier = S.screen === 'fiche';
+        return `<span class="tools">${t('Manuscrit', 'manuscrit', '⌘J', 1)}${t('Plan', 'manuscrit', '⌘⇧P')}</span>
+          <span class="ttl">Les Serres d’Hespéride</span>
+          <span class="tools r"><span class="modes chrome"><button class="${atelier ? '' : 'on'}" data-go="ecrire">Écrire</button><button class="${atelier ? 'on' : ''}" data-go="fiche">Atelier</button></span>${t('Compagnon', 'points', '⌘L', 2, ' <span class="n">4</span>')}${t('Rechercher', 'palette', '⌘K', 3, ' <kbd>⌘K</kbd>')}<button class="tbtn aa chrome${S.aa ? ' on' : ''}" data-aa="1" title="Affichage">Aa</button></span>`;
+      }
+
+      const WELCOME = {
+        actuel: [
+          ['<kbd>⌘J</kbd> le manuscrit : chapitres et scènes ;'],
+          ['<kbd>⌘L</kbd> mes remarques et notre conversation ;'],
+          ['<kbd>⌘K</kbd> tout le reste.'],
+        ],
+        rails: [
+          ['<b>à gauche</b>, le manuscrit : chapitres et scènes ;'],
+          ['<b>à droite</b>, mes remarques et notre conversation ;'],
+          ['<b>en bas</b>, « Que voulez-vous faire ? » : tapez ce que vous cherchez, tout y est.'],
+        ],
+        etabli: [
+          ['<b>à gauche</b>, le manuscrit, ouvert ;'],
+          ['<b>à droite</b>, mes remarques et notre conversation ;'],
+          ['<b>en bas</b>, « Que voulez-vous faire ? » ; « Pleine page » range les panneaux.'],
+        ],
+        barre: [
+          ['<b>en haut à gauche</b>, le manuscrit et le plan ;'],
+          ['<b>en haut à droite</b>, l’Atelier, mes remarques, la recherche ;'],
+          ['la barre s’efface quand vous écrivez et revient au moindre mouvement.'],
+        ],
+      };
+      function welcomeNote() {
+        return `<div class="note welcome" role="note"><div class="nk"><span>Bienvenue</span><span>Le Compagnon</span></div><p class="nt">Je lis par-dessus votre épaule</p><p class="nb">Je n’écrirai jamais une ligne de votre roman : je signale, j’explique, je pose des questions. Trois endroits à connaître :</p><ul>${WELCOME[S.disc].map(([l]) => `<li>${l}</li>`).join('')}</ul><div class="na">${btn(['Faire le tour', '⏎', true])}${btn(['Plus tard', 'Échap'])}</div></div>`;
+      }
+      const TOUR = {
+        1: [
+          'Le manuscrit',
+          'Vos chapitres et vos scènes. Cliquez une scène pour l’ouvrir ; « Plan » montre tout le roman d’un coup.',
+          '⌘J',
+        ],
+        2: [
+          'Le Compagnon',
+          'Mes remarques sur la scène et le chapitre, et un fil pour me poser vos questions. Le chiffre dit combien de points attendent.',
+          '⌘L',
+        ],
+        3: [
+          'Que voulez-vous faire ?',
+          'Tapez un mot : « variante », « Hélène », « chapitre 3 »… Toute action de l’app est là, avec son raccourci, pour l’apprendre en passant.',
+          '⌘K',
+        ],
+      };
+      function placeTip(app) {
+        if (!S.tour) return;
+        const el = app.querySelector(`[data-tour="${S.tour}"]`);
+        if (!el) return;
+        el.classList.add('tour-on');
+        const [title, text, key] = TOUR[S.tour];
+        const tip = document.createElement('div');
+        tip.className = 'tip';
+        tip.innerHTML = `<b>${title} <kbd>${key}</kbd></b>${text}<div class="na">${btn([S.tour < 3 ? 'Suivant' : 'Terminer', '⏎', true])}<span class="step">${S.tour} / 3</span></div>`;
+        tip.dataset.tourNext = '1';
+        app.appendChild(tip);
+        const a = app.getBoundingClientRect();
+        const r = el.getBoundingClientRect();
+        const w = tip.offsetWidth;
+        const h = tip.offsetHeight;
+        let x = r.left - a.left + r.width / 2 - w / 2;
+        let y = r.bottom - a.top + 14;
+        if (r.left - a.left < 40) {
+          x = r.right - a.left + 16;
+          y = r.top - a.top + r.height / 2 - h / 2;
+        } else if (a.right - r.right < 40) {
+          x = r.left - a.left - w - 16;
+          y = r.top - a.top + r.height / 2 - h / 2;
+        } else if (y + h > a.height - 10) y = r.top - a.top - h - 14;
+        tip.style.left = Math.max(10, Math.min(x, a.width - w - 10)) + 'px';
+        tip.style.top = Math.max(10, y) + 'px';
+      }
+
       // ───────────── Small helpers ─────────────
       const btn = ([label, key, pri]) =>
         `<button class="btn${pri ? ' pri' : ''}" data-act="${label}">${label}${key ? ` <kbd>${key}</kbd>` : ''}</button>`;
@@ -1663,8 +2304,15 @@
       }
 
       // ───────────── Writing surface ─────────────
-      function scene({ signals = false, panel = false, behind = false, crumbs = false } = {}) {
-        const rows = PARAS.map(([id, html]) => {
+      function scene({
+        signals = false,
+        panel = false,
+        behind = false,
+        crumbs = false,
+        left = false,
+        empty = false,
+      } = {}) {
+        let rows = PARAS.map(([id, html]) => {
           const sig = signals && SIG[id];
           const open = sig && S.open === id;
           let body = html;
@@ -1681,13 +2329,19 @@
           const cur = id === (signals ? S.open : 'p7') ? ' cur' : '';
           return `<div class="row"><p class="para${cur}">${body}</p><aside class="mg">${mg}</aside>${below}</div>`;
         }).join('');
+        if (empty)
+          rows = `<div class="row"><p class="para ph cur"><span class="caret"></span>Écrivez ici. Le titre de la scène, celui du chapitre, tout se change plus tard.</p><aside class="mg">${panel ? '' : welcomeNote()}</aside>${panel ? '' : `<div class="below">${welcomeNote()}</div>`}</div>`;
+        const [chN, chT, scT] = empty
+          ? ['I', 'Chapitre 1', 'Scène 1']
+          : ['III', 'La serre', 'Le bureau de Vasseur'];
         const head = crumbs
           ? `<header class="whead crumbs"><span class="c">III · La serre</span><span class="c">2 · Le bureau de Vasseur</span><span class="c">Variante A</span></header>`
-          : `<header class="whead"><span>III · La serre</span><span>—</span><span class="cur">2 · Le bureau de Vasseur</span><span class="var">· Variante A</span></header>`;
+          : `<header class="whead"><span>${chN} · ${chT}</span><span>—</span><span class="cur">${empty ? 1 : 2} · ${scT}</span>${empty ? '' : '<span class="var">· Variante A</span>'}</header>`;
         const cls = [
           'write',
           S.focus ? 'focus' : '',
           panel ? 'with-panel' : '',
+          left ? 'with-left' : '',
           behind ? 'behind' : '',
         ]
           .filter(Boolean)
@@ -1696,8 +2350,16 @@
         const count = signals
           ? `<span class="cnt" data-go="points">4 remarques du Compagnon</span>`
           : '';
-        return `<section class="${cls}">${head}<div class="wbody">${S.sig ? `<div class="row"><div class="opener"><div class="cn">III</div><div class="ct">La serre</div><div class="orn">⁂</div><div class="st">Le bureau de Vasseur</div></div></div>` : ''}${rows}</div></section>
-          <footer class="wfoot"><span>${fmt(1284)} mots · <span class="today">+${fmt(312)} aujourd’hui</span></span><span class="r">${count}<span>${status}</span></span></footer>`;
+        const ft = behind ? { mid: '', right: '' } : footTools();
+        const fstyle =
+          left || panel
+            ? ` style="left:${left ? '24.5rem' : '22px'};right:${panel ? '28.5rem' : '22px'}"`
+            : '';
+        const words = empty
+          ? '0 mot'
+          : `${fmt(1284)} mots · <span class="today">+${fmt(312)} aujourd’hui</span>`;
+        return `<section class="${cls}">${head}<div class="wbody">${S.sig ? `<div class="row"><div class="opener"><div class="cn">${chN}</div><div class="ct">${chT}</div><div class="orn">⁂</div><div class="st">${scT}</div></div></div>` : ''}${rows}</div></section>
+          <footer class="wfoot"${fstyle}><span>${words}</span>${ft.mid}<span class="r">${panel ? '' : count}<span>${status}</span>${ft.right}</span></footer>${S.aa && S.disc !== 'barre' && S.disc !== 'actuel' ? aaPop(false) : ''}`;
       }
 
       // ───────────── Right panel: points & conversation ─────────────
@@ -1774,13 +2436,17 @@
             <div class="ex"><span class="lab">Exemple · une phrase</span><q>Elle nota l’heure ; l’odeur, elle la garda pour elle.</q>${btn(['Insérer au curseur', '⌘⏎'])}</div>
             Elle fait passer l’indice du carnet au silence d’Hélène : le lecteur comprend qu’elle se méfie déjà.</div>`;
       }
-      function rightPanel() {
+      function rightPanel(welcome = false) {
         const pts = S.tab === 'points';
-        const body = pts ? pointsTab() : chatTab();
+        const body = welcome
+          ? `<div class="pwelcome">${welcomeNote()}</div>`
+          : pts
+            ? pointsTab()
+            : chatTab();
         const foot = pts
           ? `<div class="pfoot"><span><kbd>J K</kbd>parcourir</span><span><kbd>⏎</kbd>aller au passage</span><span><kbd>R</kbd>résolu</span><span><kbd>I</kbd>ignorer</span><span><kbd>⌘J</kbd>fermer</span></div>`
           : `<div class="field"><span class="grow">Écrire au Compagnon…</span><kbd>⏎</kbd></div><div class="pfoot"><span><kbd>⌘L</kbd>conversation</span><span><kbd>Échap</kbd>revenir au texte</span></div>`;
-        return `<aside class="panel"><div class="seg"><button data-tab="points" class="${pts ? 'on' : ''}">Points à traiter<span class="n">6</span></button><button data-tab="chat" class="${pts ? '' : 'on'}">Conversation</button></div><div class="pscroll">${body}</div>${foot}</aside>`;
+        return `<aside class="panel"><div class="seg" data-tour="2"><button data-tab="points" class="${pts ? 'on' : ''}">Points à traiter<span class="n">6</span></button><button data-tab="chat" class="${pts ? '' : 'on'}">Conversation</button></div><div class="pscroll">${body}</div>${foot}</aside>`;
       }
 
       // ───────────── Command line ─────────────
@@ -1854,27 +2520,32 @@
       }
 
       // ───────────── Manuscript (one pattern per direction) ─────────────
-      function drawer() {
-        const chapters = MS.map((c) => {
-          const total = c.sc.reduce((s, x) => s + x[1], 0);
-          const sc = c.sc
-            .map(([t, w, sig, v, act], i) => {
-              const dots = sig ? `<span class="dots">${'•'.repeat(Math.min(sig, 4))}</span> ` : '';
-              const row = `<div class="sc${act ? ' act' : ''}"><span>${i + 1} · ${t}</span><span class="m">${dots}${w ? fmt(w) : '—'}${v > 1 ? ' · ' + v + ' var.' : ''}</span></div>`;
-              if (!act) return row;
-              const vars = VARIANTS.map(
-                ([n, m, on]) =>
-                  `<div class="v${on ? ' on' : ''}"><span>${n}</span><span>${m}</span></div>`,
-              ).join('');
-              const cps = CHECKPOINTS.slice(0, 3)
-                .map(([d, r]) => `<div class="v"><span>${d}</span><span>${r}</span></div>`)
-                .join('');
-              return `${row}<div class="sub"><div class="h">Variantes</div>${vars}<div class="h">Points de restauration</div>${cps}</div>`;
-            })
-            .join('');
-          return `<div class="ch"><span>${c.n} · ${c.t}</span><span>${fmt(total)}</span></div>${sc}`;
-        }).join('');
-        return `<aside class="panel left"><div class="seg"><button class="on">Manuscrit</button><button data-plan="1">Plan <kbd>⌘⇧P</kbd></button></div><div class="ms">${chapters}</div><div class="pfoot"><span><kbd>↑↓</kbd>parcourir</span><span><kbd>⏎</kbd>ouvrir</span><span><kbd>⌥↑↓</kbd>déplacer</span><span><kbd>V</kbd>variantes</span><span><kbd>⌘N</kbd>nouvelle scène</span></div></aside>`;
+      function drawer(docked = false, empty = false) {
+        const ms = empty ? [{ n: 'I', t: 'Chapitre 1', sc: [['Scène 1', 0, 0, 1, true]] }] : MS;
+        const chapters = ms
+          .map((c) => {
+            const total = c.sc.reduce((s, x) => s + x[1], 0);
+            const sc = c.sc
+              .map(([t, w, sig, v, act], i) => {
+                const dots = sig
+                  ? `<span class="dots">${'•'.repeat(Math.min(sig, 4))}</span> `
+                  : '';
+                const row = `<div class="sc${act ? ' act' : ''}"><span>${i + 1} · ${t}</span><span class="m">${dots}${w ? fmt(w) : '—'}${v > 1 ? ' · ' + v + ' var.' : ''}</span></div>`;
+                if (!act || empty) return row;
+                const vars = VARIANTS.map(
+                  ([n, m, on]) =>
+                    `<div class="v${on ? ' on' : ''}"><span>${n}</span><span>${m}</span></div>`,
+                ).join('');
+                const cps = CHECKPOINTS.slice(0, 3)
+                  .map(([d, r]) => `<div class="v"><span>${d}</span><span>${r}</span></div>`)
+                  .join('');
+                return `${row}<div class="sub"><div class="h">Variantes</div>${vars}<div class="h">Points de restauration</div>${cps}</div>`;
+              })
+              .join('');
+            return `<div class="ch"><span>${c.n} · ${c.t}</span><span>${fmt(total)}</span></div>${sc}`;
+          })
+          .join('');
+        return `<aside class="panel left${docked ? ' docked' : ''}"><div class="seg" data-tour="${docked ? 1 : ''}"><button class="on">Manuscrit</button><button data-plan="1">Plan <kbd>⌘⇧P</kbd></button></div><div class="ms">${chapters}</div><div class="pfoot"><span><kbd>↑↓</kbd>parcourir</span><span><kbd>⏎</kbd>ouvrir</span><span><kbd>⌥↑↓</kbd>déplacer</span><span><kbd>V</kbd>variantes</span><span><kbd>⌘N</kbd>nouvelle scène</span></div></aside>`;
       }
       function board() {
         const cols = MS.map((c) => {
@@ -2034,15 +2705,16 @@
           <span class="grp"><span class="lbl">Direction <kbd>D</kbd></span>${Object.entries(DIRS)
             .map(([k, d]) => b('dir', k, d.name))
             .join('')}</span>
-          <span class="grp"><span class="lbl">Écran <kbd>1–7</kbd></span>${SCREENS.map(([k, l]) => b('screen', k, l)).join('')}</span>
+          <span class="grp"><span class="lbl">Découverte <kbd>G</kbd></span>${DISC_KEYS.map((k) => b('disc', k, DISC[k][0])).join('')}${b('quiet', !S.quiet, S.quiet ? 'Frappe : en cours' : 'Frappe : à l’arrêt')}</span>
+          <span class="grp"><span class="lbl">Écran <kbd>1–8</kbd></span>${SCREENS.map(([k, l]) => b('screen', k, l)).join('')}</span>
           <span class="grp"><span class="lbl">Thème <kbd>T</kbd></span>${b('theme', 'light', 'Clair')}${b('theme', 'dark', 'Sombre')}</span>
           <span class="grp"><span class="lbl">Cadre</span>${b('frame', 'mac', 'Mac')}${b('frame', 'x250', 'X250')}</span>
           <span class="grp"><span class="lbl">Personnalité <kbd>A B C</kbd></span>${b('warm', !S.warm, 'A · Pierre chaude')}${b('ink', !S.ink, 'B · Deux encres')}${b('sig', !S.sig, 'C · Signature')}</span>
           <span class="grp">${b('focus', !S.focus, S.focus ? 'Focus : oui' : 'Focus : non')}${b('sound', !S.sound, S.sound ? 'Sons : oui' : 'Sons : non')}${b('still', !S.still, S.still ? 'Animations : non' : 'Animations : oui')}</span>
-          <span class="info">${DIRS[S.dir].info}</span>`;
+          <span class="info">${S.dir === 'perle' ? DISC[S.disc][1] : DIRS[S.dir].info}</span>`;
         document
           .querySelectorAll(
-            '.mk [data-k="focus"], .mk [data-k="sound"], .mk [data-k="still"], .mk [data-k="warm"], .mk [data-k="ink"], .mk [data-k="sig"]',
+            '.mk [data-k="focus"], .mk [data-k="sound"], .mk [data-k="still"], .mk [data-k="warm"], .mk [data-k="ink"], .mk [data-k="sig"], .mk [data-k="quiet"]',
           )
           .forEach((el) => el.setAttribute('aria-pressed', S[el.dataset.k]));
       }
@@ -2056,39 +2728,65 @@
         app.dataset.ink = S.ink;
         app.dataset.sig = S.sig;
         app.classList.toggle('still', S.still);
+        const disc = S.dir === 'perle' ? S.disc : 'actuel';
+        app.dataset.disc = disc;
+        app.dataset.quiet = S.quiet;
         let body = '';
-        switch (S.screen) {
-          case 'ecrire':
-            body = scene();
-            break;
-          case 'mentor':
-            body = scene({ signals: true });
-            break;
-          case 'points':
-            body = scene({ signals: true, panel: true }) + rightPanel();
-            break;
-          case 'volet':
-            body =
-              scene({ signals: true, panel: true }) +
-              `<aside class="panel volet">${ficheBody(true)}<div class="pfoot"><span><kbd>⌘⏎</kbd>ouvrir dans l’Atelier</span><span><kbd>Échap</kbd>fermer</span></div></aside>`;
-            break;
-          case 'palette':
-            body =
-              scene({ signals: true }) +
-              cmdbar('›', S.q, `<div class="cmdres">${resultList(results(S.q))}</div>`);
-            break;
-          case 'fiche':
-            body = atelier();
-            break;
-          case 'manuscrit':
-            if (S.dir === 'perle') body = S.plan ? board() : scene({ behind: true }) + drawer();
-            else if (S.dir === 'velin') body = board();
-            else body = scene({ behind: true, crumbs: true }) + gresNav();
-            break;
-        }
-        app.innerHTML = `<div class="tb"><span class="lights"><i></i><i></i><i></i></span><span class="ttl">Les Serres d’Hespéride</span></div><div class="stage">${body}</div>`;
+        const docked =
+          disc === 'etabli' && S.screen !== 'fiche' && !(S.screen === 'manuscrit' && S.plan);
+        if (docked) {
+          const sig = S.screen !== 'ecrire' && S.screen !== 'accueil';
+          const empty = S.screen === 'accueil';
+          const right = true;
+          body =
+            scene({ signals: sig, panel: right, left: true, empty }) +
+            drawer(true, empty) +
+            (S.screen === 'volet'
+              ? `<aside class="panel volet">${ficheBody(true)}<div class="pfoot"><span><kbd>⌘⏎</kbd>ouvrir dans l’Atelier</span><span><kbd>Échap</kbd>fermer</span></div></aside>`
+              : rightPanel(empty)) +
+            (S.screen === 'palette'
+              ? cmdbar('›', S.q, `<div class="cmdres">${resultList(results(S.q))}</div>`)
+              : '');
+        } else
+          switch (S.screen) {
+            case 'accueil':
+              body = scene({ empty: true });
+              break;
+            case 'ecrire':
+              body = scene();
+              break;
+            case 'mentor':
+              body = scene({ signals: true });
+              break;
+            case 'points':
+              body = scene({ signals: true, panel: true }) + rightPanel();
+              break;
+            case 'volet':
+              body =
+                scene({ signals: true, panel: true }) +
+                `<aside class="panel volet">${ficheBody(true)}<div class="pfoot"><span><kbd>⌘⏎</kbd>ouvrir dans l’Atelier</span><span><kbd>Échap</kbd>fermer</span></div></aside>`;
+              break;
+            case 'palette':
+              body =
+                scene({ signals: true }) +
+                cmdbar('›', S.q, `<div class="cmdres">${resultList(results(S.q))}</div>`);
+              break;
+            case 'fiche':
+              body = atelier();
+              break;
+            case 'manuscrit':
+              if (S.dir === 'perle') body = S.plan ? board() : scene({ behind: true }) + drawer();
+              else if (S.dir === 'velin') body = board();
+              else body = scene({ behind: true, crumbs: true }) + gresNav();
+              break;
+          }
+        if (disc === 'rails' && S.screen !== 'fiche') body += edges(S.screen);
+        if (disc === 'barre' && S.aa) body += aaPop(true);
+        const tb = disc === 'barre' ? toolbar() : `<span class="ttl">Les Serres d’Hespéride</span>`;
+        app.innerHTML = `${menubar()}<div class="tb"><span class="lights"><i></i><i></i><i></i></span>${tb}</div><div class="stage">${body}</div>`;
+        placeTip(app);
         renderBar();
-        history.replaceState(null, '', `#${S.dir}/${S.theme}/${S.screen}`);
+        history.replaceState(null, '', `#${S.dir}/${S.theme}/${S.screen}/${S.disc}`);
         // Typewriter scrolling: the current paragraph sits a little above the middle.
         const w = app.querySelector('.write');
         const cur = w && w.querySelector('.para.cur');
@@ -2103,11 +2801,36 @@
 
       // ───────────── Interactions ─────────────
       document.addEventListener('click', (e) => {
+        const mi = e.target.closest('[data-menu]');
+        if (mi && !e.target.closest('.mdd')) {
+          S.menu = S.menu === +mi.dataset.menu ? null : +mi.dataset.menu;
+          return render();
+        }
+        if (S.menu !== null) {
+          S.menu = null;
+          render();
+        }
+        const aa = e.target.closest('[data-aa]');
+        if (aa) {
+          S.aa = !S.aa;
+          return render();
+        }
+        if (e.target.closest('[data-tour-next] .btn')) {
+          S.tour = S.tour < 3 ? S.tour + 1 : 0;
+          return render();
+        }
+        const act0 = e.target.closest('.btn[data-act]');
+        if (act0 && act0.dataset.act === 'Faire le tour') {
+          S.tour = 1;
+          return render();
+        }
         const k = e.target.closest('[data-k]');
         if (k) {
           const v = k.dataset.v;
           S[k.dataset.k] = v === 'true' ? true : v === 'false' ? false : v;
-          if (k.dataset.k === 'screen') {
+          if (k.dataset.k === 'screen' || k.dataset.k === 'disc') {
+            S.tour = 0;
+            S.aa = false;
             S.sel = 0;
             S.plan = false;
             S.q = v === 'manuscrit' ? 'bur' : 'va';
@@ -2134,6 +2857,9 @@
         const go = e.target.closest('[data-go]');
         if (go) {
           S.screen = go.dataset.go;
+          S.tour = 0;
+          S.aa = false;
+          S.plan = false;
           return render();
         }
         if (e.target.closest('.who')) {
@@ -2175,7 +2901,14 @@
         }
         if (inInput) return;
         if (e.metaKey || e.ctrlKey || e.altKey) return;
-        const i = '1234567'.indexOf(e.key);
+        if (e.key === 'Escape') {
+          S.menu = null;
+          S.aa = false;
+          S.tour = 0;
+          e.preventDefault();
+          return render();
+        }
+        const i = '12345678'.indexOf(e.key);
         if (i >= 0) {
           S.screen = SCREENS[i][0];
           S.sel = 0;
@@ -2183,7 +2916,11 @@
         } else if (e.key === 'd') {
           const ks = Object.keys(DIRS);
           S.dir = ks[(ks.indexOf(S.dir) + 1) % ks.length];
-        } else if (e.key === 't') S.theme = S.theme === 'light' ? 'dark' : 'light';
+        } else if (e.key === 'g') {
+          S.disc = DISC_KEYS[(DISC_KEYS.indexOf(S.disc) + 1) % DISC_KEYS.length];
+          S.tour = 0;
+        } else if (e.key === 'w') S.quiet = !S.quiet;
+        else if (e.key === 't') S.theme = S.theme === 'light' ? 'dark' : 'light';
         else if (e.key === 'a') S.warm = !S.warm;
         else if (e.key === 'b') S.ink = !S.ink;
         else if (e.key === 'c') S.sig = !S.sig;
