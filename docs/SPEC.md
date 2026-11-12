@@ -362,7 +362,9 @@ Chaque transaction porte une origine : `author`, `agent:<name>`, `mirror`, `syst
 
 ### 15.6 Schéma ProseMirror du texte [D-13]
 
-Nœuds : `doc`, `paragraph`, `blockquote`, `sceneBreak`, `hardBreak` éventuel ; marque : `italic`. Les espaces insécables (U+00A0) et fines insécables (U+202F) sont du texte et doivent survivre à tous les allers-retours.
+Nœuds : `doc` (au moins un bloc), `paragraph`, `blockquote` (paragraphes uniquement, pas d'imbrication), `sceneBreak`, `hardBreak` ; marque : `italic`. Les noms reprennent ceux des extensions TipTap. Les espaces insécables (U+00A0) et fines insécables (U+202F) sont du texte et doivent survivre à tous les allers-retours.
+
+Texte admis : pas de caractères de contrôle, hormis la tabulation. Partout où du texte entre dans une scène (import Markdown, collage), les sauts de ligne isolés deviennent des espaces (un vrai retour à la ligne est un `hardBreak`) et les autres caractères de contrôle sont retirés (`sanitizeSceneText`).
 
 ## 16. Persistance desktop
 
@@ -388,6 +390,14 @@ Mon roman/
 - Écriture différée (debounce) après chaque modification.
 - **Réimport** d'un `.md` modifié hors de l'app : fusion à trois voies entre la base (dernier contenu écrit par l'app), le fichier et l'état courant du CRDT, appliquée en transaction d'origine `mirror` après un point de restauration. Si les modifications se chevauchent : la version externe devient une nouvelle variante « Modif. externe du … » et un signalement `external-edit` est créé. Rien n'est perdu.
 - En v1, les YAML de modules sont en écriture seule (le réimport des modules est une question ouverte, §22).
+
+### 17.1 Dialecte Markdown d'une scène
+
+- **Écriture canonique**, lisible dans n'importe quel lecteur Markdown : un paragraphe par ligne, séparés par une ligne vide ; `*italique*` ; `> ` pour les citations ; `* * *` pour le séparateur interne ; `\` en fin de ligne pour un retour à la ligne. Une scène vide donne un fichier vide.
+- **Échappements** : `\ * _ ` [ ] < & ~` sont toujours échappés par `\` ; `> # - + =` et `12.` / `3)` le sont en début de ligne, pour qu'aucun texte ne se lise comme une structure.
+- **Encodages de dernier recours**, seulement là où Markdown ne sait pas dire le texte : espace (normale, insécable, tabulation…) en bord de ligne → référence numérique `&#xA0;` ; italique que les délimiteurs `*` ne peuvent ni ouvrir ni fermer → `<em>…</em>` ; retour à la ligne en fin de paragraphe → `<br>` ; paragraphe vide → `<!-- -->`.
+- **Garantie testée** (y compris par génération aléatoire) : CRDT → Markdown → CRDT est l'identité pour toute scène au texte admis ; tout fichier Markdown se lit en une scène valide dont la réécriture est stable.
+- **Lecture tolérante** d'un fichier modifié hors de l'app : titres, listes et code restent du texte ; le gras perd ses marqueurs mais garde ses mots ; `_italique_`, `<i>` et `<em>` sont lus comme italique ; `***`, `---` et `___` comme séparateurs ; les citations imbriquées sont aplaties ; les lignes coupées sont jointes par une espace.
 
 ## 18. Agents et frontière de l'IA [D-11]
 
