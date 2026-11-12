@@ -6,10 +6,23 @@
   "license": "SEE LICENSE IN ../../LICENSE.md",
   "type": "module",
   "scripts": {
-    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.test.json"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.test.json && tsc -p tsconfig.node.json"
   },
   "dependencies": {
     "@charpentier/core": "workspace:*",
-    "@charpentier/platform-web": "workspace:*"
+    "@charpentier/platform-web": "workspace:*",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.3.0",
+    "happy-dom": "^21.0.4",
+    "vite": "^8.3.8"
   }
 }

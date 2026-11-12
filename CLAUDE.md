@@ -39,10 +39,12 @@ Miroir Markdown (desktop) : un `.md` par scène, appariement par id dans le fron
 - `pnpm check` : tout ce que fait la CI (format, lint, typecheck, tests, `check:guards`, `check:licenses`) ; doit passer avant chaque commit
 - `pnpm check:guards` : auto-test des garde-fous anti-fuite (ESLint et TypeScript doivent rejeter une fuite Node/Electron dans chaque paquet agnostique)
 - `pnpm check:licenses` : licences de toutes les dépendances ; exceptions revues dans `licenses.exceptions.json`
-- `pnpm dev:web` (phase 1.2), `pnpm dev:desktop` (étape 2)
+- `pnpm dev:web` : hôte web sur http://localhost:5173 (config de prévisualisation dans `.claude/launch.json`) · `pnpm build` : build web · `pnpm dev:desktop` (étape 2)
 
 ## Repères techniques
 - Paquets internes exportés en source TS (`exports: ./src/index.ts`), pas d'étape de build.
 - Paquets agnostiques : `tsconfig.json` (src, sans types Node) + `tsconfig.test.json` (tests). Nouveau paquet agnostique → l'ajouter aux couches d'`eslint.config.js` et à `scripts/guard-selftest.mjs`.
 - TypeScript reste en 6.0.x tant que typescript-eslint ne supporte pas la 7.
 - Markdown exclu de Prettier (prose formatée à la main).
+- Services de plateforme absents = `null` : le cœur vérifie et masque la fonction, il ne suppose jamais un service présent. Tests du cœur : `createTestPlatform()` (jamais `platform-web`).
+- i18n : catalogue `packages/core/src/i18n/locales/fr.json`, clés typées ; la règle locale `charpentier/no-ui-literal` (`tools/eslint/`) interdit tout texte en dur dans le JSX. `eslint-plugin-i18next` est inopérant avec ESLint 10 : ne pas le réintroduire.
