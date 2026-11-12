@@ -11,16 +11,12 @@
   animation: ch-slide-from-left var(--ch-dur-panel) var(--ch-ease) both;
 }
 
-.ch-nav-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: var(--ch-space-4) var(--ch-space-4) var(--ch-space-1) var(--ch-space-5);
+.ch-nav-seg {
+  margin: 14px 14px 6px;
 }
 
-.ch-nav-title {
-  margin: 0;
-  color: var(--ch-author);
+.ch-nav-seg kbd {
+  margin-left: 4px;
 }
 
 .ch-nav-tree {
@@ -32,6 +28,10 @@
 }
 
 .ch-nav-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
   margin: 2px var(--ch-space-3);
   padding: 7px 10px 7px 14px;
   border-radius: var(--ch-radius-sm);
@@ -108,4 +108,41 @@
   color: var(--ch-faint);
   font-size: var(--ch-ui-2xs);
   line-height: 1.6;
+}
+
+.ch-nav-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ch-nav-meta {
+  display: flex;
+  gap: 6px;
+  flex: none;
+  color: var(--ch-faint);
+  font-family: var(--ch-font-ui);
+  font-size: 11.5px;
+  font-weight: 400;
+}
+
+.ch-nav-chapter .ch-nav-meta {
+  font-size: 13px;
+}
+
+.ch-nav-dots {
+  color: var(--ch-mentor);
+  letter-spacing: 1px;
+}
+
+.ch-nav-variant,
+.ch-nav-checkpoint {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+}
+
+.ch-nav-sub-meta {
+  color: var(--ch-faint);
 }

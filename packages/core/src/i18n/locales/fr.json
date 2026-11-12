@@ -198,11 +198,15 @@
   },
   "navigator": {
     "label": "Plan du manuscrit",
-    "hint": "↑↓ parcourir · ↵ ouvrir · ⌥↑↓ déplacer · R renommer · N scène · ⇧N chapitre · ⌫ corbeille · Échap fermer",
+    "hint": "↑↓ parcourir · ↵ ouvrir · ⌥↑↓ déplacer · V variantes · R renommer · N scène · ⇧N chapitre · ⌫ corbeille · Échap fermer",
     "current": "scène ouverte",
     "title": "Manuscrit",
-    "variants": "Variantes de la scène",
-    "overview": "Plan"
+    "variants": "Variantes",
+    "overview": "Plan",
+    "checkpoints": "Points de restauration",
+    "activeVariant": "active",
+    "variantCount_one": "{{count}} var.",
+    "variantCount_other": "{{count}} var."
   },
   "variants": {
     "defaultName": "Version {{n}}"
@@ -234,7 +238,12 @@
   },
   "footer": {
     "words_one": "{{count, number}} mot",
-    "words_other": "{{count, number}} mots"
+    "words_other": "{{count, number}} mots",
+    "today_one": "+{{count, number}} aujourd’hui",
+    "today_other": "+{{count, number}} aujourd’hui",
+    "remarks_one": "{{count}} remarque du Compagnon",
+    "remarks_other": "{{count}} remarques du Compagnon",
+    "saved": "Enregistré"
   },
   "atelier": {
     "label": "Atelier",
@@ -472,5 +481,10 @@
     "fixedTypography_other": "{{count}} corrections typographiques appliquées.",
     "fixedSpelling_one": "{{count}} correction d’orthographe appliquée.",
     "fixedSpelling_other": "{{count}} corrections d’orthographe appliquées."
+  },
+  "header": {
+    "chapter": "{{numeral}} · {{title}}",
+    "scene": "{{rank}} · {{title}}",
+    "variant": "Variante {{letter}}"
   }
 }

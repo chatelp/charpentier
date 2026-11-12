@@ -35,6 +35,7 @@ import { lastScenePref, type ProjectSession } from './default-scene';
 import { SceneHeader, SceneOpener, WritingFooter } from './SceneChrome';
 import { useSceneDocs } from './use-scene-docs';
 import { useTypewriterScroll, useWordCount } from './use-writing-surface';
+import { useWordsToday } from './use-words-today';
 import type { WorkspaceContext } from './workspace-context';
 import { useWritingPrefs } from './writing-prefs';
 import './workspace.css';
@@ -93,6 +94,12 @@ export function ProjectWorkspace({
   );
   const agentsStatus = useSyncExternalStore(subscribeAgents, () => agents.status());
   const words = useWordCount(editor);
+  const wordsToday = useWordsToday(
+    platform.preferences,
+    projectId,
+    `${sceneId}/${scene?.activeVariantId ?? ''}`,
+    editor ? words : undefined,
+  );
   const languageCheck = useMemo(
     () =>
       // Level 1 « Discret »: nothing while writing (D-19).
@@ -357,6 +364,7 @@ export function ProjectWorkspace({
       >
         <SceneHeader
           chapter={chapter}
+          chapterIndex={chapterIndex}
           scene={scene}
           onOutline={() => setNavigatorOpen(true)}
           onVariants={() => void registry.execute('switchVariant', ctx)}
@@ -498,6 +506,9 @@ export function ProjectWorkspace({
       )}
       <WritingFooter
         words={view === 'write' ? words : undefined}
+        wordsToday={wordsToday}
+        remarks={marks.openSignals.length}
+        onRemarks={() => setMentorPanel('points')}
         status={status?.text}
         mentorNote={mentorNote}
       />
@@ -506,6 +517,7 @@ export function ProjectWorkspace({
           ctx={ctx}
           outline={outline}
           active={palette === null}
+          signals={marks.openSignals}
           onClose={() => {
             setNavigatorOpen(false);
             focusTextIfIdle();

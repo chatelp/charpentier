@@ -42,10 +42,13 @@ describe('writing surface', () => {
   it('shows the scene’s chapter and title, and counts its words', async () => {
     await startApp();
     const header = screen.getByRole('banner');
-    expect(header.textContent).toBe('Chapitre 1Scène 1');
+    expect(header.textContent).toBe('I · Chapitre 1—1 · Scène 1');
     expect(screen.getByText('0 mot')).toBeTruthy();
     await userEvent.keyboard('Il pleuvait sur Nantes{Enter}— Encore ?');
     await waitFor(() => expect(screen.getByText('5 mots')).toBeTruthy());
+    // Today's progress, and the state.
+    expect(screen.getByText('+5 aujourd’hui')).toBeTruthy();
+    expect(screen.getByText('Enregistré')).toBeTruthy();
   });
 
   it('opens the command line on the scenes with ⌘P', async () => {

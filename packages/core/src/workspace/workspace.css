@@ -69,6 +69,15 @@
   color: var(--ch-faint);
 }
 
+.ch-crumb.is-variant::before {
+  content: '· ';
+}
+
+.ch-crumb-sep {
+  color: var(--ch-faint);
+  font-variant-caps: normal;
+}
+
 .ch-page {
   width: min(var(--ch-measure), calc(100% - 4rem));
   margin: 0 auto;
@@ -128,5 +137,21 @@
 
 .ch-footer-right {
   display: flex;
+  align-items: baseline;
   gap: 14px;
+}
+
+.ch-footer-today {
+  color: var(--ch-author);
+}
+
+/* The footer lets clicks through, except on its button. */
+.ch-footer-remarks {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ch-mentor);
+  font: inherit;
+  cursor: pointer;
+  pointer-events: auto;
 }

@@ -1,6 +1,5 @@
 import type { OutlineChapter, SceneInfo } from '@charpentier/schema';
 import { useTranslation } from 'react-i18next';
-import { variantLabel } from '../commands/variant-commands';
 import { toRoman } from './roman';
 
 export interface SceneChromeProps {
@@ -16,33 +15,45 @@ export interface SceneChromeProps {
  */
 export function SceneHeader({
   chapter,
+  chapterIndex,
   scene,
   onOutline,
   onVariants,
-}: Omit<SceneChromeProps, 'chapterIndex'> & {
+}: SceneChromeProps & {
   readonly onOutline: () => void;
   readonly onVariants: () => void;
 }) {
   const { t } = useTranslation();
   if (!scene) return null;
+  const sceneRank = (chapter?.scenes.findIndex((s) => s.id === scene.id) ?? -1) + 1;
+  const variantIndex = scene.variants.findIndex((v) => v.id === scene.activeVariantId);
   return (
     <header className="ch-scene-header">
       {chapter && (
-        <button type="button" tabIndex={-1} className="ch-crumb" onClick={onOutline}>
-          {chapter.title}
-        </button>
+        <>
+          <button type="button" tabIndex={-1} className="ch-crumb" onClick={onOutline}>
+            {t('header.chapter', { numeral: toRoman(chapterIndex + 1), title: chapter.title })}
+          </button>
+          <span className="ch-crumb-sep" aria-hidden="true">
+            —
+          </span>
+        </>
       )}
       <button type="button" tabIndex={-1} className="ch-crumb is-scene" onClick={onOutline}>
-        {scene.title}
+        {sceneRank > 0 ? t('header.scene', { rank: sceneRank, title: scene.title }) : scene.title}
       </button>
       {scene.variants.length > 1 && (
         <button type="button" tabIndex={-1} className="ch-crumb is-variant" onClick={onVariants}>
-          {variantLabel(t, scene, scene.activeVariantId)}
+          {t('header.variant', { letter: variantLetter(variantIndex) })}
         </button>
       )}
     </header>
   );
 }
+
+/** A, B, C… for the variants of a scene (docs/DESIGN.md §4.4). */
+export const variantLetter = (index: number): string =>
+  index < 0 ? '?' : index < 26 ? String.fromCharCode(65 + index) : String(index + 1);
 
 /** Opening of the scene, scrolling with the text: numeral, chapter, fleuron, scene title. */
 export function SceneOpener({ chapter, chapterIndex, scene }: SceneChromeProps) {
@@ -61,14 +72,21 @@ export function SceneOpener({ chapter, chapterIndex, scene }: SceneChromeProps) 
   );
 }
 
-/** Footer: word count on the left; confirmations and the Compagnon's state on the right. */
+/** Footer (docs/DESIGN.md §4.1): words and today's progress; remarks, state. */
 export function WritingFooter({
   words,
+  wordsToday,
+  remarks,
+  onRemarks,
   status,
   mentorNote,
 }: {
   /** Hidden outside the writing surface. */
   readonly words: number | undefined;
+  readonly wordsToday: number;
+  /** Open remarks of the Compagnon on this project. */
+  readonly remarks: number;
+  readonly onRemarks: () => void;
   readonly status: string | undefined;
   readonly mentorNote: string | undefined;
 }) {
@@ -76,13 +94,25 @@ export function WritingFooter({
   return (
     <footer className="ch-footer">
       <span className="ch-footer-words">
-        {words !== undefined && t('footer.words', { count: words })}
+        {words !== undefined && <span>{t('footer.words', { count: words })}</span>}
+        {words !== undefined && wordsToday > 0 && (
+          <>
+            {' · '}
+            <span className="ch-footer-today">{t('footer.today', { count: wordsToday })}</span>
+          </>
+        )}
       </span>
       <span className="ch-footer-right">
         <span role="status" aria-live="polite">
           {status}
         </span>
+        {remarks > 0 && (
+          <button type="button" tabIndex={-1} className="ch-footer-remarks" onClick={onRemarks}>
+            {t('footer.remarks', { count: remarks })}
+          </button>
+        )}
         {mentorNote && <span>{mentorNote}</span>}
+        <span>{t('footer.saved')}</span>
       </span>
     </footer>
   );
