@@ -1,0 +1,12 @@
+{
+  "app": {
+    "name": "Charpentier",
+    "loading": "Ouverture…"
+  },
+  "editor": {
+    "emptyScene": "Votre manuscrit commence ici."
+  },
+  "mentor": {
+    "unavailableOnHost": "Le mentor n'est pas disponible dans cette version."
+  }
+}

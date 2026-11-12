@@ -1,0 +1,71 @@
+/* Distraction-free base: no chrome, the text is the interface. */
+:root {
+  --ch-bg: #fbfaf7;
+  --ch-fg: #1f1d1a;
+  --ch-muted: #8a857c;
+  --ch-measure: 38rem;
+  --ch-font-text: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+  --ch-font-ui: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ch-bg: #1b1a18;
+    --ch-fg: #e6e1d8;
+    --ch-muted: #8f897f;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--ch-bg);
+  color: var(--ch-fg);
+  font-family: var(--ch-font-text);
+  font-size: 1.1875rem;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.ch-surface {
+  min-height: 100%;
+  max-width: var(--ch-measure);
+  margin: 0 auto;
+  padding: 18vh 1rem 4rem;
+}
+
+.ch-placeholder {
+  color: var(--ch-muted);
+  font-style: italic;
+}
+
+.ch-status {
+  position: fixed;
+  right: 1rem;
+  bottom: 0.75rem;
+  margin: 0;
+  color: var(--ch-muted);
+  font-family: var(--ch-font-ui);
+  font-size: 0.75rem;
+}
+
+.ch-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
