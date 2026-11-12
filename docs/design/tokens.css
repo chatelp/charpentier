@@ -1,0 +1,184 @@
+/*
+ * Charpentier design tokens: direction "Perle" + "Deux encres" + "Signature".
+ * Reference: docs/DESIGN.md. Proposed for packages/core/src/styles (to be wired by the app session).
+ * Theme: follows the OS by default; [data-theme] on <html> forces light or dark.
+ */
+
+/* Fonts: embedded WOFF2 files (SIL OFL 1.1), never fetched from the network.
+   Literata must be the full build with the small-caps feature (smcp, c2sc). */
+@font-face {
+  font-family: 'Literata';
+  src: url('../fonts/Literata-Variable.woff2') format('woff2');
+  font-weight: 200 900;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: 'Literata';
+  src: url('../fonts/Literata-Italic-Variable.woff2') format('woff2');
+  font-weight: 200 900;
+  font-style: italic;
+  font-display: block;
+}
+@font-face {
+  font-family: 'Inter';
+  src: url('../fonts/Inter-Variable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: block;
+}
+
+:root {
+  color-scheme: light dark;
+
+  /* ── Typography ── */
+  --ch-font-text: 'Literata', 'Iowan Old Style', Georgia, serif;
+  --ch-font-ui: 'Inter', system-ui, -apple-system, sans-serif;
+  --ch-text-size: 1.1875rem; /* 19px, author-adjustable 15–26px */
+  --ch-text-leading: 1.68;
+  --ch-text-indent: 1.6em;
+  --ch-measure: 38rem; /* about 66 characters, author-adjustable 30–48rem */
+  --ch-ui-2xs: 0.6875rem; /* 11px: shortcut hints */
+  --ch-ui-xs: 0.75rem; /* 12px: meta, footer */
+  --ch-ui-sm: 0.8125rem; /* 13px: UI body */
+  --ch-ui-md: 0.875rem; /* 14px: UI emphasis, list items */
+  --ch-ui-lg: 0.9375rem; /* 15px: command line */
+  --ch-label-size: 0.84375rem; /* 13.5px: serif small-caps labels */
+  --ch-label-tracking: 0.08em;
+  --ch-title-sheet: 1.875rem; /* 30px: sheet title, serif */
+  --ch-title-opener: 2.6rem; /* scene opener numeral */
+
+  /* ── Spacing (4px base) ── */
+  --ch-space-1: 4px;
+  --ch-space-2: 8px;
+  --ch-space-3: 12px;
+  --ch-space-4: 16px;
+  --ch-space-5: 20px;
+  --ch-space-6: 24px;
+  --ch-space-7: 32px;
+  --ch-space-8: 48px;
+
+  /* ── Radii ── */
+  --ch-radius-lg: 22px; /* panels, sheets, command results */
+  --ch-radius-md: 14px; /* cards, notes, fields, segmented controls */
+  --ch-radius-sm: 9px; /* buttons, list rows, chips, sheet values */
+  --ch-radius-round: 50%; /* pastilles */
+
+  /* ── Relief (neumorphism) ── */
+  --ch-depth: 6px;
+  --ch-blur: 14px;
+  --ch-depth-s: 3px;
+  --ch-blur-s: 7px;
+  --ch-raise:
+    var(--ch-depth) var(--ch-depth) var(--ch-blur) var(--ch-shade),
+    calc(var(--ch-depth) * -1) calc(var(--ch-depth) * -1) var(--ch-blur) var(--ch-highlight);
+  --ch-raise-s:
+    var(--ch-depth-s) var(--ch-depth-s) var(--ch-blur-s) var(--ch-shade),
+    calc(var(--ch-depth-s) * -1) calc(var(--ch-depth-s) * -1) var(--ch-blur-s) var(--ch-highlight);
+  --ch-inset:
+    inset var(--ch-depth-s) var(--ch-depth-s) var(--ch-blur-s) var(--ch-shade),
+    inset calc(var(--ch-depth-s) * -1) calc(var(--ch-depth-s) * -1) var(--ch-blur-s)
+      var(--ch-highlight);
+
+  /* ── Compagnon intensity (opacity of pastilles by importance) ── */
+  --ch-mentor-l1: 0.42; /* language, encouragement */
+  --ch-mentor-l2: 0.72; /* craft, clue */
+  --ch-mentor-l3: 1; /* conflict with a validated fact */
+
+  /* ── Motion ── */
+  --ch-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ch-dur-press: 120ms;
+  --ch-dur-note: 220ms;
+  --ch-dur-panel: 300ms;
+  --ch-dur-view: 340ms;
+  --ch-dur-relief: 350ms; /* status change: raised ↔ engraved */
+  --ch-dur-pastille: 500ms;
+  --ch-idle-before-mentor: 1500ms; /* typing pause before a pastille may appear */
+
+  /* ── Layout ── */
+  --ch-titlebar-h: 34px; /* macOS integrated title bar */
+  --ch-panel-w: 25.5rem; /* right panel: Points / Conversation, sheet drawer */
+  --ch-drawer-w: 22rem; /* manuscript drawer */
+  --ch-note-w: 18.5rem; /* margin note */
+  /* Below 1180px wide, margin notes unfold under their paragraph. */
+
+  /* ── Layers ── */
+  --ch-z-note: 2;
+  --ch-z-header: 3;
+  --ch-z-panel: 5;
+  --ch-z-command: 6;
+
+  /* ── Colours: light (default) ── */
+  --ch-bg: #e3e7ed;
+  --ch-ink: #22262d;
+  --ch-ink-2: #474d57;
+  --ch-muted: #7a828e;
+  --ch-faint: #a6adb8;
+  --ch-highlight: #ffffff;
+  --ch-shade: #b3becc;
+  --ch-mentor: #1f4f7c; /* Prussian blue: everything that comes from the Compagnon */
+  --ch-mentor-soft: rgb(31 79 124 / 0.1);
+  --ch-author: #b2432a; /* carpenter's-pencil vermilion: the author's own marks */
+  --ch-author-soft: rgb(178 67 42 / 0.22);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --ch-bg: #262a31;
+    --ch-ink: #dfe3ea;
+    --ch-ink-2: #b9c0ca;
+    --ch-muted: #8a929e;
+    --ch-faint: #5d6470;
+    --ch-highlight: #323740;
+    --ch-shade: #1a1d22;
+    --ch-mentor: #86aedb;
+    --ch-mentor-soft: rgb(134 174 219 / 0.13);
+    --ch-author: #e3876a;
+    --ch-author-soft: rgb(227 135 106 / 0.24);
+  }
+}
+:root[data-theme='dark'] {
+  --ch-bg: #262a31;
+  --ch-ink: #dfe3ea;
+  --ch-ink-2: #b9c0ca;
+  --ch-muted: #8a929e;
+  --ch-faint: #5d6470;
+  --ch-highlight: #323740;
+  --ch-shade: #1a1d22;
+  --ch-mentor: #86aedb;
+  --ch-mentor-soft: rgb(134 174 219 / 0.13);
+  --ch-author: #e3876a;
+  --ch-author-soft: rgb(227 135 106 / 0.24);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --ch-dur-press: 0ms;
+    --ch-dur-note: 0ms;
+    --ch-dur-panel: 0ms;
+    --ch-dur-view: 0ms;
+    --ch-dur-relief: 0ms;
+    --ch-dur-pastille: 0ms;
+  }
+}
+/* In-app switch "Réduire les animations". */
+:root[data-motion='reduced'] {
+  --ch-dur-press: 0ms;
+  --ch-dur-note: 0ms;
+  --ch-dur-panel: 0ms;
+  --ch-dur-view: 0ms;
+  --ch-dur-relief: 0ms;
+  --ch-dur-pastille: 0ms;
+}
+
+/* Shared text styles. */
+.ch-label {
+  font-family: var(--ch-font-text);
+  font-weight: 500;
+  font-size: var(--ch-label-size);
+  font-variant-caps: all-small-caps;
+  letter-spacing: var(--ch-label-tracking);
+}
+::selection {
+  background: var(--ch-author-soft);
+}
