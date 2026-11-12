@@ -1,0 +1,55 @@
+.ch-editor {
+  min-height: 60vh;
+}
+
+.ch-prose {
+  outline: none;
+  min-height: 60vh;
+  caret-color: var(--ch-fg);
+  hyphens: auto;
+  text-align: left;
+  overflow-wrap: break-word;
+}
+
+.ch-prose p {
+  margin: 0;
+  text-indent: 1.5em;
+}
+
+/* First paragraph of the scene, of a quote, and after a break: no indent. */
+.ch-prose > p:first-child,
+.ch-prose blockquote > p:first-child,
+.ch-prose hr + p {
+  text-indent: 0;
+}
+
+.ch-prose blockquote {
+  margin: 1.2em 0 1.2em 2em;
+  font-size: 0.95em;
+}
+
+.ch-prose hr.ch-scene-break {
+  border: 0;
+  margin: 1.6em 0;
+  text-align: center;
+  overflow: visible;
+}
+
+.ch-prose hr.ch-scene-break::after {
+  content: '⁂';
+  color: var(--ch-muted);
+}
+
+.ch-prose hr.ProseMirror-selectednode::after {
+  color: var(--ch-fg);
+}
+
+/* Placeholder of the empty scene (TipTap Placeholder extension). */
+.ch-prose p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--ch-muted);
+  font-style: italic;
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
