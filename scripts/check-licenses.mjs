@@ -19,6 +19,7 @@ const ALLOWED = new Set([
   'CC-BY-4.0',
   'Unlicense',
   'Python-2.0',
+  'PSF-2.0',
   'Zlib',
 ]);
 
