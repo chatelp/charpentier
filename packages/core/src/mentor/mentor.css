@@ -283,6 +283,10 @@
   font-size: var(--ch-ui-sm);
 }
 
+.ch-points-empty p {
+  margin: 0 0 10px;
+}
+
 /* With the panel open, the text recenters in the space left. */
 .ch-app[data-mentor-panel] .ch-write {
   right: calc(var(--ch-panel-w) + 24px);

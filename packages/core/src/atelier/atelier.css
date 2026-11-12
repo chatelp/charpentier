@@ -34,8 +34,19 @@
   min-height: 0;
 }
 
-.ch-atl-rail .ch-seg {
-  margin-bottom: var(--ch-space-3);
+.ch-atl-rail-foot {
+  margin-top: auto;
+  padding-top: var(--ch-space-3);
+}
+
+.ch-atl-rail-foot + .ch-atl-hint {
+  margin-top: var(--ch-space-2);
+}
+
+.ch-atl-new {
+  justify-content: center;
+  margin: 2px 0 6px;
+  padding: 6px 10px;
 }
 
 .ch-atl-modules,

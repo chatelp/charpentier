@@ -39,15 +39,31 @@ import { Navigator } from '../navigator/Navigator';
 import { CommandPalette } from '../palette/CommandPalette';
 import type { PaletteRequest, PaletteScope } from '../palette/palette-request';
 import { lastScenePref, type ProjectSession } from './default-scene';
+import { panelsPref, readPanels, type StoredPanels } from './panels-pref';
+import { CommandZone, DisplaySheet, EdgeHandle, ModeSwitch } from './EntryPoints';
 import { SceneHeader, SceneOpener, WritingFooter } from './SceneChrome';
 import { useSceneDocs } from './use-scene-docs';
-import { useTypewriterScroll, useWordCount } from './use-writing-surface';
+import { useTypingFade, useTypewriterScroll, useWordCount } from './use-writing-surface';
 import { useWordsToday } from './use-words-today';
 import type { WorkspaceContext } from './workspace-context';
 import { useWritingPrefs } from './writing-prefs';
 import './workspace.css';
 
 let paletteSequence = 0;
+
+/** The commands offered when the command line opens empty (docs/DESIGN.md §4.6). */
+const SUGGESTED_COMMANDS = [
+  'newScene',
+  'newChapter',
+  'toggleNavigator',
+  'goToScene',
+  'analyzeScene',
+  'talkToMentor',
+  'toggleAtelier',
+  'newCharacter',
+];
+const RECENT_COMMANDS = 4;
+const RECENT_COMMANDS_PREF = 'recentCommands';
 
 /** Characters' names as recognised in the text: full name, then first name. */
 const readKnownNames = (doc: Y.Doc): KnownName[] =>
@@ -91,6 +107,53 @@ export function ProjectWorkspace({
     setSheetPanel(null);
     setMentorPanelState(tab);
   }, []);
+  // Open panels stay open the next time the project opens (docs/DESIGN.md §4.8):
+  // an interface preference per project, not project content.
+  const panelsLoaded = useRef(false);
+  useEffect(() => {
+    let cancelled = false;
+    void platform.preferences.get<unknown>(panelsPref(projectId)).then((stored) => {
+      if (cancelled) return;
+      panelsLoaded.current = true;
+      const panels = readPanels(stored);
+      if (panels.navigator) setNavigatorOpen(true);
+      if (panels.mentor) setMentorPanelState(panels.mentor);
+      else if (panels.sheet) setSheetPanel(panels.sheet);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [platform, projectId]);
+  useEffect(() => {
+    if (!panelsLoaded.current) return;
+    const panels: StoredPanels = {
+      navigator: navigatorOpen,
+      mentor: mentorPanel,
+      sheet: sheetPanel,
+    };
+    void platform.preferences.set(panelsPref(projectId), panels);
+  }, [platform, projectId, navigatorOpen, mentorPanel, sheetPanel]);
+  // The commands last chosen in the command line, offered first when it opens empty.
+  const [recentCommands, setRecentCommands] = useState<readonly string[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    void platform.preferences.get<unknown>(RECENT_COMMANDS_PREF).then((stored) => {
+      if (!cancelled && Array.isArray(stored))
+        setRecentCommands(stored.filter((id): id is string => typeof id === 'string'));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [platform]);
+  const rememberCommand = (id: string) => {
+    const next = [id, ...recentCommands.filter((r) => r !== id)].slice(0, RECENT_COMMANDS);
+    setRecentCommands(next);
+    void platform.preferences.set(RECENT_COMMANDS_PREF, next);
+  };
+  // The display sheet behind « Aa ».
+  const [displayOpen, setDisplayOpen] = useState(false);
+  // While typing, the entry points fade (docs/DESIGN.md §4.8).
+  const typing = useTypingFade(editor);
   // A remark to show once its scene's editor is ready (going there from the panel).
   const pendingSignal = useRef<string | null>(null);
 
@@ -403,7 +466,10 @@ export function ProjectWorkspace({
         id: command.id,
         label: t(`commands.${command.id}` as 'commands.openPalette'),
         ...(shortcut && { shortcut }),
-        run: () => void command.run(ctx),
+        run: () => {
+          rememberCommand(command.id);
+          void command.run(ctx);
+        },
       };
     });
 
@@ -451,11 +517,32 @@ export function ProjectWorkspace({
     <div
       className="ch-app"
       style={surfaceStyle}
+      data-view={view}
+      data-typing={(typing && view === 'write' && !displayOpen) || undefined}
       data-focus={prefs.focusMode || undefined}
       data-typewriter={prefs.typewriter || undefined}
       data-mentor-panel={mentorPanel ?? (sheetPanel ? 'sheet' : undefined)}
       data-mentor-level={mentorLevel}
     >
+      {/* Entry points (docs/DESIGN.md §4.8), in the order of the tab key. */}
+      {view === 'write' && !navigatorOpen && (
+        <EdgeHandle
+          side="left"
+          label={t('entry.manuscript')}
+          title={t('entry.manuscriptTitle')}
+          shortcut={registry.shortcutLabel('toggleNavigator')}
+          tour={1}
+          onOpen={() => setNavigatorOpen(true)}
+        />
+      )}
+      {view === 'write' && (
+        <ModeSwitch
+          view="write"
+          shortcut={registry.shortcutLabel('toggleAtelier')}
+          onWrite={focusTextIfIdle}
+          onAtelier={() => ctx.openAtelier()}
+        />
+      )}
       <div
         ref={scroller}
         hidden={view !== 'write'}
@@ -615,6 +702,10 @@ export function ProjectWorkspace({
             }
           }}
           onOpenSheet={(rail, target) => ctx.openAtelier({ rail, target })}
+          {...(agentsStatus !== 'disabled' && {
+            onAnalyze: () => void registry.execute('analyzeScene', ctx),
+            analyzeShortcut: registry.shortcutLabel('analyzeScene'),
+          })}
           onClose={() => {
             setMentorPanel(null);
             focusTextIfIdle();
@@ -639,7 +730,55 @@ export function ProjectWorkspace({
         onRemarks={() => setMentorPanel('points')}
         status={status?.text}
         mentorNote={mentorNote}
+        onEnterKey={
+          agentsStatus === 'unconfigured'
+            ? () => void registry.execute('setApiKey', ctx)
+            : undefined
+        }
+        commandZone={
+          view === 'write' && (
+            <CommandZone
+              shortcut={registry.shortcutLabel('openPalette')}
+              onOpen={() => ctx.openPalette()}
+            />
+          )
+        }
+        tools={
+          view === 'write' && (
+            <button
+              type="button"
+              className={`ch-footer-button is-display ch-chrome ch-display-toggle${displayOpen ? ' is-on' : ''}`}
+              title={t('entry.displayTitle')}
+              aria-expanded={displayOpen}
+              onClick={() => setDisplayOpen((open) => !open)}
+            >
+              {t('entry.display')}
+            </button>
+          )
+        }
       />
+      {displayOpen && view === 'write' && (
+        <DisplaySheet
+          prefs={prefs}
+          updatePrefs={updatePrefs}
+          shortcut={(id) => registry.shortcutLabel(id)}
+          onClose={(backToText) => {
+            setDisplayOpen(false);
+            if (backToText) focusTextIfIdle();
+          }}
+        />
+      )}
+      {view === 'write' && !mentorPanel && !sheetPanel && (
+        <EdgeHandle
+          side="right"
+          label={t('entry.compagnon')}
+          title={t('entry.compagnonTitle')}
+          shortcut={registry.shortcutLabel('toggleMentorPanel')}
+          count={marks.openSignals.length}
+          tour={2}
+          onOpen={() => setMentorPanel('points')}
+        />
+      )}
       {navigatorOpen && (
         <Navigator
           ctx={ctx}
@@ -658,6 +797,12 @@ export function ProjectWorkspace({
           request={palette.request}
           commands={paletteCommands}
           scopes={paletteScopes}
+          recent={recentCommands}
+          suggested={
+            agentsStatus === 'unconfigured'
+              ? ['setApiKey', ...SUGGESTED_COMMANDS]
+              : SUGGESTED_COMMANDS
+          }
           onClose={closePalette}
         />
       )}

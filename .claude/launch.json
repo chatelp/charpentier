@@ -6,6 +6,20 @@
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["dev:web"],
       "port": 5173
+    },
+    {
+      "name": "web-5174",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "@charpentier/web",
+        "exec",
+        "vite",
+        "--port",
+        "5174",
+        "--strictPort"
+      ],
+      "port": 5174
     }
   ]
 }

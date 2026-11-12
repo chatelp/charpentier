@@ -15,6 +15,12 @@ export interface CommandPaletteProps {
   readonly commands: readonly PaletteCommand[];
   /** Other searches of the command line, by prefix: `#` scenes… (`>` is the commands). */
   readonly scopes?: Readonly<Record<string, PaletteScope>>;
+  /**
+   * With nothing typed: the commands used last, then the most useful ones,
+   * before all the others (docs/DESIGN.md §4.6), so that a beginner sees what exists.
+   */
+  readonly recent?: readonly string[];
+  readonly suggested?: readonly string[];
   readonly onClose: () => void;
 }
 
@@ -48,7 +54,14 @@ function Highlighted({ text, query }: { readonly text: string; readonly query: s
  * search commands (or, with a prefix, scenes…), pick an item, or type a value
  * (a title). ↑↓ to move, ↵ to choose, Échap to go back to the text.
  */
-export function CommandPalette({ request, commands, scopes = {}, onClose }: CommandPaletteProps) {
+export function CommandPalette({
+  request,
+  commands,
+  scopes = {},
+  recent = [],
+  suggested = [],
+  onClose,
+}: CommandPaletteProps) {
   const { t } = useTranslation();
   const listId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -103,7 +116,23 @@ export function CommandPalette({ request, commands, scopes = {}, onClose }: Comm
       items: match(commands),
       pick: runCommand,
     };
-    if (prefix === COMMANDS_PREFIX || !search.trim()) return [commandSection];
+    if (prefix === COMMANDS_PREFIX) return [commandSection];
+    if (!search.trim()) {
+      const byId = (ids: readonly string[]) =>
+        ids.flatMap((id) => commands.filter((c) => c.id === id));
+      const recentItems = byId(recent);
+      const suggestedItems = byId(suggested).filter((c) => !recent.includes(c.id));
+      return [
+        { ...commandSection, key: 'recent', label: t('palette.recentGroup'), items: recentItems },
+        {
+          ...commandSection,
+          key: 'suggested',
+          label: t('palette.suggestedGroup'),
+          items: suggestedItems,
+        },
+        { ...commandSection, label: t('palette.allCommandsGroup') },
+      ].filter((section) => section.items.length > 0);
+    }
     return [
       { ...commandSection, items: commandSection.items.slice(0, MIXED_LIMIT) },
       ...Object.entries(scopes).map(([key, s]) => ({

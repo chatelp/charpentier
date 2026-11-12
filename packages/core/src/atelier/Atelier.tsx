@@ -26,6 +26,7 @@ import {
   type SheetTarget,
 } from './atelier-data';
 import { createEntityPrompt, trashEntityAndNotify } from './atelier-actions';
+import { CommandZone, ModeSwitch } from '../workspace/EntryPoints';
 import { FieldRow } from './FieldRow';
 import { ATELIER_MODULES, moduleDefs, type AtelierModule, type FieldDef } from './module-defs';
 import './atelier.css';
@@ -75,6 +76,15 @@ function moveFocus(container: HTMLElement | null, selector: string, step: 1 | -1
   const index = items.findIndex((el) => el === document.activeElement);
   items[Math.max(0, Math.min(items.length - 1, index + step))]?.focus();
 }
+
+/** The « + New » buttons under the filter, by rail (docs/DESIGN.md §4.5). */
+const NEW_ENTRY: Record<AtelierModule, readonly EntityModule[]> = {
+  meta: [],
+  characters: ['characters'],
+  structure: ['acts', 'arcs'],
+  worldRules: ['worldRules'],
+  clues: ['clues'],
+};
 
 /**
  * The Atelier (docs/DESIGN.md §4.5): rail of modules, list of entries, sheet.
@@ -224,14 +234,13 @@ export function Atelier({
   return (
     <section className="ch-atelier" aria-label={t('atelier.label')} onKeyDown={onRootKeyDown}>
       <nav className="ch-atl-rail">
-        <div className="ch-seg" role="group">
-          <button type="button" tabIndex={-1} onClick={onWrite}>
-            {t('atelier.write')}
-          </button>
-          <button type="button" tabIndex={-1} className="is-on" aria-pressed="true">
-            {t('atelier.label')}
-          </button>
-        </div>
+        <ModeSwitch
+          view="atelier"
+          className="is-inline"
+          shortcut={ctx.shortcutLabel('toggleAtelier')}
+          onWrite={onWrite}
+          onAtelier={() => focusWithin(railRef)}
+        />
         <ul
           ref={railRef}
           className="ch-atl-modules"
@@ -260,6 +269,13 @@ export function Atelier({
             );
           })}
         </ul>
+        <div className="ch-atl-rail-foot">
+          <CommandZone
+            inline
+            shortcut={ctx.shortcutLabel('openPalette')}
+            onOpen={() => ctx.openPalette()}
+          />
+        </div>
         <p className="ch-atl-hint">
           {t('atelier.railHint', {
             toggle: ctx.shortcutLabel('toggleAtelier') ?? '',
@@ -291,6 +307,21 @@ export function Atelier({
             />
             <kbd className="ch-filter-key">{t('atelier.filterKey')}</kbd>
           </div>
+          {NEW_ENTRY[location.rail].map((module) => (
+            <button
+              key={module}
+              type="button"
+              className="ch-btn ch-atl-new"
+              title={t('atelier.newKeyHint')}
+              onClick={() =>
+                createEntityPrompt(ctx, module, (id) =>
+                  onLocation({ rail: location.rail, target: { module, entityId: id } }, true),
+                )
+              }
+            >
+              {t(`atelier.newEntry.${module}`)}
+            </button>
+          ))}
           <ul
             className="ch-atl-entries"
             role="listbox"

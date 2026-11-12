@@ -1,4 +1,5 @@
 import type { OutlineChapter, SceneInfo } from '@charpentier/schema';
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toRoman } from './roman';
 
@@ -72,7 +73,10 @@ export function SceneOpener({ chapter, chapterIndex, scene }: SceneChromeProps) 
   );
 }
 
-/** Footer (docs/DESIGN.md §4.1): words and today's progress; remarks, state. */
+/**
+ * Footer (docs/DESIGN.md §4.1): words and today's progress; the command zone
+ * in the middle; remarks, state and the display button on the right.
+ */
 export function WritingFooter({
   words,
   wordsToday,
@@ -80,6 +84,9 @@ export function WritingFooter({
   onRemarks,
   status,
   mentorNote,
+  onEnterKey,
+  commandZone,
+  tools,
 }: {
   /** Hidden outside the writing surface. */
   readonly words: number | undefined;
@@ -89,6 +96,11 @@ export function WritingFooter({
   readonly onRemarks: () => void;
   readonly status: string | undefined;
   readonly mentorNote: string | undefined;
+  /** The Compagnon waits for its key: « Compagnon : saisir la clé », clickable. */
+  readonly onEnterKey?: (() => void) | undefined;
+  readonly commandZone?: ReactNode;
+  /** Buttons at the far right (« Aa »). */
+  readonly tools?: ReactNode;
 }) {
   const { t } = useTranslation();
   return (
@@ -102,6 +114,7 @@ export function WritingFooter({
           </>
         )}
       </span>
+      <span className="ch-footer-middle">{commandZone}</span>
       <span className="ch-footer-right">
         <span role="status" aria-live="polite">
           {status}
@@ -111,8 +124,20 @@ export function WritingFooter({
             {t('footer.remarks', { count: remarks })}
           </button>
         )}
-        {mentorNote && <span>{mentorNote}</span>}
+        {onEnterKey ? (
+          <button
+            type="button"
+            className="ch-footer-button is-mentor ch-footer-key"
+            title={t('commands.setApiKey')}
+            onClick={onEnterKey}
+          >
+            {t('footer.enterKey')}
+          </button>
+        ) : (
+          mentorNote && <span>{mentorNote}</span>
+        )}
         <span>{t('footer.saved')}</span>
+        {tools}
       </span>
     </footer>
   );

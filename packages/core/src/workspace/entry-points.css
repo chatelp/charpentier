@@ -1,0 +1,211 @@
+/* Entry points (docs/DESIGN.md §4.8): every tool can be found with the mouse. */
+
+/* Discreet at rest, gone while typing (they come back with the mouse, Échap or a pause). */
+.ch-chrome {
+  transition:
+    opacity var(--ch-dur-pastille) var(--ch-ease),
+    box-shadow var(--ch-dur-relief),
+    color var(--ch-dur-relief);
+}
+
+.ch-app[data-typing] .ch-chrome {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Edge handles, where the panels come from. */
+.ch-edge {
+  position: absolute;
+  top: 50%;
+  z-index: var(--ch-z-header, 3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 8px 12px;
+  border: 0;
+  background: var(--ch-bg);
+  box-shadow: var(--ch-raise-s);
+  color: var(--ch-muted);
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+
+.ch-edge:hover,
+.ch-edge:focus-visible {
+  color: var(--ch-ink);
+  box-shadow: var(--ch-raise);
+  outline: none;
+}
+
+.ch-edge.is-left {
+  left: 0;
+  border-radius: 0 var(--ch-radius-md) var(--ch-radius-md) 0;
+}
+
+.ch-edge.is-right {
+  right: 0;
+  border-radius: var(--ch-radius-md) 0 0 var(--ch-radius-md);
+}
+
+.ch-edge-label {
+  writing-mode: vertical-rl;
+  font: 500 13.5px var(--ch-font-text);
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.08em;
+}
+
+.ch-edge.is-left .ch-edge-label {
+  transform: rotate(180deg);
+}
+
+.ch-edge-count {
+  min-width: 18px;
+  padding: 2px 0;
+  border-radius: 9px;
+  box-shadow: var(--ch-inset);
+  color: var(--ch-mentor);
+  font: 600 11px var(--ch-font-ui);
+  text-align: center;
+}
+
+/* Écrire | Atelier, top right of the page. */
+.ch-modes {
+  position: absolute;
+  top: 10px;
+  right: 16px;
+  z-index: calc(var(--ch-z-header, 3) + 1);
+  padding: 3px;
+  border-radius: var(--ch-radius-sm);
+}
+
+.ch-seg.ch-modes button {
+  flex: none;
+  padding: 5px 11px;
+  border-radius: 7px;
+  font: 500 var(--ch-ui-xs) var(--ch-font-ui);
+  cursor: pointer;
+}
+
+/* A panel on the right: the switch moves to its left. */
+.ch-app[data-mentor-panel] .ch-modes:not(.is-inline) {
+  right: calc(var(--ch-panel-w) + 36px);
+}
+
+.ch-modes.is-inline {
+  position: static;
+  margin-bottom: var(--ch-space-3);
+}
+
+.ch-seg.ch-modes.is-inline button {
+  flex: 1;
+}
+
+/* The command zone, in the middle of the footer. */
+.ch-cmdzone {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: min(30rem, 38vw);
+  padding: 7px 12px;
+  border: 0;
+  border-radius: var(--ch-radius-md);
+  background: var(--ch-bg);
+  box-shadow: var(--ch-inset);
+  color: var(--ch-faint);
+  font: var(--ch-ui-sm) var(--ch-font-ui);
+  text-align: left;
+  pointer-events: auto;
+  cursor: text;
+}
+
+.ch-cmdzone:hover,
+.ch-cmdzone:focus-visible {
+  color: var(--ch-muted);
+  outline: none;
+}
+
+.ch-cmdzone-prompt {
+  color: var(--ch-mentor);
+  font-size: 15px;
+}
+
+.ch-cmdzone-text {
+  flex: 1;
+}
+
+.ch-cmdzone.is-inline {
+  width: auto;
+}
+
+/* « Aa » and the key, at the right of the footer. */
+.ch-footer-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 9px;
+  border: 0;
+  border-radius: var(--ch-radius-sm);
+  background: transparent;
+  color: var(--ch-muted);
+  font: 500 var(--ch-ui-xs) var(--ch-font-ui);
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.ch-footer-button:hover,
+.ch-footer-button:focus-visible {
+  color: var(--ch-ink);
+  box-shadow: var(--ch-raise-s);
+  outline: none;
+}
+
+.ch-footer-button.is-on {
+  color: var(--ch-ink);
+  box-shadow: var(--ch-inset);
+}
+
+.ch-footer-button.is-display {
+  font: 500 var(--ch-ui-sm) var(--ch-font-text);
+}
+
+.ch-footer-button.is-mentor {
+  color: var(--ch-mentor);
+}
+
+/* The display sheet, above « Aa ». */
+.ch-display {
+  position: absolute;
+  right: 14px;
+  bottom: 44px;
+  z-index: var(--ch-z-note);
+  width: 21rem;
+  padding: 12px 14px;
+  font-size: 12.5px;
+  animation: ch-rise var(--ch-dur-note) var(--ch-ease) both;
+}
+
+.ch-app[data-mentor-panel] .ch-display {
+  right: calc(var(--ch-panel-w) + 36px);
+}
+
+.ch-display-title {
+  margin: 0 0 4px;
+}
+
+.ch-display-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 0;
+  color: var(--ch-ink-2);
+}
+
+.ch-display-label {
+  flex: 1;
+}
+
+.ch-display-choice.is-on {
+  box-shadow: var(--ch-inset);
+  color: var(--ch-ink);
+}

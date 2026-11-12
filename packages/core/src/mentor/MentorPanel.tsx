@@ -37,6 +37,9 @@ export interface MentorPanelProps {
   readonly conversation?: ReactNode;
   readonly header?: ReactNode;
   readonly active: boolean;
+  /** Nothing to deal with: what to do instead (ask for the Compagnon's opinion on the scene). */
+  readonly onAnalyze?: () => void;
+  readonly analyzeShortcut?: string | undefined;
 }
 
 /** A sheet proposal of the Compagnon waiting for the author (a whole entry, or one field). */
@@ -350,7 +353,17 @@ export function MentorPanel(props: MentorPanelProps) {
               </li>
             ))}
           </ul>
-          {flat.length === 0 && <p className="ch-points-empty">{t('mentor.noPoints')}</p>}
+          {flat.length === 0 && (
+            <div className="ch-points-empty">
+              <p>{t('mentor.noPoints')}</p>
+              {props.onAnalyze && (
+                <button type="button" className="ch-btn is-mentor" onClick={props.onAnalyze}>
+                  {t('mentor.askOpinion')}
+                  {props.analyzeShortcut && <kbd>{props.analyzeShortcut}</kbd>}
+                </button>
+              )}
+            </div>
+          )}
           <p className="ch-panel-hint">{t('mentor.pointsHint')}</p>
         </>
       )}

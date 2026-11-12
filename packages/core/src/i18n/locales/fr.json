@@ -5,7 +5,7 @@
     "openError": "Impossible d'ouvrir le projet."
   },
   "editor": {
-    "emptyScene": "Votre manuscrit commence ici.",
+    "emptyScene": "Écrivez ici. Le titre de la scène, celui du chapitre, tout se change plus tard.",
     "ariaLabel": "Texte de la scène"
   },
   "mentor": {
@@ -102,7 +102,8 @@
         "arcs": "Nouvel arc proposé."
       },
       "value": "Nouvelle valeur proposée."
-    }
+    },
+    "askOpinion": "Demander l’avis du Compagnon sur la scène"
   },
   "manuscript": {
     "defaultProjectTitle": "Mon roman",
@@ -210,7 +211,10 @@
     "sheetsGroup": "Fiches",
     "projectTitle": "Titre du projet",
     "variantCount_one": "{{count}} variante",
-    "variantCount_other": "{{count}} variantes"
+    "variantCount_other": "{{count}} variantes",
+    "recentGroup": "Utilisées récemment",
+    "suggestedGroup": "Pour commencer",
+    "allCommandsGroup": "Toutes les commandes"
   },
   "navigator": {
     "label": "Plan du manuscrit",
@@ -259,7 +263,8 @@
     "today_other": "+{{count, number}} aujourd’hui",
     "remarks_one": "{{count}} remarque du Compagnon",
     "remarks_other": "{{count}} remarques du Compagnon",
-    "saved": "Enregistré"
+    "saved": "Enregistré",
+    "enterKey": "Compagnon : saisir la clé"
   },
   "atelier": {
     "label": "Atelier",
@@ -283,10 +288,10 @@
     "listHint": "↑↓ parcourir · ↵ fiche · N nouveau · ⌫ corbeille · V valider · X rejeter · / filtrer",
     "filter": "Filtrer…",
     "emptyList": {
-      "characters": "Aucun personnage. N en crée un.",
+      "characters": "Aucun personnage pour l’instant. Créez-en un avec « + Nouveau personnage » ou la touche N.",
       "structure": "",
-      "worldRules": "Aucune règle du monde. N en crée une.",
-      "clues": "Aucun indice. N en crée un.",
+      "worldRules": "Aucune règle du monde pour l’instant. Créez-en une avec « + Nouvelle règle du monde » ou la touche N.",
+      "clues": "Aucun indice pour l’instant. Créez-en un avec « + Nouvel indice » ou la touche N.",
       "meta": ""
     },
     "structureModel": "Modèle narratif",
@@ -477,7 +482,15 @@
     "inScene": "scène {{number}}",
     "filterKey": "/",
     "sheetPanel": "Fiche",
-    "sheetPanelHint": "↑↓ parcourir · ↵ modifier · ⌘⏎ ouvrir dans l’Atelier · Échap fermer"
+    "sheetPanelHint": "↑↓ parcourir · ↵ modifier · ⌘⏎ ouvrir dans l’Atelier · Échap fermer",
+    "newEntry": {
+      "characters": "+ Nouveau personnage",
+      "acts": "+ Nouvel acte",
+      "arcs": "+ Nouvel arc",
+      "worldRules": "+ Nouvelle règle du monde",
+      "clues": "+ Nouvel indice"
+    },
+    "newKeyHint": "Nouvelle entrée (N)"
   },
   "overview": {
     "label": "Vue d’ensemble du manuscrit",
@@ -517,5 +530,35 @@
     "chapter": "{{numeral}} · {{title}}",
     "scene": "{{rank}} · {{title}}",
     "variant": "Variante {{letter}}"
+  },
+  "entry": {
+    "manuscript": "Manuscrit",
+    "manuscriptTitle": "Manuscrit : chapitres et scènes",
+    "compagnon": "Compagnon",
+    "compagnonTitle": "Compagnon : points à traiter et conversation",
+    "modes": "Écrire ↔ Atelier",
+    "write": "Écrire",
+    "atelier": "Atelier",
+    "commandZone": "Que voulez-vous faire ?",
+    "commandZoneTitle": "Ligne de commande",
+    "display": "Aa",
+    "displayTitle": "Affichage : taille, colonne, focus, thème"
+  },
+  "display": {
+    "title": "Affichage",
+    "textSize": "Taille du texte",
+    "column": "Largeur de colonne",
+    "focus": "Mode focus",
+    "theme": "Thème",
+    "motion": "Réduire les animations",
+    "less": "−",
+    "more": "+",
+    "narrower": "←",
+    "wider": "→",
+    "yes": "Oui",
+    "no": "Non",
+    "system": "Système",
+    "light": "Clair",
+    "dark": "Sombre"
   }
 }

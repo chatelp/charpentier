@@ -125,10 +125,11 @@
   position: absolute;
   left: 22px;
   right: 22px;
-  bottom: 12px;
+  bottom: 8px;
   z-index: var(--ch-z-header);
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
   gap: var(--ch-space-4);
   color: var(--ch-muted);
   font-size: var(--ch-ui-xs);
@@ -142,8 +143,19 @@
 
 .ch-footer-right {
   display: flex;
-  align-items: baseline;
+  white-space: nowrap;
+  justify-content: flex-end;
+  align-items: center;
   gap: 14px;
+}
+
+.ch-footer-middle {
+  display: flex;
+  justify-content: center;
+}
+
+.ch-footer-words {
+  white-space: nowrap;
 }
 
 .ch-footer-today {

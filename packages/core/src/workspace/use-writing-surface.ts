@@ -63,3 +63,50 @@ export function useTypewriterScroll(
     };
   }, [editor, enabled, scroller]);
 }
+
+/** Keys that write or erase (not shortcuts, not moves). */
+const isWriting = (event: KeyboardEvent) =>
+  !event.metaKey &&
+  !event.ctrlKey &&
+  !event.altKey &&
+  (event.key.length === 1 || ['Backspace', 'Delete', 'Enter'].includes(event.key));
+
+/** After this pause the entry points come back by themselves. */
+export const TYPING_PAUSE_MS = 3000;
+
+/**
+ * True from the first keystroke in the text until the mouse moves, Échap is
+ * pressed or the author pauses (docs/DESIGN.md §4.8): the entry points fade
+ * meanwhile, the counter, state and pastilles stay.
+ */
+export function useTypingFade(editor: Editor | null): boolean {
+  const [typing, setTyping] = useState(false);
+  useEffect(() => {
+    if (!editor || editor.isDestroyed) return;
+    const dom = editor.view.dom;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const stop = () => {
+      clearTimeout(timer);
+      setTyping(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') return stop();
+      if (!isWriting(event)) return;
+      setTyping(true);
+      clearTimeout(timer);
+      timer = setTimeout(stop, TYPING_PAUSE_MS);
+    };
+    // A real move of the mouse (not the page scrolling under a still pointer).
+    const onMouseMove = (event: MouseEvent) => {
+      if (event.movementX !== 0 || event.movementY !== 0) stop();
+    };
+    dom.addEventListener('keydown', onKeyDown);
+    window.addEventListener('mousemove', onMouseMove);
+    return () => {
+      clearTimeout(timer);
+      dom.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('mousemove', onMouseMove);
+    };
+  }, [editor]);
+  return typing;
+}
