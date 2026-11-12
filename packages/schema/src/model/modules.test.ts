@@ -212,6 +212,7 @@ describe('« contredite » is derived from open conflict signals', () => {
     dismissSignal(doc, b);
     expect(agent.resolveOwnSignal(a)).toBe(true);
     expect(agent.resolveOwnSignal(b)).toBe(false);
-    expect(listSignals(doc).map((s) => s.state)).toEqual(['resolved', 'dismissed']);
+    const states = Object.fromEntries(listSignals(doc).map((s) => [s.id, s.state]));
+    expect(states).toEqual({ [a]: 'resolved', [b]: 'dismissed' });
   });
 });
