@@ -184,7 +184,8 @@
     "analyzeChapter": "Avis du Compagnon sur tout le chapitre",
     "reviewChapter": "Bilan du chapitre par le Compagnon",
     "analyzeManuscript": "Avis du Compagnon sur tout le manuscrit",
-    "toggleLightModel": "Remarques légères : Opus ou Haiku (moins cher)"
+    "toggleLightModel": "Remarques légères : Opus ou Haiku (moins cher)",
+    "replayTour": "Revoir la visite guidée"
   },
   "palette": {
     "label": "Ligne de commande",
@@ -560,5 +561,45 @@
     "system": "Système",
     "light": "Clair",
     "dark": "Sombre"
+  },
+  "welcome": {
+    "kind": "Bienvenue",
+    "title": "Je lis par-dessus votre épaule",
+    "body": "Je n’écrirai jamais une ligne de votre roman : je signale, j’explique, je pose des questions. Trois endroits à connaître :",
+    "places": {
+      "left": {
+        "where": "à gauche",
+        "what": ", le manuscrit : chapitres et scènes ;"
+      },
+      "right": {
+        "where": "à droite",
+        "what": ", mes remarques et notre conversation ;"
+      },
+      "bottom": {
+        "where": "en bas",
+        "what": ", « Que voulez-vous faire ? » : tapez ce que vous cherchez, tout y est."
+      }
+    },
+    "tour": "Faire le tour",
+    "tourKey": "⏎",
+    "later": "Plus tard",
+    "laterKey": "Échap"
+  },
+  "tour": {
+    "manuscript": {
+      "title": "Le manuscrit",
+      "text": "Vos chapitres et vos scènes. Cliquez une scène pour l’ouvrir ; « Plan » montre tout le roman d’un coup."
+    },
+    "compagnon": {
+      "title": "Le Compagnon",
+      "text": "Mes remarques sur la scène et le chapitre, et un fil pour me poser vos questions. Le chiffre dit combien de points attendent."
+    },
+    "commands": {
+      "title": "Que voulez-vous faire ?",
+      "text": "Tapez un mot : « variante », « Hélène », « chapitre 3 »… Toute action de l’app est là, avec son raccourci, pour l’apprendre en passant."
+    },
+    "next": "Suivant",
+    "done": "Terminer",
+    "step": "{{step}} / {{count}}"
   }
 }

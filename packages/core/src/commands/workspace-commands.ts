@@ -126,6 +126,11 @@ export const workspaceCommands: readonly WorkspaceCommand[] = [
     run: (ctx) => ctx.openPalette({ kind: 'commands' }),
   },
   {
+    id: 'replayTour',
+    scope: 'global',
+    run: (ctx) => ctx.startTour(),
+  },
+  {
     id: 'toggleNavigator',
     scope: 'global',
     keybinding: 'Mod-j',

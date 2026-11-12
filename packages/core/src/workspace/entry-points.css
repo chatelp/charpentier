@@ -209,3 +209,58 @@
   box-shadow: var(--ch-inset);
   color: var(--ch-ink);
 }
+
+/* First launch: the welcome note and the guided tour. */
+.ch-welcome-places {
+  margin: 8px 0 4px;
+  padding-left: 18px;
+  color: var(--ch-ink-2);
+  font-size: var(--ch-ui-sm);
+  line-height: 1.5;
+}
+
+.ch-welcome-places li + li {
+  margin-top: 4px;
+}
+
+.ch-welcome-places b {
+  font-weight: 600;
+}
+
+/* (Over the hover and focus styles, which remove the outline.) */
+.ch-tour-on {
+  outline: 2px solid var(--ch-mentor) !important;
+  outline-offset: 4px;
+  opacity: 1 !important;
+}
+
+.ch-tip {
+  position: fixed;
+  z-index: var(--ch-z-command, 6);
+  width: 17rem;
+  padding: 12px 14px;
+  border-radius: var(--ch-radius-md);
+  color: var(--ch-ink-2);
+  font-size: var(--ch-ui-sm);
+  line-height: 1.45;
+  outline: none;
+  animation: ch-rise var(--ch-dur-note) var(--ch-ease) both;
+}
+
+.ch-tip p {
+  margin: 0;
+}
+
+.ch-tip-title {
+  margin-bottom: 4px !important;
+  color: var(--ch-mentor);
+  font: 500 13.5px var(--ch-font-text);
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.08em;
+}
+
+.ch-tip-step {
+  margin-left: auto;
+  color: var(--ch-faint);
+  font-size: var(--ch-ui-2xs);
+}

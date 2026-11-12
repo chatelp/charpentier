@@ -41,6 +41,7 @@ import type { PaletteRequest, PaletteScope } from '../palette/palette-request';
 import { lastScenePref, type ProjectSession } from './default-scene';
 import { panelsPref, readPanels, type StoredPanels } from './panels-pref';
 import { CommandZone, DisplaySheet, EdgeHandle, ModeSwitch } from './EntryPoints';
+import { GuidedTour, WELCOMED_PREF, WelcomeNote } from './Onboarding';
 import { SceneHeader, SceneOpener, WritingFooter } from './SceneChrome';
 import { useSceneDocs } from './use-scene-docs';
 import { useTypingFade, useTypewriterScroll, useWordCount } from './use-writing-surface';
@@ -152,6 +153,55 @@ export function ProjectWorkspace({
   };
   // The display sheet behind « Aa ».
   const [displayOpen, setDisplayOpen] = useState(false);
+  // First launch: the Compagnon's welcome, then (on request) the guided tour.
+  const [welcome, setWelcome] = useState(false);
+  const [touring, setTouring] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    void platform.preferences.get<unknown>(WELCOMED_PREF).then((welcomed) => {
+      if (!cancelled && welcomed !== true) setWelcome(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [platform]);
+  const closeWelcome = useCallback(() => {
+    setWelcome(false);
+    void platform.preferences.set(WELCOMED_PREF, true);
+  }, [platform]);
+  const startTour = useCallback(() => {
+    closeWelcome();
+    setNavigatorOpen(false);
+    setMentorPanelState(null);
+    setSheetPanel(null);
+    setDisplayOpen(false);
+    setView('write');
+    setTouring(true);
+  }, [closeWelcome]);
+  // The welcome leaves the cursor in the text: there ⏎ starts the tour, Échap
+  // or the first letter typed puts it off.
+  useEffect(() => {
+    if (!welcome || !editor || editor.isDestroyed) return;
+    const dom = editor.view.dom;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+      if (event.key === 'Enter') {
+        // Not a new paragraph: the editor's own listener on this element must not see it.
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        startTour();
+      } else if (event.key === 'Escape' || event.key.length === 1) closeWelcome();
+    };
+    dom.addEventListener('keydown', onKeyDown, true);
+    return () => dom.removeEventListener('keydown', onKeyDown, true);
+  }, [welcome, editor, startTour, closeWelcome]);
+  const [welcomeTop, setWelcomeTop] = useState(0);
+  useLayoutEffect(() => {
+    if (!welcome || !editor || editor.isDestroyed || !page.current) return;
+    setWelcomeTop(
+      editor.view.dom.getBoundingClientRect().top - page.current.getBoundingClientRect().top,
+    );
+  }, [welcome, editor]);
   // While typing, the entry points fade (docs/DESIGN.md §4.8).
   const typing = useTypingFade(editor);
   // A remark to show once its scene's editor is ready (going there from the panel).
@@ -358,6 +408,7 @@ export function ProjectWorkspace({
       setView('overview');
     },
     toggleNavigator: () => setNavigatorOpen((open) => !open),
+    startTour,
     mentorPanel,
     toggleMentorPanel: (tab = 'points') => setMentorPanel((open) => (open === tab ? null : tab)),
     openSignalNote: (id) => marks.openNote(id, true),
@@ -518,7 +569,7 @@ export function ProjectWorkspace({
       className="ch-app"
       style={surfaceStyle}
       data-view={view}
-      data-typing={(typing && view === 'write' && !displayOpen) || undefined}
+      data-typing={(typing && view === 'write' && !displayOpen && !touring) || undefined}
       data-focus={prefs.focusMode || undefined}
       data-typewriter={prefs.typewriter || undefined}
       data-mentor-panel={mentorPanel ?? (sheetPanel ? 'sheet' : undefined)}
@@ -579,6 +630,16 @@ export function ProjectWorkspace({
               languageCheck={languageCheck}
               signals={marks.signalOptions}
               names={nameOptions}
+            />
+          )}
+          {welcome && !touring && !mentorPanel && !marks.noteSignal && (
+            <WelcomeNote
+              style={{ top: welcomeTop }}
+              onTour={startTour}
+              onLater={() => {
+                closeWelcome();
+                focusTextIfIdle();
+              }}
             />
           )}
           {marks.noteSignal && marks.noteTop !== null && !mentorPanel && (
@@ -787,6 +848,19 @@ export function ProjectWorkspace({
           signals={marks.openSignals}
           onClose={() => {
             setNavigatorOpen(false);
+            focusTextIfIdle();
+          }}
+        />
+      )}
+      {touring && (
+        <GuidedTour
+          shortcuts={{
+            1: registry.shortcutLabel('toggleNavigator'),
+            2: registry.shortcutLabel('toggleMentorPanel'),
+            3: registry.shortcutLabel('openPalette'),
+          }}
+          onDone={() => {
+            setTouring(false);
             focusTextIfIdle();
           }}
         />

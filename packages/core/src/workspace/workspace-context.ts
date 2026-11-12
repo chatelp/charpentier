@@ -25,6 +25,8 @@ export interface WorkspaceContext {
   openScene(sceneId: string): void;
   openPalette(request?: PaletteRequest): void;
   toggleNavigator(): void;
+  /** Plays the guided tour of the entry points again (docs/DESIGN.md §4.8). */
+  startTour(): void;
   /** The right panel of the Compagnon, if open, on which tab. */
   readonly mentorPanel: 'points' | 'conversation' | null;
   toggleMentorPanel(tab?: 'points' | 'conversation'): void;

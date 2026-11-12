@@ -104,4 +104,37 @@ describe('entry points (docs/DESIGN.md §4.8)', () => {
     render(<App platform={setup(prefs, docs).platform} i18n={await createI18n('fr')} />);
     await screen.findByRole('complementary', { name: 'Le Compagnon' });
   });
+
+  it('welcomes the author on the first launch and shows them around', async () => {
+    const { platform, prefs } = setup();
+    const editor = await open(platform);
+    expect(screen.getByRole('complementary', { name: 'Bienvenue' })).toBeTruthy();
+    // ⏎ in the text starts the tour (no new paragraph).
+    await userEvent.keyboard('{Enter}');
+    await screen.findByRole('dialog', { name: 'Le manuscrit' });
+    expect(document.querySelector('.ch-edge.is-left')?.classList).toContain('ch-tour-on');
+    await userEvent.keyboard('{Enter}');
+    await screen.findByRole('dialog', { name: 'Le Compagnon' });
+    await userEvent.keyboard('{Enter}');
+    await screen.findByRole('dialog', { name: 'Que voulez-vous faire ?' });
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(screen.queryByRole('complementary', { name: 'Bienvenue' })).toBeNull();
+    expect(prefs.get('welcomed')).toBe(true);
+    expect(editor.querySelectorAll('p')).toHaveLength(1);
+  });
+
+  it('puts the welcome off at the first letter, and never shows it again', async () => {
+    const { platform, prefs, docs } = setup();
+    await open(platform);
+    await userEvent.keyboard('Il');
+    await waitFor(() =>
+      expect(screen.queryByRole('complementary', { name: 'Bienvenue' })).toBeNull(),
+    );
+    expect(prefs.get('welcomed')).toBe(true);
+    cleanup();
+    render(<App platform={setup(prefs, docs).platform} i18n={await createI18n('fr')} />);
+    await screen.findByRole('textbox', { name: 'Texte de la scène' });
+    expect(screen.queryByRole('complementary', { name: 'Bienvenue' })).toBeNull();
+  });
 });
