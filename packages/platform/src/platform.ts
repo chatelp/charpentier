@@ -37,4 +37,6 @@ export interface Platform {
    * window with integrated traffic lights), or 0.
    */
   readonly titleBarHeight?: number;
+  /** The window entered or left full screen (the title bar is then absent); returns an unsubscribe function. */
+  onFullScreenChange?(listener: (fullScreen: boolean) => void): () => void;
 }

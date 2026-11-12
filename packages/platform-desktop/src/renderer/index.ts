@@ -76,5 +76,9 @@ export function createDesktopPlatform(bridge: DesktopBridge): Platform {
     system: null,
     // docs/DESIGN.md §4.1: a 34 px title bar merged with the background.
     titleBarHeight: bridge.platform === 'darwin' ? 34 : 0,
+    onFullScreenChange: (listener) =>
+      bridge.onMessage((message) => {
+        if (message.type === 'host.fullScreen') listener(message.fullScreen);
+      }),
   };
 }

@@ -86,7 +86,9 @@ export interface Responses {
 export type Message =
   | { readonly type: 'doc.update'; readonly guid: string; readonly update: Uint8Array }
   /** The Compagnon's availability changed (main → renderer). */
-  | { readonly type: 'agents.status'; readonly status: LlmStatus };
+  | { readonly type: 'agents.status'; readonly status: LlmStatus }
+  /** The window entered or left full screen (main → renderer). */
+  | { readonly type: 'host.fullScreen'; readonly fullScreen: boolean };
 
 /** What the preload script exposes to the renderer as `window.charpentier`. */
 export interface DesktopBridge {

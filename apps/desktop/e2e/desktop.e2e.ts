@@ -249,4 +249,17 @@ describe('desktop app', () => {
       })
       .toBe(1);
   });
+
+  it.runIf(process.platform === 'darwin')('has no title bar in full screen', async () => {
+    const { app, window } = await launch(folders());
+    await expect.poll(() => window.locator('.ch-titlebar').count()).toBe(1);
+    await app.evaluate(({ BrowserWindow }) =>
+      BrowserWindow.getAllWindows()[0]?.setFullScreen(true),
+    );
+    await expect.poll(() => window.locator('.ch-titlebar').count(), { timeout: 10_000 }).toBe(0);
+    await app.evaluate(({ BrowserWindow }) =>
+      BrowserWindow.getAllWindows()[0]?.setFullScreen(false),
+    );
+    await expect.poll(() => window.locator('.ch-titlebar').count(), { timeout: 10_000 }).toBe(1);
+  });
 });

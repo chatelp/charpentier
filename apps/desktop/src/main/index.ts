@@ -202,6 +202,15 @@ function createWindow() {
     },
   });
   window.once('ready-to-show', () => window.show());
+  // docs/DESIGN.md §4.1: no title bar in full screen.
+  const sendFullScreen = () =>
+    window.webContents.send(IPC_MESSAGE, {
+      type: 'host.fullScreen',
+      fullScreen: window.isFullScreen(),
+    } satisfies Message);
+  window.on('enter-full-screen', sendFullScreen);
+  window.on('leave-full-screen', sendFullScreen);
+  window.webContents.on('did-finish-load', sendFullScreen);
   // Links never open inside the app; nothing navigates away from it.
   window.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https?:/.test(url)) void shell.openExternal(url);

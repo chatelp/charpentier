@@ -88,14 +88,15 @@ function Root() {
       ? ({ state: 'loading' } as const)
       : opening;
 
+  // The title bar, absent in full screen (docs/DESIGN.md §4.1).
+  const [fullScreen, setFullScreen] = useState(false);
+  useEffect(() => platform.onFullScreenChange?.(setFullScreen), [platform]);
+  const titleBarHeight = fullScreen ? 0 : (platform.titleBarHeight ?? 0);
   useEffect(() => {
-    document.documentElement.style.setProperty(
-      '--ch-titlebar-offset',
-      `${platform.titleBarHeight ?? 0}px`,
-    );
-  }, [platform]);
+    document.documentElement.style.setProperty('--ch-titlebar-offset', `${titleBarHeight}px`);
+  }, [titleBarHeight]);
 
-  const titleBar = platform.titleBarHeight ? (
+  const titleBar = titleBarHeight ? (
     <TitleBar root={shown.state === 'ready' ? shown.session.root : undefined} />
   ) : null;
 
