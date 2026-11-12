@@ -11,5 +11,7 @@
   "scripts": {
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.test.json"
   },
-  "dependencies": {}
+  "dependencies": {
+    "yjs": "^13.6.33"
+  }
 }
