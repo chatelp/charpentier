@@ -5,7 +5,10 @@
 Outil d'aide à l'écriture de romans piloté par des agents IA. Charpentier n'écrit pas le livre à votre place : il joue le rôle d'un romancier et éditeur expérimenté « par-dessus l'épaule », qui structure, vérifie la cohérence, pose des questions et explique le métier.
 
 - Spécification : [docs/SPEC.md](docs/SPEC.md)
+- Design language : [docs/DESIGN.md](docs/DESIGN.md)
 - Plan de construction : [docs/PLAN.md](docs/PLAN.md)
+
+Les polices embarquées (Literata, Inter) restent sous leur propre licence, la SIL Open Font License 1.1 : voir [packages/core/src/fonts](packages/core/src/fonts/README.md).
 
 ## Développement
 
