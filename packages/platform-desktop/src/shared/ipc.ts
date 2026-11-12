@@ -2,6 +2,7 @@ import type {
   ApiKeyResult,
   AskResult,
   LlmStatus,
+  MenuModel,
   ProjectKind,
   ProjectSummary,
 } from '@charpentier/platform';
@@ -53,7 +54,8 @@ export type Request =
   // Handled by the Electron host itself (dialogs, Finder).
   | { readonly type: 'host.libraryFolder' }
   | { readonly type: 'host.chooseLibraryFolder' }
-  | { readonly type: 'host.revealLibraryFolder' };
+  | { readonly type: 'host.revealLibraryFolder' }
+  | { readonly type: 'host.setMenu'; readonly model: MenuModel };
 
 export interface Responses {
   'doc.open': { readonly state: Uint8Array };
@@ -80,6 +82,7 @@ export interface Responses {
   'host.libraryFolder': string;
   'host.chooseLibraryFolder': boolean;
   'host.revealLibraryFolder': null;
+  'host.setMenu': null;
 }
 
 /** One-way messages, in both directions. */
@@ -88,7 +91,9 @@ export type Message =
   /** The Compagnon's availability changed (main → renderer). */
   | { readonly type: 'agents.status'; readonly status: LlmStatus }
   /** The window entered or left full screen (main → renderer). */
-  | { readonly type: 'host.fullScreen'; readonly fullScreen: boolean };
+  | { readonly type: 'host.fullScreen'; readonly fullScreen: boolean }
+  /** A command was chosen in the application menu (main → renderer). */
+  | { readonly type: 'host.menuCommand'; readonly id: string };
 
 /** What the preload script exposes to the renderer as `window.charpentier`. */
 export interface DesktopBridge {
@@ -101,3 +106,5 @@ export interface DesktopBridge {
 
 export const IPC_INVOKE = 'charpentier:invoke';
 export const IPC_MESSAGE = 'charpentier:message';
+
+export type { MenuModel };

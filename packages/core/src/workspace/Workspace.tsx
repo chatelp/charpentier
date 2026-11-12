@@ -30,6 +30,7 @@ import { placedSignals } from '../mentor/signal-decorations';
 import { useMentorMarks } from '../mentor/use-mentor-marks';
 import '../mentor/mentor.css';
 import { variantLabel } from '../commands/variant-commands';
+import { buildMenuModel } from '../commands/menu-model';
 import { createWorkspaceRegistry } from '../commands/workspace-commands';
 import { createLanguageChecker } from '../language/checker';
 import { knownWordsOf } from '../language/known-words';
@@ -452,6 +453,13 @@ export function ProjectWorkspace({
     window.addEventListener('keydown', onKeyDown, true);
     return () => window.removeEventListener('keydown', onKeyDown, true);
   }, [registry]);
+  // The host's application menu (macOS menu bar): every command, chosen with the mouse.
+  useEffect(() => {
+    const menu = platform.menu;
+    if (!menu) return;
+    menu.set(buildMenuModel(registry, t));
+    return menu.onCommand((id) => void registry.execute(id, latest.current));
+  }, [platform, registry, t]);
 
   // Back to the text whenever nothing else holds the focus. Synchronous on
   // purpose: TipTap's `focus()` waits a frame and could then take the focus

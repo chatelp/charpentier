@@ -5,6 +5,7 @@ export type * from './documents';
 export type * from './file-mirror';
 export type * from './keybindings';
 export type * from './llm';
+export type * from './menu';
 export type * from './platform';
 export type * from './secrets';
 export type * from './spellcheck';

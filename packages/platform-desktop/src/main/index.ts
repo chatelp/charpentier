@@ -4,6 +4,7 @@ export { DocStore, type UpdateListener } from './doc-store';
 export { PreferencesFile } from './preferences';
 export { documentLocator, folderName, FolderLibrary, STATE_DIR } from './projects';
 export { RendererSession } from './renderer-session';
+export { toAccelerator } from './accelerator';
 export { SpellClient } from './spell-client';
 export { AgentHost, API_KEY_SECRET } from './agent-host';
 export { AnthropicLlmService, HAIKU, OPUS, type ModelChoice } from './anthropic-llm';

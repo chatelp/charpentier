@@ -3,6 +3,7 @@ import type { DocumentService } from './documents';
 import type { FileMirrorService } from './file-mirror';
 import type { KeybindingsService } from './keybindings';
 import type { LlmService } from './llm';
+import type { MenuService } from './menu';
 import type { SecretsService } from './secrets';
 import type { SpellcheckService } from './spellcheck';
 import type { LibraryFolderService, LibraryService, PreferencesService } from './storage';
@@ -39,4 +40,6 @@ export interface Platform {
   readonly titleBarHeight?: number;
   /** The window entered or left full screen (the title bar is then absent); returns an unsubscribe function. */
   onFullScreenChange?(listener: (fullScreen: boolean) => void): () => void;
+  /** The application menu (macOS menu bar); absent where the host has none. */
+  readonly menu?: MenuService;
 }

@@ -601,5 +601,32 @@
     "next": "Suivant",
     "done": "Terminer",
     "step": "{{step}} / {{count}}"
+  },
+  "menu": {
+    "app": "Charpentier",
+    "file": "Fichier",
+    "edit": "Édition",
+    "scene": "Scène",
+    "manuscript": "Manuscrit",
+    "atelier": "Atelier",
+    "compagnon": "Compagnon",
+    "view": "Présentation",
+    "window": "Fenêtre",
+    "help": "Aide",
+    "whatToDo": "Que voulez-vous faire ?",
+    "roles": {
+      "about": "À propos de Charpentier",
+      "hide": "Masquer Charpentier",
+      "hideOthers": "Masquer les autres",
+      "quit": "Quitter Charpentier",
+      "cut": "Couper",
+      "copy": "Copier",
+      "paste": "Coller",
+      "selectAll": "Tout sélectionner",
+      "minimize": "Réduire",
+      "zoom": "Zoom",
+      "close": "Fermer la fenêtre",
+      "togglefullscreen": "Plein écran"
+    }
   }
 }

@@ -262,4 +262,40 @@ describe('desktop app', () => {
     );
     await expect.poll(() => window.locator('.ch-titlebar').count(), { timeout: 10_000 }).toBe(1);
   });
+
+  it.runIf(process.platform === 'darwin')(
+    'has a full menu bar whose items run the commands',
+    async () => {
+      const { app, window } = await launch(folders());
+      const menus = async () =>
+        app.evaluate(({ Menu }) =>
+          (Menu.getApplicationMenu()?.items ?? []).map((m) => ({
+            label: m.label,
+            items: (m.submenu?.items ?? []).map((i) => `${i.label}|${i.accelerator ?? ''}`),
+          })),
+        );
+      await expect
+        .poll(async () => (await menus()).map((m) => m.label).slice(1))
+        .toEqual([
+          'Fichier',
+          'Édition',
+          'Scène',
+          'Manuscrit',
+          'Atelier',
+          'Compagnon',
+          'Présentation',
+          'Fenêtre',
+          'Aide',
+        ]);
+      const manuscript = (await menus()).find((m) => m.label === 'Manuscrit');
+      expect(manuscript?.items[0]).toBe('Afficher ou masquer le manuscrit|Command+J');
+
+      // Choosing « Manuscrit › … » with the mouse opens the drawer.
+      await app.evaluate(({ Menu }) => {
+        const item = Menu.getApplicationMenu()?.items.find((m) => m.label === 'Manuscrit');
+        item?.submenu?.items[0]?.click();
+      });
+      await window.getByRole('complementary', { name: 'Plan du manuscrit' }).waitFor();
+    },
+  );
 });

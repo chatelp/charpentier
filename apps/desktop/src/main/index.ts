@@ -33,7 +33,7 @@ import {
   type Message,
   type Request,
 } from '@charpentier/platform-desktop/shared';
-import { appMenu } from './menu';
+import { appMenu, commandMenu } from './menu';
 import spellWorkerPath from '@charpentier/platform-desktop/main/spell-worker?modulePath';
 
 /** The library folder: `CHARPENTIER_LIBRARY` (tests), the saved choice, or ~/Documents/Charpentier. */
@@ -155,6 +155,20 @@ ipcMain.handle(IPC_INVOKE, async (event, request: Request) => {
   switch (request.type) {
     case 'host.libraryFolder':
       return libraryFolder;
+    case 'host.setMenu':
+      // The menu bar is macOS's; elsewhere the command zone stands in for it.
+      if (process.platform === 'darwin')
+        Menu.setApplicationMenu(
+          commandMenu(request.model, (id) =>
+            (
+              BrowserWindow.getFocusedWindow() ?? BrowserWindow.fromWebContents(event.sender)
+            )?.webContents.send(IPC_MESSAGE, {
+              type: 'host.menuCommand',
+              id,
+            } satisfies Message),
+          ),
+        );
+      return null;
     case 'host.revealLibraryFolder':
       await shell.openPath(libraryFolder);
       return null;

@@ -86,6 +86,16 @@ export class CommandRegistry<Ctx> {
     return this.#entries.map((e) => e.command).filter((c) => c.isEnabled?.(ctx) ?? true);
   }
 
+  /** Every command id, in registration order. */
+  ids(): string[] {
+    return this.#entries.map((e) => e.command.id);
+  }
+
+  /** The shortcut shown for a command (its first bound one), for a host's menus. */
+  chord(id: string): Chord | undefined {
+    return this.#entries.find((e) => e.command.id === id)?.chords[0];
+  }
+
   shortcutLabel(id: string): string | undefined {
     const chord = this.#entries.find((e) => e.command.id === id)?.chords[0];
     return chord && formatChord(chord, this.primary);
