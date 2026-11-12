@@ -13,3 +13,10 @@ export {
 export { chatAnswerSchema, compagnonSystemPrompt, type MentorLevel } from './prompts';
 export { answerAuthor } from './conversation';
 export { sceneContext, sheetsSummary } from './context';
+export {
+  analysisSchema,
+  analyzeScene,
+  applyAnalysis,
+  remarkKindsFor,
+  type AnalysisResult,
+} from './analysis';

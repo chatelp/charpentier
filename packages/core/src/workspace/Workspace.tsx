@@ -1,4 +1,4 @@
-import { readOutline } from '@charpentier/schema';
+import { readMentorLevel, readOutline } from '@charpentier/schema';
 import type { Editor } from '@tiptap/core';
 import {
   useCallback,
@@ -16,6 +16,7 @@ import { Atelier, type AtelierLocation } from '../atelier/Atelier';
 import { sheetScope } from '../atelier/sheet-scope';
 import { Overview } from '../overview/Overview';
 import { Conversation } from '../mentor/Conversation';
+import { InterventionSlider } from '../mentor/InterventionSlider';
 import { MentorPanel } from '../mentor/MentorPanel';
 import { SignalNote } from '../mentor/SignalNote';
 import { placedSignals } from '../mentor/signal-decorations';
@@ -74,6 +75,9 @@ export function ProjectWorkspace({
     [platform],
   );
   const outline = useDocSnapshot(root, readOutline);
+  const mentorLevel = useDocSnapshot(root, readMentorLevel);
+  // The editor is rebuilt only when the language check turns on or off, not at every level.
+  const languageOn = mentorLevel > 1;
   const scenes = outline.flatMap((c) => c.scenes);
   // The requested scene may vanish (trashed on another device): fall back to the first one.
   const scene = scenes.find((s) => s.id === requestedSceneId) ?? scenes[0];
@@ -91,12 +95,15 @@ export function ProjectWorkspace({
   const words = useWordCount(editor);
   const languageCheck = useMemo(
     () =>
-      createLanguageChecker({
-        spellcheck: platform.spellcheck,
-        language,
-        knownWords: () => knownWordsOf(root),
-      }),
-    [platform, language, root],
+      // Level 1 « Discret »: nothing while writing (D-19).
+      !languageOn
+        ? null
+        : createLanguageChecker({
+            spellcheck: platform.spellcheck,
+            language,
+            knownWords: () => knownWordsOf(root),
+          }),
+    [platform, language, root, languageOn],
   );
   useTypewriterScroll(editor, scroller, prefs.typewriter);
   const marks = useMentorMarks({
@@ -105,8 +112,44 @@ export function ProjectWorkspace({
     variantId: scene?.activeVariantId ?? '',
     editor,
     page,
-    pauseMs: 1500,
+    // D-19: the pause before a note unfolds by itself, by level.
+    pauseMs: mentorLevel === 1 ? null : mentorLevel === 2 ? 3000 : 1500,
   });
+
+  // ─── When the Compagnon reads (D-19) ───
+  const analyze = useCallback(
+    (sceneIds: readonly string[], automatic: boolean) => {
+      if (sceneIds.length === 0) return;
+      void platform.agents.analyze({ projectId, sceneIds, automatic }).then((result) => {
+        if (!automatic && result !== 'answered')
+          setStatus({ key: ++paletteSequence, text: t(`mentor.ask.${result}`) });
+        if (!automatic && result === 'answered')
+          setStatus({ key: ++paletteSequence, text: t('mentor.analysisDone') });
+      });
+    },
+    [platform, projectId, t],
+  );
+  // Leaving a scene (level 2 and up) analyses it.
+  const previousScene = useRef(sceneId);
+  useEffect(() => {
+    const left = previousScene.current;
+    previousScene.current = sceneId;
+    if (left !== sceneId && mentorLevel >= 2 && agentsStatus === 'available') analyze([left], true);
+  }, [sceneId, mentorLevel, agentsStatus, analyze]);
+  // Two minutes without writing (level 3 and up) analyses the open scene.
+  useEffect(() => {
+    if (!editor || mentorLevel < 3 || agentsStatus !== 'available') return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const onUpdate = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => analyze([sceneId], true), 120_000);
+    };
+    editor.on('update', onUpdate);
+    return () => {
+      clearTimeout(timer);
+      editor.off('update', onUpdate);
+    };
+  }, [editor, mentorLevel, agentsStatus, sceneId, analyze]);
 
   // Going to a remark in another scene: once its editor is there, select the passage.
   const { openNote, sceneSignals } = marks;
@@ -166,6 +209,8 @@ export function ProjectWorkspace({
     mentorPanel,
     toggleMentorPanel: (tab = 'points') => setMentorPanel((open) => (open === tab ? null : tab)),
     openSignalNote: (id) => marks.openNote(id, true),
+    mentorLevel,
+    analyze,
     shortcutLabel: (id) => registry.shortcutLabel(id),
     notify,
     prefs,
@@ -211,12 +256,13 @@ export function ProjectWorkspace({
       editor !== lastFocusedEditor.current &&
       !palette &&
       !navigatorOpen &&
+      !mentorPanel &&
       view === 'write'
     ) {
       lastFocusedEditor.current = editor;
       editor.commands.focus('end');
     }
-  }, [editor, palette, navigatorOpen, view]);
+  }, [editor, palette, navigatorOpen, view, mentorPanel]);
 
   // Back from the Atelier: the text, cursor where it was.
   const previousView = useRef(view);
@@ -300,6 +346,7 @@ export function ProjectWorkspace({
       data-focus={prefs.focusMode || undefined}
       data-typewriter={prefs.typewriter || undefined}
       data-mentor-panel={mentorPanel ?? undefined}
+      data-mentor-level={mentorLevel}
     >
       <div
         ref={scroller}
@@ -333,6 +380,45 @@ export function ProjectWorkspace({
               signal={marks.noteSignal}
               style={{ top: marks.noteTop }}
               focus={marks.note?.focus ?? false}
+              onFixText={() => {
+                const placed =
+                  editor &&
+                  placedSignals(editor.state).find((p) => p.signal.id === marks.noteSignal?.id);
+                if (editor && placed)
+                  editor
+                    .chain()
+                    .focus()
+                    .setTextSelection({ from: placed.from, to: placed.to })
+                    .run();
+              }}
+              onUpdateSheet={(ref) =>
+                ctx.openAtelier({
+                  rail:
+                    ref.module === 'acts' || ref.module === 'arcs' || ref.module === 'structure'
+                      ? 'structure'
+                      : ref.module,
+                  target: {
+                    module: ref.module,
+                    ...('entityId' in ref && { entityId: ref.entityId }),
+                  },
+                })
+              }
+              onApplyCorrection={(text) => {
+                const placed =
+                  editor &&
+                  placedSignals(editor.state).find((p) => p.signal.id === marks.noteSignal?.id);
+                if (editor && placed)
+                  editor
+                    .chain()
+                    .focus()
+                    .insertContentAt({ from: placed.from, to: placed.to }, text)
+                    .run();
+              }}
+              onInsertExample={(text) => {
+                if (!editor || editor.isDestroyed) return;
+                editor.chain().focus().insertContent(text).run();
+                notify(t('mentor.exampleInserted'));
+              }}
               onClose={(backToText) => {
                 marks.closeNote();
                 if (backToText) focusTextIfIdle();
@@ -365,6 +451,7 @@ export function ProjectWorkspace({
           }
           tab={mentorPanel}
           onTab={setMentorPanel}
+          header={<InterventionSlider root={root} level={mentorLevel} />}
           conversation={
             <Conversation
               projectId={projectId}

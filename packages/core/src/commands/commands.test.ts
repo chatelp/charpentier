@@ -151,7 +151,9 @@ describe('workspace commands', () => {
       `${mod}-Shift-t`,
       `${mod}-l`,
       ...Array.from({ length: 9 }, (_, i) => `${mod}-${i + 1}`),
-      ...(apple ? ['Meta-q', 'Meta-Alt-ArrowLeft', 'Meta-Alt-ArrowRight'] : ['Control-Tab']),
+      ...(apple
+        ? ['Meta-q', 'Meta-Shift-a', 'Meta-Alt-ArrowLeft', 'Meta-Alt-ArrowRight']
+        : ['Control-Tab']),
     ];
     expect(() => createWorkspaceRegistry('Meta', reserved('Meta', true))).not.toThrow();
     expect(() => createWorkspaceRegistry('Control', reserved('Control', false))).not.toThrow();

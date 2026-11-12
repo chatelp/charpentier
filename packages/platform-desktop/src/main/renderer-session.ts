@@ -81,6 +81,9 @@ export class RendererSession {
       case 'agents.setKey':
       case 'agents.forgetKey':
       case 'agents.ask':
+      case 'agents.analyze':
+      case 'agents.lightModel':
+      case 'agents.setLightModel':
         if (!this.services.agents) throw new Error('No agents in this host');
         return this.services.agents.handle(request);
       default:

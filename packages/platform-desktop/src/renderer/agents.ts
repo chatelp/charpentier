@@ -38,6 +38,22 @@ export class IpcAgentsService implements AgentsService {
     return this.bridge.invoke({ type: 'agents.ask', ...input });
   }
 
+  analyze(input: {
+    readonly projectId: string;
+    readonly sceneIds: readonly string[];
+    readonly automatic: boolean;
+  }) {
+    return this.bridge.invoke({ type: 'agents.analyze', ...input });
+  }
+
+  lightModel() {
+    return this.bridge.invoke({ type: 'agents.lightModel' });
+  }
+
+  async setLightModel(model: 'opus' | 'haiku') {
+    await this.bridge.invoke({ type: 'agents.setLightModel', model });
+  }
+
   async forgetApiKey() {
     await this.bridge.invoke({ type: 'agents.forgetKey' });
     this.#set(await this.bridge.invoke({ type: 'agents.status' }));

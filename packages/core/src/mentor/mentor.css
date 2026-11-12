@@ -337,3 +337,63 @@
   font-size: 13.5px;
   line-height: 1.45;
 }
+
+/* ── Intervention slider ── */
+.ch-slider-block {
+  margin: 6px 18px 4px;
+}
+
+.ch-slider {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  padding: 5px;
+  border-radius: var(--ch-radius-md);
+  box-shadow: var(--ch-inset);
+  outline: none;
+}
+
+.ch-slider:focus-visible {
+  box-shadow:
+    var(--ch-inset),
+    inset 0 0 0 1.5px var(--ch-author);
+}
+
+.ch-slider-step {
+  height: 12px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.ch-slider-step.is-on {
+  background: var(--ch-bg);
+  box-shadow: var(--ch-raise-s);
+}
+
+.ch-slider-step.is-on::after {
+  content: '';
+  display: block;
+  width: 6px;
+  height: 6px;
+  margin: 3px auto;
+  border-radius: 50%;
+  background: var(--ch-author);
+}
+
+.ch-slider-name {
+  margin: 6px 0 0;
+  color: var(--ch-author);
+}
+
+.ch-slider-what {
+  margin: 2px 0 0;
+  color: var(--ch-muted);
+  font-size: var(--ch-ui-xs);
+}
+
+/* Level 1 « Discret »: nothing in the margin while writing. */
+[data-mentor-level='1'] .ch-pastille {
+  display: none;
+}

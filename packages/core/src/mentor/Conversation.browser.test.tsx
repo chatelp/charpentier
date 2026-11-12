@@ -39,6 +39,9 @@ describe('conversation with the Compagnon', () => {
         onStatusChange: () => () => {},
         setApiKey: async () => 'saved',
         forgetApiKey: async () => {},
+        analyze: async () => 'answered',
+        lightModel: async () => 'opus',
+        setLightModel: async () => {},
         // What the main process does: answer in the mentor document.
         ask: async ({ projectId }) => {
           const mentor = doc(guids.mentor(projectId));

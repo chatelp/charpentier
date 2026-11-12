@@ -63,6 +63,32 @@
       "offline": "Pas de réseau : le Compagnon répondra quand la connexion reviendra.",
       "refused": "Le Compagnon n’a pas pu répondre à cette demande.",
       "failed": "Le Compagnon n’a pas pu répondre. Réessayez dans un instant."
+    },
+    "fixText": "Corriger le texte",
+    "updateSheet": "Mettre à jour la fiche",
+    "applyCorrection": "Appliquer la correction",
+    "correctionLabel": "Correction proposée",
+    "analysing": "Le Compagnon lit…",
+    "analysisDone": "Le Compagnon a lu. Ses remarques sont dans la marge et dans les points (⌘L).",
+    "level": {
+      "label": "Intervention du Compagnon",
+      "changed": "Compagnon : {{name}}.",
+      "name": {
+        "1": "Discret",
+        "2": "Attentif",
+        "3": "Accompagnant",
+        "4": "Tuteur"
+      },
+      "what": {
+        "1": "Rien pendant l’écriture ; l’avis seulement quand vous le demandez.",
+        "2": "La langue et les incohérences évidentes ; il lit la scène quand vous la quittez.",
+        "3": "Aussi des remarques de métier ; il lit aussi après deux minutes de pause.",
+        "4": "Pédagogie complète : questions, exemples, encouragements."
+      }
+    },
+    "lightModel": {
+      "opus": "Remarques légères : Claude Opus.",
+      "haiku": "Remarques légères : Claude Haiku, moins cher."
     }
   },
   "manuscript": {
@@ -137,7 +163,13 @@
     "toggleMentorPanel": "Points à traiter et conversation",
     "setApiKey": "Saisir la clé d’API Anthropic du Compagnon…",
     "forgetApiKey": "Oublier la clé d’API Anthropic",
-    "talkToMentor": "Parler au Compagnon"
+    "talkToMentor": "Parler au Compagnon",
+    "moreHelp": "Plus d’aide du Compagnon",
+    "lessHelp": "Moins d’aide du Compagnon",
+    "analyzeScene": "Avis du Compagnon sur la scène",
+    "analyzeChapter": "Avis du Compagnon sur tout le chapitre",
+    "analyzeManuscript": "Avis du Compagnon sur tout le manuscrit",
+    "toggleLightModel": "Remarques légères : Opus ou Haiku (moins cher)"
   },
   "palette": {
     "label": "Ligne de commande",

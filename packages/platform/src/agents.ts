@@ -20,4 +20,17 @@ export interface AgentsService {
   forgetApiKey(): Promise<void>;
   /** Answers the author's last message of the conversation (docs/SPEC.md §6.7). */
   ask(input: { readonly projectId: string; readonly sceneId?: string }): Promise<AskResult>;
+  /**
+   * Analyses scenes (docs/SPEC.md §6.2): sheets proposals, conflicts, remarks.
+   * `automatic` skips scenes unchanged since their last analysis and may use
+   * the light model.
+   */
+  analyze(input: {
+    readonly projectId: string;
+    readonly sceneIds: readonly string[];
+    readonly automatic: boolean;
+  }): Promise<AskResult>;
+  /** D-20: the model of the light, frequent work. */
+  lightModel(): Promise<'opus' | 'haiku'>;
+  setLightModel(model: 'opus' | 'haiku'): Promise<void>;
 }

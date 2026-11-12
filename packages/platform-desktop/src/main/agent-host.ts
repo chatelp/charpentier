@@ -1,7 +1,15 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { answerAuthor } from '@charpentier/agents';
+import { analyzeScene, answerAuthor } from '@charpentier/agents';
 import type { ApiKeyResult, AskResult, LlmStatus } from '@charpentier/platform';
-import { guids } from '@charpentier/schema';
+import {
+  agentOrigin,
+  fragmentPlainText,
+  getScene,
+  guids,
+  hashEvidence,
+  readMentorLevel,
+  variantFragment,
+} from '@charpentier/schema';
 import type * as Y from 'yjs';
 import type { Request } from '../shared/ipc';
 import { LlmRefusalError, LlmUnconfiguredError, type AnthropicLlmService } from './anthropic-llm';
@@ -21,7 +29,76 @@ export class AgentHost {
     readonly llm: AnthropicLlmService,
     private readonly secrets: SecretStore,
     private readonly store: DocStore,
+    private readonly lightModel: {
+      get(): 'opus' | 'haiku';
+      set(model: 'opus' | 'haiku'): void;
+    } = { get: () => 'opus', set: () => {} },
   ) {}
+
+  /** One analysis at a time per project: automatic triggers queue behind it. */
+  readonly #running = new Map<string, Promise<unknown>>();
+
+  async #analyze(
+    projectId: string,
+    sceneIds: readonly string[],
+    automatic: boolean,
+  ): Promise<AskResult> {
+    if (this.llm.status() === 'unconfigured') return 'unavailable';
+    if (automatic && this.llm.status() === 'offline') return 'offline';
+    const previous = this.#running.get(projectId) ?? Promise.resolve();
+    const run = previous.then(() => this.#analyzeNow(projectId, sceneIds, automatic));
+    this.#running.set(
+      projectId,
+      run.catch(() => {}),
+    );
+    return run;
+  }
+
+  async #analyzeNow(
+    projectId: string,
+    sceneIds: readonly string[],
+    automatic: boolean,
+  ): Promise<AskResult> {
+    const rootGuid = guids.project(projectId);
+    const mentorGuid = guids.mentor(projectId);
+    try {
+      for (const sceneId of sceneIds) {
+        const sceneGuid = guids.scene(projectId, sceneId);
+        await this.#withDocs([rootGuid, mentorGuid, sceneGuid], async (docs) => {
+          const root = docs.get(rootGuid);
+          const mentorDoc = docs.get(mentorGuid);
+          const sceneDoc = docs.get(sceneGuid);
+          const scene = root && getScene(root, sceneId);
+          if (!root || !mentorDoc || !sceneDoc || !scene) return;
+          const level = readMentorLevel(root);
+          // What was analysed last: an unchanged scene is not analysed again automatically.
+          const text = fragmentPlainText(variantFragment(sceneDoc, scene.activeVariantId));
+          if (!text.trim()) return;
+          const digest = hashEvidence([
+            { sceneId, variantId: scene.activeVariantId, quote: `${level}|${text}` },
+          ]);
+          const analyses = mentorDoc.getMap<string>('analyses');
+          if (automatic && analyses.get(sceneId) === digest) return;
+          await analyzeScene({
+            llm: this.llm,
+            root,
+            sceneDoc,
+            sceneId,
+            level,
+            tier: automatic ? 'fast' : 'deep',
+          });
+          mentorDoc.transact(() => analyses.set(sceneId, digest), agentOrigin('scene-analysis'));
+        });
+      }
+      return 'answered';
+    } catch (error) {
+      if (error instanceof LlmUnconfiguredError) return 'unavailable';
+      if (error instanceof LlmRefusalError) return 'refused';
+      if (error instanceof Anthropic.APIConnectionError) return 'offline';
+      console.error('Charpentier: the scene analysis failed', error);
+      return 'failed';
+    }
+  }
 
   /** Holds the documents an agent needs for the time of its work. */
   async #withDocs<T>(
@@ -67,7 +144,9 @@ export class AgentHost {
     }
   }
 
-  async handle(request: AgentRequest): Promise<LlmStatus | ApiKeyResult | AskResult | null> {
+  async handle(
+    request: AgentRequest,
+  ): Promise<LlmStatus | ApiKeyResult | AskResult | 'opus' | 'haiku' | null> {
     switch (request.type) {
       case 'agents.status':
         return this.llm.status();
@@ -86,6 +165,13 @@ export class AgentHost {
         return null;
       case 'agents.ask':
         return this.#ask(request.projectId, request.sceneId);
+      case 'agents.analyze':
+        return this.#analyze(request.projectId, request.sceneIds, request.automatic);
+      case 'agents.lightModel':
+        return this.lightModel.get();
+      case 'agents.setLightModel':
+        this.lightModel.set(request.model);
+        return null;
     }
   }
 }

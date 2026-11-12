@@ -34,6 +34,11 @@ export interface Signal {
   readonly textAnchor?: TextAnchor;
   readonly fieldRef?: FieldRef;
   readonly suggestion?: { readonly kind: 'correction' | 'example'; readonly text: string };
+  /**
+   * Identity of the remark across analyses (kind, passage, sheet field):
+   * the same remark is not raised twice, and never again once dismissed.
+   */
+  readonly fingerprint?: string;
   readonly createdAt: string;
   readonly closedAt?: string;
 }

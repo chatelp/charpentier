@@ -1,4 +1,4 @@
-import { addToDictionary } from '@charpentier/schema';
+import { addToDictionary, setMentorLevel } from '@charpentier/schema';
 import {
   applyCorrection,
   issueAtCursor,
@@ -127,6 +127,69 @@ export const languageCommands: readonly LanguageCommand[] = [
     // ⌘L where the host allows it; a browser keeps ⌘L for its address bar.
     keybinding: ['Mod-l', 'Mod-Alt-l'],
     run: (ctx) => ctx.toggleMentorPanel('points'),
+  },
+  {
+    id: 'moreHelp',
+    scope: 'global',
+    isEnabled: (ctx) => ctx.mentorLevel < 4,
+    run: (ctx) => {
+      const level = (ctx.mentorLevel + 1) as 1 | 2 | 3 | 4;
+      setMentorLevel(ctx.root, level);
+      ctx.notify(ctx.t('mentor.level.changed', { name: ctx.t(`mentor.level.name.${level}`) }));
+    },
+  },
+  {
+    id: 'lessHelp',
+    scope: 'global',
+    isEnabled: (ctx) => ctx.mentorLevel > 1,
+    run: (ctx) => {
+      const level = (ctx.mentorLevel - 1) as 1 | 2 | 3 | 4;
+      setMentorLevel(ctx.root, level);
+      ctx.notify(ctx.t('mentor.level.changed', { name: ctx.t(`mentor.level.name.${level}`) }));
+    },
+  },
+  {
+    id: 'analyzeScene',
+    scope: 'global',
+    // ⌘⇧A (docs/DESIGN.md §5.3); a browser may keep it for searching its tabs.
+    keybinding: ['Mod-Shift-a', 'Mod-Alt-Shift-a'],
+    isEnabled: (ctx) => ctx.platform.agents.status() !== 'disabled',
+    run: (ctx) => {
+      ctx.notify(ctx.t('mentor.analysing'));
+      ctx.analyze([ctx.sceneId], false);
+    },
+  },
+  {
+    id: 'analyzeChapter',
+    scope: 'global',
+    isEnabled: (ctx) => ctx.platform.agents.status() !== 'disabled',
+    run: (ctx) => {
+      const chapter = ctx.outline.find((c) => c.scenes.some((s) => s.id === ctx.sceneId));
+      ctx.notify(ctx.t('mentor.analysing'));
+      ctx.analyze(chapter?.scenes.map((s) => s.id) ?? [], false);
+    },
+  },
+  {
+    id: 'analyzeManuscript',
+    scope: 'global',
+    isEnabled: (ctx) => ctx.platform.agents.status() !== 'disabled',
+    run: (ctx) => {
+      ctx.notify(ctx.t('mentor.analysing'));
+      ctx.analyze(
+        ctx.outline.flatMap((c) => c.scenes.map((s) => s.id)),
+        false,
+      );
+    },
+  },
+  {
+    id: 'toggleLightModel',
+    scope: 'global',
+    isEnabled: (ctx) => ctx.platform.agents.status() !== 'disabled',
+    run: async (ctx) => {
+      const next = (await ctx.platform.agents.lightModel()) === 'haiku' ? 'opus' : 'haiku';
+      await ctx.platform.agents.setLightModel(next);
+      ctx.notify(ctx.t(`mentor.lightModel.${next}`));
+    },
   },
   {
     id: 'talkToMentor',

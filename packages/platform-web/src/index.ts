@@ -14,6 +14,9 @@ const disabledAgents: AgentsService = {
   setApiKey: async () => 'invalid',
   forgetApiKey: async () => {},
   ask: async () => 'unavailable',
+  analyze: async () => 'unavailable',
+  lightModel: async () => 'opus',
+  setLightModel: async () => {},
 };
 
 const isApple = (userAgent: string) => /Mac|iPhone|iPad/.test(userAgent);
@@ -30,7 +33,9 @@ export function webReservedShortcuts(apple: boolean): string[] {
     `${mod}-Shift-t`,
     `${mod}-l`,
     ...tabs,
-    ...(apple ? ['Meta-q', 'Meta-Alt-ArrowLeft', 'Meta-Alt-ArrowRight'] : ['Control-Tab']),
+    ...(apple
+      ? ['Meta-q', 'Meta-Shift-a', 'Meta-Alt-ArrowLeft', 'Meta-Alt-ArrowRight']
+      : ['Control-Tab']),
   ];
 }
 

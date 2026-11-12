@@ -29,6 +29,9 @@ describe('<App>', () => {
         onStatusChange: () => () => {},
         setApiKey: async () => 'saved',
         forgetApiKey: async () => {},
+        analyze: async () => 'answered',
+        lightModel: async () => 'opus',
+        setLightModel: async () => {},
         ask: async () => 'answered',
       },
     });
