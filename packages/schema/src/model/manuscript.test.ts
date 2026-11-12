@@ -5,10 +5,16 @@ import {
   createScene,
   listChapters,
   listScenes,
+  listTrash,
   moveChapter,
+  moveChapterStep,
   moveScene,
+  moveSceneStep,
+  readOutline,
   renameScene,
   restoreScene,
+  restoreSceneWithChapter,
+  trashChapter,
   trashScene,
 } from './manuscript';
 import { readProjectMeta } from './project';
@@ -117,5 +123,49 @@ describe('manuscript tree under concurrent edits', () => {
     moveScene(b, sceneId, { chapterId: c2, index: 0 });
     sync(a, b);
     for (const doc of [a, b]) expect(titles(listScenes(doc, c2))).toEqual(['Nouveau titre']);
+  });
+});
+
+describe('keyboard-friendly moves', () => {
+  it('moves a scene step by step, crossing chapter boundaries', () => {
+    const doc = newProjectDoc();
+    const c1 = createChapter(doc, { title: 'Un' });
+    const c2 = createChapter(doc, { title: 'Deux' });
+    const a = createScene(doc, { chapterId: c1, title: 'A' }).sceneId;
+    createScene(doc, { chapterId: c1, title: 'B' });
+    createScene(doc, { chapterId: c2, title: 'C' });
+    const outline = () => readOutline(doc).map((c) => `${c.title}: ${titles(c.scenes).join(',')}`);
+
+    expect(moveSceneStep(doc, a, 1)).toBe(true);
+    expect(outline()).toEqual(['Un: B,A', 'Deux: C']);
+    expect(moveSceneStep(doc, a, 1)).toBe(true);
+    expect(outline()).toEqual(['Un: B', 'Deux: A,C']);
+    expect(moveSceneStep(doc, a, -1)).toBe(true);
+    expect(outline()).toEqual(['Un: B,A', 'Deux: C']);
+    expect(moveSceneStep(doc, a, -1)).toBe(true);
+    expect(moveSceneStep(doc, a, -1)).toBe(false);
+    expect(outline()).toEqual(['Un: A,B', 'Deux: C']);
+  });
+
+  it('moves chapters step by step', () => {
+    const doc = newProjectDoc();
+    const c1 = createChapter(doc, { title: 'Un' });
+    createChapter(doc, { title: 'Deux' });
+    expect(moveChapterStep(doc, c1, -1)).toBe(false);
+    expect(moveChapterStep(doc, c1, 1)).toBe(true);
+    expect(titles(listChapters(doc))).toEqual(['Deux', 'Un']);
+  });
+
+  it('lists the trash and restores a scene with its chapter', () => {
+    const doc = newProjectDoc();
+    const c = createChapter(doc, { title: 'Un' });
+    const { sceneId } = createScene(doc, { chapterId: c, title: 'A' });
+    trashScene(doc, sceneId);
+    trashChapter(doc, c);
+    expect(titles(listTrash(doc).scenes)).toEqual(['A']);
+    expect(titles(listTrash(doc).chapters)).toEqual(['Un']);
+    restoreSceneWithChapter(doc, sceneId);
+    expect(readOutline(doc).map((ch) => titles(ch.scenes))).toEqual([['A']]);
+    expect(listTrash(doc)).toEqual({ chapters: [], scenes: [] });
   });
 });

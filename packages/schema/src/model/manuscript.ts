@@ -302,3 +302,104 @@ export function trashVariant(
     requireMap(variantsOf(doc, sceneId), variantId, 'variant').set('trashedAt', nowIso());
   }, origin);
 }
+
+// ─── Outline and keyboard-friendly moves ─────────────────────────────────
+
+export interface OutlineChapter extends ChapterInfo {
+  readonly scenes: readonly SceneInfo[];
+}
+
+/** Live chapters with their live scenes, in reading order. */
+export function readOutline(doc: Y.Doc): OutlineChapter[] {
+  return listChapters(doc).map((chapter) => ({ ...chapter, scenes: listScenes(doc, chapter.id) }));
+}
+
+/** Live scenes of the whole manuscript, in reading order. */
+export function listAllScenes(doc: Y.Doc): SceneInfo[] {
+  return readOutline(doc).flatMap((c) => c.scenes);
+}
+
+/**
+ * Moves a scene one step up or down in reading order. At the edge of its
+ * chapter it crosses into the neighbouring chapter (end of the previous one,
+ * start of the next one). Returns false when there is nowhere to go.
+ */
+export function moveSceneStep(
+  doc: Y.Doc,
+  sceneId: string,
+  direction: -1 | 1,
+  origin: Origin = AUTHOR,
+): boolean {
+  const outline = readOutline(doc);
+  const chapterIndex = outline.findIndex((c) => c.scenes.some((s) => s.id === sceneId));
+  const chapter = outline[chapterIndex];
+  if (!chapter) return false;
+  const index = chapter.scenes.findIndex((s) => s.id === sceneId);
+  const target = index + direction;
+  if (target >= 0 && target < chapter.scenes.length) {
+    moveScene(doc, sceneId, { chapterId: chapter.id, index: target }, origin);
+    return true;
+  }
+  const neighbour = outline[chapterIndex + direction];
+  if (!neighbour) return false;
+  moveScene(
+    doc,
+    sceneId,
+    { chapterId: neighbour.id, index: direction === 1 ? 0 : neighbour.scenes.length },
+    origin,
+  );
+  return true;
+}
+
+/** Moves a chapter one step up or down. Returns false at the edges. */
+export function moveChapterStep(
+  doc: Y.Doc,
+  chapterId: string,
+  direction: -1 | 1,
+  origin: Origin = AUTHOR,
+): boolean {
+  const chapters = listChapters(doc);
+  const index = chapters.findIndex((c) => c.id === chapterId);
+  const target = index + direction;
+  if (index < 0 || target < 0 || target >= chapters.length) return false;
+  moveChapter(doc, chapterId, target, origin);
+  return true;
+}
+
+export interface TrashContent {
+  readonly chapters: readonly ChapterInfo[];
+  readonly scenes: readonly (SceneInfo & { readonly trashedAt: string })[];
+}
+
+/** What the author put in the trash, most recent first. */
+export function listTrash(doc: Y.Doc): TrashContent {
+  const byDate = <T extends { trashedAt: string }>(items: T[]) =>
+    items.sort((a, b) => (a.trashedAt < b.trashedAt ? 1 : a.trashedAt > b.trashedAt ? -1 : 0));
+  return {
+    chapters: byDate(
+      [...chaptersMap(doc).entries()]
+        .filter(([, m]) => !isLive(m))
+        .map(([id, m]) => ({ ...toChapter(id, m), trashedAt: String(m.get('trashedAt')) })),
+    ),
+    scenes: byDate(
+      [...scenesMap(doc).entries()]
+        .filter(([, m]) => !isLive(m))
+        .map(([id, m]) => ({ ...toScene(id, m), trashedAt: String(m.get('trashedAt')) })),
+    ),
+  };
+}
+
+/** Restores a scene and, if needed, its chapter. */
+export function restoreSceneWithChapter(
+  doc: Y.Doc,
+  sceneId: string,
+  origin: Origin = AUTHOR,
+): void {
+  doc.transact(() => {
+    const scene = requireMap(scenesMap(doc), sceneId, 'scene');
+    scene.delete('trashedAt');
+    chaptersMap(doc)
+      .get(String(scene.get('chapterId')))
+      ?.delete('trashedAt');
+  }, origin);
+}
