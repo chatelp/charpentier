@@ -36,6 +36,18 @@ export function initProject(
   }, origin);
 }
 
+/** The Compagnon's intervention level (D-19): 1 Discret … 4 Tuteur; 3 by default. */
+export type MentorLevel = 1 | 2 | 3 | 4;
+
+export function readMentorLevel(doc: Y.Doc): MentorLevel {
+  const level = metaMap(doc).get('mentorLevel');
+  return level === 1 || level === 2 || level === 3 || level === 4 ? level : 3;
+}
+
+export function setMentorLevel(doc: Y.Doc, level: MentorLevel, origin: Origin = AUTHOR): void {
+  doc.transact(() => metaMap(doc).set('mentorLevel', level), origin);
+}
+
 export function readProjectMeta(doc: Y.Doc): ProjectMeta | undefined {
   const meta = metaMap(doc);
   const id = meta.get('id');

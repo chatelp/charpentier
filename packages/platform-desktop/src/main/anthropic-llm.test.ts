@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { AgentHost, API_KEY_SECRET } from './agent-host';
+import { DocStore } from './doc-store';
 import { AnthropicLlmService, HAIKU, LlmRefusalError, OPUS } from './anthropic-llm';
 import { SecretStore } from './secret-store';
 
@@ -125,7 +126,7 @@ describe('API key', () => {
       models: () => ({ deep: OPUS, fast: OPUS }),
       createClient: () => client,
     });
-    const host = new AgentHost(llm, secrets);
+    const host = new AgentHost(llm, secrets, new DocStore(() => undefined));
     expect(await host.handle({ type: 'agents.setKey', key: 'sk-wrong' })).toBe('invalid');
     expect(secrets.get(API_KEY_SECRET)).toBeUndefined();
     valid = true;

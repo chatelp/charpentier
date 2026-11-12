@@ -13,6 +13,7 @@ const disabledAgents: AgentsService = {
   onStatusChange: () => () => {},
   setApiKey: async () => 'invalid',
   forgetApiKey: async () => {},
+  ask: async () => 'unavailable',
 };
 
 const isApple = (userAgent: string) => /Mac|iPhone|iPad/.test(userAgent);

@@ -29,6 +29,7 @@ describe('<App>', () => {
         onStatusChange: () => () => {},
         setApiKey: async () => 'saved',
         forgetApiKey: async () => {},
+        ask: async () => 'answered',
       },
     });
     render(<App platform={platform} i18n={await createI18n('fr')} />);

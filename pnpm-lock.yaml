@@ -123,6 +123,9 @@ importers:
       '@charpentier/schema':
         specifier: workspace:*
         version: link:../schema
+      yjs:
+        specifier: ^13.6.33
+        version: 13.6.33
 
   packages/core:
     dependencies:

@@ -48,7 +48,22 @@
       "invalid": "Anthropic refuse cette clé. Vérifiez-la dans votre console Anthropic.",
       "offline": "Pas de réseau : la clé n’a pas pu être vérifiée."
     },
-    "apiKeyForgotten": "Clé oubliée. Le Compagnon attend une nouvelle clé."
+    "apiKeyForgotten": "Clé oubliée. Le Compagnon attend une nouvelle clé.",
+    "you": "Vous",
+    "chatEmpty": "Posez votre question sur votre scène, vos personnages, votre histoire. Le Compagnon vous aide à écrire, il n’écrit pas à votre place.",
+    "chatPlaceholder": "Votre question au Compagnon",
+    "chatHint": "↵ envoyer · ⇧↵ nouvelle ligne · ⌘⏎ insérer l’exemple · Échap fermer",
+    "thinking": "Le Compagnon réfléchit…",
+    "exampleLabel": "Exemple · une phrase",
+    "insertExample": "Insérer dans le texte",
+    "insertExampleKey": "⌘⏎",
+    "exampleInserted": "Phrase d’exemple insérée. Elle est à vous : modifiez-la à votre guise.",
+    "ask": {
+      "unavailable": "Le Compagnon a besoin de votre clé d’API (ligne de commande : « clé »).",
+      "offline": "Pas de réseau : le Compagnon répondra quand la connexion reviendra.",
+      "refused": "Le Compagnon n’a pas pu répondre à cette demande.",
+      "failed": "Le Compagnon n’a pas pu répondre. Réessayez dans un instant."
+    }
   },
   "manuscript": {
     "defaultProjectTitle": "Mon roman",
@@ -121,7 +136,8 @@
     "nextRemark": "Aller à la remarque ou correction suivante",
     "toggleMentorPanel": "Points à traiter et conversation",
     "setApiKey": "Saisir la clé d’API Anthropic du Compagnon…",
-    "forgetApiKey": "Oublier la clé d’API Anthropic"
+    "forgetApiKey": "Oublier la clé d’API Anthropic",
+    "talkToMentor": "Parler au Compagnon"
   },
   "palette": {
     "label": "Ligne de commande",

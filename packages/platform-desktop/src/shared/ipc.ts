@@ -1,4 +1,10 @@
-import type { ApiKeyResult, LlmStatus, ProjectKind, ProjectSummary } from '@charpentier/platform';
+import type {
+  ApiKeyResult,
+  AskResult,
+  LlmStatus,
+  ProjectKind,
+  ProjectSummary,
+} from '@charpentier/platform';
 
 /**
  * Messages between an Electron renderer (the interface) and the main process,
@@ -29,6 +35,7 @@ export type Request =
   | { readonly type: 'agents.status' }
   | { readonly type: 'agents.setKey'; readonly key: string }
   | { readonly type: 'agents.forgetKey' }
+  | { readonly type: 'agents.ask'; readonly projectId: string; readonly sceneId?: string }
   // Handled by the Electron host itself (dialogs, Finder).
   | { readonly type: 'host.libraryFolder' }
   | { readonly type: 'host.chooseLibraryFolder' }
@@ -51,6 +58,7 @@ export interface Responses {
   'agents.status': LlmStatus;
   'agents.setKey': ApiKeyResult;
   'agents.forgetKey': null;
+  'agents.ask': AskResult;
   'host.libraryFolder': string;
   'host.chooseLibraryFolder': boolean;
   'host.revealLibraryFolder': null;

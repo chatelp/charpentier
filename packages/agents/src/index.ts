@@ -11,3 +11,5 @@ export {
   type ProseViolation,
 } from './guard';
 export { chatAnswerSchema, compagnonSystemPrompt, type MentorLevel } from './prompts';
+export { answerAuthor } from './conversation';
+export { sceneContext, sheetsSummary } from './context';

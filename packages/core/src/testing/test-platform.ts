@@ -31,6 +31,7 @@ export function createTestPlatform(overrides: Partial<Platform> = {}): Platform 
       onStatusChange: () => () => {},
       setApiKey: async () => 'invalid',
       forgetApiKey: async () => {},
+      ask: async () => 'unavailable',
     },
     llm: null,
     fileMirror: null,

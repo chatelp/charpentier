@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@charpentier/platform": "workspace:*",
-    "@charpentier/schema": "workspace:*"
+    "@charpentier/schema": "workspace:*",
+    "yjs": "^13.6.33"
   }
 }

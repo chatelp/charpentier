@@ -15,6 +15,7 @@ import { usePlatform } from '../app/platform-context';
 import { Atelier, type AtelierLocation } from '../atelier/Atelier';
 import { sheetScope } from '../atelier/sheet-scope';
 import { Overview } from '../overview/Overview';
+import { Conversation } from '../mentor/Conversation';
 import { MentorPanel } from '../mentor/MentorPanel';
 import { SignalNote } from '../mentor/SignalNote';
 import { placedSignals } from '../mentor/signal-decorations';
@@ -125,6 +126,8 @@ export function ProjectWorkspace({
     return () => clearTimeout(timer);
   }, [showPendingSignal, sceneSignals]);
 
+  const notify = (text: string) => setStatus({ key: ++paletteSequence, text });
+
   const openScene = useCallback(
     (id: string) => {
       setRequestedSceneId(id);
@@ -164,7 +167,7 @@ export function ProjectWorkspace({
     toggleMentorPanel: (tab = 'points') => setMentorPanel((open) => (open === tab ? null : tab)),
     openSignalNote: (id) => marks.openNote(id, true),
     shortcutLabel: (id) => registry.shortcutLabel(id),
-    notify: (text) => setStatus({ key: ++paletteSequence, text }),
+    notify,
     prefs,
     updatePrefs,
   };
@@ -362,6 +365,23 @@ export function ProjectWorkspace({
           }
           tab={mentorPanel}
           onTab={setMentorPanel}
+          conversation={
+            <Conversation
+              projectId={projectId}
+              sceneId={sceneId}
+              active={palette === null && mentorPanel === 'conversation'}
+              onInsertExample={(example) => {
+                // D-11: the only way an example enters the text, on the author's gesture.
+                if (!editor || editor.isDestroyed) return;
+                editor.chain().focus().insertContent(example).run();
+                notify(t('mentor.exampleInserted'));
+              }}
+              onClose={() => {
+                setMentorPanel(null);
+                focusTextIfIdle();
+              }}
+            />
+          }
           active={palette === null}
           onGoTo={(signal) => {
             const target = signal.textAnchor?.sceneId;

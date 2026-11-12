@@ -85,7 +85,7 @@ const llm = new AnthropicLlmService({
     fast: preferences.get(LIGHT_MODEL_PREF) === 'haiku' ? HAIKU : OPUS,
   }),
 });
-const agents = new AgentHost(llm, secrets);
+const agents = new AgentHost(llm, secrets, store);
 llm.onStatusChange((status) => {
   for (const contents of sessions.keys())
     if (!contents.isDestroyed()) contents.send(IPC_MESSAGE, { type: 'agents.status', status });

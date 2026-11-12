@@ -7,6 +7,7 @@ export * from './fields';
 export * from './history';
 export * from './ids';
 export * from './manuscript';
+export * from './mentor-chat';
 export * from './modules';
 export * from './order';
 export * from './origins';

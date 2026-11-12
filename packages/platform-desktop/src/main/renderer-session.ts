@@ -80,6 +80,7 @@ export class RendererSession {
       case 'agents.status':
       case 'agents.setKey':
       case 'agents.forgetKey':
+      case 'agents.ask':
         if (!this.services.agents) throw new Error('No agents in this host');
         return this.services.agents.handle(request);
       default:

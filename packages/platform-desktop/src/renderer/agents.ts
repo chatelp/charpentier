@@ -34,6 +34,10 @@ export class IpcAgentsService implements AgentsService {
     return result;
   }
 
+  ask(input: { readonly projectId: string; readonly sceneId?: string }) {
+    return this.bridge.invoke({ type: 'agents.ask', ...input });
+  }
+
   async forgetApiKey() {
     await this.bridge.invoke({ type: 'agents.forgetKey' });
     this.#set(await this.bridge.invoke({ type: 'agents.status' }));

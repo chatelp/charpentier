@@ -129,6 +129,12 @@ export const languageCommands: readonly LanguageCommand[] = [
     run: (ctx) => ctx.toggleMentorPanel('points'),
   },
   {
+    id: 'talkToMentor',
+    scope: 'global',
+    isEnabled: (ctx) => ctx.platform.agents.status() !== 'disabled',
+    run: (ctx) => ctx.toggleMentorPanel('conversation'),
+  },
+  {
     id: 'fixAllTypography',
     scope: 'global',
     isEnabled: (ctx) => ctx.editor !== null,
