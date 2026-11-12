@@ -112,6 +112,7 @@ Sons : **désactivés par défaut**, discrets, hors ligne. Un déclic clair à l
 - Panneau en relief de 25,5 rem, détaché des bords (10–12 px), ouvert par `⌘L`, sur l'onglet Points ; le contrôle segmenté passe à la conversation [D-18]. Il **remplace la marge** : les pastilles disparaissent et le texte se recentre dans l'espace restant.
 - **Contrôle segmenté** en tête : rail en creux, onglet actif en relief, libellé vermillon, compteur bleu.
 - **Points** : groupes « Cette scène », « Chapitre », « Fiches proposées » (libellés en petites capitales) ; chaque point est une carte en relief avec sa pastille, son type et sa scène, un titre, une phrase. Le point sélectionné est gravé. Les propositions de fiche portent « Valider `V` » et « Rejeter `X` ». Pied : `J K` parcourir, `⏎` aller au passage, `R` résolu, `I` ignorer.
+- **Réglette d'intervention** [D-19] : en tête du panneau, sous le contrôle segmenté, un rail gravé à 4 crans (Discret, Attentif, Accompagnant, Tuteur), curseur en relief, libellé du cran en petites capitales et une ligne qui dit ce qu'il change. `←` `→` quand elle a le focus.
 - **Conversation** : pas de bulles. Transcription sobre : « Vous » (petites capitales vermillon), « Le Compagnon » (petites capitales bleues), texte en Inter 13,5 px. Champ de saisie gravé en pied.
 
 ### 4.4 Manuscrit : tiroir et vue d'ensemble
@@ -177,6 +178,7 @@ Registre central dans le cœur, tous modifiables. `⌘` = `Ctrl` sur le X250.
 | Nouvelle scène / nouvelle variante / changer de variante | `⌘N` / `⌘⇧N` / `⌘⌥V` |
 | Point de restauration | `⌘S` |
 | Avis du Compagnon sur la scène | `⌘⇧A` |
+| Plus d'aide / moins d'aide (réglette) | ligne de commande |
 | Taille du texte / largeur de colonne / mode focus | `⌘+` `⌘−` / `⌘⌥←` `⌘⌥→` / `⌘⇧F` |
 | Revenir au texte | `Échap` |
 
@@ -198,4 +200,4 @@ Registre central dans le cœur, tous modifiables. `⌘` = `Ctrl` sur le X250.
 - ~~Intégrer `design/tokens.css` dans `packages/core/src/styles/` et embarquer Literata et Inter.~~ Fait (phase 1.7 bis) : `packages/core/src/styles/tokens.css` est désormais la copie de référence, polices dans `packages/core/src/fonts`.
 - ~~Reporter au journal des décisions de la SPEC : nom du Compagnon et « marge qui respire ».~~ Fait : [D-16], [D-17], question n°3 annotée.
 - Raccourcis : un hôte qui garde un raccourci pour lui (⌘N, ⌘⇧N, ⌘1…9, ⌘⌥←→ dans un navigateur) fait basculer la commande sur son autre raccourci ou sur la ligne de commande ; sur le bureau, les raccourcis de ce tableau s'appliquent tels quels.
-- À trancher avant l'étape 3 : seuil exact de la pause qui autorise une pastille (proposé : 1,5 s) et liste des types de remarques visibles pendant l'écriture (question ouverte n°2).
+- ~~À trancher avant l'étape 3 : seuil de la pause et types de remarques visibles pendant l'écriture.~~ Tranché par la réglette [D-19].

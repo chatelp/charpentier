@@ -26,6 +26,7 @@
 | D-14 | Machine d'écriture initiale | **Le Mac de l'auteur** : la fin de l'étape 2 produit une `.app` macOS non signée. |
 | D-15 | Titulaire des droits | **Pierre Chatel**. Dépôt GitHub pas encore choisi (configuration CLA prête, à compléter). |
 | D-16 | Design language | **Direction « Perle »** (neumorphisme doux : page plate, outils en relief), deux encres (vermillon pour l'auteur, bleu de Prusse pour le mentor), Literata + Inter embarquées (SIL OFL 1.1). Référence : [DESIGN.md](DESIGN.md). Décidé le 12 novembre 2026. |
+| D-19 | Niveau d'intervention du Compagnon | **Une réglette à 4 crans** (Discret, Attentif, Accompagnant, Tuteur), un seul réglage qui fixe à la fois ce que le Compagnon dit pendant l'écriture, ce qui déclenche l'analyse complète d'une scène, le délai avant une pastille et la profondeur des explications (§6.3). Réglage par projet, **cran 3 « Accompagnant » par défaut**. Aucun cran ne fait écrire le Compagnon à la place de l'auteur. Répond aux questions ouvertes n°1 et n°2 ; avance la v2 prévue au §6.3. Décidé le 12 novembre 2026. |
 | D-18 | Raccourcis du tiroir et du panneau droit | **`⌘J` ouvre le tiroir du manuscrit** (au lieu du `⌘\` des maquettes, qui demande quatre touches sur un Mac AZERTY). Les points à traiter et la conversation du Compagnon partagent le panneau droit sur **`⌘L`**, avec un contrôle segmenté pour passer de l'un à l'autre. Décidé le 12 novembre 2026. |
 | D-17 | Nom du mentor | **Le Compagnon** (le compagnon charpentier qui transmet le métier) ; vouvoie l'auteur, signe ses notes en bleu de Prusse. Répond à la question ouverte n°4. |
 
@@ -149,12 +150,21 @@ Chaque champ porte son propre statut.
 Tous les agents s'expriment à travers un seul mentor, à la voix cohérente. L'auteur n'a pas à savoir quel agent a produit une remarque.
 
 ### 6.2 Quand le mentor réagit (mode mixte par défaut)
-- **Pendant l'écriture** : discret ; signalements légers (orthographe, incohérence factuelle évidente).
-- **En fin de scène** : analyse complète (structure, personnages, rythme, style, cohérence) et mise à jour des modules.
-- **À la demande** : analyse d'une scène, d'un chapitre ou du manuscrit.
+- **Pendant l'écriture** : selon le cran de la réglette (§6.3).
+- **En fin de scène** : analyse complète (structure, personnages, rythme, style, cohérence) et mise à jour des modules ; ce qui marque la fin d'une scène dépend du cran.
+- **À la demande** : analyse d'une scène, d'un chapitre ou du manuscrit (`⌘⇧A`), à tous les crans.
 
-### 6.3 Niveaux d'intervention (réglables en v2)
-Discret, Mentor (défaut), Exigeant.
+### 6.3 Réglette d'intervention [D-19]
+Un seul réglage, à 4 crans, par projet ; **cran 3 par défaut**. Il se change à tout moment depuis le panneau du Compagnon (`⌘L`) et par les commandes « Plus d'aide » / « Moins d'aide ».
+
+| Cran | Pendant l'écriture | Analyse complète de la scène | Pause avant une pastille | Explications |
+|---|---|---|---|---|
+| **1. Discret** | Rien | Seulement à la demande | – | Brèves |
+| **2. Attentif** | Langue et incohérences factuelles évidentes | En changeant de scène | 3 s | Le « pourquoi » en une ligne |
+| **3. Accompagnant** (défaut) | Cran 2 + remarques de métier légères (rythme, point de vue qui glisse, scène sans enjeu) | En changeant de scène, ou après 2 min sans écrire | 1,5 s | Développées, avec la règle du métier |
+| **4. Tuteur** | Cran 3 + questions socratiques (« Que veut Hélène dans cette scène ? ») et encouragements sur ce qui fonctionne | Comme au cran 3, plus un bilan à la fin de chaque chapitre | 1,5 s | Pédagogie complète : exemples tirés d'œuvres, phrase d'exemple proposée plus souvent |
+
+Quel que soit le cran : le Compagnon n'écrit jamais à la place de l'auteur (principe n°1, D-11) ; la phrase d'exemple n'entre dans le texte que par un geste explicite ; rien ne s'affiche pendant la frappe elle-même ; les conflits avec une information validée restent signalés dans la liste de points dès le cran 1.
 
 ### 6.4 Niveaux d'aide rédactionnelle
 Niveau minimal et par défaut :
@@ -478,16 +488,16 @@ Garde-fous, contrôlés mécaniquement :
 ## 22. Questions ouvertes
 
 À trancher avant l'étape 3 :
-1. Définition de la « fin de scène » qui déclenche l'analyse complète (action explicite, changement de scène, inactivité).
-2. Types de remarques assez importants pour apparaître pendant l'écriture.
-3. Place de la marge d'annotations et de la liste de points dans une interface distraction-free. *Piste retenue par le design : la « marge qui respire » (pastilles en marge, note dépliée à la pause) et le panneau droit Points / Conversation, [DESIGN.md](DESIGN.md) §4.2 et §4.3 ; détails à confirmer avant l'étape 3.*
+1. ~~Définition de la « fin de scène » qui déclenche l'analyse complète.~~ Tranché : selon le cran de la réglette [D-19].
+2. ~~Types de remarques assez importants pour apparaître pendant l'écriture.~~ Tranché : selon le cran de la réglette [D-19].
+3. Place de la marge d'annotations et de la liste de points dans une interface distraction-free. *Piste retenue par le design : la « marge qui respire » (pastilles en marge, note dépliée à la pause) et le panneau droit Points / Conversation, [DESIGN.md](DESIGN.md) §4.2 et §4.3 ; pause de 1,5 s ou 3 s selon le cran [D-19].*
 4. ~~Nom ou personnalité du mentor.~~ Tranché : le Compagnon [D-17].
 
 À trancher plus tard :
 5. Réimport des YAML de modules modifiés hors de l'app.
 6. Authentification auto-hébergée (étape 4) : 2 ou 3 options adaptées à Hocuspocus et Postgres.
 7. Migration de l'hébergement au lancement public.
-8. Niveaux supérieurs d'aide rédactionnelle ; détermination du profil débutant / confirmé (v2, version publique).
+8. Niveaux supérieurs d'aide rédactionnelle ; détermination du profil débutant / confirmé (v2, version publique). *La réglette [D-19] couvre la fréquence et la profondeur des interventions ; l'aide rédactionnelle reste plafonnée à une phrase d'exemple.*
 9. Interface de validation par lot (avec l'import, après la v1).
 10. Dépôt GitHub (propriétaire/nom) pour activer le CLA.
 

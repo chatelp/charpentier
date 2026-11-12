@@ -117,5 +117,5 @@ Contradictions avec les informations validées, indices non exploités, personna
 **Vérifiable** : j'écris que mon héroïne a les yeux verts alors que sa fiche validée dit bleus ; une annotation apparaît en marge et je tranche (corriger le texte, mettre à jour la fiche, ignorer).
 
 ### 3.7 Pendant l'écriture et à la demande
-Signalements légers pendant l'écriture, analyse à la demande d'une scène, d'un chapitre ou du manuscrit, grammaire par le LLM.
+Réglette d'intervention à 4 crans [D-19] (cran 3 par défaut) qui règle les remarques pendant l'écriture, le déclenchement de l'analyse complète et la profondeur des explications ; analyse à la demande d'une scène, d'un chapitre ou du manuscrit, grammaire par le LLM.
 **Vérifiable** : je demande l'analyse d'un chapitre entier et je reçois des remarques ancrées dans le texte. (Jalon : **v1 fonctionnelle**.)
