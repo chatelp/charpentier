@@ -134,6 +134,7 @@ export function SignalNote(props: SignalNoteProps) {
         <span className="ch-label">{t(`mentor.kind.${signal.kind}`)}</span>
         <span className="ch-note-signature">{t('mentor.name')}</span>
       </p>
+      {signal.title && <p className="ch-note-title">{signal.title}</p>}
       <p className="ch-note-message">{signal.message}</p>
       {suggestion && (
         <div className="ch-example">

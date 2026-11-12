@@ -487,6 +487,7 @@ export function ProjectWorkspace({
               else showPendingSignal();
             }
           }}
+          onOpenSheet={(rail, target) => ctx.openAtelier({ rail, target })}
           onClose={() => {
             setMentorPanel(null);
             focusTextIfIdle();

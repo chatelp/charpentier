@@ -28,6 +28,8 @@ export interface Signal {
   readonly state: SignalState;
   /** `mentor`, or a person id for human annotations later. */
   readonly author: string;
+  /** A few words naming the remark (« Les yeux d'Hélène »). */
+  readonly title?: string;
   readonly message: string;
   /** The craft principle behind the remark (principle n°5). */
   readonly principle?: string;

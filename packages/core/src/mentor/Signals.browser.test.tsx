@@ -1,6 +1,8 @@
 import {
   anchorForQuote,
   createAgentWriter,
+  createEntity,
+  getEntity,
   getScene,
   guids,
   listAllScenes,
@@ -122,5 +124,36 @@ describe('the Compagnon’s remarks in the text', () => {
     ]);
     await userEvent.keyboard('{Escape}');
     expect(screen.queryByRole('complementary', { name: 'Le Compagnon' })).toBeNull();
+  });
+
+  it('lists the sheets the Compagnon proposes, to validate or reject from the panel', async () => {
+    const { root } = await startApp();
+    const writer = createAgentWriter(root, 'test');
+    const marc = writer.proposeEntity('characters', { name: 'Marc' }, []);
+    const evidence = [{ sceneId: 's', variantId: 'v', quote: 'q' }];
+    const helene = createEntity(root, 'characters', { name: 'Hélène' });
+    writer.proposeField(
+      { module: 'characters', entityId: helene, field: 'residence' },
+      'Anneau B',
+      evidence,
+    );
+
+    await userEvent.keyboard(mod('l'));
+    const panel = await screen.findByRole('complementary', { name: 'Le Compagnon' });
+    expect(within(panel).getByText('Fiches proposées')).toBeTruthy();
+    const points = within(panel).getAllByRole('option');
+    expect(points.map((p) => p.textContent)).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining('Marc'),
+        expect.stringContaining('Hélène · Lieu de vie'),
+      ]),
+    );
+    points.find((p) => p.textContent?.includes('Marc'))?.focus();
+    await userEvent.keyboard('v');
+    expect(getEntity(root, 'characters', marc)?.status).toBe('validated');
+    await waitFor(() => expect(within(panel).getAllByRole('option')).toHaveLength(1));
+    within(panel).getAllByRole('option')[0]?.focus();
+    await userEvent.keyboard('x');
+    expect(getEntity(root, 'characters', helene)?.fields['residence']?.status).toBe('rejected');
   });
 });

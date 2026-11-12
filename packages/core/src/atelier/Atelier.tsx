@@ -1,5 +1,7 @@
 import {
+  acceptProposal,
   knownByField,
+  readFieldRef,
   rejectEntity,
   validateEntity,
   type EntityInfo,
@@ -193,6 +195,13 @@ export function Atelier({
     } else if (key.toLowerCase() === 'v' && entity && selected.proposed) {
       event.preventDefault();
       validateEntity(ctx.root, module, entity);
+      // Taken with its name; its other fields wait for the author, one by one.
+      const def = moduleDefs[module];
+      if (def.kind === 'entity') {
+        const titleRef = { module, entityId: entity, field: def.titleField } as const;
+        if (readFieldRef(ctx.root, titleRef).status === 'proposed')
+          acceptProposal(ctx.root, titleRef);
+      }
     } else if (key.toLowerCase() === 'x' && entity && selected.proposed) {
       event.preventDefault();
       rejectEntity(ctx.root, module, entity);

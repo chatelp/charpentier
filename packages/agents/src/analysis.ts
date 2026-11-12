@@ -92,6 +92,7 @@ export const analysisSchema = object({
       entityId: string,
       field: string,
       quote: string,
+      title: string,
       message: string,
       principle: string,
     }),
@@ -100,6 +101,7 @@ export const analysisSchema = object({
     object({
       kind: { enum: REMARK_KINDS },
       quote: string,
+      title: string,
       message: string,
       principle: string,
       correction: nullable(string),
@@ -129,12 +131,14 @@ interface Analysis {
     entityId: string;
     field: string;
     quote: string;
+    title?: string;
     message: string;
     principle: string;
   }[];
   remarks: {
     kind: RemarkKind;
     quote: string;
+    title?: string;
     message: string;
     principle: string;
     correction: string | null;
@@ -156,7 +160,7 @@ WHAT TO REPORT
 - clues: clues, red herrings and revelations this scene plants, shows again or resolves ("existingId" for an existing clue sheet).
 - knowledge: for existing clues, who learns of the clue in this scene ("who" is a character id or "reader").
 - conflicts: places where the scene contradicts a VALIDATED fact of the sheets (module, entityId, field as given in the sheets). A character acting on information before the scene where they learn it is a conflict on the clue's knownBy field. Say what differs; do not decide which is right.
-- remarks: ${kinds.length ? `only of these kinds: ${kinds.join(', ')}.` : 'none (leave the list empty).'} "craft" = a point about the writing (stakes, point of view, rhythm, showing vs telling, dialogue); "clue" = a clue never exploited, a revelation not prepared, a red herring never resolved; "language" = a grammar or agreement error, with its "correction"; "encouragement" = something that works, said simply. Each remark gives the craft "principle" behind it (the why). Few and important beats many and minor: at most 5 remarks.
+- remarks: ${kinds.length ? `only of these kinds: ${kinds.join(', ')}.` : 'none (leave the list empty).'} "craft" = a point about the writing (stakes, point of view, rhythm, showing vs telling, dialogue); "clue" = a clue never exploited, a revelation not prepared, a red herring never resolved; "language" = a grammar or agreement error, with its "correction"; "encouragement" = something that works, said simply. Each remark has a "title" of 2 to 6 words naming it, and gives the craft "principle" behind it (the why). Few and important beats many and minor: at most 5 remarks.
 
 STYLE
 Messages are in ${language}, address the author formally ("vous"), short sentences, no exclamation marks, questions rather than verdicts where you can.`;
@@ -364,6 +368,7 @@ export function applyAnalysis(
   const raise = (signal: {
     kind: SignalKind;
     quote: string;
+    title?: string;
     message: string;
     principle: string;
     fieldRef?: FieldRef;
@@ -385,6 +390,7 @@ export function applyAnalysis(
     writer.raiseSignal({
       kind: signal.kind,
       message: signal.message,
+      ...(signal.title && { title: signal.title }),
       principle: signal.principle,
       textAnchor,
       fingerprint,
@@ -408,6 +414,7 @@ export function applyAnalysis(
     raise({
       kind: 'conflict',
       quote: conflict.quote,
+      ...(conflict.title && { title: conflict.title }),
       message: conflict.message,
       principle: conflict.principle,
       fieldRef: ref,
@@ -431,6 +438,7 @@ export function applyAnalysis(
     raise({
       kind: remark.kind === 'encouragement' ? 'craft' : remark.kind,
       quote: remark.quote,
+      ...(remark.title && { title: remark.title }),
       message: remark.message,
       principle: remark.principle,
       ...(suggestion && { suggestion }),

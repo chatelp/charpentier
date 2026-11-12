@@ -13,7 +13,7 @@
     "name": "Le Compagnon",
     "panel": "Le Compagnon",
     "tabs": {
-      "points": "Points",
+      "points": "Points à traiter",
       "conversation": "Conversation"
     },
     "kind": {
@@ -25,12 +25,13 @@
     },
     "groups": {
       "scene": "Cette scène",
-      "elsewhere": "Autres scènes",
       "sheets": "Fiches",
-      "project": "Projet"
+      "project": "Projet",
+      "chapter": "Chapitre {{numeral}}",
+      "proposals": "Fiches proposées"
     },
     "noPoints": "Rien à traiter pour l’instant.",
-    "pointsHint": "↑↓ ou J K parcourir · ↵ aller au passage · R résolu · I ignorer · Échap fermer",
+    "pointsHint": "↑↓ ou J K parcourir · ↵ aller au passage · R résolu · I ignorer · V valider · X rejeter · Échap fermer",
     "resolve": "Résolu",
     "resolveKey": "R",
     "dismiss": "Ignorer",
@@ -89,6 +90,16 @@
     "lightModel": {
       "opus": "Remarques légères : Claude Opus.",
       "haiku": "Remarques légères : Claude Haiku, moins cher."
+    },
+    "proposal": {
+      "new": {
+        "characters": "Nouveau personnage nommé dans le texte.",
+        "worldRules": "Nouvelle règle du monde posée par le texte.",
+        "clues": "Nouvel indice ou révélation repéré dans le texte.",
+        "acts": "Nouvel acte proposé.",
+        "arcs": "Nouvel arc proposé."
+      },
+      "value": "Nouvelle valeur proposée."
     }
   },
   "manuscript": {

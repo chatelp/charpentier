@@ -110,6 +110,16 @@
   font-size: 12.5px;
 }
 
+.ch-note-title {
+  margin-top: 8px !important;
+  color: var(--ch-ink);
+  font: 500 16px / 1.3 var(--ch-font-text);
+}
+
+.ch-note-title + .ch-note-message {
+  margin-top: 4px !important;
+}
+
 .ch-note-message {
   margin-top: 8px !important;
   color: var(--ch-ink);
@@ -238,7 +248,21 @@
   font-variant-caps: normal;
 }
 
+.ch-point-title {
+  grid-column: 2;
+  color: var(--ch-ink);
+  font-size: var(--ch-ui-md);
+}
+
+.ch-point-actions {
+  grid-column: 2;
+  display: flex;
+  gap: 7px;
+  margin-top: 8px;
+}
+
 .ch-point-message {
+  grid-column: 2;
   color: var(--ch-ink-2);
   font-size: var(--ch-ui-sm);
   line-height: 1.45;
