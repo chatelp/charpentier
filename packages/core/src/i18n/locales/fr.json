@@ -189,7 +189,7 @@
   },
   "palette": {
     "label": "Ligne de commande",
-    "searchCommands": "Rechercher une commande…",
+    "searchCommands": "Que voulez-vous faire ?",
     "noResults": "Aucun résultat",
     "sceneTitle": "Titre de la scène",
     "chapterTitle": "Titre du chapitre",

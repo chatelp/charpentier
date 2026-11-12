@@ -127,8 +127,8 @@
   right: 22px;
   bottom: 8px;
   z-index: var(--ch-z-header);
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  display: flex;
+  justify-content: space-between;
   align-items: center;
   gap: var(--ch-space-4);
   color: var(--ch-muted);
@@ -136,9 +136,9 @@
   pointer-events: none;
 }
 
-/* A panel on the right: the footer stops before it. */
+/* A panel on the right: the footer stops before it, symmetrical with the text area. */
 .ch-app[data-mentor-panel] .ch-footer {
-  right: calc(var(--ch-panel-w) + 36px);
+  right: calc(var(--ch-panel-w) + 46px);
 }
 
 .ch-footer-right {
@@ -149,9 +149,12 @@
   gap: 14px;
 }
 
+/* The command zone is centred under the text column, whatever is on either side. */
 .ch-footer-middle {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
-  justify-content: center;
 }
 
 .ch-footer-words {
