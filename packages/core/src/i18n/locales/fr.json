@@ -73,7 +73,9 @@
     "toggleOverview": "Vue d’ensemble du manuscrit",
     "openLibrary": "Bibliothèque des projets",
     "newProject": "Nouveau projet (roman ou nouvelle)…",
-    "renameProject": "Renommer le projet…"
+    "renameProject": "Renommer le projet…",
+    "chooseLibraryFolder": "Changer le dossier de la bibliothèque…",
+    "revealLibraryFolder": "Afficher la bibliothèque dans le Finder"
   },
   "palette": {
     "label": "Ligne de commande",
@@ -362,6 +364,9 @@
     "enterKey": "↵",
     "untitled": "Sans titre",
     "trash": "Corbeille · ↵ restaure",
-    "trashedOn": "Mis à la corbeille le {{date}}"
+    "trashedOn": "Mis à la corbeille le {{date}}",
+    "folder": "Dossier : {{folder}}",
+    "chooseFolder": "Changer de dossier…",
+    "revealFolder": "Afficher dans le Finder"
   }
 }

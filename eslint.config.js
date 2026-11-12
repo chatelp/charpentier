@@ -93,6 +93,12 @@ const layers = [
   { files: ['packages/agents/**'], forbidden: ['@charpentier/core', '@charpentier/platform-*'] },
   { files: ['packages/platform-web/**'], forbidden: ['@charpentier/core', '@charpentier/agents'] },
   { files: ['apps/web/src/**'], forbidden: ['@charpentier/platform-desktop'] },
+  // The renderer side of the desktop platform runs in the sandboxed renderer.
+  {
+    files: ['packages/platform-desktop/src/renderer/**', 'packages/platform-desktop/src/shared/**'],
+    forbidden: ['@charpentier/core', '@charpentier/agents'],
+  },
+  { files: ['apps/desktop/src/renderer/**'], forbidden: ['@charpentier/platform-web'] },
 ];
 
 export default tseslint.config(
@@ -101,6 +107,7 @@ export default tseslint.config(
       '**/node_modules/**',
       '**/dist/**',
       '**/coverage/**',
+      '**/out/**',
       '**/.turbo/**',
       'scripts/fixtures/**',
     ],
@@ -118,6 +125,12 @@ export default tseslint.config(
       'tools/**',
       '**/vite.config.ts',
       '**/vitest.config.ts',
+      '**/electron.vite.config.ts',
+      // Electron main process, preload, end-to-end tests, Node side of the desktop platform.
+      'apps/desktop/src/main/**',
+      'apps/desktop/src/preload/**',
+      'apps/desktop/e2e/**',
+      'packages/platform-desktop/src/main/**',
     ],
     languageOptions: { globals: { ...globals.node } },
   },
@@ -133,7 +146,7 @@ export default tseslint.config(
   })),
   // React UI: hooks rules, and no user-facing literal string in JSX (all UI text goes through i18n).
   {
-    files: ['packages/core/src/**/*.tsx', 'apps/web/src/**/*.tsx'],
+    files: ['packages/core/src/**/*.tsx', 'apps/web/src/**/*.tsx', 'apps/desktop/src/**/*.tsx'],
     plugins: { 'react-hooks': reactHooks, charpentier },
     rules: {
       ...reactHooks.configs.recommended.rules,

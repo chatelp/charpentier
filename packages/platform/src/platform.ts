@@ -5,7 +5,7 @@ import type { KeybindingsService } from './keybindings';
 import type { LlmService } from './llm';
 import type { SecretsService } from './secrets';
 import type { SpellcheckService } from './spellcheck';
-import type { LibraryService, PreferencesService } from './storage';
+import type { LibraryFolderService, LibraryService, PreferencesService } from './storage';
 import type { SystemService } from './system';
 
 export type HostKind = 'web' | 'desktop' | 'appliance';
@@ -21,6 +21,8 @@ export interface Platform {
   readonly host: HostKind;
   readonly documents: DocumentService;
   readonly library: LibraryService;
+  /** The library's folder on disk; `null` where projects do not live in folders (web). */
+  readonly libraryFolder: LibraryFolderService | null;
   readonly preferences: PreferencesService;
   readonly keybindings: KeybindingsService;
   readonly agents: AgentsService;
@@ -30,4 +32,9 @@ export interface Platform {
   readonly secrets: SecretsService | null;
   readonly spellcheck: SpellcheckService | null;
   readonly system: SystemService | null;
+  /**
+   * Height in px of a title bar drawn by the app over its content (macOS
+   * window with integrated traffic lights), or 0.
+   */
+  readonly titleBarHeight?: number;
 }

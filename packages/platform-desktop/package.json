@@ -1,0 +1,23 @@
+{
+  "name": "@charpentier/platform-desktop",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Desktop (Electron) implementation of the platform services: main-process side and renderer side.",
+  "license": "SEE LICENSE IN ../../LICENSE.md",
+  "type": "module",
+  "exports": {
+    "./main": "./src/main/index.ts",
+    "./renderer": "./src/renderer/index.ts",
+    "./shared": "./src/shared/ipc.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.main.json && tsc -p tsconfig.renderer.json && tsc -p tsconfig.test.json"
+  },
+  "dependencies": {
+    "@charpentier/platform": "workspace:*",
+    "yjs": "^13.6.33"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6"
+  }
+}

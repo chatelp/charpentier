@@ -138,6 +138,18 @@ export const workspaceCommands: readonly WorkspaceCommand[] = [
   },
   { id: 'newProject', scope: 'global', run: (ctx) => ctx.openLibrary(true) },
   {
+    id: 'chooseLibraryFolder',
+    scope: 'global',
+    isEnabled: (ctx) => ctx.platform.libraryFolder !== null,
+    run: (ctx) => void ctx.platform.libraryFolder?.choose(),
+  },
+  {
+    id: 'revealLibraryFolder',
+    scope: 'global',
+    isEnabled: (ctx) => ctx.platform.libraryFolder !== null,
+    run: (ctx) => void ctx.platform.libraryFolder?.reveal(),
+  },
+  {
     id: 'renameProject',
     scope: 'global',
     run: (ctx) =>

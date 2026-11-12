@@ -45,6 +45,7 @@ export function createWebPlatform(): Platform {
     host: 'web',
     documents,
     library: new DocumentLibrary(documents),
+    libraryFolder: null,
     preferences: new LocalStoragePreferences(),
     keybindings: createWebKeybindings(globalThis.navigator?.userAgent ?? ''),
     agents: disabledAgents,

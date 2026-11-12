@@ -150,3 +150,29 @@ kbd,
   font: var(--ch-ui-xs) var(--ch-font-ui);
   font-style: normal;
 }
+
+/* Title bar drawn by the app (macOS desktop): content starts below it. */
+:root {
+  --ch-titlebar-offset: 0px;
+}
+
+.ch-titlebar {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: var(--ch-z-command);
+  height: var(--ch-titlebar-offset);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ch-bg);
+  -webkit-app-region: drag;
+  user-select: none;
+}
+
+.ch-titlebar-title {
+  color: var(--ch-author);
+  font-family: var(--ch-font-text);
+  font-size: 13px;
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.1em;
+}

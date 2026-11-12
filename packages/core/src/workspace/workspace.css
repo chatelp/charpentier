@@ -1,7 +1,7 @@
 /* Writing surface (docs/DESIGN.md §4.1): a flat page, the text set on the background. */
 .ch-app {
   position: fixed;
-  inset: 0;
+  inset: var(--ch-titlebar-offset) 0 0;
   overflow: hidden;
 }
 

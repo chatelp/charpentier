@@ -31,6 +31,14 @@ export interface LibraryService {
   restore(projectId: string): Promise<void>;
 }
 
+/** Where the library lives on disk (desktop): shown, changed, opened in the file manager. */
+export interface LibraryFolderService {
+  current(): Promise<string>;
+  /** Asks the author for a folder; the app restarts on it. False if cancelled. */
+  choose(): Promise<boolean>;
+  reveal(): Promise<void>;
+}
+
 /**
  * Small per-device preferences (last opened project, UI toggles).
  * Never used for book content, which lives in Yjs documents.

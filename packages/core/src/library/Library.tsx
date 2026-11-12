@@ -1,4 +1,4 @@
-import type { ProjectKind, ProjectSummary } from '@charpentier/platform';
+import type { LibraryFolderService, ProjectKind, ProjectSummary } from '@charpentier/platform';
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePlatform } from '../app/platform-context';
@@ -140,6 +140,7 @@ export function Library({ currentProjectId, creating = false, onOpen, onClose }:
     >
       <h1 className="ch-library-title">{t('library.label')}</h1>
       <p className="ch-library-sub">{t('library.hint')}</p>
+      {platform.libraryFolder && <LibraryFolder service={platform.libraryFolder} />}
 
       {form?.mode === 'create' && (
         <div
@@ -228,5 +229,29 @@ export function Library({ currentProjectId, creating = false, onOpen, onClose }:
         ))}
       </ul>
     </section>
+  );
+}
+
+/** Where the projects are on disk (desktop), with the way to change it. */
+function LibraryFolder({ service }: { readonly service: LibraryFolderService }) {
+  const { t } = useTranslation();
+  const [folder, setFolder] = useState<string>();
+  useEffect(() => {
+    let cancelled = false;
+    void service.current().then((current) => !cancelled && setFolder(current));
+    return () => {
+      cancelled = true;
+    };
+  }, [service]);
+  return (
+    <p className="ch-library-folder">
+      <span>{t('library.folder', { folder: folder ?? '' })}</span>
+      <button type="button" className="ch-btn" onClick={() => void service.choose()}>
+        {t('library.chooseFolder')}
+      </button>
+      <button type="button" className="ch-btn" onClick={() => void service.reveal()}>
+        {t('library.revealFolder')}
+      </button>
+    </p>
   );
 }

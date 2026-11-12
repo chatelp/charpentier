@@ -23,6 +23,7 @@ export function createTestPlatform(overrides: Partial<Platform> = {}): Platform 
       },
     },
     library: new MemoryLibrary(),
+    libraryFolder: null,
     preferences: { get: async () => undefined, set: async () => {} },
     keybindings: { primaryModifier: 'Meta', reserved: [] },
     agents: { status: () => 'disabled', onStatusChange: () => () => {} },

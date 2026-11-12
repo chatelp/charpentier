@@ -1,0 +1,5 @@
+{
+  "extends": "../../tsconfig.host-agnostic.json",
+  "include": ["src/renderer", "src/shared"],
+  "exclude": ["src/**/*.test.ts"]
+}

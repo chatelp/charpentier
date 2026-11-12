@@ -1,0 +1,9 @@
+{
+  "extends": "../../tsconfig.host-agnostic.json",
+  "compilerOptions": {
+    // Electron is installed here (for the main process): in the renderer it resolves to
+    // an empty module, otherwise its typings would also bring in Node's globals.
+    "paths": { "electron": ["./types/no-electron.d.ts"] }
+  },
+  "include": ["src/renderer"]
+}

@@ -14,14 +14,19 @@ import ts from 'typescript';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-const packages = [
-  'packages/schema',
-  'packages/platform',
-  'packages/core',
-  'packages/agents',
-  'packages/platform-web',
-  'apps/web',
-];
+/** Host-agnostic code: package, source folder of the fixture, tsconfig. */
+const targets = [
+  ['packages/schema'],
+  ['packages/platform'],
+  ['packages/core'],
+  ['packages/agents'],
+  ['packages/platform-web'],
+  ['apps/web'],
+  ['packages/platform-desktop', 'src/renderer', 'tsconfig.renderer.json'],
+  ['apps/desktop', 'src/renderer', 'tsconfig.json'],
+].map(([pkg, src = 'src', tsconfig = 'tsconfig.json']) => ({ pkg, src, tsconfig }));
+const packages = targets.map((t) => t.pkg);
+const target = (pkg) => targets.find((t) => t.pkg === pkg);
 
 // Each entry is one line of the leaking fixture.
 const leaks = [
@@ -42,6 +47,8 @@ const layeringLeaks = {
   'packages/core': ["import '@charpentier/platform-web';", "import '@charpentier/agents';"],
   'packages/agents': ["import '@charpentier/core';", 'export const e = document.title;'],
   'packages/platform': ["import '@charpentier/platform-web';"],
+  'packages/platform-desktop': ["import '@charpentier/core';"],
+  'apps/desktop': ["import '@charpentier/platform-web';"],
 };
 
 const failures = [];
@@ -49,7 +56,7 @@ const failures = [];
 const eslint = new ESLint({ cwd: root });
 
 async function lintLines(pkg, lines, label) {
-  const filePath = path.join(root, pkg, 'src', '__guard_fixture__.ts');
+  const filePath = path.join(root, pkg, target(pkg).src, '__guard_fixture__.ts');
   const [result] = await eslint.lintText(lines.join('\n') + '\n', { filePath });
   const flagged = new Set(
     result.messages
@@ -60,10 +67,10 @@ async function lintLines(pkg, lines, label) {
 }
 
 function typecheck(pkg, lines) {
-  const configPath = path.join(root, pkg, 'tsconfig.json');
+  const configPath = path.join(root, pkg, target(pkg).tsconfig);
   const config = ts.readConfigFile(configPath, ts.sys.readFile);
   const parsed = ts.parseJsonConfigFileContent(config.config, ts.sys, path.dirname(configPath));
-  const fixturePath = path.join(root, pkg, 'src', '__guard_fixture__.ts');
+  const fixturePath = path.join(root, pkg, target(pkg).src, '__guard_fixture__.ts');
   const fixtureText = lines.join('\n') + '\n';
 
   const host = ts.createCompilerHost(parsed.options);
@@ -122,8 +129,8 @@ for (const pkg of packages) {
 }
 
 // 5. No untranslated UI text in React code (all UI strings go through i18n).
-for (const pkg of ['packages/core', 'apps/web']) {
-  const filePath = path.join(root, pkg, 'src', '__guard_fixture__.tsx');
+for (const pkg of ['packages/core', 'apps/web', 'apps/desktop']) {
+  const filePath = path.join(root, pkg, target(pkg).src, '__guard_fixture__.tsx');
   const uiLeaks = [
     'export const A = () => <p>Bonjour</p>;',
     "export const B = () => <p>{'Bonjour'}</p>;",

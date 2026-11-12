@@ -3,6 +3,7 @@ import type { i18n } from 'i18next';
 import { useEffect, useMemo, useState } from 'react';
 import { I18nextProvider, useTranslation } from 'react-i18next';
 import { Library } from '../library/Library';
+import { TitleBar } from './TitleBar';
 import { initialProjectId, openProject, type ProjectSession } from '../workspace/default-scene';
 import { ProjectWorkspace } from '../workspace/Workspace';
 import { PlatformContext, usePlatform } from './platform-context';
@@ -87,21 +88,36 @@ function Root() {
       ? ({ state: 'loading' } as const)
       : opening;
 
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      '--ch-titlebar-offset',
+      `${platform.titleBarHeight ?? 0}px`,
+    );
+  }, [platform]);
+
+  const titleBar = platform.titleBarHeight ? (
+    <TitleBar root={shown.state === 'ready' ? shown.session.root : undefined} />
+  ) : null;
+
   if (library)
     return (
-      <Library
-        currentProjectId={projectId}
-        creating={library.creating}
-        onOpen={(id) => {
-          setLibrary(null);
-          setProjectId(id);
-        }}
-        onClose={() => setLibrary(null)}
-      />
+      <>
+        {titleBar}
+        <Library
+          currentProjectId={projectId}
+          creating={library.creating}
+          onOpen={(id) => {
+            setLibrary(null);
+            setProjectId(id);
+          }}
+          onClose={() => setLibrary(null)}
+        />
+      </>
     );
 
   return (
     <>
+      {titleBar}
       {shown.state === 'ready' && (
         <ProjectWorkspace
           key={shown.session.projectId}

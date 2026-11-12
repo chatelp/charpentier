@@ -17,7 +17,9 @@
     "test": "vitest run",
     "check:guards": "node scripts/guard-selftest.mjs",
     "check:licenses": "node scripts/check-licenses.mjs",
-    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm check:guards && pnpm check:licenses"
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm check:guards && pnpm check:licenses",
+    "dev:desktop": "pnpm --filter @charpentier/desktop dev",
+    "test:desktop": "pnpm --filter @charpentier/desktop test:e2e"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -29,5 +31,10 @@
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.72.2",
     "vitest": "^5.1.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "electron"
+    ]
   }
 }

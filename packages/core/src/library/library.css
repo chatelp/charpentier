@@ -1,7 +1,7 @@
 /* Library of projects (phase 1.10). */
 .ch-library {
   position: fixed;
-  inset: 0;
+  inset: var(--ch-titlebar-offset) 0 0;
   overflow: auto;
   padding: 10vh max(24px, calc(50% - 22rem)) 6vh;
   animation: ch-atelier-in var(--ch-dur-view) var(--ch-ease) both;
@@ -93,6 +93,16 @@
 }
 
 .ch-library-meta {
+  color: var(--ch-muted);
+  font-size: var(--ch-ui-xs);
+}
+
+.ch-library-folder {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin: -16px 0 24px;
   color: var(--ch-muted);
   font-size: var(--ch-ui-xs);
 }

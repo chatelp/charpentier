@@ -21,3 +21,5 @@ jobs:
       # Format, lint (incl. host-API guardrails), typecheck, tests,
       # guardrail self-test and dependency license check.
       - run: pnpm check
+      # The desktop app itself: built, launched in Electron (virtual display), killed mid-write.
+      - run: xvfb-run -a pnpm test:desktop
