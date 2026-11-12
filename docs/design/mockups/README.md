@@ -11,6 +11,10 @@ Taille de référence : 1536×864 px CSS (X250 en 1920×1080 à 125 %). Sous 118
 
 Les polices viennent de Google Fonts **pour les maquettes seulement** ; l'application embarquera les polices retenues (toutes sous OFL) et ne chargera rien du réseau. Le texte de la scène est un exemple écrit pour la maquette.
 
+## Direction retenue
+
+**Perle**, avec les leviers **B · Deux encres** et **C · Signature** (actifs par défaut dans la maquette ; A · Pierre chaude écarté), navigation du manuscrit par **tiroir + vue d'ensemble** (bouton « Plan » du tiroir). Le design language qui en découle est décrit dans [`../../DESIGN.md`](../../DESIGN.md).
+
 ## Les trois directions
 
 Socle commun, issu du brief (`../brief.md`) : neumorphisme, page d'écriture plate et outils en relief, accent bleu de Prusse réservé au Compagnon, marge qui respire, statuts portés par le relief, panneau droit Points / Conversation, ligne de commande en pied, Atelier plein cadre + fiche en volet.
