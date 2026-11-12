@@ -1,0 +1,91 @@
+/**
+ * Keybindings are written like TipTap/ProseMirror's: `Mod-Alt-Shift-ArrowUp`,
+ * where `Mod` is ⌘ on macOS and Ctrl elsewhere (decided by the host).
+ */
+
+export type PrimaryModifier = 'Meta' | 'Control';
+
+export interface Chord {
+  readonly key: string; // lower-case letter, or a KeyboardEvent.key name (ArrowUp, Enter…)
+  readonly meta: boolean;
+  readonly ctrl: boolean;
+  readonly alt: boolean;
+  readonly shift: boolean;
+}
+
+export function parseKeybinding(binding: string, primary: PrimaryModifier): Chord {
+  const parts = binding.split('-');
+  const rawKey = parts.pop();
+  if (!rawKey) throw new Error(`Invalid keybinding: ${binding}`);
+  const mods = new Set(parts.map((p) => p.toLowerCase()));
+  for (const m of mods) {
+    if (!['mod', 'alt', 'shift', 'ctrl', 'meta'].includes(m))
+      throw new Error(`Invalid modifier in ${binding}: ${m}`);
+  }
+  const mod = mods.has('mod');
+  return {
+    key: rawKey.length === 1 ? rawKey.toLowerCase() : rawKey,
+    meta: mods.has('meta') || (mod && primary === 'Meta'),
+    ctrl: mods.has('ctrl') || (mod && primary === 'Control'),
+    alt: mods.has('alt'),
+    shift: mods.has('shift'),
+  };
+}
+
+/**
+ * The key an event stands for. With Alt, macOS turns letters into other
+ * characters (⌥N gives "˜"), and AZERTY/QWERTY differ: for letters and
+ * digits typed with Alt, fall back to the physical key code.
+ */
+export function eventKey(event: Pick<KeyboardEvent, 'key' | 'code' | 'altKey'>): string {
+  if (event.altKey) {
+    const letter = /^Key([A-Z])$/.exec(event.code);
+    if (letter?.[1]) return letter[1].toLowerCase();
+    const digit = /^Digit([0-9])$/.exec(event.code);
+    if (digit?.[1]) return digit[1];
+  }
+  return event.key.length === 1 ? event.key.toLowerCase() : event.key;
+}
+
+export function matches(
+  chord: Chord,
+  event: Pick<KeyboardEvent, 'key' | 'code' | 'altKey' | 'shiftKey' | 'metaKey' | 'ctrlKey'>,
+): boolean {
+  return (
+    eventKey(event) === chord.key &&
+    event.metaKey === chord.meta &&
+    event.ctrlKey === chord.ctrl &&
+    event.altKey === chord.alt &&
+    event.shiftKey === chord.shift
+  );
+}
+
+export const sameChord = (a: Chord, b: Chord): boolean =>
+  a.key === b.key &&
+  a.meta === b.meta &&
+  a.ctrl === b.ctrl &&
+  a.alt === b.alt &&
+  a.shift === b.shift;
+
+const KEY_LABELS: Record<string, string> = {
+  ArrowUp: '↑',
+  ArrowDown: '↓',
+  ArrowLeft: '←',
+  ArrowRight: '→',
+  Enter: '↵',
+  Escape: 'Échap',
+  Backspace: '⌫',
+  Delete: 'Suppr',
+  ' ': 'Espace',
+};
+
+/** Human label: `⌥⇧⌘↑` on macOS, `Ctrl+Alt+Maj+↑` elsewhere. */
+export function formatChord(chord: Chord, primary: PrimaryModifier): string {
+  const key = KEY_LABELS[chord.key] ?? chord.key.toUpperCase();
+  if (primary === 'Meta') {
+    return `${chord.ctrl ? '⌃' : ''}${chord.alt ? '⌥' : ''}${chord.shift ? '⇧' : ''}${chord.meta ? '⌘' : ''}${key}`;
+  }
+  return [chord.ctrl && 'Ctrl', chord.meta && 'Méta', chord.alt && 'Alt', chord.shift && 'Maj', key]
+    .filter(Boolean)
+    .join('+');
+}
