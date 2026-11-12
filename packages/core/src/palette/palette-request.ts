@@ -1,6 +1,10 @@
 /** What the palette is asked to show. */
 export type PaletteRequest =
-  | { readonly kind: 'commands' }
+  | {
+      readonly kind: 'commands';
+      /** Initial text, e.g. `#` to open on the scenes. */
+      readonly query?: string;
+    }
   | {
       readonly kind: 'pick';
       readonly placeholder: string;
@@ -20,4 +24,11 @@ export interface PickItem {
   readonly label: string;
   readonly detail?: string;
   readonly shortcut?: string;
+}
+
+/** What a prefix of the command line searches (`#` scenes, later `@` sheets). */
+export interface PaletteScope {
+  readonly label: string;
+  readonly items: readonly PickItem[];
+  onPick(id: string): void;
 }

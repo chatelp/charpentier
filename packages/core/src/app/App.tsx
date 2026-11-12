@@ -60,9 +60,6 @@ function Root() {
     <>
       {opening.state === 'ready' && <ProjectWorkspace session={opening.session} />}
       {opening.state === 'error' && <p role="alert">{t('app.openError')}</p>}
-      {platform.agents.status() === 'disabled' && (
-        <p className="ch-status">{t('mentor.unavailableOnHost')}</p>
-      )}
     </>
   );
 }

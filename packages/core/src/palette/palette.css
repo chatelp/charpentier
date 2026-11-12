@@ -1,73 +1,120 @@
-.ch-palette-backdrop {
+/* Command line (docs/DESIGN.md §4.6): a bar at the bottom, results rising above it. */
+.ch-cmd-backdrop {
   position: fixed;
   inset: 0;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding-top: 14vh;
-  background: color-mix(in srgb, var(--ch-bg) 55%, transparent);
-  z-index: 20;
+  z-index: var(--ch-z-command);
 }
 
-.ch-palette {
-  width: min(36rem, calc(100vw - 2rem));
+.ch-cmdbar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: var(--ch-space-3) var(--ch-space-5) var(--ch-space-4);
   background: var(--ch-bg);
-  color: var(--ch-fg);
-  border: 1px solid color-mix(in srgb, var(--ch-fg) 18%, transparent);
-  border-radius: 8px;
-  box-shadow: 0 12px 40px color-mix(in srgb, #000 18%, transparent);
-  font-family: var(--ch-font-ui);
-  font-size: 0.95rem;
-  overflow: hidden;
+  animation: ch-rise var(--ch-dur-panel) var(--ch-ease) both;
 }
 
-.ch-palette-input {
-  width: 100%;
+/* The text fades under the bar instead of being cut. */
+.ch-cmdbar::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 18px;
+  transform: translateY(-100%);
+  background: linear-gradient(to top, var(--ch-bg), transparent);
+  pointer-events: none;
+}
+
+.ch-cmd-field {
+  display: flex;
+  align-items: center;
+  gap: var(--ch-space-3);
+  height: 46px;
+  padding: 0 var(--ch-space-4);
+  border-radius: var(--ch-radius-md);
+  box-shadow: var(--ch-inset);
+  font-size: var(--ch-ui-lg);
+}
+
+.ch-cmd-prompt {
+  color: var(--ch-mentor);
+  font-weight: 600;
+}
+
+.ch-cmd-input {
+  flex: 1;
+  min-width: 0;
   border: 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--ch-fg) 12%, transparent);
-  padding: 0.8rem 1rem;
-  font: inherit;
-  font-size: 1rem;
-  color: inherit;
+  outline: 0;
   background: transparent;
-  outline: none;
+  color: var(--ch-ink);
+  font: inherit;
 }
 
-.ch-palette-list {
+.ch-cmd-input::placeholder {
+  color: var(--ch-faint);
+}
+
+.ch-cmd-hint {
+  color: var(--ch-faint);
+  font-size: var(--ch-ui-xs);
+  white-space: nowrap;
+}
+
+.ch-cmd-results {
+  position: absolute;
+  left: var(--ch-space-5);
+  bottom: calc(100% + 4px);
+  width: min(46rem, calc(100% - 2 * var(--ch-space-5)));
+  max-height: 60vh;
+  overflow: auto;
+  padding: var(--ch-space-2);
+}
+
+.ch-cmd-group {
+  margin: var(--ch-space-2) 10px var(--ch-space-1);
+  color: var(--ch-muted);
+}
+
+.ch-cmd-list {
   list-style: none;
   margin: 0;
-  padding: 0.3rem 0;
-  max-height: 50vh;
-  overflow-y: auto;
+  padding: 0;
 }
 
-.ch-palette-item {
+.ch-cmd-item {
   display: flex;
   align-items: baseline;
-  gap: 0.75rem;
-  padding: 0.45rem 1rem;
+  gap: var(--ch-space-3);
+  padding: var(--ch-space-2) 10px;
+  border-radius: var(--ch-radius-sm);
+  color: var(--ch-ink-2);
+  font-size: var(--ch-ui-md);
   cursor: pointer;
 }
 
-.ch-palette-item[aria-selected='true'] {
-  background: color-mix(in srgb, var(--ch-fg) 9%, transparent);
+.ch-cmd-item[aria-selected='true'] {
+  box-shadow: var(--ch-inset);
+  color: var(--ch-ink);
 }
 
-.ch-palette-label {
+.ch-cmd-item mark {
+  background: none;
+  color: var(--ch-mentor);
+  font-weight: 600;
+}
+
+.ch-cmd-label {
   flex: 1;
 }
 
-.ch-palette-detail,
-.ch-palette-shortcut,
-.ch-palette-empty {
+.ch-cmd-detail {
   color: var(--ch-muted);
-  font-size: 0.85em;
+  font-size: var(--ch-ui-xs);
 }
 
-.ch-palette-shortcut {
-  font-family: inherit;
-}
-
-.ch-palette-empty {
-  padding: 0.6rem 1rem;
+.ch-cmd-empty {
+  padding: var(--ch-space-2) 10px;
+  color: var(--ch-muted);
 }

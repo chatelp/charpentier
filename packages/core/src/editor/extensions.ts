@@ -8,6 +8,7 @@ import Text from '@tiptap/extension-text';
 import { Placeholder } from '@tiptap/extensions';
 import { markInputRule, type AnyExtension } from '@tiptap/core';
 import type * as Y from 'yjs';
+import { CurrentBlock } from './current-block';
 import { SanitizePaste } from './sanitize-paste';
 import { SceneBreak } from './scene-break';
 
@@ -55,5 +56,6 @@ export function sceneEditorExtensions(options: {
     Collaboration.configure({ fragment: options.fragment }),
     Placeholder.configure({ placeholder: options.placeholder }),
     SanitizePaste,
+    CurrentBlock,
   ];
 }

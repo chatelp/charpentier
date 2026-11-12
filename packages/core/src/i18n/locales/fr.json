@@ -9,7 +9,7 @@
     "ariaLabel": "Texte de la scène"
   },
   "mentor": {
-    "unavailableOnHost": "Le mentor n'est pas disponible dans cette version."
+    "unavailableOnHost": "Le Compagnon n’est pas disponible dans cette version."
   },
   "manuscript": {
     "defaultProjectTitle": "Mon roman",
@@ -19,8 +19,8 @@
     "newChapterTitle": "Nouveau chapitre"
   },
   "commands": {
-    "openPalette": "Ouvrir la palette de commandes",
-    "toggleNavigator": "Afficher ou masquer le plan",
+    "openPalette": "Ouvrir la ligne de commande",
+    "toggleNavigator": "Afficher ou masquer le manuscrit",
     "goToScene": "Aller à la scène…",
     "nextScene": "Scène suivante",
     "previousScene": "Scène précédente",
@@ -49,15 +49,23 @@
     "createCheckpoint": "Créer un point de restauration",
     "createNamedCheckpoint": "Créer un point de restauration nommé…",
     "restoreCheckpoint": "Revenir à un point de restauration…",
-    "variantFromCheckpoint": "Créer une variante depuis un point de restauration…"
+    "variantFromCheckpoint": "Créer une variante depuis un point de restauration…",
+    "increaseTextSize": "Agrandir le texte",
+    "decreaseTextSize": "Réduire le texte",
+    "resetTextSize": "Taille du texte par défaut",
+    "widenColumn": "Élargir la colonne",
+    "narrowColumn": "Rétrécir la colonne",
+    "toggleFocusMode": "Mode focus",
+    "toggleTypewriter": "Défilement machine à écrire",
+    "cycleTheme": "Changer de thème (système, clair, sombre)",
+    "toggleReducedMotion": "Réduire les animations"
   },
   "palette": {
-    "label": "Palette de commandes",
+    "label": "Ligne de commande",
     "searchCommands": "Rechercher une commande…",
     "noResults": "Aucun résultat",
     "sceneTitle": "Titre de la scène",
     "chapterTitle": "Titre du chapitre",
-    "pickScene": "Aller à la scène…",
     "pickChapter": "Vers quel chapitre ?",
     "pickTrash": "Que restaurer ?",
     "trashedScene": "Scène",
@@ -70,12 +78,17 @@
     "pickCheckpointForVariant": "Partir de quel moment ?",
     "noCheckpoints": "Aucun point de restauration pour cette variante.",
     "trashedVariant": "Variante de la scène ouverte",
-    "activeVariant": "variante active"
+    "activeVariant": "variante active",
+    "commandsGroup": "Commandes",
+    "scenesGroup": "Scènes",
+    "prefixHint": "# scènes · > commandes"
   },
   "navigator": {
     "label": "Plan du manuscrit",
     "hint": "↑↓ parcourir · ↵ ouvrir · ⌥↑↓ déplacer · R renommer · N scène · ⇧N chapitre · ⌫ corbeille · Échap fermer",
-    "current": "scène ouverte"
+    "current": "scène ouverte",
+    "title": "Manuscrit",
+    "variants": "Variantes de la scène"
   },
   "variants": {
     "defaultName": "Version {{n}}"
@@ -95,6 +108,17 @@
   "status": {
     "checkpointCreated": "Point de restauration créé.",
     "checkpointRestored": "Version restaurée ({{date}}). L’état précédent reste dans l’historique.",
-    "variantCreated": "Variante « {{name}} » créée."
+    "variantCreated": "Variante « {{name}} » créée.",
+    "theme": {
+      "system": "Thème : celui du système.",
+      "light": "Thème clair.",
+      "dark": "Thème sombre."
+    },
+    "motionReduced": "Animations réduites.",
+    "motionNormal": "Animations rétablies."
+  },
+  "footer": {
+    "words_one": "{{count, number}} mot",
+    "words_other": "{{count, number}} mots"
   }
 }

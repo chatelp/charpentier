@@ -1,0 +1,132 @@
+/* Writing surface (docs/DESIGN.md §4.1): a flat page, the text set on the background. */
+.ch-app {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+
+.ch-write {
+  position: absolute;
+  inset: 0;
+  overflow: auto;
+  transition:
+    opacity var(--ch-dur-panel),
+    filter var(--ch-dur-panel);
+}
+
+/* Behind the drawer, the page fades. */
+.ch-write.is-behind {
+  opacity: 0.45;
+  filter: saturate(0.6);
+}
+
+.ch-scene-header {
+  position: sticky;
+  top: 0;
+  z-index: var(--ch-z-header);
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 0.6em;
+  padding: 14px var(--ch-space-4) 10px;
+  background: var(--ch-bg);
+  color: var(--ch-muted);
+  font-family: var(--ch-font-text);
+  font-size: 14.5px;
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.1em;
+}
+
+/* The header melts into the text. */
+.ch-scene-header::after {
+  content: '';
+  position: absolute;
+  inset: 100% 0 auto 0;
+  height: 28px;
+  background: linear-gradient(var(--ch-bg), transparent);
+  pointer-events: none;
+}
+
+.ch-crumb {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+}
+
+.ch-crumb.is-scene {
+  color: var(--ch-author);
+  font-size: 14px;
+  font-style: italic;
+  font-variant-caps: normal;
+  letter-spacing: 0.01em;
+}
+
+.ch-crumb.is-variant {
+  color: var(--ch-faint);
+}
+
+.ch-page {
+  width: min(var(--ch-measure), calc(100% - 4rem));
+  margin: 0 auto;
+  padding: 13vh 0 34vh;
+}
+
+/* Typewriter scrolling needs room under the last line. */
+.ch-app[data-typewriter] .ch-page {
+  padding-bottom: 60vh;
+}
+
+.ch-opener {
+  margin: 0 0 3.2rem;
+  text-align: center;
+  font-family: var(--ch-font-text);
+  color: var(--ch-ink-2);
+}
+
+.ch-opener-numeral {
+  font-size: var(--ch-title-opener);
+  line-height: 1;
+  color: var(--ch-author);
+}
+
+.ch-opener-chapter {
+  margin-top: 0.4rem;
+  font-size: 1.15rem;
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.14em;
+}
+
+.ch-opener-fleuron {
+  margin: 0.9rem 0 0.5rem;
+  color: var(--ch-faint);
+  font-size: 1.1rem;
+}
+
+.ch-opener-scene {
+  color: var(--ch-ink);
+  font-size: 1.25rem;
+  font-style: italic;
+}
+
+.ch-footer {
+  position: absolute;
+  left: 22px;
+  right: 22px;
+  bottom: 12px;
+  z-index: var(--ch-z-header);
+  display: flex;
+  justify-content: space-between;
+  gap: var(--ch-space-4);
+  color: var(--ch-muted);
+  font-size: var(--ch-ui-xs);
+  pointer-events: none;
+}
+
+.ch-footer-right {
+  display: flex;
+  gap: 14px;
+}

@@ -11,6 +11,7 @@ export default defineProject({
       '@tiptap/react',
       '@tiptap/pm/model',
       '@tiptap/pm/state',
+      '@tiptap/pm/view',
       '@tiptap/extension-blockquote',
       '@tiptap/extension-collaboration',
       '@tiptap/extension-document',

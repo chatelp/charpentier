@@ -1,7 +1,8 @@
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
+import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { filterByQuery } from '../commands/registry';
-import type { PaletteRequest, PickItem } from './palette-request';
+import { matchRanges } from './highlight';
+import type { PaletteRequest, PaletteScope, PickItem } from './palette-request';
 import './palette.css';
 
 export interface PaletteCommand extends PickItem {
@@ -12,31 +13,66 @@ export interface CommandPaletteProps {
   readonly request: PaletteRequest;
   /** Available commands, for `kind: 'commands'`. */
   readonly commands: readonly PaletteCommand[];
+  /** Other searches of the command line, by prefix: `#` scenes… (`>` is the commands). */
+  readonly scopes?: Readonly<Record<string, PaletteScope>>;
   readonly onClose: () => void;
 }
 
+const COMMANDS_PREFIX = '>';
+
+function Highlighted({ text, query }: { readonly text: string; readonly query: string }) {
+  const parts: ReactNode[] = [];
+  let at = 0;
+  for (const [start, end] of matchRanges(text, query)) {
+    if (start > at) parts.push(text.slice(at, start));
+    parts.push(<mark key={start}>{text.slice(start, end)}</mark>);
+    at = end;
+  }
+  parts.push(text.slice(at));
+  return <>{parts}</>;
+}
+
 /**
- * Keyboard-first palette: search commands, pick an item (a scene, a chapter…)
- * or type a value (a title). ↑↓ to move, ↵ to choose, Échap to leave.
+ * The command line (docs/DESIGN.md §4.6), at the bottom of the window:
+ * search commands (or, with a prefix, scenes…), pick an item, or type a value
+ * (a title). ↑↓ to move, ↵ to choose, Échap to go back to the text.
  */
-export function CommandPalette({ request, commands, onClose }: CommandPaletteProps) {
+export function CommandPalette({ request, commands, scopes = {}, onClose }: CommandPaletteProps) {
   const { t } = useTranslation();
   const listId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
-  const [query, setQuery] = useState(request.kind === 'input' ? request.initial : '');
+  const [query, setQuery] = useState(
+    request.kind === 'input'
+      ? request.initial
+      : request.kind === 'commands'
+        ? (request.query ?? '')
+        : '',
+  );
   const [active, setActive] = useState(0);
 
   useEffect(() => {
-    inputRef.current?.focus();
-    inputRef.current?.select();
-  }, []);
+    const input = inputRef.current;
+    if (!input) return;
+    input.focus();
+    // A prefilled prefix is kept, the cursor after it; a value to edit is selected.
+    if (request.kind === 'input') input.select();
+    else input.setSelectionRange(input.value.length, input.value.length);
+  }, [request.kind]);
 
+  const prefix = request.kind === 'commands' ? query.charAt(0) : '';
+  const scope = request.kind === 'commands' ? scopes[prefix] : undefined;
+  const search =
+    request.kind === 'commands' && (scope || prefix === COMMANDS_PREFIX) ? query.slice(1) : query;
   const items: readonly PickItem[] =
-    request.kind === 'commands' ? commands : request.kind === 'pick' ? request.items : [];
+    request.kind === 'commands'
+      ? (scope?.items ?? commands)
+      : request.kind === 'pick'
+        ? request.items
+        : [];
   const filtered =
     request.kind === 'input'
       ? []
-      : filterByQuery(items, query, (i) => `${i.label} ${i.detail ?? ''}`);
+      : filterByQuery(items, search, (i) => `${i.label} ${i.detail ?? ''}`);
   const activeIndex = Math.min(active, Math.max(filtered.length - 1, 0));
   const optionId = (i: number) => `${listId}-${i}`;
 
@@ -47,7 +83,8 @@ export function CommandPalette({ request, commands, onClose }: CommandPalettePro
   const choose = (item: PickItem | undefined) => {
     if (!item) return;
     onClose();
-    if (request.kind === 'commands') commands.find((c) => c.id === item.id)?.run();
+    if (scope) scope.onPick(item.id);
+    else if (request.kind === 'commands') commands.find((c) => c.id === item.id)?.run();
     else if (request.kind === 'pick') request.onPick(item.id);
   };
 
@@ -77,58 +114,76 @@ export function CommandPalette({ request, commands, onClose }: CommandPalettePro
 
   const placeholder =
     request.kind === 'commands' ? t('palette.searchCommands') : request.placeholder;
+  const groupLabel =
+    request.kind === 'commands' ? (scope?.label ?? t('palette.commandsGroup')) : undefined;
   const emptyText =
     request.kind === 'pick' && request.empty && items.length === 0
       ? request.empty
       : t('palette.noResults');
+  const showHint = request.kind === 'commands' && Object.keys(scopes).length > 0;
 
   return (
-    <div className="ch-palette-backdrop" onMouseDown={onClose}>
+    <div className="ch-cmd-backdrop" onMouseDown={onClose}>
       <div
-        className="ch-palette"
+        className="ch-cmdbar"
         role="dialog"
         aria-modal="true"
         aria-label={t('palette.label')}
         onMouseDown={(e) => e.stopPropagation()}
       >
-        <input
-          ref={inputRef}
-          className="ch-palette-input"
-          value={query}
-          placeholder={placeholder}
-          aria-label={placeholder}
-          spellCheck={false}
-          {...(request.kind !== 'input' && {
-            role: 'combobox',
-            'aria-expanded': true,
-            'aria-controls': listId,
-            'aria-activedescendant': filtered.length ? optionId(activeIndex) : undefined,
-          })}
-          onChange={(e) => {
-            setQuery(e.target.value);
-            setActive(0);
-          }}
-          onKeyDown={onKeyDown}
-        />
+        <div className="ch-cmd-field">
+          <span className="ch-cmd-prompt" aria-hidden="true">
+            ›
+          </span>
+          <input
+            ref={inputRef}
+            className="ch-cmd-input"
+            value={query}
+            placeholder={placeholder}
+            aria-label={placeholder}
+            spellCheck={false}
+            {...(request.kind !== 'input' && {
+              role: 'combobox',
+              'aria-expanded': true,
+              'aria-controls': listId,
+              'aria-activedescendant': filtered.length ? optionId(activeIndex) : undefined,
+            })}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setActive(0);
+            }}
+            onKeyDown={onKeyDown}
+          />
+          {showHint && <span className="ch-cmd-hint">{t('palette.prefixHint')}</span>}
+        </div>
         {request.kind !== 'input' && (
-          <ul className="ch-palette-list" id={listId} role="listbox" aria-label={placeholder}>
-            {filtered.map((item, i) => (
-              <li
-                key={item.id}
-                id={optionId(i)}
-                role="option"
-                aria-selected={i === activeIndex}
-                className="ch-palette-item"
-                onMouseMove={() => setActive(i)}
-                onClick={() => choose(item)}
-              >
-                <span className="ch-palette-label">{item.label}</span>
-                {item.detail && <span className="ch-palette-detail">{item.detail}</span>}
-                {item.shortcut && <kbd className="ch-palette-shortcut">{item.shortcut}</kbd>}
-              </li>
-            ))}
-            {filtered.length === 0 && <li className="ch-palette-empty">{emptyText}</li>}
-          </ul>
+          <div className="ch-cmd-results ch-raised">
+            {groupLabel && (
+              <p className="ch-cmd-group ch-label" aria-hidden="true">
+                {groupLabel}
+              </p>
+            )}
+            <ul className="ch-cmd-list" id={listId} role="listbox" aria-label={placeholder}>
+              {filtered.map((item, i) => (
+                <li
+                  key={item.id}
+                  id={optionId(i)}
+                  role="option"
+                  aria-selected={i === activeIndex}
+                  className="ch-cmd-item"
+                  onMouseMove={() => setActive(i)}
+                  onClick={() => choose(item)}
+                >
+                  <span className="ch-cmd-label">
+                    <Highlighted text={item.label} query={search} />
+                  </span>
+                  {item.detail && <span className="ch-cmd-detail">{item.detail}</span>}
+                  {item.shortcut && <kbd className="ch-cmd-shortcut">{item.shortcut}</kbd>}
+                </li>
+              ))}
+              {filtered.length === 0 && <li className="ch-cmd-empty">{emptyText}</li>}
+            </ul>
+          </div>
         )}
       </div>
     </div>

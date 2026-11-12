@@ -9,7 +9,6 @@ import {
   moveChapterStep,
   moveScene,
   moveSceneStep,
-  readOutline,
   renameChapter,
   renameScene,
   restoreChapter,
@@ -22,6 +21,7 @@ import { ensureScene } from '../workspace/default-scene';
 import type { CommandId } from './command-id';
 import type { PrimaryModifier } from './keybinding';
 import { trashedVariantItems, variantCommands } from './variant-commands';
+import { writingCommands } from './writing-commands';
 import { CommandRegistry, type Command } from './registry';
 
 export type { CommandId } from './command-id';
@@ -131,15 +131,8 @@ export const workspaceCommands: readonly WorkspaceCommand[] = [
     id: 'goToScene',
     scope: 'global',
     keybinding: 'Mod-p',
-    run: (ctx) =>
-      ctx.openPalette({
-        kind: 'pick',
-        placeholder: ctx.t('palette.pickScene'),
-        items: readOutline(ctx.root).flatMap((c) =>
-          c.scenes.map((s) => ({ id: s.id, label: s.title, detail: c.title })),
-        ),
-        onPick: (id) => ctx.openScene(id),
-      }),
+    // The command line, already in its `#` (scenes) mode.
+    run: (ctx) => ctx.openPalette({ kind: 'commands', query: '#' }),
   },
   {
     id: 'nextScene',
@@ -164,7 +157,8 @@ export const workspaceCommands: readonly WorkspaceCommand[] = [
   {
     id: 'newScene',
     scope: 'global',
-    keybinding: 'Mod-Alt-n',
+    // ⌘N where the host allows it (desktop); a browser keeps ⌘N for itself.
+    keybinding: ['Mod-n', 'Mod-Alt-n'],
     run: (ctx) => {
       const scene = currentScene(ctx);
       if (!scene) return;
@@ -329,6 +323,7 @@ export const workspaceCommands: readonly WorkspaceCommand[] = [
 
 export function createWorkspaceRegistry(primary: PrimaryModifier, reserved: readonly string[]) {
   const registry = new CommandRegistry<WorkspaceContext>(primary, reserved);
-  for (const command of [...workspaceCommands, ...variantCommands]) registry.register(command);
+  for (const command of [...workspaceCommands, ...variantCommands, ...writingCommands])
+    registry.register(command);
   return registry;
 }

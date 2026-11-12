@@ -37,7 +37,7 @@ async function startApp() {
 
 const command = async (query: string) => {
   await userEvent.keyboard('{ControlOrMeta>}k{/ControlOrMeta}');
-  await screen.findByRole('dialog', { name: 'Palette de commandes' });
+  await screen.findByRole('dialog', { name: 'Ligne de commande' });
   await userEvent.keyboard(`${query}{Enter}`);
 };
 

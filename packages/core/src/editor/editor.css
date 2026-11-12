@@ -1,11 +1,17 @@
+/* Scene text (docs/DESIGN.md §3.2): Literata, French book typography. */
 .ch-editor {
-  min-height: 60vh;
+  min-height: 40vh;
 }
 
 .ch-prose {
   outline: none;
-  min-height: 60vh;
-  caret-color: var(--ch-fg);
+  min-height: 40vh;
+  font-family: var(--ch-font-text);
+  font-size: var(--ch-text-size);
+  line-height: var(--ch-text-leading);
+  font-optical-sizing: auto;
+  color: var(--ch-ink);
+  caret-color: var(--ch-author);
   hyphens: auto;
   text-align: left;
   overflow-wrap: break-word;
@@ -13,7 +19,7 @@
 
 .ch-prose p {
   margin: 0;
-  text-indent: 1.5em;
+  text-indent: var(--ch-text-indent);
 }
 
 /* First paragraph of the scene, of a quote, and after a break: no indent. */
@@ -28,6 +34,7 @@
   font-size: 0.95em;
 }
 
+/* Scene-internal break: a centred fleuron. */
 .ch-prose hr.ch-scene-break {
   border: 0;
   margin: 1.6em 0;
@@ -37,17 +44,26 @@
 
 .ch-prose hr.ch-scene-break::after {
   content: '⁂';
-  color: var(--ch-muted);
+  color: var(--ch-faint);
 }
 
 .ch-prose hr.ProseMirror-selectednode::after {
-  color: var(--ch-fg);
+  color: var(--ch-author);
+}
+
+/* Focus mode: every block but the current one recedes. */
+.ch-prose > * {
+  transition: opacity 0.4s var(--ch-ease);
+}
+
+[data-focus] .ch-prose > :not(.is-current-block) {
+  opacity: 0.26;
 }
 
 /* Placeholder of the empty scene (TipTap Placeholder extension). */
 .ch-prose p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
-  color: var(--ch-muted);
+  color: var(--ch-faint);
   font-style: italic;
   float: left;
   height: 0;

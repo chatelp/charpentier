@@ -53,7 +53,7 @@ async function press(chord: string) {
 }
 
 async function inputInPalette(text: string) {
-  const input = await screen.findByRole('dialog', { name: 'Palette de commandes' });
+  const input = await screen.findByRole('dialog', { name: 'Ligne de commande' });
   expect(input).toBeTruthy();
   await userEvent.keyboard(`{ControlOrMeta>}a{/ControlOrMeta}${text}{Enter}`);
 }

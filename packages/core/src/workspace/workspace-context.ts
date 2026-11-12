@@ -2,6 +2,7 @@ import type { Editor } from '@tiptap/core';
 import type { TFunction } from 'i18next';
 import type * as Y from 'yjs';
 import type { PaletteRequest } from '../palette/palette-request';
+import type { PrefsUpdate, WritingPrefs } from './writing-prefs';
 
 /** Everything a command may use. Rebuilt on every render of the workspace. */
 export interface WorkspaceContext {
@@ -20,4 +21,6 @@ export interface WorkspaceContext {
   shortcutLabel(commandId: string): string | undefined;
   /** A short, discreet confirmation (read by screen readers). */
   notify(message: string): void;
+  readonly prefs: WritingPrefs;
+  updatePrefs(change: PrefsUpdate): void;
 }

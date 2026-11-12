@@ -1,22 +1,34 @@
 import { readOutline } from '@charpentier/schema';
 import type { Editor } from '@tiptap/core';
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePlatform } from '../app/platform-context';
+import { variantLabel } from '../commands/variant-commands';
 import { createWorkspaceRegistry } from '../commands/workspace-commands';
 import { SceneEditor } from '../editor/SceneEditor';
 import { useDocSnapshot } from '../hooks/use-doc-snapshot';
 import { Navigator } from '../navigator/Navigator';
 import { CommandPalette } from '../palette/CommandPalette';
-import type { PaletteRequest } from '../palette/palette-request';
+import type { PaletteRequest, PaletteScope } from '../palette/palette-request';
 import { lastScenePref, type ProjectSession } from './default-scene';
-import { variantLabel } from '../commands/variant-commands';
+import { SceneHeader, SceneOpener, WritingFooter } from './SceneChrome';
 import { useSceneDocs } from './use-scene-docs';
+import { useTypewriterScroll, useWordCount } from './use-writing-surface';
 import type { WorkspaceContext } from './workspace-context';
+import { useWritingPrefs } from './writing-prefs';
+import './workspace.css';
 
 let paletteSequence = 0;
 
-/** The writing workspace of one project: editor, navigator, palette, shortcuts. */
+/** The writing workspace of one project: editor, drawer, command line, shortcuts. */
 export function ProjectWorkspace({ session }: { readonly session: ProjectSession }) {
   const { t } = useTranslation();
   const platform = usePlatform();
@@ -26,6 +38,8 @@ export function ProjectWorkspace({ session }: { readonly session: ProjectSession
   const [editor, setEditor] = useState<Editor | null>(null);
   const [palette, setPalette] = useState<{ key: number; request: PaletteRequest } | null>(null);
   const [navigatorOpen, setNavigatorOpen] = useState(false);
+  const [prefs, updatePrefs] = useWritingPrefs(platform.preferences);
+  const scroller = useRef<HTMLDivElement>(null);
 
   const registry = useMemo(
     () =>
@@ -37,8 +51,12 @@ export function ProjectWorkspace({ session }: { readonly session: ProjectSession
   // The requested scene may vanish (trashed on another device): fall back to the first one.
   const scene = scenes.find((s) => s.id === requestedSceneId) ?? scenes[0];
   const sceneId = scene?.id ?? requestedSceneId;
+  const chapterIndex = outline.findIndex((c) => c.scenes.some((s) => s.id === sceneId));
+  const chapter = outline[chapterIndex];
   const sceneDocs = useSceneDocs(platform, projectId, sceneId, scene?.activeVariantId ?? '');
   const [status, setStatus] = useState<{ key: number; text: string } | null>(null);
+  const words = useWordCount(editor);
+  useTypewriterScroll(editor, scroller, prefs.typewriter);
 
   const openScene = useCallback(
     (id: string) => {
@@ -62,6 +80,8 @@ export function ProjectWorkspace({ session }: { readonly session: ProjectSession
     toggleNavigator: () => setNavigatorOpen((open) => !open),
     shortcutLabel: (id) => registry.shortcutLabel(id),
     notify: (text) => setStatus({ key: ++paletteSequence, text }),
+    prefs,
+    updatePrefs,
   };
 
   // Global shortcuts. The listener reads the latest context through a ref.
@@ -82,9 +102,11 @@ export function ProjectWorkspace({ session }: { readonly session: ProjectSession
     return () => window.removeEventListener('keydown', onKeyDown, true);
   }, [registry]);
 
-  // Back to the text whenever nothing else holds the focus.
+  // Back to the text whenever nothing else holds the focus. Synchronous on
+  // purpose: TipTap's `focus()` waits a frame and could then take the focus
+  // from a command line opened in between.
   const focusTextIfIdle = useCallback(() => {
-    if (!latest.current.paletteOpen) editor?.commands.focus();
+    if (!latest.current.paletteOpen && editor && !editor.isDestroyed) editor.view.focus();
   }, [editor]);
   const lastFocusedEditor = useRef<Editor | null>(null);
   useEffect(() => {
@@ -110,6 +132,8 @@ export function ProjectWorkspace({ session }: { readonly session: ProjectSession
 
   const closePalette = () => {
     setPalette(null);
+    // A command chosen in the palette may open another one right after.
+    latest.current.paletteOpen = false;
     if (!navigatorOpen) focusTextIfIdle();
   };
 
@@ -126,22 +150,57 @@ export function ProjectWorkspace({ session }: { readonly session: ProjectSession
       };
     });
 
+  const paletteScopes: Record<string, PaletteScope> = {
+    '#': {
+      label: t('palette.scenesGroup'),
+      items: outline.flatMap((c) =>
+        c.scenes.map((s) => ({ id: s.id, label: s.title, detail: c.title })),
+      ),
+      onPick: openScene,
+    },
+  };
+
+  const mentorNote =
+    platform.agents.status() === 'disabled' ? t('mentor.unavailableOnHost') : undefined;
+
+  const surfaceStyle = {
+    '--ch-text-size': `${prefs.textSize / 16}rem`,
+    '--ch-measure': `${prefs.measure}rem`,
+  } as CSSProperties;
+
   return (
-    <>
-      <main className="ch-surface">
-        <h1 className="ch-visually-hidden">{t('app.name')}</h1>
-        {sceneDocs && (
-          <SceneEditor
-            key={`${sceneId}/${scene?.activeVariantId}`}
-            fragment={sceneDocs.fragment}
-            language={language}
-            onEditor={setEditor}
-          />
-        )}
-      </main>
-      <p className="ch-toast" role="status" aria-live="polite">
-        {status?.text}
-      </p>
+    <div
+      className="ch-app"
+      style={surfaceStyle}
+      data-focus={prefs.focusMode || undefined}
+      data-typewriter={prefs.typewriter || undefined}
+    >
+      <div
+        ref={scroller}
+        className={`ch-write${navigatorOpen ? ' is-behind' : ''}`}
+        // A click on the faded page puts the drawer away.
+        onMouseDown={navigatorOpen ? () => setNavigatorOpen(false) : undefined}
+      >
+        <SceneHeader
+          chapter={chapter}
+          scene={scene}
+          onOutline={() => setNavigatorOpen(true)}
+          onVariants={() => void registry.execute('switchVariant', ctx)}
+        />
+        <main className="ch-page">
+          <h1 className="ch-visually-hidden">{t('app.name')}</h1>
+          <SceneOpener chapter={chapter} chapterIndex={chapterIndex} scene={scene} />
+          {sceneDocs && (
+            <SceneEditor
+              key={`${sceneId}/${scene?.activeVariantId}`}
+              fragment={sceneDocs.fragment}
+              language={language}
+              onEditor={setEditor}
+            />
+          )}
+        </main>
+      </div>
+      <WritingFooter words={words} status={status?.text} mentorNote={mentorNote} />
       {navigatorOpen && (
         <Navigator
           ctx={ctx}
@@ -149,7 +208,7 @@ export function ProjectWorkspace({ session }: { readonly session: ProjectSession
           active={palette === null}
           onClose={() => {
             setNavigatorOpen(false);
-            editor?.commands.focus();
+            focusTextIfIdle();
           }}
         />
       )}
@@ -158,9 +217,10 @@ export function ProjectWorkspace({ session }: { readonly session: ProjectSession
           key={palette.key}
           request={palette.request}
           commands={paletteCommands}
+          scopes={paletteScopes}
           onClose={closePalette}
         />
       )}
-    </>
+    </div>
   );
 }

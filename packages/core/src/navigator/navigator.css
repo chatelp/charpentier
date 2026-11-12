@@ -1,61 +1,104 @@
+/* Manuscript drawer (docs/DESIGN.md §4.4): a raised panel on the left. */
 .ch-navigator {
   position: fixed;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: min(20rem, 80vw);
+  top: 10px;
+  bottom: 12px;
+  left: 12px;
+  width: min(var(--ch-drawer-w), calc(100vw - 24px));
   display: flex;
   flex-direction: column;
-  background: var(--ch-bg);
-  border-right: 1px solid color-mix(in srgb, var(--ch-fg) 12%, transparent);
-  font-family: var(--ch-font-ui);
-  font-size: 0.9rem;
-  z-index: 10;
+  z-index: var(--ch-z-panel);
+  animation: ch-slide-from-left var(--ch-dur-panel) var(--ch-ease) both;
+}
+
+.ch-nav-title {
+  margin: var(--ch-space-5) var(--ch-space-5) var(--ch-space-1);
+  color: var(--ch-author);
 }
 
 .ch-nav-tree {
   flex: 1;
   list-style: none;
   margin: 0;
-  padding: 1.5rem 0 1rem;
+  padding: var(--ch-space-1) 0 var(--ch-space-3);
   overflow-y: auto;
 }
 
 .ch-nav-item {
-  padding: 0.3rem 1rem;
+  margin: 2px var(--ch-space-3);
+  padding: 7px 10px 7px 14px;
+  border-radius: var(--ch-radius-sm);
+  color: var(--ch-ink-2);
   cursor: pointer;
   outline: none;
-  border-left: 2px solid transparent;
+  transition: box-shadow var(--ch-dur-press) var(--ch-ease);
 }
 
 .ch-nav-chapter {
-  margin-top: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.01em;
+  margin-top: var(--ch-space-3);
+  padding-left: 10px;
+  color: var(--ch-ink);
+  font-family: var(--ch-font-text);
+  font-size: 15px;
+  font-weight: 500;
 }
 
 .ch-nav-scene {
-  padding-left: 1.75rem;
+  font-size: var(--ch-ui-sm);
 }
 
+/* Keyboard focus: engraved. The open scene: engraved, vermilion rule. */
 .ch-nav-item:focus-visible,
 .ch-nav-item[aria-selected='true']:focus {
-  background: color-mix(in srgb, var(--ch-fg) 9%, transparent);
+  box-shadow: var(--ch-inset);
+  color: var(--ch-ink);
 }
 
-.ch-nav-item.is-current {
-  border-left-color: var(--ch-fg);
+/* Wins over the focus rule above: the open scene keeps its vermilion rule. */
+.ch-nav-tree .ch-nav-item.is-current {
+  box-shadow:
+    var(--ch-inset),
+    inset 3px 0 0 var(--ch-author);
+  color: var(--ch-author);
 }
 
 .ch-nav-item.is-drop-target {
-  box-shadow: inset 0 2px 0 var(--ch-fg);
+  box-shadow: inset 0 2px 0 var(--ch-author);
+}
+
+/* Variants of the open scene, under it. */
+.ch-nav-sub {
+  margin: var(--ch-space-1) var(--ch-space-4) var(--ch-space-2) 26px;
+  padding-left: var(--ch-space-3);
+  border-left: 1px solid color-mix(in srgb, var(--ch-shade) 70%, transparent);
+  font-size: 12.5px;
+}
+
+.ch-nav-sub-title {
+  margin: var(--ch-space-1) 0;
+  color: var(--ch-muted);
+}
+
+.ch-nav-variant {
+  display: block;
+  width: 100%;
+  padding: 3px 0;
+  border: 0;
+  background: none;
+  color: var(--ch-ink-2);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ch-nav-variant.is-active {
+  color: var(--ch-author);
 }
 
 .ch-nav-hint {
   margin: 0;
-  padding: 0.75rem 1rem;
-  color: var(--ch-muted);
-  font-size: 0.75rem;
-  line-height: 1.5;
-  border-top: 1px solid color-mix(in srgb, var(--ch-fg) 8%, transparent);
+  padding: var(--ch-space-3) var(--ch-space-5) var(--ch-space-4);
+  color: var(--ch-faint);
+  font-size: var(--ch-ui-2xs);
+  line-height: 1.6;
 }

@@ -112,7 +112,14 @@ export const variantCommands: readonly (Command<Ctx> & { readonly id: CommandId 
       });
     },
   },
-  { id: 'newVariant', scope: 'global', isEnabled: hasDocs, run: (ctx) => newVariant(ctx, true) },
+  {
+    id: 'newVariant',
+    scope: 'global',
+    // ⌘⇧N on the desktop; a browser keeps it for private windows.
+    keybinding: ['Mod-Shift-n'],
+    isEnabled: hasDocs,
+    run: (ctx) => newVariant(ctx, true),
+  },
   {
     id: 'newEmptyVariant',
     scope: 'global',

@@ -4,9 +4,11 @@ import {
   moveChapterStep,
   moveScene,
   moveSceneStep,
+  setActiveVariant,
   type OutlineChapter,
 } from '@charpentier/schema';
-import { useEffect, useRef, useState, type DragEvent, type KeyboardEvent } from 'react';
+import { Fragment, useEffect, useRef, useState, type DragEvent, type KeyboardEvent } from 'react';
+import { variantLabel } from '../commands/variant-commands';
 import { useTranslation } from 'react-i18next';
 import {
   newChapterAt,
@@ -177,8 +179,11 @@ export function Navigator({ ctx, outline, active, onClose }: NavigatorProps) {
     setDragged(null);
   };
 
+  const currentScene = outline.flatMap((c) => c.scenes).find((s) => s.id === ctx.sceneId);
+
   return (
-    <aside className="ch-navigator" aria-label={t('navigator.label')}>
+    <aside className="ch-navigator ch-raised" aria-label={t('navigator.label')}>
+      <h2 className="ch-nav-title ch-label">{t('navigator.title')}</h2>
       <ul
         className="ch-nav-tree"
         role="tree"
@@ -186,46 +191,64 @@ export function Navigator({ ctx, outline, active, onClose }: NavigatorProps) {
         onKeyDown={onKeyDown}
       >
         {items.map((item) => (
-          <li
-            key={item.id}
-            ref={(el) => {
-              if (el) elements.current.set(item.id, el);
-              else elements.current.delete(item.id);
-            }}
-            role="treeitem"
-            aria-level={item.kind === 'chapter' ? 1 : 2}
-            aria-selected={item.id === focused?.id}
-            aria-current={item.id === ctx.sceneId ? 'true' : undefined}
-            tabIndex={item.id === focused?.id ? 0 : -1}
-            className={[
-              'ch-nav-item',
-              `ch-nav-${item.kind}`,
-              item.id === ctx.sceneId && 'is-current',
-              item.id === dropTarget && 'is-drop-target',
-            ]
-              .filter(Boolean)
-              .join(' ')}
-            draggable
-            onDragStart={(e) => {
-              e.dataTransfer.effectAllowed = 'move';
-              e.dataTransfer.setData('text/plain', item.title);
-              setDragged(item);
-            }}
-            onDragEnd={() => {
-              setDragged(null);
-              setDropTarget(null);
-            }}
-            onDragOver={(e) => {
-              if (!dragged) return;
-              e.preventDefault();
-              setDropTarget(item.id);
-            }}
-            onDrop={(e) => onDrop(e, item)}
-            onFocus={() => setFocusedId(item.id)}
-            onClick={() => openItem(item)}
-          >
-            {item.title}
-          </li>
+          <Fragment key={item.id}>
+            <li
+              ref={(el) => {
+                if (el) elements.current.set(item.id, el);
+                else elements.current.delete(item.id);
+              }}
+              role="treeitem"
+              aria-level={item.kind === 'chapter' ? 1 : 2}
+              aria-selected={item.id === focused?.id}
+              aria-current={item.id === ctx.sceneId ? 'true' : undefined}
+              tabIndex={item.id === focused?.id ? 0 : -1}
+              className={[
+                'ch-nav-item',
+                `ch-nav-${item.kind}`,
+                item.id === ctx.sceneId && 'is-current',
+                item.id === dropTarget && 'is-drop-target',
+              ]
+                .filter(Boolean)
+                .join(' ')}
+              draggable
+              onDragStart={(e) => {
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', item.title);
+                setDragged(item);
+              }}
+              onDragEnd={() => {
+                setDragged(null);
+                setDropTarget(null);
+              }}
+              onDragOver={(e) => {
+                if (!dragged) return;
+                e.preventDefault();
+                setDropTarget(item.id);
+              }}
+              onDrop={(e) => onDrop(e, item)}
+              onFocus={() => setFocusedId(item.id)}
+              onClick={() => openItem(item)}
+            >
+              {item.title}
+            </li>
+            {item.id === ctx.sceneId && currentScene && currentScene.variants.length > 1 && (
+              // Mouse shortcut to the variants (⌥⌘V from the keyboard).
+              <li role="none" className="ch-nav-sub">
+                <p className="ch-nav-sub-title ch-label">{t('navigator.variants')}</p>
+                {currentScene.variants.map((v) => (
+                  <button
+                    key={v.id}
+                    type="button"
+                    tabIndex={-1}
+                    className={`ch-nav-variant${v.id === currentScene.activeVariantId ? ' is-active' : ''}`}
+                    onClick={() => setActiveVariant(ctx.root, currentScene.id, v.id)}
+                  >
+                    {variantLabel(t, currentScene, v.id)}
+                  </button>
+                ))}
+              </li>
+            )}
+          </Fragment>
         ))}
       </ul>
       <p className="ch-nav-hint">{t('navigator.hint')}</p>

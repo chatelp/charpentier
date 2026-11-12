@@ -195,6 +195,7 @@ Registre central dans le cœur, tous modifiables. `⌘` = `Ctrl` sur le X250.
 - Toute chaîne vient du catalogue i18n (`fr.json`) ; les maquettes fixent le ton : vouvoiement, phrases courtes, verbes d'action sur les boutons (« Valider », « Corriger le texte », « Mettre à jour la fiche »), pas de point d'exclamation.
 
 ## 6. Suites
-- Intégrer `design/tokens.css` dans `packages/core/src/styles/` et embarquer Literata et Inter (session de l'application ; licence OFL à déclarer).
-- Reporter au journal des décisions de la SPEC : nom du Compagnon (question ouverte n°4) et principe « marge qui respire » (éclaire la question n°3).
+- ~~Intégrer `design/tokens.css` dans `packages/core/src/styles/` et embarquer Literata et Inter.~~ Fait (phase 1.7 bis) : `packages/core/src/styles/tokens.css` est désormais la copie de référence, polices dans `packages/core/src/fonts`.
+- ~~Reporter au journal des décisions de la SPEC : nom du Compagnon et « marge qui respire ».~~ Fait : [D-16], [D-17], question n°3 annotée.
+- Raccourcis : un hôte qui garde un raccourci pour lui (⌘N, ⌘⇧N, ⌘1…9, ⌘⌥←→ dans un navigateur) fait basculer la commande sur son autre raccourci ou sur la ligne de commande ; sur le bureau, les raccourcis de ce tableau s'appliquent tels quels.
 - À trancher avant l'étape 3 : seuil exact de la pause qui autorise une pastille (proposé : 1,5 s) et liste des types de remarques visibles pendant l'écriture (question ouverte n°2).
