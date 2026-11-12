@@ -12,6 +12,7 @@
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.test.json"
   },
   "dependencies": {
-    "@charpentier/platform": "workspace:*"
+    "@charpentier/platform": "workspace:*",
+    "yjs": "^13.6.33"
   }
 }
