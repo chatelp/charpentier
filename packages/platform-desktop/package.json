@@ -15,6 +15,8 @@
   },
   "dependencies": {
     "@charpentier/platform": "workspace:*",
+    "@charpentier/schema": "workspace:*",
+    "@tiptap/y-tiptap": "^3.3.0",
     "yjs": "^13.6.33"
   },
   "devDependencies": {

@@ -4,3 +4,4 @@ export { DocStore, type UpdateListener } from './doc-store';
 export { PreferencesFile } from './preferences';
 export { documentLocator, folderName, FolderLibrary, STATE_DIR } from './projects';
 export { RendererSession } from './renderer-session';
+export { ProjectMirror, type ImportResult, type MirrorStrings } from './project-mirror';

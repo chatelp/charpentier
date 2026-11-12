@@ -83,6 +83,16 @@ export class DocStore {
     }
   }
 
+  /** Guids of the open documents. */
+  openGuids(): string[] {
+    return [...this.#entries.keys()];
+  }
+
+  /** Who holds a document (empty if closed). */
+  holders(guid: string): ReadonlySet<unknown> {
+    return this.#entries.get(guid)?.holders ?? new Set();
+  }
+
   isOpen(guid: string): boolean {
     return this.#entries.has(guid);
   }

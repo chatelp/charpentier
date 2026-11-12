@@ -6,7 +6,9 @@ import {
   documentLocator,
   FolderLibrary,
   PreferencesFile,
+  ProjectMirror,
   RendererSession,
+  type MirrorStrings,
 } from '@charpentier/platform-desktop/main';
 import {
   IPC_INVOKE,
@@ -33,6 +35,44 @@ const library = new FolderLibrary(libraryFolder);
 const store = new DocStore(documentLocator(library));
 const sessions = new Map<WebContents, RendererSession>();
 
+// ─── Markdown mirror: runs while a window has the project open (docs/SPEC.md §17) ───
+
+// The main process has no i18n catalogue yet: the two texts it writes into a project.
+const mirrorStrings: MirrorStrings = {
+  externalVariant: (date) =>
+    `Modif. externe du ${new Intl.DateTimeFormat('fr', { dateStyle: 'short', timeStyle: 'short' }).format(date)}`,
+  externalSignal: (name) =>
+    `Le fichier de cette scène a été modifié hors de l’app au même endroit que le texte : sa version est conservée dans la variante « ${name} ».`,
+};
+const mirrors = new Map<string, ProjectMirror>();
+
+/** Starts the mirror of every project a window holds, stops the others. */
+function syncMirrors() {
+  const wanted = new Set<string>();
+  for (const guid of store.openGuids()) {
+    const projectId = /^project:([^/]+)$/.exec(guid)?.[1];
+    if (!projectId) continue;
+    const others = [...store.holders(guid)].filter((h) => !(h instanceof ProjectMirror));
+    if (others.length > 0) wanted.add(projectId);
+  }
+  for (const [projectId, mirror] of mirrors) {
+    if (wanted.has(projectId)) continue;
+    mirror.stop();
+    mirrors.delete(projectId);
+  }
+  for (const projectId of wanted) {
+    if (mirrors.has(projectId)) continue;
+    const folder = library.folderOf(projectId);
+    if (!folder) continue;
+    const mirror = new ProjectMirror(store, projectId, folder, {
+      strings: mirrorStrings,
+      watch: true,
+    });
+    mirrors.set(projectId, mirror);
+    mirror.start();
+  }
+}
+
 function sessionOf(contents: WebContents): RendererSession {
   let session = sessions.get(contents);
   if (!session) {
@@ -43,11 +83,15 @@ function sessionOf(contents: WebContents): RendererSession {
     const dispose = () => {
       created.dispose();
       sessions.delete(contents);
+      syncMirrors();
     };
     contents.once('destroyed', dispose);
     // A reload starts a new renderer: its documents are opened again.
     contents.on('did-start-navigation', (_event, _url, isInPlace, isMainFrame) => {
-      if (isMainFrame && !isInPlace) created.dispose();
+      if (isMainFrame && !isInPlace) {
+        created.dispose();
+        syncMirrors();
+      }
     });
     session = created;
   }
@@ -78,8 +122,11 @@ ipcMain.handle(IPC_INVOKE, async (event, request: Request) => {
       app.quit();
       return true;
     }
-    default:
-      return sessionOf(event.sender).handle(request);
+    default: {
+      const response = await sessionOf(event.sender).handle(request);
+      if (request.type === 'doc.open' || request.type === 'doc.close') syncMirrors();
+      return response;
+    }
   }
 });
 ipcMain.on(IPC_MESSAGE, (event, message: Message) => sessionOf(event.sender).receive(message));
@@ -136,4 +183,8 @@ app.on('window-all-closed', () => {
 });
 
 // Every document is compacted on the way out (the journal already holds everything).
-app.on('will-quit', () => store.closeAll());
+app.on('will-quit', () => {
+  for (const mirror of mirrors.values()) mirror.stop();
+  mirrors.clear();
+  store.closeAll();
+});

@@ -73,4 +73,32 @@ describe('desktop app', () => {
       .poll(() => second.editor.textContent())
       .toBe('Il pleuvait sur Nantes depuis trois jours.');
   });
+
+  it('mirrors the scene in Markdown and takes in a correction made in another editor', async () => {
+    const dirs = folders();
+    const { editor, window } = await launch(dirs);
+    await editor.click();
+    await window.keyboard.type('Il pleuvait sur Nantes.');
+    await window.keyboard.press('Enter');
+    await window.keyboard.type('Hélène regardait la Loire.');
+    const file = path.join(
+      dirs.library,
+      'Mon roman',
+      'manuscrit',
+      '01-chapitre-1',
+      '01-scene-1.md',
+    );
+    await expect
+      .poll(() => (fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : ''), { timeout: 10_000 })
+      .toContain('Il pleuvait sur Nantes.\n\nHélène regardait la Loire.');
+
+    // Another editor corrects the first sentence.
+    fs.writeFileSync(
+      file,
+      fs.readFileSync(file, 'utf8').replace('sur Nantes', 'sur Nantes, encore'),
+    );
+    await expect
+      .poll(() => editor.textContent(), { timeout: 10_000 })
+      .toBe('Il pleuvait sur Nantes, encore.Hélène regardait la Loire.');
+  });
 });
