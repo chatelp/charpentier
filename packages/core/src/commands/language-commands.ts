@@ -5,11 +5,15 @@ import {
   placedIssues,
   type PlacedIssue,
 } from '../editor/language-check';
+import { placedSignals, signalAtCursor } from '../mentor/signal-decorations';
 import type { WorkspaceContext } from '../workspace/workspace-context';
 import type { CommandId } from './command-id';
 import type { Command } from './registry';
 
 type LanguageCommand = Command<WorkspaceContext> & { readonly id: CommandId };
+
+const signalHere = (ctx: WorkspaceContext) =>
+  ctx.editor && !ctx.editor.isDestroyed ? signalAtCursor(ctx.editor.state) : undefined;
 
 const issueHere = (ctx: WorkspaceContext) =>
   ctx.editor && !ctx.editor.isDestroyed ? issueAtCursor(ctx.editor.state) : undefined;
@@ -50,32 +54,48 @@ async function fix(ctx: WorkspaceContext, issue: PlacedIssue) {
 /** Spelling and typography (docs/SPEC.md §8): every correction is the author's choice. */
 export const languageCommands: readonly LanguageCommand[] = [
   {
-    id: 'fixLanguage',
+    // ⌥⏎ (docs/DESIGN.md §5.3): the correction under the cursor, else the remark's note.
+    id: 'passageAction',
     scope: 'global',
     keybinding: 'Alt-Enter',
-    isEnabled: (ctx) => issueHere(ctx) !== undefined,
+    isEnabled: (ctx) => issueHere(ctx) !== undefined || signalHere(ctx) !== undefined,
     run: async (ctx) => {
       const issue = issueHere(ctx);
-      if (issue) await fix(ctx, issue);
+      if (issue) {
+        await fix(ctx, issue);
+        return;
+      }
+      const signal = signalHere(ctx);
+      if (signal) ctx.openSignalNote(signal.signal.id);
     },
   },
   {
-    id: 'nextLanguageIssue',
+    id: 'nextRemark',
     scope: 'global',
     keybinding: ["Mod-'"],
     isEnabled: (ctx) => ctx.editor !== null,
     run: (ctx) => {
       const editor = ctx.editor;
       if (!editor) return;
-      const issues = placedIssues(editor.state);
-      const after = issues.find((i) => i.pos.from > editor.state.selection.from) ?? issues[0];
-      if (!after) {
+      const starts = [
+        ...placedIssues(editor.state).map((i) => i.pos.from),
+        ...placedSignals(editor.state).map((p) => p.from),
+      ].sort((a, b) => a - b);
+      const after = starts.find((p) => p > editor.state.selection.from) ?? starts[0];
+      if (after === undefined) {
         ctx.notify(ctx.t('language.noIssue'));
         return;
       }
-      editor.chain().setTextSelection(after.pos.from).scrollIntoView().run();
+      editor.chain().setTextSelection(after).scrollIntoView().run();
       editor.view.focus();
     },
+  },
+  {
+    id: 'toggleMentorPanel',
+    scope: 'global',
+    // ⌘L where the host allows it; a browser keeps ⌘L for its address bar.
+    keybinding: ['Mod-l', 'Mod-Alt-l'],
+    run: (ctx) => ctx.toggleMentorPanel('points'),
   },
   {
     id: 'fixAllTypography',

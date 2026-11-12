@@ -149,6 +149,7 @@ describe('workspace commands', () => {
       `${mod}-n`,
       `${mod}-Shift-n`,
       `${mod}-Shift-t`,
+      `${mod}-l`,
       ...Array.from({ length: 9 }, (_, i) => `${mod}-${i + 1}`),
       ...(apple ? ['Meta-q', 'Meta-Alt-ArrowLeft', 'Meta-Alt-ArrowRight'] : ['Control-Tab']),
     ];

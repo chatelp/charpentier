@@ -25,6 +25,7 @@ export function webReservedShortcuts(apple: boolean): string[] {
     `${mod}-n`,
     `${mod}-Shift-n`,
     `${mod}-Shift-t`,
+    `${mod}-l`,
     ...tabs,
     ...(apple ? ['Meta-q', 'Meta-Alt-ArrowLeft', 'Meta-Alt-ArrowRight'] : ['Control-Tab']),
   ];

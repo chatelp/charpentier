@@ -10,6 +10,7 @@ import { markInputRule, type AnyExtension } from '@tiptap/core';
 import type * as Y from 'yjs';
 import { CurrentBlock } from './current-block';
 import { LanguageCheck } from './language-check';
+import { SignalDecorations, type SignalDecorationsOptions } from '../mentor/signal-decorations';
 import type { LanguageCheck as LanguageCheckFn } from '../language/checker';
 import { SanitizePaste } from './sanitize-paste';
 import { SceneBreak } from './scene-break';
@@ -53,6 +54,8 @@ export function sceneEditorExtensions(options: {
   placeholder: string;
   /** Spelling and typography, when available. */
   languageCheck?: LanguageCheckFn | null;
+  /** The Compagnon's remarks anchored in this variant. */
+  signals?: SignalDecorationsOptions;
 }): AnyExtension[] {
   return [
     ...sceneSchemaExtensions,
@@ -62,5 +65,6 @@ export function sceneEditorExtensions(options: {
     SanitizePaste,
     CurrentBlock,
     LanguageCheck.configure({ check: options.languageCheck ?? null, delayMs: 800 }),
+    ...(options.signals ? [SignalDecorations.configure(options.signals)] : []),
   ];
 }

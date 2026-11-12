@@ -9,7 +9,34 @@
     "ariaLabel": "Texte de la scène"
   },
   "mentor": {
-    "unavailableOnHost": "Le Compagnon n’est pas disponible dans cette version."
+    "unavailableOnHost": "Le Compagnon n’est pas disponible dans cette version.",
+    "name": "Le Compagnon",
+    "panel": "Le Compagnon",
+    "tabs": {
+      "points": "Points",
+      "conversation": "Conversation"
+    },
+    "kind": {
+      "language": "Langue",
+      "conflict": "Incohérence",
+      "craft": "Métier",
+      "clue": "Indice",
+      "external-edit": "Modification externe"
+    },
+    "groups": {
+      "scene": "Cette scène",
+      "elsewhere": "Autres scènes",
+      "sheets": "Fiches",
+      "project": "Projet"
+    },
+    "noPoints": "Rien à traiter pour l’instant.",
+    "pointsHint": "↑↓ ou J K parcourir · ↵ aller au passage · R résolu · I ignorer · Échap fermer",
+    "resolve": "Résolu",
+    "resolveKey": "R",
+    "dismiss": "Ignorer",
+    "dismissKey": "I",
+    "close": "Replier",
+    "closeKey": "Échap"
   },
   "manuscript": {
     "defaultProjectTitle": "Mon roman",
@@ -76,10 +103,11 @@
     "renameProject": "Renommer le projet…",
     "chooseLibraryFolder": "Changer le dossier de la bibliothèque…",
     "revealLibraryFolder": "Afficher la bibliothèque dans le Finder",
-    "fixLanguage": "Corriger le mot ou la typographie sous le curseur",
-    "nextLanguageIssue": "Aller à la correction suivante",
     "fixAllTypography": "Corriger toute la typographie de la scène",
-    "fixAllSpelling": "Accepter toutes les corrections d’orthographe de la scène"
+    "fixAllSpelling": "Accepter toutes les corrections d’orthographe de la scène",
+    "passageAction": "Corriger le passage ou déplier sa remarque",
+    "nextRemark": "Aller à la remarque ou correction suivante",
+    "toggleMentorPanel": "Points à traiter et conversation"
   },
   "palette": {
     "label": "Ligne de commande",

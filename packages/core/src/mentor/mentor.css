@@ -1,0 +1,264 @@
+/* The Compagnon's marks (docs/DESIGN.md §4.2, §4.3). */
+
+/* Pastille in the right margin, at the paragraph's first line. */
+.ch-prose p {
+  position: relative;
+}
+
+.ch-pastille {
+  position: absolute;
+  left: calc(100% + 1.5rem + var(--ch-pastille-rank, 0) * 20px);
+  top: calc((var(--ch-text-leading) * 1em - 14px) / 2);
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ch-radius-round);
+  background: var(--ch-bg);
+  box-shadow: var(--ch-raise-s);
+  text-indent: 0;
+  cursor: pointer;
+  opacity: var(--ch-mentor-l3);
+  animation: ch-pastille-in var(--ch-dur-pastille) var(--ch-ease) both;
+}
+
+.ch-pastille::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  background: var(--ch-mentor);
+}
+
+.ch-pastille[data-level='1'] {
+  opacity: var(--ch-mentor-l1);
+}
+
+.ch-pastille[data-level='2'] {
+  opacity: var(--ch-mentor-l2);
+}
+
+@keyframes ch-pastille-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* The right panel replaces the margin: no pastilles while it is open. */
+[data-mentor-panel] .ch-pastille {
+  display: none;
+}
+
+.ch-prose .ch-anchor {
+  background: var(--ch-mentor-soft);
+  text-decoration: underline;
+  text-decoration-color: var(--ch-mentor);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 4px;
+  border-radius: 2px;
+}
+
+.ch-prose .ch-anchor.is-language {
+  background: none;
+  text-decoration-style: wavy;
+  text-decoration-thickness: 1px;
+}
+
+/* Note unfolded in the margin. */
+.ch-page {
+  position: relative;
+}
+
+.ch-note {
+  position: absolute;
+  left: calc(100% + 3.5rem);
+  width: var(--ch-note-w);
+  padding: 14px 16px;
+  border-radius: var(--ch-radius-md);
+  z-index: var(--ch-z-note);
+  outline: none;
+  animation: ch-note-in var(--ch-dur-note) var(--ch-ease) both;
+}
+
+@keyframes ch-note-in {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+}
+
+.ch-note:focus-visible {
+  box-shadow:
+    var(--ch-raise),
+    inset 0 0 0 1.5px var(--ch-mentor);
+}
+
+.ch-note p {
+  margin: 0;
+}
+
+.ch-note-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  color: var(--ch-mentor);
+}
+
+.ch-note-signature {
+  font-family: var(--ch-font-text);
+  font-style: italic;
+  font-size: 12.5px;
+}
+
+.ch-note-message {
+  margin-top: 8px !important;
+  color: var(--ch-ink);
+  font-size: var(--ch-ui-sm);
+  line-height: 1.5;
+}
+
+.ch-note-why {
+  margin-top: 10px !important;
+  padding-top: 8px;
+  border-top: 1px solid color-mix(in srgb, var(--ch-shade) 60%, transparent);
+  color: var(--ch-muted);
+  font-size: var(--ch-ui-xs);
+  font-style: italic;
+}
+
+.ch-note-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 11px !important;
+}
+
+/* Narrow window: the margin is too thin, the note goes under the text column's right edge. */
+@media (max-width: 1180px) {
+  .ch-note {
+    left: auto;
+    right: 0;
+    transform: translateY(2.2em);
+  }
+
+  .ch-pastille {
+    left: calc(100% + 0.5rem + var(--ch-pastille-rank, 0) * 18px);
+  }
+}
+
+/* ── Right panel ── */
+.ch-mentor-panel {
+  position: fixed;
+  top: calc(10px + var(--ch-titlebar-offset));
+  right: 12px;
+  bottom: 12px;
+  width: min(var(--ch-panel-w), calc(100vw - 24px));
+  display: flex;
+  flex-direction: column;
+  z-index: var(--ch-z-panel);
+  animation: ch-slide-from-right var(--ch-dur-panel) var(--ch-ease) both;
+}
+
+@keyframes ch-slide-from-right {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+}
+
+.ch-mentor-panel > .ch-seg {
+  margin: 14px 14px 6px;
+}
+
+.ch-seg-count {
+  margin-left: 6px;
+  color: var(--ch-mentor);
+}
+
+.ch-points {
+  flex: 1;
+  overflow: auto;
+  list-style: none;
+  margin: 0;
+  padding: 6px 0 10px;
+  outline: none;
+}
+
+.ch-points-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ch-points-group {
+  margin: 14px 18px 8px;
+  color: var(--ch-muted);
+}
+
+.ch-point {
+  display: grid;
+  grid-template-columns: 14px 1fr;
+  gap: 2px 10px;
+  margin: 0 14px 10px;
+  padding: 11px 13px;
+  border-radius: var(--ch-radius-md);
+  box-shadow: var(--ch-raise-s);
+  cursor: pointer;
+  outline: none;
+}
+
+.ch-point[aria-selected='true'] {
+  box-shadow: var(--ch-inset);
+}
+
+.ch-point-pastille {
+  grid-row: span 2;
+  width: 10px;
+  height: 10px;
+  margin-top: 4px;
+  border-radius: 50%;
+  background: var(--ch-mentor);
+}
+
+.ch-point-pastille[data-level='1'] {
+  opacity: var(--ch-mentor-l1);
+}
+
+.ch-point-pastille[data-level='2'] {
+  opacity: var(--ch-mentor-l2);
+}
+
+.ch-point-kind {
+  color: var(--ch-mentor);
+}
+
+.ch-point-kind em {
+  color: var(--ch-muted);
+  font-style: italic;
+  font-variant-caps: normal;
+}
+
+.ch-point-message {
+  color: var(--ch-ink-2);
+  font-size: var(--ch-ui-sm);
+  line-height: 1.45;
+}
+
+.ch-points-empty,
+.ch-panel-hint {
+  margin: 0;
+  padding: 10px 18px;
+  color: var(--ch-faint);
+  font-size: var(--ch-ui-2xs);
+}
+
+.ch-points-empty {
+  flex: 1;
+  color: var(--ch-muted);
+  font-size: var(--ch-ui-sm);
+}
+
+/* With the panel open, the text recenters in the space left. */
+.ch-app[data-mentor-panel] .ch-write {
+  right: calc(var(--ch-panel-w) + 24px);
+}

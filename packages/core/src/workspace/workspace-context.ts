@@ -24,6 +24,11 @@ export interface WorkspaceContext {
   openScene(sceneId: string): void;
   openPalette(request?: PaletteRequest): void;
   toggleNavigator(): void;
+  /** The right panel of the Compagnon, if open, on which tab. */
+  readonly mentorPanel: 'points' | 'conversation' | null;
+  toggleMentorPanel(tab?: 'points' | 'conversation'): void;
+  /** Unfolds a remark's note in the margin and gives it the focus. */
+  openSignalNote(signalId: string): void;
   shortcutLabel(commandId: string): string | undefined;
   /** A short, discreet confirmation (read by screen readers). */
   notify(message: string): void;

@@ -14,6 +14,11 @@ import { usePlatform } from '../app/platform-context';
 import { Atelier, type AtelierLocation } from '../atelier/Atelier';
 import { sheetScope } from '../atelier/sheet-scope';
 import { Overview } from '../overview/Overview';
+import { MentorPanel } from '../mentor/MentorPanel';
+import { SignalNote } from '../mentor/SignalNote';
+import { placedSignals } from '../mentor/signal-decorations';
+import { useMentorMarks } from '../mentor/use-mentor-marks';
+import '../mentor/mentor.css';
 import { variantLabel } from '../commands/variant-commands';
 import { createWorkspaceRegistry } from '../commands/workspace-commands';
 import { createLanguageChecker } from '../language/checker';
@@ -56,6 +61,10 @@ export function ProjectWorkspace({
   const paletteReturn = useRef<Element | null>(null);
   const [prefs, updatePrefs] = useWritingPrefs(platform.preferences);
   const scroller = useRef<HTMLDivElement>(null);
+  const page = useRef<HTMLElement>(null);
+  const [mentorPanel, setMentorPanel] = useState<'points' | 'conversation' | null>(null);
+  // A remark to show once its scene's editor is ready (going there from the panel).
+  const pendingSignal = useRef<string | null>(null);
 
   const registry = useMemo(
     () =>
@@ -82,6 +91,32 @@ export function ProjectWorkspace({
     [platform, language, root],
   );
   useTypewriterScroll(editor, scroller, prefs.typewriter);
+  const marks = useMentorMarks({
+    root,
+    sceneId,
+    variantId: scene?.activeVariantId ?? '',
+    editor,
+    page,
+    pauseMs: 1500,
+  });
+
+  // Going to a remark in another scene: once its editor is there, select the passage.
+  const { openNote, sceneSignals } = marks;
+  const showPendingSignal = useCallback(() => {
+    const id = pendingSignal.current;
+    if (!id || !editor || editor.isDestroyed) return;
+    const placed = placedSignals(editor.state).find((p) => p.signal.id === id);
+    if (!placed) return;
+    pendingSignal.current = null;
+    editor.chain().setTextSelection({ from: placed.from, to: placed.to }).scrollIntoView().run();
+    editor.view.focus();
+    openNote(placed.signal.id, false);
+  }, [editor, openNote]);
+  useEffect(() => {
+    // The editor of the target scene appeared, or its remarks were placed.
+    const timer = setTimeout(showPendingSignal, 0);
+    return () => clearTimeout(timer);
+  }, [showPendingSignal, sceneSignals]);
 
   const openScene = useCallback(
     (id: string) => {
@@ -118,6 +153,9 @@ export function ProjectWorkspace({
       setView('overview');
     },
     toggleNavigator: () => setNavigatorOpen((open) => !open),
+    mentorPanel,
+    toggleMentorPanel: (tab = 'points') => setMentorPanel((open) => (open === tab ? null : tab)),
+    openSignalNote: (id) => marks.openNote(id, true),
     shortcutLabel: (id) => registry.shortcutLabel(id),
     notify: (text) => setStatus({ key: ++paletteSequence, text }),
     prefs,
@@ -247,6 +285,7 @@ export function ProjectWorkspace({
       style={surfaceStyle}
       data-focus={prefs.focusMode || undefined}
       data-typewriter={prefs.typewriter || undefined}
+      data-mentor-panel={mentorPanel ?? undefined}
     >
       <div
         ref={scroller}
@@ -261,7 +300,7 @@ export function ProjectWorkspace({
           onOutline={() => setNavigatorOpen(true)}
           onVariants={() => void registry.execute('switchVariant', ctx)}
         />
-        <main className="ch-page">
+        <main className="ch-page" ref={page}>
           <h1 className="ch-visually-hidden">{t('app.name')}</h1>
           <SceneOpener chapter={chapter} chapterIndex={chapterIndex} scene={scene} />
           {sceneDocs && (
@@ -271,6 +310,19 @@ export function ProjectWorkspace({
               language={language}
               onEditor={setEditor}
               languageCheck={languageCheck}
+              signals={marks.signalOptions}
+            />
+          )}
+          {marks.noteSignal && marks.noteTop !== null && !mentorPanel && (
+            <SignalNote
+              root={root}
+              signal={marks.noteSignal}
+              style={{ top: marks.noteTop }}
+              focus={marks.note?.focus ?? false}
+              onClose={(backToText) => {
+                marks.closeNote();
+                if (backToText) focusTextIfIdle();
+              }}
             />
           )}
         </main>
@@ -286,6 +338,33 @@ export function ProjectWorkspace({
             if (focus) setAtelierFocus((n) => n + 1);
           }}
           onWrite={() => setView('write')}
+        />
+      )}
+      {mentorPanel && (
+        <MentorPanel
+          root={root}
+          outline={outline}
+          sceneId={sceneId}
+          signals={marks.openSignals}
+          sceneOrder={
+            editor && !editor.isDestroyed ? placedSignals(editor.state).map((p) => p.signal.id) : []
+          }
+          tab={mentorPanel}
+          onTab={setMentorPanel}
+          active={palette === null}
+          onGoTo={(signal) => {
+            const target = signal.textAnchor?.sceneId;
+            if (target) {
+              setView('write');
+              pendingSignal.current = signal.id;
+              if (target !== sceneId) openScene(target);
+              else showPendingSignal();
+            }
+          }}
+          onClose={() => {
+            setMentorPanel(null);
+            focusTextIfIdle();
+          }}
         />
       )}
       {view === 'overview' && (
