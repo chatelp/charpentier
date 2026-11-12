@@ -1,5 +1,5 @@
 # Contributor License Agreement check (CLA Assistant, Apache-2.0).
-# Not active until the repository exists on GitHub: complete the TODOs below.
+# Signatures are kept on the `cla-signatures` branch of this repository.
 name: CLA
 
 on:
@@ -26,8 +26,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          # TODO: replace OWNER/REPO once the GitHub repository is chosen.
-          path-to-document: https://github.com/OWNER/REPO/blob/main/CLA.md
+          path-to-document: https://github.com/chatelp/charpentier/blob/main/CLA.md
           path-to-signatures: signatures/cla.json
           branch: cla-signatures
-          allowlist: bot*
+          # The licensor does not sign his own CLA.
+          allowlist: chatelp,bot*

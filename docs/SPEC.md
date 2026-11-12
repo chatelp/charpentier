@@ -24,7 +24,7 @@
 | D-12 | Premier fournisseur LLM | **Anthropic**, via le SDK `ai`, clé BYOK dans le trousseau de l'OS. |
 | D-13 | Mise en forme du texte | Paragraphes, **italique**, **citation en bloc**, **séparateur interne de scène**. Pas de gras ni de titres dans le texte. |
 | D-14 | Machine d'écriture initiale | **Le Mac de l'auteur** : la fin de l'étape 2 produit une `.app` macOS non signée. |
-| D-15 | Titulaire des droits | **Pierre Chatel**. Dépôt GitHub pas encore choisi (configuration CLA prête, à compléter). |
+| D-15 | Titulaire des droits | **Pierre Chatel**. Dépôt public **github.com/chatelp/charpentier** (créé le 12 novembre 2026), CLA actif. |
 | D-16 | Design language | **Direction « Perle »** (neumorphisme doux : page plate, outils en relief), deux encres (vermillon pour l'auteur, bleu de Prusse pour le mentor), Literata + Inter embarquées (SIL OFL 1.1). Référence : [DESIGN.md](DESIGN.md). Décidé le 12 novembre 2026. |
 | D-19 | Niveau d'intervention du Compagnon | **Une réglette à 4 crans** (Discret, Attentif, Accompagnant, Tuteur), un seul réglage qui fixe à la fois ce que le Compagnon dit pendant l'écriture, ce qui déclenche l'analyse complète d'une scène, le délai avant une pastille et la profondeur des explications (§6.3). Réglage par projet, **cran 3 « Accompagnant » par défaut**. Aucun cran ne fait écrire le Compagnon à la place de l'auteur. Répond aux questions ouvertes n°1 et n°2 ; avance la v2 prévue au §6.3. Décidé le 12 novembre 2026. |
 | D-18 | Raccourcis du tiroir et du panneau droit | **`⌘J` ouvre le tiroir du manuscrit** (au lieu du `⌘\` des maquettes, qui demande quatre touches sur un Mac AZERTY). Les points à traiter et la conversation du Compagnon partagent le panneau droit sur **`⌘L`**, avec un contrôle segmenté pour passer de l'un à l'autre. Décidé le 12 novembre 2026. |
@@ -499,7 +499,7 @@ Garde-fous, contrôlés mécaniquement :
 7. Migration de l'hébergement au lancement public.
 8. Niveaux supérieurs d'aide rédactionnelle ; détermination du profil débutant / confirmé (v2, version publique). *La réglette [D-19] couvre la fréquence et la profondeur des interventions ; l'aide rédactionnelle reste plafonnée à une phrase d'exemple.*
 9. Interface de validation par lot (avec l'import, après la v1).
-10. Dépôt GitHub (propriétaire/nom) pour activer le CLA.
+10. ~~Dépôt GitHub (propriétaire/nom) pour activer le CLA.~~ Tranché : `chatelp/charpentier` [D-15].
 
 ## 23. Licence
 
