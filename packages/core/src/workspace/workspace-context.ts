@@ -65,6 +65,8 @@ export interface WorkspaceContext {
   openOverview(): void;
   /** The library of projects; `creating` opens the new project form. */
   openLibrary(creating?: boolean): void;
+  /** The author is typing (the entry points fade, the cpu curve stands still). */
+  readonly typing: boolean;
   readonly prefs: WritingPrefs;
   updatePrefs(change: PrefsUpdate): void;
 }

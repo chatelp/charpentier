@@ -1,0 +1,319 @@
+/* The X250's system line and its panels (docs/DESIGN.md §4.12). */
+
+.ch-system {
+  --ch-mentor: #86aedb;
+}
+
+.ch-sysline {
+  display: flex;
+  align-items: stretch;
+  height: 30px;
+  container-type: inline-size;
+  font: 11.5px / 30px var(--ch-font-sys);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.ch-sys-seg {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  padding: 0 11px;
+  border: 0;
+  /* The engraved rule between segments. */
+  box-shadow:
+    inset -1px 0 0 var(--ch-highlight),
+    inset -2px 0 0 var(--ch-shade);
+  background: transparent;
+  color: var(--ch-muted);
+  font: inherit;
+  cursor: default;
+  outline: none;
+  transition:
+    box-shadow var(--ch-dur-relief) var(--ch-ease),
+    color var(--ch-dur-relief) var(--ch-ease);
+}
+
+.ch-sys-seg:last-child {
+  box-shadow: none;
+}
+
+.ch-sys-seg:hover,
+.ch-sys-seg:hover .ch-sys-value {
+  color: var(--ch-ink);
+}
+
+/* Unfolded, or the keyboard on it: lit, the glow spilling under the line. */
+.ch-sys-seg.is-open,
+.ch-sys-seg:focus-visible {
+  color: var(--ch-ink);
+  box-shadow: var(--ch-lit);
+}
+
+.ch-sys-seg.is-message {
+  flex: 1 1 auto;
+  min-width: 19rem;
+  overflow: hidden;
+}
+
+.ch-sys-message {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ch-sys-message.is-empty {
+  color: var(--ch-faint);
+}
+
+.ch-sys-word {
+  color: var(--ch-ink);
+  font-weight: 500;
+}
+
+.ch-sys-seg kbd,
+.ch-sys-panel kbd {
+  color: var(--ch-faint);
+  font: inherit;
+}
+
+.ch-sys-square {
+  color: var(--ch-ink);
+}
+
+.ch-sys-square-dot {
+  fill: var(--ch-mentor);
+}
+
+.ch-sys-value {
+  color: var(--ch-ink-2);
+}
+
+.ch-sys-remaining,
+.ch-sys-day {
+  color: var(--ch-muted);
+}
+
+.ch-sys-spark {
+  color: var(--ch-ink-2);
+  letter-spacing: -0.5px;
+}
+
+/* An alert: the segment inverted, never red. */
+.ch-sys-seg.is-alert,
+.ch-sys-seg.is-alert .ch-sys-value,
+.ch-sys-seg.is-alert .ch-sys-remaining {
+  background: var(--ch-ink);
+  color: var(--ch-bg);
+}
+
+.ch-sys-seg.is-alert .ch-sys-gauge span {
+  background: color-mix(in srgb, var(--ch-bg) 35%, transparent);
+}
+
+.ch-sys-seg.is-alert .ch-sys-gauge span.is-full {
+  background: var(--ch-bg);
+}
+
+/* Ten cells of 4 × 9 px, 2 px apart. */
+.ch-sys-gauge {
+  display: inline-flex;
+  gap: 2px;
+  align-items: center;
+}
+
+.ch-sys-gauge span {
+  width: 4px;
+  height: 9px;
+  background: var(--ch-faint);
+}
+
+.ch-sys-gauge span.is-full {
+  background: var(--ch-ink-2);
+}
+
+.ch-sys-signal .is-missing {
+  color: var(--ch-faint);
+}
+
+/* Short of room, the gauges, the time left and the day go first, then the labels;
+   the message keeps its 19 rem. */
+@container (max-width: 1400px) {
+  .ch-sys-gauge {
+    display: none;
+  }
+}
+
+@container (max-width: 1240px) {
+  .ch-sys-remaining,
+  .ch-sys-day,
+  .ch-sys-spark {
+    display: none;
+  }
+}
+
+@container (max-width: 1080px) {
+  .ch-sys-label,
+  .ch-sys-word,
+  .ch-sys-seg kbd {
+    display: none;
+  }
+}
+
+/* A panel under its segment: 21 rem, the system's material, the page's shadow. */
+.ch-sys-panel {
+  position: fixed;
+  top: calc(var(--ch-titlebar-offset) + 34px);
+  z-index: calc(var(--ch-z-command, 6) + 1);
+  width: 21rem;
+  max-height: calc(100vh - 80px);
+  overflow: auto;
+  padding: 12px 14px 10px;
+  border-radius: 12px;
+  box-shadow: var(--ch-page-raise);
+  font: 12px / 1.5 var(--ch-font-sys);
+}
+
+.ch-sys-head {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 0 10px;
+  color: var(--ch-ink);
+}
+
+.ch-sys-head-aside {
+  color: var(--ch-faint);
+}
+
+.ch-sys-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 0;
+}
+
+.ch-sys-row-label {
+  color: var(--ch-ink-2);
+}
+
+.ch-sys-item {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 8px;
+  border: 0;
+  border-radius: var(--ch-radius-sm);
+  background: transparent;
+  color: var(--ch-ink-2);
+  font: inherit;
+  text-align: left;
+  cursor: default;
+  outline: none;
+}
+
+.ch-sys-item:hover {
+  color: var(--ch-ink);
+}
+
+.ch-sys-item:focus-visible,
+.ch-sys-item:focus {
+  color: var(--ch-ink);
+  box-shadow: var(--ch-lit);
+}
+
+/* The network chosen: a choice that stays, sunk. */
+.ch-sys-item.is-chosen {
+  box-shadow: var(--ch-inset);
+  color: var(--ch-ink);
+}
+
+.ch-sys-item:disabled {
+  color: var(--ch-faint);
+}
+
+.ch-sys-item-aside {
+  display: inline-flex;
+  gap: 8px;
+  color: var(--ch-ink-2);
+}
+
+.ch-sys-list {
+  margin: 8px 0;
+  padding: 6px 0 10px;
+  border-top: 1px solid var(--ch-shade);
+}
+
+.ch-sys-field.ch-field {
+  margin: 4px 0 8px;
+  font: 12px var(--ch-font-sys);
+}
+
+.ch-sys-note,
+.ch-sys-foot,
+.ch-sys-sub {
+  margin: 8px 0 0;
+  color: var(--ch-muted);
+}
+
+.ch-sys-foot {
+  padding-top: 8px;
+  border-top: 1px solid var(--ch-shade);
+  color: var(--ch-faint);
+}
+
+.ch-sys-big {
+  margin: 4px 0 8px;
+  color: var(--ch-ink);
+  font: 500 28px / 1.2 var(--ch-font-sys);
+}
+
+.ch-sys-journal {
+  margin: 0;
+  padding: 0 0 10px;
+  list-style: none;
+}
+
+.ch-sys-journal li {
+  display: flex;
+  gap: 12px;
+  padding: 4px 6px;
+  color: var(--ch-ink-2);
+  outline: none;
+}
+
+.ch-sys-time {
+  color: var(--ch-faint);
+}
+
+.ch-sys-keys {
+  gap: 4px;
+}
+
+.ch-sys-keys button {
+  flex: none;
+  padding: 3px 9px;
+  font: 12px var(--ch-font-sys);
+}
+
+/* A slider: a sunk rail of 10 px, the filled part muted, a raised round knob. */
+.ch-sys-slider {
+  width: 100%;
+  height: 10px;
+  margin: 10px 0;
+  border-radius: 5px;
+  background: linear-gradient(to right, var(--ch-muted) var(--fill), transparent var(--fill));
+  box-shadow: var(--ch-inset);
+  appearance: none;
+}
+
+.ch-sys-slider::-webkit-slider-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--ch-bg);
+  box-shadow: var(--ch-raise-s);
+  appearance: none;
+}

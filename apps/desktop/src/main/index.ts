@@ -51,6 +51,8 @@ if (!app.requestSingleInstanceLock()) app.quit();
  * writing device (the X250): full screen, no frame, no menu bar.
  */
 const appliance = process.argv.includes('--appliance');
+/** `--simulate-system`: the X250's system simulated in the interface (phase 5.3, on the Mac). */
+const simulateSystem = process.argv.includes('--simulate-system');
 
 const preferences = new PreferencesFile(path.join(app.getPath('userData'), 'preferences.json'));
 const libraryFolder =
@@ -257,7 +259,10 @@ function createWindow() {
       : { titleBarStyle: 'hiddenInset' as const }),
     backgroundColor: '#e3e7ed',
     webPreferences: {
-      ...(appliance && { additionalArguments: ['--charpentier-appliance'] }),
+      additionalArguments: [
+        ...(appliance ? ['--charpentier-appliance'] : []),
+        ...(simulateSystem ? ['--charpentier-simulate-system'] : []),
+      ],
       preload: path.join(import.meta.dirname, '../preload/index.cjs'),
       contextIsolation: true,
       sandbox: true,

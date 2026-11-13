@@ -34,6 +34,8 @@ export interface Feature {
   readonly footer?: readonly FooterItem[];
   /** Sections of the settings view. */
   readonly settings?: readonly SettingsSection[];
+  /** How the settings view looks when this feature brings them: its title (text key) and the rail's material. */
+  readonly settingsLook?: { readonly title: string; readonly material: 'system' };
   /** Full-frame views, like the Atelier (the X250's monitor). */
   readonly views?: readonly FeatureView[];
   /** Searches of the command line under a prefix of their own (`:` for the system). */
@@ -145,6 +147,7 @@ export function checkFeatures(features: readonly Feature[], coreTexts: TextTree)
       } else if (root !== id) throw new Error(`Feature ${id} has texts outside ${id}.…`);
     for (const command of feature.commands ?? []) needText(`commands.${command.id}`);
     for (const menu of feature.menu ?? []) if (menu.label) needText(menu.label);
+    if (feature.settingsLook) needText(feature.settingsLook.title);
     for (const section of feature.settings ?? []) {
       claim('Settings section', section.id, id);
       needText(section.label);

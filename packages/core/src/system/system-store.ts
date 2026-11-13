@@ -1,0 +1,57 @@
+import type { SystemMessage, SystemService, SystemState } from '@charpentier/platform';
+import { useSyncExternalStore } from 'react';
+
+/** The device's state, live. */
+export const useSystemState = (system: SystemService): SystemState =>
+  useSyncExternalStore(system.onChange, system.state);
+
+/** The journal, live (a new array only when a message arrives). */
+export function useJournal(system: SystemService): readonly SystemMessage[] {
+  return useSyncExternalStore(system.onChange, system.journal);
+}
+
+/** The segments of the system line, left to right (docs/DESIGN.md §4.12). */
+export const SEGMENTS = [
+  'systeme',
+  'message',
+  'usb',
+  'cpu',
+  'wifi',
+  'bt',
+  'lum',
+  'vol',
+  'bat',
+  'sync',
+  'date',
+] as const;
+export type Segment = (typeof SEGMENTS)[number];
+
+/**
+ * What the line shows open, shared by the line and the commands that open
+ * its panels (⊞W, :wifi…): one panel at a time, and a request to take the focus.
+ */
+interface UiState {
+  readonly open: Segment | null;
+  readonly focus: number;
+}
+
+let ui: UiState = { open: null, focus: 0 };
+const listeners = new Set<() => void>();
+const set = (next: UiState) => {
+  ui = next;
+  for (const listener of listeners) listener();
+};
+
+export const systemUi = {
+  get: () => ui,
+  subscribe: (listener: () => void) => {
+    listeners.add(listener);
+    return () => listeners.delete(listener);
+  },
+  open: (segment: Segment | null) => set({ ...ui, open: segment }),
+  toggle: (segment: Segment) => set({ ...ui, open: ui.open === segment ? null : segment }),
+  /** Puts the focus on the line (⊞ alone). */
+  focusLine: () => set({ ...ui, focus: ui.focus + 1 }),
+};
+
+export const useSystemUi = (): UiState => useSyncExternalStore(systemUi.subscribe, systemUi.get);

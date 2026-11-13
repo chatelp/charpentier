@@ -1,4 +1,9 @@
-import type { AgentsService, KeybindingsService, Platform } from '@charpentier/platform';
+import {
+  createSimulatedSystem,
+  type AgentsService,
+  type KeybindingsService,
+  type Platform,
+} from '@charpentier/platform';
 import { IndexedDbDocumentService, MemoryDocumentService } from './documents';
 import { DocumentLibrary } from './library';
 import { LocalStoragePreferences } from './preferences';
@@ -49,7 +54,11 @@ export function createWebKeybindings(userAgent: string): KeybindingsService {
   };
 }
 
-export function createWebPlatform(): Platform {
+/**
+ * `simulateSystem`: a simulated X250 (address ending in `?x250`), to see and
+ * review the system line in a browser (docs/PLAN.md phase 5.3).
+ */
+export function createWebPlatform(options: { readonly simulateSystem?: boolean } = {}): Platform {
   const documents =
     typeof indexedDB === 'undefined' ? new MemoryDocumentService() : new IndexedDbDocumentService();
   return {
@@ -65,6 +74,6 @@ export function createWebPlatform(): Platform {
     fileMirror: null,
     secrets: null,
     spellcheck: null,
-    system: null,
+    system: options.simulateSystem ? createSimulatedSystem() : null,
   };
 }

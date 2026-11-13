@@ -135,6 +135,8 @@ export interface DesktopBridge {
    * screen of a writing device, without title bar or menu bar.
    */
   readonly appliance?: boolean;
+  /** Started with `--simulate-system`: a simulated X250 system, for development on the Mac. */
+  readonly simulateSystem?: boolean;
   invoke<R extends Request>(request: R): Promise<Responses[R['type']]>;
   send(message: Message): void;
   /** Messages from the main process; returns an unsubscribe function. */

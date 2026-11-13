@@ -27,3 +27,5 @@ export {
 } from './features/feature';
 export type { WorkspaceContext, WorkspaceView } from './workspace/workspace-context';
 export type { PickItem } from './palette/palette-request';
+export { createSystemFeature } from './system/system-feature';
+export type { SystemModifier } from './system/SystemLine';

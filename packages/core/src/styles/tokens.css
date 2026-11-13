@@ -21,6 +21,13 @@
   font-display: block;
 }
 @font-face {
+  font-family: 'JetBrains Mono';
+  src: url('../fonts/JetBrainsMono-Variable.woff2') format('woff2');
+  font-weight: 100 800;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
   font-family: 'Inter';
   src: url('../fonts/Inter-Variable.woff2') format('woff2');
   font-weight: 100 900;
@@ -35,6 +42,8 @@
   /* Inter second: Literata lacks U+202F, the narrow no-break space of French. */
   --ch-font-text: 'Literata', 'Inter', 'Iowan Old Style', Georgia, serif;
   --ch-font-ui: 'Inter', system-ui, -apple-system, sans-serif;
+  /* The X250's system zone (docs/DESIGN.md §3.2); Inter brings the keys it lacks (⊞ ⏎ ⇥). */
+  --ch-font-sys: 'JetBrains Mono', 'Inter', ui-monospace, monospace;
   --ch-text-size: 1.1875rem; /* 19px, author-adjustable 15–26px */
   --ch-text-leading: 1.68;
   --ch-text-indent: 1.6em;
@@ -203,6 +212,35 @@
   color-scheme: dark;
   background-color: var(--ch-bg);
   color: var(--ch-ink);
+}
+
+/*
+ * The system's material (X250, docs/DESIGN.md §3.1): the darkest of the
+ * screen in both themes, deeper than the slate; no colour of its own.
+ */
+.ch-system {
+  --ch-bg: #14161a;
+  --ch-highlight: #20242a;
+  --ch-shade: #090a0c;
+  --ch-ink: #dfe3ea;
+  --ch-ink-2: #b9c0ca;
+  --ch-muted: #8a929e;
+  --ch-faint: #555b66;
+  --ch-raise:
+    var(--ch-depth) var(--ch-depth) var(--ch-blur) var(--ch-shade),
+    calc(var(--ch-depth) * -1) calc(var(--ch-depth) * -1) var(--ch-blur) var(--ch-highlight);
+  --ch-raise-s:
+    var(--ch-depth-s) var(--ch-depth-s) var(--ch-blur-s) var(--ch-shade),
+    calc(var(--ch-depth-s) * -1) calc(var(--ch-depth-s) * -1) var(--ch-blur-s) var(--ch-highlight);
+  --ch-inset:
+    inset var(--ch-depth-s) var(--ch-depth-s) var(--ch-blur-s) var(--ch-shade),
+    inset calc(var(--ch-depth-s) * -1) calc(var(--ch-depth-s) * -1) var(--ch-blur-s)
+      var(--ch-highlight);
+  --ch-lit-bg: transparent;
+  color-scheme: dark;
+  background-color: var(--ch-bg);
+  color: var(--ch-ink);
+  font-family: var(--ch-font-sys);
 }
 
 @media (prefers-reduced-motion: reduce) {

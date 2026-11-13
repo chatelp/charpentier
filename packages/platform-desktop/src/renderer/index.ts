@@ -1,9 +1,10 @@
 // Renderer side of the desktop platform: everything goes through the preload bridge.
-import type {
-  KeybindingsService,
-  LibraryService,
-  Platform,
-  PreferencesService,
+import {
+  createSimulatedSystem,
+  type KeybindingsService,
+  type LibraryService,
+  type Platform,
+  type PreferencesService,
 } from '@charpentier/platform';
 import type { DesktopBridge } from '../shared/ipc';
 import { IpcAgentsService } from './agents';
@@ -85,7 +86,8 @@ export function createDesktopPlatform(bridge: DesktopBridge): Platform {
       misspelled: (words, language) => bridge.invoke({ type: 'spell.misspelled', words, language }),
       suggest: (word, language) => bridge.invoke({ type: 'spell.suggest', word, language }),
     },
-    system: null,
+    // The device's System service comes with phase 5.4; meanwhile it can be simulated.
+    system: bridge.simulateSystem ? createSimulatedSystem() : null,
     // docs/DESIGN.md §4.1: a 34 px title bar merged with the background (none on a device).
     titleBarHeight: bridge.platform === 'darwin' && !appliance ? 34 : 0,
     // A device has no menu bar: the command zone stands in for it.

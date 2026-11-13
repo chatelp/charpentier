@@ -30,7 +30,7 @@
   padding: var(--ch-space-5) 22px 0;
 }
 
-.ch-settings-rail.ch-tool {
+.ch-settings-rail {
   display: flex;
   flex-direction: column;
   gap: var(--ch-space-2);
@@ -100,4 +100,74 @@
   margin: 0 0 var(--ch-space-4);
   color: var(--ch-ink);
   font: 400 30px/1.2 var(--ch-font-text);
+}
+
+/* The system's settings (X250): the rail in the system's material, the active section ruled in ink. */
+.ch-settings-rail.ch-system {
+  width: 17rem;
+}
+
+.ch-settings-rail.ch-system .ch-settings-title,
+.ch-settings-rail.ch-system .ch-settings-section {
+  font-family: var(--ch-font-sys);
+  font-variant-caps: normal;
+  letter-spacing: 0;
+}
+
+.ch-settings-rail.ch-system .ch-settings-section {
+  font-size: 12px;
+}
+
+.ch-settings-rail.ch-system .ch-settings-section[aria-selected='true'] {
+  color: var(--ch-ink);
+  box-shadow:
+    var(--ch-lit),
+    inset 3px 0 0 var(--ch-ink);
+}
+
+/* The page of a section: groups in small caps, lines of label, help and control. */
+.ch-set-group {
+  margin-bottom: var(--ch-space-5);
+}
+
+.ch-set-title {
+  margin: 0 0 var(--ch-space-2);
+  color: var(--ch-muted);
+}
+
+.ch-set-row {
+  display: flex;
+  align-items: center;
+  gap: var(--ch-space-4);
+  padding: 10px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--ch-shade) 45%, transparent);
+}
+
+.ch-set-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.ch-set-label {
+  margin: 0;
+  color: var(--ch-ink);
+  font: var(--ch-ui-sm) var(--ch-font-ui);
+}
+
+.ch-set-help {
+  margin: 2px 0 0;
+  color: var(--ch-muted);
+  font: var(--ch-ui-xs) var(--ch-font-ui);
+  line-height: 1.45;
+}
+
+.ch-set-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ch-set-value {
+  color: var(--ch-ink-2);
+  font: var(--ch-ui-sm) var(--ch-font-ui);
 }

@@ -15,7 +15,9 @@ export const resources = { fr: { translation: fr } } as const;
 export async function createI18n(language: UiLanguage = 'fr'): Promise<i18n> {
   const instance = i18next.createInstance();
   await instance.use(initReactI18next).init({
-    resources,
+    // A copy: i18next merges the features' texts into its resources, which
+    // must never reach the catalogue module itself (checked against it).
+    resources: structuredClone(resources),
     lng: language,
     fallbackLng: 'fr',
     interpolation: { escapeValue: false }, // React already escapes.

@@ -11,4 +11,5 @@ export type * from './secrets';
 export type * from './spellcheck';
 export type * from './storage';
 export type * from './sync';
-export type * from './system';
+export * from './system';
+export { createSimulatedSystem, type SimulatedSystem } from './system-simulated';

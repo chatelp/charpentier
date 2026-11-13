@@ -2,6 +2,7 @@ import { useEffect, useRef, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { WorkspaceContext } from '../workspace/workspace-context';
 import { featureText, type SettingsSection } from './feature';
+import { useFeatures } from './features-context';
 
 /**
  * The settings view (docs/DESIGN.md §4.12): full frame, like the Atelier. On
@@ -32,6 +33,7 @@ export function SettingsView({
   const text = featureText(t);
   const railRef = useRef<HTMLUListElement>(null);
   const pageRef = useRef<HTMLDivElement>(null);
+  const look = useFeatures().find((f) => f.settingsLook)?.settingsLook;
   const current = sections.find((s) => s.id === section) ?? sections[0];
   const index = current ? sections.indexOf(current) : -1;
 
@@ -74,8 +76,8 @@ export function SettingsView({
         onClose();
       }}
     >
-      <nav className="ch-settings-rail ch-tool">
-        <h2 className="ch-settings-title">{t('settings.title')}</h2>
+      <nav className={`ch-settings-rail ${look?.material === 'system' ? 'ch-system' : 'ch-tool'}`}>
+        <h2 className="ch-settings-title">{look ? text(look.title) : t('settings.title')}</h2>
         <ul
           ref={railRef}
           className="ch-settings-sections"
