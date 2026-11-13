@@ -473,9 +473,13 @@ export function ProjectWorkspace({
   const { uiSounds, typingSounds } = prefs;
   useEffect(() => {
     platform.menu?.set(
-      buildMenuModel(registry, t, { toggleUiSounds: uiSounds, toggleTypingSounds: typingSounds }),
+      buildMenuModel(registry, t, {
+        toggleUiSounds: uiSounds,
+        toggleTypingSounds: typingSounds,
+        toggleRejected: prefs.showRejected,
+      }),
     );
-  }, [platform, registry, t, uiSounds, typingSounds]);
+  }, [platform, registry, t, uiSounds, typingSounds, prefs.showRejected]);
   useEffect(
     () => setSoundSettings({ ui: uiSounds, typing: typingSounds }),
     [uiSounds, typingSounds],

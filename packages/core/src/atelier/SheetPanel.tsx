@@ -51,6 +51,14 @@ export function SheetPanel({ ctx, target, active, onOpenInAtelier, onClose }: Sh
       event.preventDefault();
       onClose();
     } else if (
+      event.key === 'X' &&
+      event.shiftKey &&
+      !(event.target instanceof HTMLTextAreaElement || event.target instanceof HTMLInputElement)
+    ) {
+      // ⇧X: show or hide the rejections, as in the Atelier.
+      event.preventDefault();
+      ctx.updatePrefs((p) => ({ showRejected: !p.showRejected }));
+    } else if (
       (event.key === 'ArrowDown' || event.key === 'ArrowUp') &&
       event.target instanceof HTMLElement &&
       event.target.hasAttribute('data-field-value')

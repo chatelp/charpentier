@@ -187,7 +187,8 @@
     "toggleLightModel": "Remarques légères : Opus ou Haiku (moins cher)",
     "replayTour": "Revoir la visite guidée",
     "toggleUiSounds": "Sons de l’interface",
-    "toggleTypingSounds": "Son de frappe"
+    "toggleTypingSounds": "Son de frappe",
+    "toggleRejected": "Afficher les rejets"
   },
   "palette": {
     "label": "Ligne de commande",
@@ -345,7 +346,10 @@
       "proposed": "en relief : proposée",
       "validated": "gravée : validée",
       "rejected": "estompée : rejetée",
-      "contradicted": "contredite"
+      "contradicted": "contredite",
+      "show": "afficher ({{count}})",
+      "hide": "masquer",
+      "toggleKey": "⇧X"
     },
     "status": {
       "proposed": "Proposée par le Compagnon.",
@@ -497,7 +501,17 @@
       "worldRules": "+ Nouvelle règle du monde",
       "clues": "+ Nouvel indice"
     },
-    "newKeyHint": "Nouvelle entrée (N)"
+    "newKeyHint": "Nouvelle entrée (N)",
+    "rejectCount_one": "{{count}} rejet",
+    "rejectCount_other": "{{count}} rejets",
+    "useValue": "Utiliser cette valeur",
+    "rejectedPrefix": "Rejetée : ",
+    "rejectedSuffix": ", le {{date}}",
+    "rejectedEntries_one": "{{count}} proposition rejetée",
+    "rejectedEntries_other": "{{count}} propositions rejetées",
+    "showRejected": "Afficher",
+    "reconsider": "Reprendre",
+    "rejectedEntry": "Rejetée"
   },
   "overview": {
     "label": "Vue d’ensemble du manuscrit",

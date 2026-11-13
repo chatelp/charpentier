@@ -26,6 +26,9 @@ export interface FieldRowProps {
   readonly sceneNumber: (sceneId: string) => string | undefined;
   /** Opens the passage a conflict points at. */
   readonly onShowPassage: (sceneId: string) => void;
+  /** « Afficher les rejets » (docs/DESIGN.md §4.5); hidden, a rejected value leaves the field empty. */
+  readonly showRejected: boolean;
+  readonly onShowRejected: () => void;
 }
 
 const asText = (value: unknown): string =>
@@ -54,6 +57,8 @@ export function FieldRow({
   conflict,
   sceneNumber,
   onShowPassage,
+  showRejected,
+  onShowRejected,
 }: FieldRowProps) {
   const { t, i18n } = useTranslation();
   const labelId = useId();
@@ -61,8 +66,10 @@ export function FieldRow({
   const [draft, setDraft] = useState<string | null>(null);
   // Enter commits, then the textarea goes away and may also blur: commit once.
   const editing = useRef(false);
-  const status = shownStatus(state, conflict);
-  const value = shownValue(state);
+  const actualStatus = shownStatus(state, conflict);
+  // Rejections hidden: a field whose only value was rejected looks empty.
+  const status = actualStatus === 'rejected' && !showRejected ? 'empty' : actualStatus;
+  const value = status === 'empty' ? undefined : shownValue(state);
 
   const write = (next: FieldValue | undefined) => {
     if (next === undefined || next === '' || (Array.isArray(next) && next.length === 0)) {
@@ -152,6 +159,9 @@ export function FieldRow({
     if (event.key === 'Enter' || event.key === 'F2') {
       event.preventDefault();
       startEdit();
+    } else if (event.shiftKey) {
+      // ⇧X shows or hides the rejections (the Atelier handles it).
+      return;
     } else if (key === 'v' && state.status === 'proposed') {
       event.preventDefault();
       playSound('click');
@@ -183,18 +193,24 @@ export function FieldRow({
       new Date(iso),
     );
 
-  const shownText = (() => {
-    if (def.kind === 'choice') return value ? optionLabel(asText(value)) : '';
-    if (def.kind === 'scenes') return '';
+  const textOf = (shown: unknown): string => {
+    if (def.kind === 'choice') return shown ? optionLabel(asText(shown)) : '';
+    if (def.kind === 'scenes')
+      return asSceneIds(shown)
+        .map((id) => sceneNumber(id) ?? '?')
+        .join(', ');
     if (def.kind === 'scene') {
-      const id = fromSceneOf(value);
+      const id = fromSceneOf(shown);
       const scene = ctx.outline.flatMap((c) => c.scenes).find((sc) => sc.id === id);
       return id
         ? t('atelier.fromScene', { number: sceneNumber(id) ?? '?', title: scene?.title ?? '' })
         : '';
     }
-    return asText(value);
-  })();
+    return asText(shown);
+  };
+  const shownText = def.kind === 'scenes' ? '' : textOf(value);
+  const lastRejection = state.rejected[state.rejected.length - 1];
+  const keptValue = actualStatus === 'validated' || actualStatus === 'contradicted';
   const sceneIds = def.kind === 'scenes' ? asSceneIds(value) : [];
 
   const evidenceScenes = [
@@ -278,12 +294,32 @@ export function FieldRow({
             </button>
           </>
         )}
-        {status === 'rejected' && state.rejected.length > 0 && (
-          <span>
-            {t('atelier.rejectedOn', {
-              date: date(state.rejected[state.rejected.length - 1]?.at ?? ''),
-            })}
-          </span>
+        {status === 'rejected' && lastRejection && (
+          <>
+            <span>{t('atelier.rejectedOn', { date: date(lastRejection.at) })}</span>
+            <button
+              type="button"
+              tabIndex={-1}
+              className="ch-btn"
+              onClick={() => {
+                // The author takes the rejected value as their own.
+                playSound('click');
+                setField(ctx.root, fieldRef, lastRejection.value);
+              }}
+            >
+              {t('atelier.useValue')}
+            </button>
+          </>
+        )}
+        {!showRejected && state.rejected.length > 0 && (status === 'empty' || keptValue) && (
+          <button
+            type="button"
+            tabIndex={-1}
+            className="ch-link ch-fld-rejects"
+            onClick={onShowRejected}
+          >
+            {t('atelier.rejectCount', { count: state.rejected.length })}
+          </button>
         )}
         {status === 'contradicted' && conflict && (
           <>
@@ -301,6 +337,17 @@ export function FieldRow({
           </>
         )}
       </div>
+      {showRejected && keptValue && state.rejected.length > 0 && (
+        <ul className="ch-fld-rejections">
+          {state.rejected.map((rejection) => (
+            <li key={rejection.at}>
+              {t('atelier.rejectedPrefix')}
+              <s>{`« ${textOf(rejection.value)} »`}</s>
+              {t('atelier.rejectedSuffix', { date: date(rejection.at) })}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

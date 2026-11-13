@@ -34,6 +34,12 @@ export const atelierCommands: readonly AtelierCommand[] = [
     keybinding: 'Mod-e',
     run: (ctx) => (ctx.view === 'atelier' ? ctx.openWriting() : ctx.openAtelier()),
   },
+  {
+    // ⇧X in the Atelier and the sheet beside the text (handled there: a capital X is text elsewhere).
+    id: 'toggleRejected',
+    scope: 'global',
+    run: (ctx) => ctx.updatePrefs((p) => ({ showRejected: !p.showRejected })),
+  },
   ...ATELIER_MODULES.map((rail, i): AtelierCommand => ({
     id: RAIL_COMMANDS[rail],
     scope: 'global',

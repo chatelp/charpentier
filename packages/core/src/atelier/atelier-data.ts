@@ -28,8 +28,10 @@ export interface SheetTarget {
 export interface AtelierData {
   readonly project: ProjectMeta | undefined;
   readonly singletons: Readonly<Record<SingletonModule, Readonly<Record<string, FieldState>>>>;
-  /** Live entities; those the author rejected stay stored (not proposed again) but hidden. */
+  /** Live entities, but those the author rejected. */
   readonly entities: Readonly<Record<EntityModule, readonly EntityInfo[]>>;
+  /** Entities the author rejected: kept (never proposed again), shown with « Afficher les rejets ». */
+  readonly rejectedEntities: Readonly<Record<EntityModule, readonly EntityInfo[]>>;
   /** Open conflict signals aimed at a field. */
   readonly conflicts: readonly Signal[];
 }
@@ -44,6 +46,9 @@ export function readAtelier(doc: Y.Doc): AtelierData {
     entities: Object.fromEntries(
       entityModules.map((m) => [m, listEntities(doc, m).filter((e) => e.status !== 'rejected')]),
     ) as Record<EntityModule, EntityInfo[]>,
+    rejectedEntities: Object.fromEntries(
+      entityModules.map((m) => [m, listEntities(doc, m).filter((e) => e.status === 'rejected')]),
+    ) as Record<EntityModule, EntityInfo[]>,
     conflicts: listSignals(doc, { state: 'open' }).filter(
       (s) => s.kind === 'conflict' && s.fieldRef !== undefined,
     ),
@@ -56,7 +61,8 @@ export function fieldState(data: AtelierData, target: SheetTarget, field: string
   if (target.entityId === undefined) {
     return data.singletons[target.module as SingletonModule]?.[field] ?? EMPTY;
   }
-  const entity = data.entities[target.module as EntityModule]?.find(
+  const module = target.module as EntityModule;
+  const entity = [...(data.entities[module] ?? []), ...(data.rejectedEntities[module] ?? [])].find(
     (e) => e.id === target.entityId,
   );
   return entity?.fields[field] ?? EMPTY;

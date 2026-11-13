@@ -405,3 +405,50 @@
 .ch-prose .ch-who:hover {
   background: var(--ch-mentor-soft);
 }
+
+/* Rejections (docs/DESIGN.md §4.5): hidden by default, counted under the field. */
+.ch-legend-toggle {
+  padding: 2px 6px;
+  border: 0;
+  border-radius: var(--ch-radius-sm);
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.ch-legend-toggle:hover,
+.ch-legend-toggle:focus-visible,
+.ch-legend-toggle[aria-pressed='true'] {
+  box-shadow: var(--ch-raise-s);
+  outline: none;
+}
+
+.ch-fld-rejects {
+  color: var(--ch-faint);
+  font-size: 11.5px;
+}
+
+.ch-fld-rejections {
+  grid-column: 2;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--ch-faint);
+  font-size: 11.5px;
+}
+
+.ch-atl-entry.is-rejected {
+  opacity: 0.45;
+  text-decoration: line-through;
+}
+
+.ch-atl-entry.is-rejected .ch-btn {
+  text-decoration: none;
+}
+
+.ch-atl-rejected {
+  margin: 4px 0 0;
+  color: var(--ch-faint);
+  font-size: var(--ch-ui-2xs);
+}

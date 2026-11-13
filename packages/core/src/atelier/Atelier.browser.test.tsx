@@ -142,9 +142,13 @@ describe('Atelier', () => {
     field('Peur').focus();
     await userEvent.keyboard('x');
     expect(readFieldRef(root, fear).status).toBe('rejected');
+    // Rejections are hidden by default: the field looks empty, « 1 rejet » under it.
     await waitFor(() =>
-      expect(field('Peur').closest('.ch-fld')?.getAttribute('data-status')).toBe('rejected'),
+      expect(field('Peur').closest('.ch-fld')?.getAttribute('data-status')).toBe('empty'),
     );
+    expect(
+      within(field('Peur').closest('.ch-fld') as HTMLElement).getByText('1 rejet'),
+    ).toBeTruthy();
 
     // A conflict on a validated field makes it « contredite ».
     writer.raiseSignal({
@@ -245,5 +249,50 @@ describe('Atelier', () => {
     await userEvent.keyboard('mon roman{Enter}');
     await screen.findByRole('region', { name: 'Atelier' });
     expect(screen.getByRole('heading', { name: 'Mon roman' })).toBeTruthy();
+  });
+
+  it('hides the rejections, shows them with ⇧X, and lets the author take one back', async () => {
+    const host = createHost();
+    await host.start();
+    const root = host.root();
+    const writer = createAgentWriter(root, 'bottom-up');
+    const vasseur = writer.proposeEntity('characters', { name: 'Paul Vasseur' }, []);
+    const helene = createEntity(root, 'characters', { name: 'Hélène' });
+    writer.proposeField({ module: 'characters', entityId: helene, field: 'age' }, '52 ans', []);
+    const age = { module: 'characters', entityId: helene, field: 'age' } as const;
+
+    await userEvent.keyboard(mod('2'));
+    // The proposed entry is rejected from the list: gone, counted at the foot.
+    await userEvent.click(await screen.findByRole('option', { name: /Paul Vasseur/ }));
+    await userEvent.keyboard('x');
+    await waitFor(() => expect(screen.queryByRole('option', { name: /Paul Vasseur/ })).toBeNull());
+    expect(screen.getByText(/1 proposition rejetée/)).toBeTruthy();
+
+    // Hélène's proposed age is rejected: empty field, « 1 rejet ».
+    (await screen.findByRole('option', { name: /Hélène/ })).click();
+    await waitFor(() => expect(field('Âge')).toBeTruthy());
+    field('Âge').focus();
+    await userEvent.keyboard('x');
+    await waitFor(() =>
+      expect(field('Âge').closest('.ch-fld')?.getAttribute('data-status')).toBe('empty'),
+    );
+
+    // ⇧X shows them: the field is rejected again, its value can be used; the entry comes back.
+    await userEvent.keyboard('{Shift>}X{/Shift}');
+    await waitFor(() =>
+      expect(field('Âge').closest('.ch-fld')?.getAttribute('data-status')).toBe('rejected'),
+    );
+    const rejected = await screen.findByRole('option', { name: /Paul Vasseur/ });
+    expect(rejected.className).toContain('is-rejected');
+    await userEvent.click(screen.getByRole('button', { name: 'Utiliser cette valeur' }));
+    await waitFor(() => expect(readFieldRef(root, age).status).toBe('validated'));
+    expect(readFieldRef(root, age).value).toBe('52 ans');
+    await userEvent.click(within(rejected).getByRole('button', { name: 'Reprendre' }));
+    await waitFor(() =>
+      expect(listEntities(root, 'characters').find((c) => c.id === vasseur)?.status).toBe(
+        'proposed',
+      ),
+    );
+    expect(vasseur).toBeTruthy();
   });
 });

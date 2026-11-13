@@ -2,6 +2,7 @@ import {
   acceptProposal,
   knownByField,
   readFieldRef,
+  reconsiderEntity,
   rejectEntity,
   validateEntity,
   type EntityInfo,
@@ -19,6 +20,7 @@ import {
   fieldRefOf,
   fieldState,
   pendingCount,
+  RAIL_SOURCES,
   readAtelier,
   sceneNumbers,
   shownValue,
@@ -55,6 +57,8 @@ interface Entry {
   readonly title: string;
   readonly subtitle?: string;
   readonly proposed: boolean;
+  /** Rejected by the author, listed only with « Afficher les rejets ». */
+  readonly rejected?: boolean;
   readonly group?: string;
 }
 
@@ -107,7 +111,13 @@ export function Atelier({
   const listRef = useRef<HTMLDivElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
 
-  const entries = useEntries(data, location.rail, numbers);
+  const showRejected = ctx.prefs.showRejected;
+  const toggleRejected = () => ctx.updatePrefs((p) => ({ showRejected: !p.showRejected }));
+  const entries = useEntries(data, location.rail, numbers, showRejected);
+  const rejectedEntries = RAIL_SOURCES[location.rail].reduce(
+    (n, m) => n + (data.rejectedEntities[m as EntityModule]?.length ?? 0),
+    0,
+  );
   const hasList = location.rail !== 'meta';
   const shown = filterByQuery(entries, query, (e) => `${e.title} ${e.subtitle ?? ''}`);
   const selected =
@@ -136,6 +146,10 @@ export function Atelier({
     if (event.key === 'Escape') {
       event.preventDefault();
       onWrite();
+    } else if (event.key === 'X' && event.shiftKey && !typing && !event.metaKey && !event.ctrlKey) {
+      // ⇧X: show or hide the rejections (docs/DESIGN.md §4.5).
+      event.preventDefault();
+      toggleRejected();
     } else if (
       event.key.toLowerCase() === 'n' &&
       !typing &&
@@ -204,6 +218,8 @@ export function Atelier({
       const next = shown[index + 1] ?? shown[index - 1];
       trashEntityAndNotify(ctx, module, entity, selected.title);
       select(next);
+    } else if (event.shiftKey) {
+      return;
     } else if (key.toLowerCase() === 'v' && entity && selected.proposed) {
       event.preventDefault();
       playSound('click');
@@ -337,9 +353,24 @@ export function Atelier({
                 showGroup={entry.group !== undefined && entry.group !== shown[i - 1]?.group}
                 selected={entry.key === selected?.key}
                 onSelect={() => select(entry)}
+                onReconsider={() => {
+                  const { module: m, entityId } = entry.target;
+                  if (!entityId) return;
+                  playSound('click');
+                  reconsiderEntity(ctx.root, m as EntityModule, entityId);
+                }}
               />
             ))}
           </ul>
+          {!showRejected && rejectedEntries > 0 && (
+            <p className="ch-atl-rejected">
+              {t('atelier.rejectedEntries', { count: rejectedEntries })}
+              {' · '}
+              <button type="button" className="ch-link" onClick={toggleRejected}>
+                {t('atelier.showRejected')} <kbd>{t('atelier.legend.toggleKey')}</kbd>
+              </button>
+            </p>
+          )}
           {entries.length === 0 && (
             <p className="ch-atl-empty">{t(`atelier.emptyList.${location.rail}`)}</p>
           )}
@@ -371,12 +402,16 @@ function EntryItem({
   showGroup,
   selected,
   onSelect,
+  onReconsider,
 }: {
   readonly entry: Entry;
   readonly showGroup: boolean;
   readonly selected: boolean;
   readonly onSelect: () => void;
+  /** « Reprendre » a rejected entry: a proposal again. */
+  readonly onReconsider: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <>
       {showGroup && (
@@ -389,11 +424,24 @@ function EntryItem({
         aria-selected={selected}
         tabIndex={selected ? 0 : -1}
         data-atl-focus=""
-        className={`ch-atl-entry${entry.proposed ? ' is-proposed' : ''}`}
+        className={`ch-atl-entry${entry.proposed ? ' is-proposed' : ''}${entry.rejected ? ' is-rejected' : ''}`}
         onClick={onSelect}
       >
         <div>{entry.title}</div>
         {entry.subtitle && <div className="ch-atl-sub">{entry.subtitle}</div>}
+        {entry.rejected && (
+          <button
+            type="button"
+            tabIndex={-1}
+            className="ch-btn"
+            onClick={(event) => {
+              event.stopPropagation();
+              onReconsider();
+            }}
+          >
+            {t('atelier.reconsider')}
+          </button>
+        )}
       </li>
     </>
   );
@@ -413,12 +461,16 @@ function useEntries(
   data: AtelierData,
   rail: AtelierModule,
   numbers: ReadonlyMap<string, string>,
+  showRejected: boolean,
 ): Entry[] {
   const { t } = useTranslation();
   const entityEntries = (module: EntityModule, group?: string): Entry[] => {
     const def = moduleDefs[module];
     if (def.kind !== 'entity') return [];
-    return data.entities[module].map((entity: EntityInfo) => {
+    const shown = showRejected
+      ? [...data.entities[module], ...data.rejectedEntities[module]]
+      : data.entities[module];
+    return shown.map((entity: EntityInfo) => {
       const title = asText(shownValue(entity.fields[def.titleField] ?? EMPTY));
       const subtitleRaw = def.subtitleField
         ? asText(shownValue(entity.fields[def.subtitleField] ?? EMPTY))
@@ -435,14 +487,16 @@ function useEntries(
       ).length;
       const proposedIn = entity.fields[def.titleField]?.proposal?.evidence[0]?.sceneId;
       const details =
-        entity.status === 'proposed'
-          ? [
-              t('atelier.proposedEntry'),
-              proposedIn &&
-                numbers.get(proposedIn) &&
-                t('atelier.inScene', { number: numbers.get(proposedIn) }),
-            ]
-          : [subtitle, conflicts > 0 && t('atelier.contradictions', { count: conflicts })];
+        entity.status === 'rejected'
+          ? [t('atelier.rejectedEntry')]
+          : entity.status === 'proposed'
+            ? [
+                t('atelier.proposedEntry'),
+                proposedIn &&
+                  numbers.get(proposedIn) &&
+                  t('atelier.inScene', { number: numbers.get(proposedIn) }),
+              ]
+            : [subtitle, conflicts > 0 && t('atelier.contradictions', { count: conflicts })];
       const line = details.filter(Boolean).join(' · ');
       return {
         key: `${module}:${entity.id}`,
@@ -450,6 +504,7 @@ function useEntries(
         title: title || t(`atelier.untitled.${module}`),
         ...(line && { subtitle: line }),
         proposed: entity.status === 'proposed',
+        ...(entity.status === 'rejected' && { rejected: true }),
         ...(group && { group }),
       };
     });
@@ -521,6 +576,8 @@ export function Sheet({
 }) {
   const { t } = useTranslation();
   const def = moduleDefs[target.module];
+  const showRejected = ctx.prefs.showRejected;
+  const toggleRejected = () => ctx.updatePrefs((p) => ({ showRejected: !p.showRejected }));
   const row = (
     field: FieldDef,
     label = t(`atelier.fields.${target.module}.${field.key}` as 'atelier.fields.meta.pitch'),
@@ -537,9 +594,16 @@ export function Sheet({
         conflict={conflictFor(data, ref)}
         sceneNumber={sceneNumber}
         onShowPassage={onShowPassage}
+        showRejected={showRejected}
+        onShowRejected={toggleRejected}
       />
     );
   };
+  // What « afficher (N) » counts: the rejections in this sheet and the rejected entries of its module.
+  const fieldKeys = def.sections.flatMap((s) => s.fields.map((f) => f.key));
+  const rejections =
+    fieldKeys.reduce((n, key) => n + fieldState(data, target, key).rejected.length, 0) +
+    (data.rejectedEntities[target.module as EntityModule]?.length ?? 0);
   const characters = data.entities.characters;
   const appearances =
     target.module === 'characters' ? appearancesOf(title, ctx.outline, ctx.sceneTexts) : [];
@@ -564,20 +628,32 @@ export function Sheet({
     <article className="ch-sheet-body" aria-label={title}>
       <h2 className="ch-sheet-title">{title}</h2>
       <p className="ch-sheet-lead">{lead}</p>
-      <p className="ch-legend" aria-hidden="true">
-        <span>
+      <p className="ch-legend">
+        <span aria-hidden="true">
           <i className="is-proposed" />
           {t('atelier.legend.proposed')}
         </span>
-        <span>
+        <span aria-hidden="true">
           <i className="is-validated" />
           {t('atelier.legend.validated')}
         </span>
-        <span>
+        {/* « Afficher les rejets »: the legend's rejected sample is the switch (⇧X). */}
+        <button
+          type="button"
+          className="ch-legend-toggle"
+          aria-pressed={showRejected}
+          title={t('commands.toggleRejected')}
+          onClick={toggleRejected}
+        >
           <i className="is-rejected" />
           {t('atelier.legend.rejected')}
-        </span>
-        <span>
+          {' · '}
+          {showRejected
+            ? t('atelier.legend.hide')
+            : t('atelier.legend.show', { count: rejections })}{' '}
+          <kbd>{t('atelier.legend.toggleKey')}</kbd>
+        </button>
+        <span aria-hidden="true">
           <i className="is-contradicted" />
           {t('atelier.legend.contradicted')}
         </span>

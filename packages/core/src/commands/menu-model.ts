@@ -94,6 +94,8 @@ export const MENU_LAYOUT: readonly { readonly menu: string; readonly items: read
       'atelierWorldRules',
       'atelierClues',
       '-',
+      'toggleRejected',
+      '-',
       'newCharacter',
       'newAct',
       'newArc',

@@ -226,6 +226,19 @@ export function rejectEntity(
   }, origin);
 }
 
+/**
+ * The author takes back an entry they rejected (« Reprendre »): it is a
+ * proposal again, for them to validate or reject (docs/DESIGN.md §4.5).
+ */
+export function reconsiderEntity(
+  doc: Y.Doc,
+  module: EntityModule,
+  entityId: string,
+  origin: Origin = AUTHOR,
+): void {
+  doc.transact(() => entityMap(doc, module, entityId).delete('$rejectedAt'), origin);
+}
+
 /** Moves an entity to the trash (never a hard delete). */
 export function trashEntity(
   doc: Y.Doc,

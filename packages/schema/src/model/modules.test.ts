@@ -11,6 +11,7 @@ import {
   listTrashedEntities,
   readFieldRef,
   readSingleton,
+  reconsiderEntity,
   rejectEntity,
   rejectProposal,
   restoreEntity,
@@ -239,5 +240,15 @@ describe('« contredite » is derived from open conflict signals', () => {
     expect(agent.resolveOwnSignal(b)).toBe(false);
     const states = Object.fromEntries(listSignals(doc).map((s) => [s.id, s.state]));
     expect(states).toEqual({ [a]: 'resolved', [b]: 'dismissed' });
+  });
+
+  it('takes back a rejected entry as a proposal again', () => {
+    const doc = newProjectDoc();
+    const writer = createAgentWriter(doc, 'test');
+    const id = writer.proposeEntity('characters', { name: 'Vasseur' }, []);
+    rejectEntity(doc, 'characters', id);
+    expect(getEntity(doc, 'characters', id)?.status).toBe('rejected');
+    reconsiderEntity(doc, 'characters', id);
+    expect(getEntity(doc, 'characters', id)?.status).toBe('proposed');
   });
 });
