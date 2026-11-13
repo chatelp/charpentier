@@ -3141,6 +3141,75 @@
       .mc th:first-child {
         text-align: left;
       }
+
+      /* ───────────── « Sens » : hollow = what is written or holds something; lit = where you are ───────────── */
+      .app[data-rim='sens'],
+      .app[data-rim='sens'] * {
+        --rim: 0 0 0 0 transparent;
+        --lit-bg: color-mix(in srgb, var(--bg) 58%, var(--hl));
+        --lit:
+          0 0 0 1px color-mix(in srgb, var(--hl) 82%, #fff),
+          0 0 16px color-mix(in srgb, var(--hl) 70%, transparent);
+      }
+      .app[data-rim='sens']
+        :is(
+          .pt.sel,
+          .sg.on,
+          .smsg.on,
+          .tbtn.on,
+          .r.pick.sel,
+          .card2.sel,
+          .net.sel,
+          .ri.sel,
+          .chip.on,
+          .card.act
+        ) {
+        background: var(--lit-bg);
+        box-shadow: var(--lit);
+      }
+      .app[data-rim='sens'] :is(.nav.on, .ent.on, .ms .sc.act, .proj.on, .snav.on) {
+        background: var(--lit-bg);
+        box-shadow:
+          var(--lit),
+          inset 3px 0 0 var(--author, var(--ink));
+      }
+      .app[data-rim='sens'] .srail .snav.on {
+        box-shadow:
+          var(--lit),
+          inset 3px 0 0 var(--ink);
+      }
+      .app[data-rim='sens'] :is(.seg button.on, .segs span.on, .modes button.on) {
+        background: var(--lit-bg);
+        box-shadow:
+          var(--raise-s),
+          0 0 0 1px color-mix(in srgb, var(--hl) 82%, #fff);
+      }
+      .app[data-rim='sens'][data-orn='true'] :is(.nav.on .pic, .ent.on .mono) {
+        box-shadow: var(--raise-s);
+      }
+      /* The gesture itself: hollow while pressed, nothing else. */
+      .app[data-rim='sens']
+        :is(
+          .btn,
+          .tbtn,
+          .sg,
+          .smsg,
+          .nav,
+          .ent,
+          .snav,
+          .pt,
+          .proj,
+          .ms .sc,
+          .seg button,
+          .edge,
+          .cmdz,
+          .r.pick,
+          .chip
+        ):active {
+        background: var(--bg);
+        box-shadow: var(--inset);
+        transition: none;
+      }
     </style>
   </head>
   <body>
@@ -3208,7 +3277,7 @@
         sec: 'reseau',
         mat: 'ardoise',
         dk: 'clair',
-        rim: 'levre',
+        rim: 'sens',
         full: false,
         orn: true,
       };
@@ -4431,7 +4500,7 @@
             .map(([k, d]) => b('dir', k, d.name))
             .join('')}</span>
           <span class="grp"><span class="lbl">Caractère <kbd>M E O</kbd></span>${MATS.map(([k, l]) => b('mat', k, l)).join('')}${b('dk', 'profond', 'Sombre : outils profonds')}${b('dk', 'clair', 'Sombre : outils clairs')}${b('full', !S.full, 'E · Encres pleines')}</span>
-          <span class="grp"><span class="lbl">Lumière <kbd>L</kbd></span>${b('rim', 'non', 'Sans')}${b('rim', 'levre', 'Lèvre')}${b('rim', 'eclair', 'Éclair au clic')}${b('orn', !S.orn, 'O · Outils gravés')}</span>
+          <span class="grp"><span class="lbl">Lumière <kbd>L</kbd></span>${b('rim', 'non', 'Avant : tout en creux')}${b('rim', 'sens', 'Creux / allumé')}${b('orn', !S.orn, 'O · Outils gravés')}</span>
           <span class="grp"><span class="lbl">Découverte <kbd>G</kbd></span>${DISC_KEYS.map((k) => b('disc', k, DISC[k][0])).join('')}${b('quiet', !S.quiet, S.quiet ? 'Frappe : en cours' : 'Frappe : à l’arrêt')}</span>
           <span class="grp"><span class="lbl">Écran <kbd>1–9</kbd></span>${SCREENS.map(([k, l]) => b('screen', k, l)).join('')}</span>
           <span class="grp"><span class="lbl">Thème <kbd>T</kbd></span>${b('theme', 'light', 'Clair')}${b('theme', 'dark', 'Sombre')}</span>
@@ -4729,7 +4798,7 @@
         else if (e.key === 'm')
           S.mat = MATS[(MATS.findIndex(([k]) => k === S.mat) + 1) % MATS.length][0];
         else if (e.key === 'e') S.full = !S.full;
-        else if (e.key === 'l') S.rim = { non: 'levre', levre: 'eclair', eclair: 'non' }[S.rim];
+        else if (e.key === 'l') S.rim = S.rim === 'sens' ? 'non' : 'sens';
         else if (e.key === 'o') S.orn = !S.orn;
         else if (e.key === 't') S.theme = S.theme === 'light' ? 'dark' : 'light';
         else if (e.key === 'a') S.warm = !S.warm;

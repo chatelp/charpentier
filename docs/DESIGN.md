@@ -1,6 +1,6 @@
 # Charpentier : design language
 
-- **Version** : 1.6 (13 novembre 2026). 1.6 : le moniteur du X250 (§4.12). 1.5 : la **ligne système** du X250 et tout ce qu'elle ouvre (§4.12), la matière du système (§3.1), la police à chasse fixe (§3.2), le **liseré de lumière** sur ce qu'on presse (§4.7). 1.4 : en thème sombre, l'ardoise reste la même et la page s'assombrit (§3.1). 1.3 : les outils changent de matière, **ardoise sombre**, et reçoivent des **outils gravés** (§3.1, §4.11), l'auteur trouvant l'ensemble trop neutre hors de la page d'écriture. 1.2 : finitions (sons §3.4, rejets §4.5, restauration dans la vue d'ensemble §4.4, note en fenêtre étroite §4.2, bibliothèque §4.9, icône §4.10). 1.1 : tout devient découvrable sans raccourci (§4.8, §5.1), après essai de l'app par l'auteur ; inventaire et directions comparées dans [design/decouverte.md](design/decouverte.md).
+- **Version** : 1.7 (13 novembre 2026). 1.7 : **relief, creux, allumé** : trois états qui ont chacun un sens (§1 principe 3, §4.7) ; le « liseré de lumière » de la 1.5 est abandonné. 1.6 : le moniteur du X250 (§4.12). 1.5 : la **ligne système** du X250 et tout ce qu'elle ouvre (§4.12), la matière du système (§3.1), la police à chasse fixe (§3.2), le **liseré de lumière** sur ce qu'on presse (§4.7). 1.4 : en thème sombre, l'ardoise reste la même et la page s'assombrit (§3.1). 1.3 : les outils changent de matière, **ardoise sombre**, et reçoivent des **outils gravés** (§3.1, §4.11), l'auteur trouvant l'ensemble trop neutre hors de la page d'écriture. 1.2 : finitions (sons §3.4, rejets §4.5, restauration dans la vue d'ensemble §4.4, note en fenêtre étroite §4.2, bibliothèque §4.9, icône §4.10). 1.1 : tout devient découvrable sans raccourci (§4.8, §5.1), après essai de l'app par l'auteur ; inventaire et directions comparées dans [design/decouverte.md](design/decouverte.md).
 - **Direction retenue** : **Perle** pour la page, **ardoise** pour les outils, avec **Deux encres**, **Signature** et **Outils gravés** ; manuscrit en **tiroir + vue d'ensemble** ; points d'entrée en **poignées** sur les bords et **zone de commande** en pied.
 - **Sources** : brief de l'auteur ([design/brief.md](design/brief.md)), maquettes ([design/mockups/](design/mockups/), ouvrir `index.html`), tokens CSS proposés ([design/tokens.css](design/tokens.css)).
 - Complète la [SPEC](SPEC.md) (§6 mentor, §7.1 statuts, §19 exigences transverses) sans la contredire.
@@ -11,7 +11,7 @@
 
 1. **La page est plate et claire, les outils sont en relief et en ardoise.** Le texte n'est jamais dans une boîte : il est posé sur le fond perle. Ce qui sert à travailler autour du texte (panneaux, tiroir, rail et liste de l'Atelier, poignées, ligne de commande) est taillé dans une seconde matière, l'**ardoise sombre**, en neumorphisme doux : on distingue d'un coup d'œil le texte de l'outillage. Ce qui est du contenu reste sur la perle : la page, les fiches, les cartes de scène et de projet, la note en marge.
 2. **Deux voix, deux encres.** Le **vermillon** (crayon de charpentier) marque ce qui est à l'auteur : curseur, sélection, élément actif, décisions validées. Le **bleu de Prusse** marque tout ce qui vient du Compagnon. Aucune autre couleur porteuse de sens.
-3. **Le relief dit le statut.** En relief = proposé, à prendre ; gravé = validé, acquis ; estompé = rejeté ; gravé + médaillon « ! » = contredit. Le statut ne dépend jamais de la seule couleur.
+3. **Relief, creux, allumé : trois états, trois sens.** **En relief** = disponible, à prendre : un bouton, une proposition du Compagnon. **En creux** = inscrit, ou fait pour recevoir : une valeur validée, un champ de saisie, le rail d'un réglage. **Allumé** = là où vous êtes, ce qui est ouvert ou en cours : le module, la fiche ou la scène active, le segment dont le panneau est déplié, le focus du clavier. On ne mélange jamais creux et allumé sur un même élément, et le creux ne sert plus à dire « sélectionné ». S'y ajoutent estompé = rejeté, et gravé + médaillon « ! » = contredit. Un état ne dépend jamais de la seule couleur.
 4. **Le Compagnon respire dans la marge.** Ses remarques apparaissent quand vous marquez une pause, se déplient à côté du passage, se replient quand vous repartez. Rien ne recouvre le texte, rien ne clignote, aucune notification.
 5. **Une typographie d'éditeur.** Literata pour le roman et pour tout ce qui « parle livre » (titres, libellés en petites capitales, ouverture de scène) ; Inter, petite et discrète, pour l'outillage.
 6. **Clavier d'abord, rien de caché.** Tout outil a un point d'entrée visible (poignée, bouton, menu) qui affiche son raccourci : on le trouve à la souris, on l'apprend en passant, on finit au clavier. Ces points d'entrée sont discrets au repos et s'effacent pendant la frappe ; `Échap` ramène toujours au texte.
@@ -115,7 +115,7 @@ Typographie française du texte : espaces fines insécables avant `? ! ; :` et d
 - Relief, trois niveaux seulement :
   - `--ch-raise` (6 px / flou 14) : panneaux, notes, feuille de résultats, cartes de la vue d'ensemble ;
   - `--ch-raise-s` (3 px / flou 7) : boutons, cartes de points, puces, valeurs proposées, pastilles ;
-  - `--ch-inset` (3 px / flou 7, creux) : champs de saisie, élément sélectionné ou actif, bouton pressé, valeur validée.
+  - `--ch-inset` (3 px / flou 7, creux) : champs de saisie, rails, valeur validée, bouton pendant l'appui. Jamais pour un élément sélectionné ou actif : il est allumé (§4.7).
 - Le fond de tous les éléments en relief est `--ch-bg` : la forme naît de l'ombre, pas d'un aplat.
 
 ### 3.4 Mouvement et son
@@ -164,15 +164,15 @@ Attaques et chutes en rampes exponentielles depuis et vers 0,0001. Réglages : �
 ### 4.3 Panneau droit : Points à traiter / Conversation
 - Panneau en ardoise, en relief, de 25,5 rem, détaché des bords (10–12 px), ouvert par `⌘L` ou la poignée « Compagnon » (§4.8), sur l'onglet Points ; le contrôle segmenté passe à la conversation [D-18]. Il **remplace la marge** : les pastilles disparaissent et le texte se recentre dans l'espace restant. **Il ne recouvre jamais le contenu**, dans aucune vue : dans l'Atelier, la colonne de la fiche se resserre (une seule colonne de champs sous 46 rem) ; dans la vue d'ensemble, les colonnes et le bandeau s'arrêtent avant lui. Même règle pour le tiroir du manuscrit quand il reste ouvert.
 - **Contrôle segmenté** en tête : rail en creux, onglet actif en relief, libellé vermillon, compteur bleu.
-- **Points** : groupes « Cette scène », « Chapitre », « Fiches proposées » (libellés en petites capitales) ; chaque point est une carte en relief avec sa pastille, son type et sa scène, un titre, une phrase. Le point sélectionné est gravé. Les propositions de fiche portent « Valider `V` » et « Rejeter `X` ». Pied : `J K` parcourir, `⏎` aller au passage, `R` résolu, `I` ignorer.
+- **Points** : groupes « Cette scène », « Chapitre », « Fiches proposées » (libellés en petites capitales) ; chaque point est une carte en relief avec sa pastille, son type et sa scène, un titre, une phrase. Le point sélectionné est allumé. Les propositions de fiche portent « Valider `V` » et « Rejeter `X` ». Pied : `J K` parcourir, `⏎` aller au passage, `R` résolu, `I` ignorer.
 - **Réglette d'intervention** [D-19] : en tête du panneau, sous le contrôle segmenté, un rail gravé à 4 crans (Discret, Attentif, Accompagnant, Tuteur), curseur en relief, libellé du cran en petites capitales et une ligne qui dit ce qu'il change. `←` `→` quand elle a le focus.
 - **Conversation** : pas de bulles. Transcription sobre : « Vous » (petites capitales vermillon), « Le Compagnon » (petites capitales bleues), texte en Inter 13,5 px. Champ de saisie gravé en pied.
 
 ### 4.4 Manuscrit : tiroir et vue d'ensemble
-- **Tiroir** (`⌘J` ou la poignée « Manuscrit », [D-18]) : panneau gauche en ardoise, en relief, de 22 rem, la scène derrière s'estompe. Contrôle segmenté « Manuscrit | Plan ». Chapitres en Literata, scènes en lignes ; scène active gravée avec un filet vermillon à gauche ; pastilles bleues `•••` et nombre de mots à droite. Sous la scène active : variantes (active en vermillon) et derniers points de restauration. Clavier : `↑↓`, `⏎` ouvrir, `⌥↑↓` déplacer, `V` variantes, `⌘N` nouvelle scène.
-- **Vue d'ensemble** (`⌘⇧P` ou « Plan ») : plein cadre, titre du roman en Literata, une colonne par chapitre, une carte en relief par scène (numéro, titre en Literata, mots, variantes, pastilles). Scène active gravée et cerclée de vermillon. Clavier : flèches, `⌥` + flèches pour déplacer, `⏎` écrire, `Échap` revenir.
+- **Tiroir** (`⌘J` ou la poignée « Manuscrit », [D-18]) : panneau gauche en ardoise, en relief, de 22 rem, la scène derrière s'estompe. Contrôle segmenté « Manuscrit | Plan ». Chapitres en Literata, scènes en lignes ; scène active allumée avec un filet vermillon à gauche ; pastilles bleues `•••` et nombre de mots à droite. Sous la scène active : variantes (active en vermillon) et derniers points de restauration. Clavier : `↑↓`, `⏎` ouvrir, `⌥↑↓` déplacer, `V` variantes, `⌘N` nouvelle scène.
+- **Vue d'ensemble** (`⌘⇧P` ou « Plan ») : plein cadre, titre du roman en Literata, une colonne par chapitre, une carte en relief par scène (numéro, titre en Literata, mots, variantes, pastilles). Scène active allumée et cerclée de vermillon. Clavier : flèches, `⌥` + flèches pour déplacer, `⏎` écrire, `Échap` revenir.
 - **Bandeau en pied de la vue d'ensemble** (scène sélectionnée) : deux groupes, libellés en petites capitales avec leur touche.
-  - « Variantes `V` » : une puce par variante, l'active gravée en vermillon ; un clic ou `⏎` la rend active.
+  - « Variantes `V` » : une puce par variante, l'active allumée, en vermillon ; un clic ou `⏎` la rend active.
   - « Restauration `H` » : les **3 derniers points** de la variante active, en puces (« Auj. 14:32 · auto », « Hier 18:40 · « avant de couper la fin » ») puis un lien « Tous (12)… » qui ouvre « Revenir à un point de restauration… » dans la ligne de commande, filtré sur la scène.
   - Choisir un point ouvre au-dessus du bandeau un **aperçu** en relief : date et raison en petites capitales, les premières lignes de cette version dans un cadre gravé (Literata italique), l'écart de mots avec aujourd'hui et la variante, puis « Restaurer `⏎` », « En faire une variante `⇧⏎` », « Fermer `Échap` ».
   - Restaurer ne demande pas de confirmation : c'est une nouvelle transaction et l'état précédent devient lui-même un point de restauration (message d'état « Version restaurée… »). « En faire une variante » crée une variante nommée d'après la date et la rend active.
@@ -180,8 +180,8 @@ Attaques et chutes en rampes exponentielles depuis et vers 0,0001. Réglages : �
 
 ### 4.5 Atelier (modules) et fiches
 - **Atelier** (`⌘E` bascule Écrire / Atelier) : trois colonnes, rail des modules (13,5 rem), liste des entrées (16,5 rem) avec filtre gravé, fiche.
-- **Rail** : Méta, Personnages, Structure, Règles du monde, Indices et révélations (`⌘1…5`) ; module actif gravé avec filet vermillon ; nombre de propositions en bleu.
-- **Liste** : bouton « + Nouveau personnage » (libellé selon le module) sous le filtre ; entrée active gravée (filet vermillon) ; entrée proposée en relief, texte bleu.
+- **Rail** : Méta, Personnages, Structure, Règles du monde, Indices et révélations (`⌘1…5`) ; module actif allumé avec filet vermillon ; nombre de propositions en bleu.
+- **Liste** : bouton « + Nouveau personnage » (libellé selon le module) sous le filtre ; entrée active allumée (filet vermillon) ; entrée proposée en relief, texte bleu.
 - **Fiche** : titre Literata 30 px, ligne de contexte, légende des statuts, sections en deux colonnes (une seule en dessous de 46 rem de large), libellés en petites capitales.
 - **Champ à statut** (cœur du système) :
 
@@ -203,17 +203,32 @@ Attaques et chutes en rampes exponentielles depuis et vers 0,0001. Réglages : �
 ### 4.6 Ligne de commande
 - **Zone de commande, toujours visible** : au centre du pied, un champ gravé (largeur min(30 rem, 38 %)) avec l'invite bleue `›`, « Que voulez-vous faire ? » en `--ch-faint` et `⌘K` à droite. Un clic ou `⌘K` l'ouvre. Dans l'Atelier, le même champ est au pied du rail des modules.
 - Ouverte : barre pleine largeur en pied, en ardoise et en relief (sans dégradé vers la page), champ gravé, invite bleue `›` ; résultats qui montent dans une feuille en relief de 46 rem alignée à gauche. Champ vide : les commandes les plus utiles et les dernières utilisées, pour qu'un débutant voie ce qui existe sans rien taper.
-- Préfixes : `>` commandes, `@` fiches, `#` scènes (`⌘P` ouvre directement en `#`). Recherche approximative, insensible aux accents ; lettres trouvées en bleu, ligne choisie gravée ; raccourci de chaque commande à droite.
+- Préfixes : `>` commandes, `@` fiches, `#` scènes (`⌘P` ouvre directement en `#`). Recherche approximative, insensible aux accents ; lettres trouvées en bleu, ligne choisie allumée ; raccourci de chaque commande à droite.
 - Toute action de l'app y figure, avec son raccourci : c'est aussi l'aide-mémoire du clavier.
 
 ### 4.7 Éléments de base
-- **Bouton** : relief léger, rayon 9 px, Inter 12,5 px 500, touche en `--ch-faint` ; pressé = creux. Bouton principal : libellé bleu s'il agit pour le Compagnon, encre sinon. Pas de bouton plein.
+- **Bouton** : relief léger, rayon 9 px, Inter 12,5 px 500, touche en `--ch-faint` ; en creux le temps de l'appui, puis il revient. Bouton principal : libellé bleu s'il agit pour le Compagnon, encre sinon. Pas de bouton plein.
 - **Champ** : creux, rayon 14 px, texte d'invite `--ch-faint`.
-- **Contrôle segmenté** : rail creux, segment actif en relief.
-- **Puce** : relief léger, 12 px ; active = creux, vermillon.
+- **Contrôle segmenté** : rail creux, segment actif en relief et allumé.
+- **Puce** : relief léger, 12 px ; active = allumée, vermillon.
 - **Barres de défilement** : fines, **sans fond** (piste transparente, jamais de bande blanche entre le texte et un panneau), curseur en `--ch-muted` à 40 % ; elles prennent donc la teinte de la matière où elles se trouvent, en clair comme en sombre.
-- **Liseré de lumière** (« ce qu'on presse s'allume ») : tout élément pressé, ouvert ou sélectionné passe en creux **et** reçoit un liseré d'un pixel de lumière sur son bord bas et droit : `box-shadow: var(--ch-inset), inset -1px -1px 0 color-mix(in srgb, var(--ch-highlight) 70%, #fff)` (token proposé : `--ch-rim`, à déclarer sur chaque élément pour qu'il prenne la lumière de sa matière). Transition de 120 ms. S'applique partout : segment de la ligne système, bouton pressé, bouton `Aa` ouvert, zone de commande survolée, entrée active d'une liste ou d'un rail (avec son filet vermillon), médaillon ou monogramme actif, point sélectionné, carte de projet sélectionnée. Ne s'applique pas aux valeurs validées des fiches : là, le creux dit un statut, pas un geste.
-- **Focus clavier** : l'élément focalisé passe en creux ; pour les cartes et lignes, filet vermillon. Jamais d'anneau bleu par défaut du navigateur.
+- **Relief, creux, allumé** (principe 3). Maquette : groupe « Lumière », touche `L` pour comparer avec l'ancien état ; planche : [design/creux-allume.png](design/creux-allume.png).
+
+| État | Sens | Aspect | Où |
+|---|---|---|---|
+| **Relief** | disponible, à prendre | `--ch-raise` ou `--ch-raise-s` | boutons, propositions du Compagnon (valeur, fiche, point), cartes, poignées, notes, médaillons |
+| **Creux** | inscrit, ou fait pour recevoir | `--ch-inset` | valeurs validées des fiches, champs de saisie, zone de commande, rails (contrôle segmenté, curseur, réglette), cadre d'une courbe, bloc « Exemple · une phrase » |
+| **Creux, le temps du geste** | on appuie | `--ch-inset` tant que le bouton est tenu, sans transition à l'aller, 350 ms au retour | tout ce qui se clique |
+| **Allumé** | là où vous êtes ; ce qui est ouvert ; ce qui est en cours | fond éclairci `color-mix(in srgb, var(--ch-bg) 58%, var(--ch-highlight))`, liseré d'un pixel `color-mix(in srgb, var(--ch-highlight) 82%, #fff)` sur tout le pourtour, halo `0 0 16px` de la même lumière à 70 % ; ni ombre intérieure ni relief | module, fiche, scène, projet, section de réglages actifs (avec leur filet vermillon) ; point sélectionné ; ligne choisie dans la ligne de commande ou un panneau ; variante active ; segment de la ligne système dont le panneau est déplié ; bouton `Aa` ouvert ; focus du clavier |
+| **Relief allumé** | le choix courant d'un réglage | relief léger et liseré de lumière | segment actif d'un contrôle segmenté |
+| **Estompé** | écarté | à plat, 45 %, barré | rejets |
+| **Inversé** | alerte du système | fond `--ch-ink`, texte `--ch-bg` | batterie faible |
+
+  - La lumière est toujours **autour** de l'élément, jamais dans un creux. Tokens proposés : `--ch-lit-bg` et `--ch-lit`, à déclarer comme les reliefs pour prendre la lumière de leur matière (perle, ardoise ou système).
+  - Un seul élément allumé par liste ou par rail : la lumière se déplace avec l'auteur. Le vermillon continue de dire « c'est à vous » (filet, libellé) ; la lumière, elle, n'a pas de couleur.
+  - Un champ en creux qui a le focus garde son creux et reçoit le liseré de lumière à l'extérieur.
+  - Transition de 350 ms quand la lumière passe d'un élément à l'autre ; aucune avec « Réduire les animations ».
+- **Focus clavier** : l'élément focalisé est allumé ; pour les cartes et lignes, filet vermillon. Jamais d'anneau bleu par défaut du navigateur.
 
 ### 4.8 Points d'entrée et découverte
 Un débutant doit pouvoir tout trouver à la souris ; le raccourci s'affiche à côté pour qu'il l'apprenne en passant. Maquette : `index.html`, groupe « Découverte » sur « 1 · Poignées » (choix de l'auteur), écran 8 pour le premier lancement, bouton « Frappe » pour l'effacement.
@@ -233,7 +248,7 @@ Un débutant doit pouvoir tout trouver à la souris ; le raccourci s'affiche à 
 ### 4.9 Bibliothèque des projets
 Maquette : écran 9.
 - En tête : « Bibliothèque » en petites capitales vermillon, à droite « + Nouveau roman `N` » (principal) et « + Nouvelle `⇧N` ». Sous le titre, la ligne de touches en `--ch-faint`.
-- Un projet = une carte en relief léger : titre en Literata 19 px ; dessous, genre, mots, scènes et dernière ouverture en Inter 12 px `--ch-muted`. Projet sélectionné (ou ouvert) gravé avec un filet vermillon à gauche. Au survol ou au focus, à droite : « Ouvrir `⏎` », « Renommer `R` », « Corbeille `⌫` ».
+- Un projet = une carte en relief léger : titre en Literata 19 px ; dessous, genre, mots, scènes et dernière ouverture en Inter 12 px `--ch-muted`. Projet sélectionné (ou ouvert) allumé avec un filet vermillon à gauche. Au survol ou au focus, à droite : « Ouvrir `⏎` », « Renommer `R` », « Corbeille `⌫` ».
 - Pied, sous un filet : « Corbeille (2) » (projets restaurables) ; sur le bureau, « Dossier : ~/Documents/Charpentier · Changer… · Afficher dans le Finder ».
 - État vide : « Aucun projet pour l'instant. Commencez un roman ou une nouvelle. » avec les deux boutons.
 
@@ -246,9 +261,9 @@ Du dessin plutôt que de la couleur : chaque lieu devient reconnaissable. Maquet
 - **Titre de panneau** : en tête du panneau du Compagnon et du tiroir, au-dessus du contrôle segmenté (14 px 18 px 4 px) : un médaillon, un titre, et à droite une ligne de contexte en Inter 11,5 px `--ch-muted`.
   - Compagnon : compas, « Le Compagnon » en Literata italique 19 px `--ch-mentor`, contexte « 6 points · cran Accompagnant ».
   - Manuscrit : livre ouvert, « Manuscrit » en petites capitales Literata 19 px `--ch-ink-2`, contexte : titre du projet et nombre de mots.
-- **Médaillon** : disque en relief léger (`--ch-raise-s`), 34 px dans un titre de panneau, 30 px dans le rail de l'Atelier ; pictogramme au trait de 1,5 px en `--ch-ink-2` (`--ch-mentor` pour le Compagnon). Élément actif : médaillon **gravé**, pictogramme vermillon.
+- **Médaillon** : disque en relief léger (`--ch-raise-s`), 34 px dans un titre de panneau, 30 px dans le rail de l'Atelier ; pictogramme au trait de 1,5 px en `--ch-ink-2` (`--ch-mentor` pour le Compagnon). Élément actif : la ligne est allumée, son médaillon reste en relief, pictogramme vermillon.
 - **Rail de l'Atelier** : chaque module porte son médaillon à gauche du libellé : plan (Méta), buste (Personnages), ferme de charpente (Structure), fil à plomb (Règles du monde), loupe (Indices et révélations). Le compteur de propositions passe à droite.
-- **Monogramme** : l'initiale de l'entrée (sans l'article : « Le technicien » donne T) en Literata dans un disque en relief : 30 px devant chaque entrée de la liste (gravé et vermillon si l'entrée est active, italique bleu si elle est proposée), 62 px en `--ch-raise` devant le titre de la fiche, initiale vermillon de 34 px.
+- **Monogramme** : l'initiale de l'entrée (sans l'article : « Le technicien » donne T) en Literata dans un disque en relief : 30 px devant chaque entrée de la liste (vermillon si l'entrée est active, italique bleu si elle est proposée), 62 px en `--ch-raise` devant le titre de la fiche, initiale vermillon de 34 px.
 - **Filets gravés** : les intertitres de groupe (« Cette scène », « Identité et apparence »…) sont suivis d'un filet qui file jusqu'au bord : deux traits d'1 px, `--ch-shade` puis `--ch-highlight`, comme un trait de trusquin.
 - **Tiroir** : chaque titre de chapitre est en Literata 15 px, précédé du fleuron ⁂ en `--ch-faint`.
 - Un pictogramme n'est jamais seul : toujours à côté de son libellé. Aucune autre illustration, aucune texture.
@@ -272,9 +287,9 @@ Sur le X250, l'app est la partie visible du système [D-24]. Maquette : cadre «
 | `sync` | `ok`, `…` en cours, `hors ligne` | serveur, dernière synchronisation, Synchroniser maintenant |
 | date | `ven. 13 14:32` | l'heure en grand, la date complète et la semaine, le fuseau, les mots et le temps d'écriture du jour |
 
-- **Segments** : séparés par un filet gravé vertical (1 px `--ch-shade`, 1 px `--ch-highlight`) ; libellé en `--ch-muted`, valeur en `--ch-ink-2` ; survol : `--ch-ink` ; déplié : en creux avec le liseré de lumière (§4.7).
+- **Segments** : séparés par un filet gravé vertical (1 px `--ch-shade`, 1 px `--ch-highlight`) ; libellé en `--ch-muted`, valeur en `--ch-ink-2` ; survol : `--ch-ink` ; déplié : allumé (§4.7).
 - **Jauge en cellules** : dix cellules de 4 × 9 px espacées de 2 px, pleines en `--ch-ink-2`, vides en `--ch-faint`. Pas d'icône.
-- **Panneau déroulant** : sous son segment, aligné sur lui, 21 rem, rayon 12 px, matière du système, ombre de la page. En-tête : nom en minuscules à gauche, touche ou état à droite. Lignes libellé / contrôle ; ligne choisie en creux ; aides de touches en pied. `Échap` ou un clic ailleurs le ferme. Un seul ouvert à la fois.
+- **Panneau déroulant** : sous son segment, aligné sur lui, 21 rem, rayon 12 px, matière du système, ombre de la page. En-tête : nom en minuscules à gauche, touche ou état à droite. Lignes libellé / contrôle ; ligne choisie allumée ; aides de touches en pied. `Échap` ou un clic ailleurs le ferme. Un seul ouvert à la fois.
 - **Contrôles du système** : interrupteur à deux ou trois segments (rail en creux, segment actif en relief), curseur (rail en creux de 10 px, remplissage `--ch-muted`, bouton rond de 18 px en relief), boutons de l'app.
 - **Touches du ThinkPad** (luminosité, volume, muet) : la jauge du segment bouge, le segment s'allume une seconde et le message dit « luminosité 70 % ». Aucune fenêtre par-dessus le texte.
 - **Largeur** : la ligne est dessinée pour 1536 px. Le message garde toujours au moins 19 rem ; si la place manque (fenêtre plus étroite, écran externe à forte échelle), ce sont les jauges, l'autonomie et le jour qui s'effacent d'abord, puis les libellés des segments. Le message n'est jamais coupé à mi-hauteur ni recouvert.
@@ -286,7 +301,7 @@ Sur le X250, l'app est la partie visible du système [D-24]. Maquette : cadre «
 - La touche **Super** (`⊞`) est celle du système. Seule : le focus va à la ligne, `←` `→` parcourent les segments, `⏎` ou `↓` déplie, `Échap` rend le focus au texte. Avec une lettre : `⊞W` Wi-Fi, `⊞B` Bluetooth, `⊞J` journal, `⊞M` moniteur, `⊞L` verrouiller, `⊞P` imprimer, `⊞U` clé USB, `⊞,` réglages, `⊞⏎` veille.
 - Dans la ligne de commande, le préfixe **`:`** appelle le système, avec un argument éventuel : `:lum 40`, `:vol 20`, `:muet`, `:wifi Maison-5G`, `:wifi non`, `:nuit`, `:veille`, `:verrou`, `:eteindre`, `:redemarrer`, `:imprimer scène`, `:usb`, `:moniteur`, `:reglages`. Sans argument, la commande ouvre le panneau du segment. Ces commandes figurent aussi, en clair, dans la liste ordinaire (« Mettre en veille », « Régler la luminosité… »).
 
-**Réglages du système** (`⊞,`). Vue plein cadre, comme l'Atelier : à gauche un rail de 17 rem dans la matière du système (titre « réglages du système » avec l'équerre, une ligne par section avec sa valeur courante à droite, section active en creux avec un filet `--ch-ink`) ; à droite la section, **sur la page**, avec les composants ordinaires de l'app (titre Literata 30 px, intertitres en petites capitales, lignes libellé / aide / contrôle). `Échap` revient au texte.
+**Réglages du système** (`⊞,`). Vue plein cadre, comme l'Atelier : à gauche un rail de 17 rem dans la matière du système (titre « réglages du système » avec l'équerre, une ligne par section avec sa valeur courante à droite, section active allumée avec un filet `--ch-ink`) ; à droite la section, **sur la page**, avec les composants ordinaires de l'app (titre Literata 30 px, intertitres en petites capitales, lignes libellé / aide / contrôle). `Échap` revient au texte.
 
 | Section | Contenu |
 |---|---|
