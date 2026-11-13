@@ -59,7 +59,7 @@
 }
 
 .ch-library-item[aria-selected='true'] {
-  box-shadow: var(--ch-inset);
+  box-shadow: var(--ch-inset), var(--ch-rim);
 }
 
 .ch-library-item.is-trashed {
@@ -68,7 +68,7 @@
 }
 
 .ch-library-item.is-trashed[aria-selected='true'] {
-  box-shadow: var(--ch-inset);
+  box-shadow: var(--ch-inset), var(--ch-rim);
   opacity: 0.8;
 }
 
@@ -148,6 +148,7 @@
 .ch-library-item[aria-selected='true'] {
   box-shadow:
     var(--ch-inset),
+    var(--ch-rim),
     inset 3px 0 0 var(--ch-author);
 }
 

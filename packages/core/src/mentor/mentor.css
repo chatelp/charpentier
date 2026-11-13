@@ -229,7 +229,7 @@
 }
 
 .ch-point[aria-selected='true'] {
-  box-shadow: var(--ch-inset);
+  box-shadow: var(--ch-inset), var(--ch-rim);
 }
 
 .ch-point-pastille {

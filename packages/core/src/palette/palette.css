@@ -89,7 +89,7 @@
 }
 
 .ch-cmd-item[aria-selected='true'] {
-  box-shadow: var(--ch-inset);
+  box-shadow: var(--ch-inset), var(--ch-rim);
   color: var(--ch-ink);
 }
 

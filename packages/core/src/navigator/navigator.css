@@ -57,7 +57,7 @@
 /* Keyboard focus: engraved. The open scene: engraved, vermilion rule. */
 .ch-nav-item:focus-visible,
 .ch-nav-item[aria-selected='true']:focus {
-  box-shadow: var(--ch-inset);
+  box-shadow: var(--ch-inset), var(--ch-rim);
   color: var(--ch-ink);
 }
 
@@ -65,6 +65,7 @@
 .ch-nav-tree .ch-nav-item.is-current {
   box-shadow:
     var(--ch-inset),
+    var(--ch-rim),
     inset 3px 0 0 var(--ch-author);
   color: var(--ch-author);
 }

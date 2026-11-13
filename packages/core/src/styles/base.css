@@ -89,7 +89,7 @@ kbd,
 }
 
 .ch-btn:active {
-  box-shadow: var(--ch-inset);
+  box-shadow: var(--ch-inset), var(--ch-rim);
 }
 
 .ch-btn.is-mentor {
@@ -191,4 +191,17 @@ kbd,
 * {
   scrollbar-width: thin;
   scrollbar-color: color-mix(in srgb, var(--ch-muted) 40%, transparent) transparent;
+}
+
+/* What is pressed, open or selected sinks and lights up in 120 ms (docs/DESIGN.md §4.7). */
+.ch-atl-module,
+.ch-atl-entry,
+.ch-medallion,
+.ch-monogram,
+.ch-library-item,
+.ch-point,
+.ch-cmd-item,
+.ch-display-choice,
+.ch-strip-chip {
+  transition: box-shadow var(--ch-dur-press) var(--ch-ease);
 }

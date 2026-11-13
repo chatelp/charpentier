@@ -51,12 +51,12 @@
 }
 
 .ch-card.is-selected {
-  box-shadow: var(--ch-inset);
+  box-shadow: var(--ch-inset), var(--ch-rim);
 }
 
 /* The scene being written: engraved, ringed in vermilion. */
 .ch-card.is-current {
-  box-shadow: var(--ch-inset);
+  box-shadow: var(--ch-inset), var(--ch-rim);
   outline: 1.5px solid var(--ch-author);
   outline-offset: 3px;
 }
@@ -136,6 +136,7 @@
 .ch-strip-chip:focus-visible {
   box-shadow:
     var(--ch-inset),
+    var(--ch-rim),
     inset 0 0 0 1.5px var(--ch-author);
 }
 

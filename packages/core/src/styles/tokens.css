@@ -161,6 +161,8 @@
  * colours: --ch-page-raise, resolved at the root.
  */
 :root {
+  /* A rim of light on what is pressed, open or selected (docs/DESIGN.md §4.7). */
+  --ch-rim: inset -1px -1px 0 color-mix(in srgb, var(--ch-highlight) 70%, #fff);
   --ch-page-raise: var(--ch-raise);
   --ch-page-raise-s: var(--ch-raise-s);
   --ch-page-shade: var(--ch-shade);
@@ -189,6 +191,7 @@
     inset var(--ch-depth-s) var(--ch-depth-s) var(--ch-blur-s) var(--ch-shade),
     inset calc(var(--ch-depth-s) * -1) calc(var(--ch-depth-s) * -1) var(--ch-blur-s)
       var(--ch-highlight);
+  --ch-rim: inset -1px -1px 0 color-mix(in srgb, var(--ch-highlight) 70%, #fff);
   color-scheme: dark;
   background-color: var(--ch-bg);
   color: var(--ch-ink);

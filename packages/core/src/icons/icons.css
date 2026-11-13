@@ -14,7 +14,7 @@
 }
 
 .ch-medallion.is-active {
-  box-shadow: var(--ch-inset);
+  box-shadow: var(--ch-inset), var(--ch-rim);
   color: var(--ch-author);
 }
 
@@ -36,7 +36,7 @@
 }
 
 .ch-monogram.is-active {
-  box-shadow: var(--ch-inset);
+  box-shadow: var(--ch-inset), var(--ch-rim);
   color: var(--ch-author);
 }
 

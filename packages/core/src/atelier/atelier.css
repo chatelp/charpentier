@@ -80,6 +80,7 @@
 .ch-atl-module[aria-selected='true'] {
   box-shadow:
     var(--ch-inset),
+    var(--ch-rim),
     inset 3px 0 0 var(--ch-author);
   color: var(--ch-author);
   font-weight: 500;
@@ -116,6 +117,7 @@
 .ch-atl-entry[aria-selected='true'] {
   box-shadow:
     var(--ch-inset),
+    var(--ch-rim),
     inset 3px 0 0 var(--ch-author);
   color: var(--ch-author);
 }
