@@ -1,0 +1,33 @@
+# Charpentier sync server (docs/SPEC.md D-22): Hocuspocus + Postgres.
+# Behind the reverse proxy that serves the public HTTPS domain (WebSocket upgrade).
+name: charpentier
+
+services:
+  server:
+    build: ../apps/server
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://charpentier:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@db:5432/charpentier
+    ports:
+      - '${CHARPENTIER_PORT:-8080}:8080'
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: charpentier
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: charpentier
+    volumes:
+      - db:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U charpentier']
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  db:

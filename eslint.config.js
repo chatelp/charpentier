@@ -110,6 +110,8 @@ export default tseslint.config(
       '**/out/**',
       '**/.turbo/**',
       'scripts/fixtures/**',
+      // Worktrees of other sessions.
+      '.claude/**',
     ],
   },
   js.configs.recommended,
@@ -130,6 +132,8 @@ export default tseslint.config(
       'apps/desktop/src/main/**',
       'apps/desktop/src/preload/**',
       'apps/desktop/e2e/**',
+      // The sync server.
+      'apps/server/**',
       'packages/platform-desktop/src/main/**',
     ],
     languageOptions: { globals: { ...globals.node } },

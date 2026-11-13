@@ -1,0 +1,30 @@
+{
+  "name": "@charpentier/server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Self-hosted sync server: Hocuspocus over Postgres (docs/SPEC.md \u00a714, D-21, D-22).",
+  "license": "SEE LICENSE IN ../../LICENSE.md",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "build": "esbuild src/main.ts --bundle --platform=node --format=esm --target=node22 --external:pg-native --banner:js=\"import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);\" --outfile=dist/main.js",
+    "start": "node dist/main.js"
+  },
+  "dependencies": {
+    "@hocuspocus/extension-database": "^4.8.0",
+    "@hocuspocus/server": "^4.8.0",
+    "pg": "^8.23.1",
+    "yjs": "^13.6.33"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.16",
+    "@hocuspocus/provider": "^4.8.0",
+    "@types/node": "^26.6.6",
+    "@types/pg": "^8.23.1",
+    "@types/ws": "^8.18.2",
+    "esbuild": "^0.28.2",
+    "typescript": "~6.0.3",
+    "vitest": "^5.1.0",
+    "ws": "^8.23.0"
+  }
+}
