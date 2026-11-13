@@ -1,78 +1,34 @@
-import { PGlite } from '@electric-sql/pglite';
-import { HocuspocusProvider, HocuspocusProviderWebsocket } from '@hocuspocus/provider';
-import type { Server } from '@hocuspocus/server';
 import { afterEach, describe, expect, it } from 'vitest';
-import WebSocket from 'ws';
 import * as Y from 'yjs';
-import { migrate, type Database } from './database';
+import { revokeSession } from './accounts';
 import { documentOwner } from './document-names';
-import { createSyncServer } from './sync-server';
+import { account, cleanUp, connect, freshDatabase, startServer, text } from './testing';
 
-const servers: Server[] = [];
-const providers: HocuspocusProvider[] = [];
-const sockets: HocuspocusProviderWebsocket[] = [];
-
-afterEach(async () => {
-  for (const provider of providers.splice(0)) provider.destroy();
-  for (const socket of sockets.splice(0)) socket.destroy();
-  for (const server of servers.splice(0)) await server.destroy();
-});
-
-async function startServer(db: Database) {
-  const server = createSyncServer({ db, port: 0, address: '127.0.0.1' });
-  await server.listen();
-  servers.push(server);
-  return `ws://127.0.0.1:${server.address.port}`;
-}
-
-/** A device: its own Y.Doc, connected to the server. */
-function provide(url: string, name: string, doc: Y.Doc) {
-  const socket = new HocuspocusProviderWebsocket({ url, WebSocketPolyfill: WebSocket });
-  sockets.push(socket);
-  const provider = new HocuspocusProvider({
-    websocketProvider: socket,
-    name,
-    document: doc,
-    token: 'test',
-  });
-  provider.attach();
-  providers.push(provider);
-  return provider;
-}
-
-function connect(url: string, name: string, doc = new Y.Doc()) {
-  const provider = provide(url, name, doc);
-  const synced = new Promise<void>((resolve) => provider.on('synced', () => resolve()));
-  return { doc, provider, synced };
-}
-
-const text = (doc: Y.Doc) => doc.getText('t').toString();
-
-async function freshDatabase() {
-  const db = new PGlite();
-  await migrate(db);
-  return db;
-}
+afterEach(cleanUp);
 
 describe('sync server', () => {
   it('relays the edits of one device to another', async () => {
-    const url = await startServer(await freshDatabase());
-    const a = connect(url, 'project:p1/scene:s1');
-    const b = connect(url, 'project:p1/scene:s1');
-    await Promise.all([a.synced, b.synced]);
+    const db = await freshDatabase();
+    const { ws } = await startServer(db);
+    const { token } = await account(db);
+    const a = connect(ws, 'project:p1/scene:s1', token);
+    const b = connect(ws, 'project:p1/scene:s1', token);
+    expect(await Promise.all([a.synced, b.synced])).toEqual([true, true]);
     a.doc.getText('t').insert(0, 'Il pleuvait sur Nantes.');
     await expect.poll(() => text(b.doc), { timeout: 5000 }).toBe('Il pleuvait sur Nantes.');
   });
 
   it('merges what two devices wrote apart', async () => {
-    const url = await startServer(await freshDatabase());
+    const db = await freshDatabase();
+    const { ws } = await startServer(db);
+    const { token } = await account(db);
     // Each device writes before connecting (offline), then both connect.
     const docA = new Y.Doc();
     docA.getText('t').insert(0, 'Hélène entra. ');
     const docB = new Y.Doc();
     docB.getText('t').insert(0, 'Il pleuvait. ');
-    const a = connect(url, 'project:p1/scene:s1', docA);
-    const b = connect(url, 'project:p1/scene:s1', docB);
+    const a = connect(ws, 'project:p1/scene:s1', token, docA);
+    const b = connect(ws, 'project:p1/scene:s1', token, docB);
     await Promise.all([a.synced, b.synced]);
     await expect
       .poll(() => [text(a.doc), text(b.doc)], { timeout: 8000 })
@@ -84,29 +40,50 @@ describe('sync server', () => {
   it('keeps the documents in Postgres across a restart', async () => {
     const db = await freshDatabase();
     const first = await startServer(db);
-    const a = connect(first, 'project:p1');
+    const { token } = await account(db);
+    const a = connect(first.ws, 'project:p1', token);
     await a.synced;
     a.doc.getText('t').insert(0, 'Les serres');
     // The server has it once the device has no unacknowledged change left.
     await expect.poll(() => a.provider.hasUnsyncedChanges).toBe(false);
     a.provider.destroy();
     // Destroying the server stores what is still pending.
-    await servers.pop()?.destroy();
+    await first.stop();
 
     const second = await startServer(db);
-    const b = connect(second, 'project:p1');
+    const b = connect(second.ws, 'project:p1', token);
     await b.synced;
     expect(text(b.doc)).toBe('Les serres');
   });
+});
+
+describe('who may open what (D-21)', () => {
+  it('refuses a connection without a valid session', async () => {
+    const db = await freshDatabase();
+    const { ws } = await startServer(db);
+    const { token, userId, sessionId } = await account(db);
+    expect(await connect(ws, 'project:p1', 'not-a-token').synced).toBe(false);
+    await revokeSession(db, userId, sessionId);
+    expect(await connect(ws, 'project:p1', token).synced).toBe(false);
+  });
+
+  it('keeps each account to its own projects and library', async () => {
+    const db = await freshDatabase();
+    const { ws } = await startServer(db);
+    const helene = await account(db, 'helene@example.org');
+    const paul = await account(db, 'paul@example.org');
+    // Hélène's project: hers once she opened it.
+    expect(await connect(ws, 'project:p1', helene.token).synced).toBe(true);
+    expect(await connect(ws, 'project:p1/scene:s1', paul.token).synced).toBe(false);
+    expect(await connect(ws, `library:${helene.userId}`, helene.token).synced).toBe(true);
+    expect(await connect(ws, `library:${helene.userId}`, paul.token).synced).toBe(false);
+  });
 
   it('serves only Charpentier documents', async () => {
-    const url = await startServer(await freshDatabase());
-    const provider = provide(url, 'anything-else', new Y.Doc());
-    const failed = await new Promise<boolean>((resolve) => {
-      provider.on('authenticationFailed', () => resolve(true));
-      provider.on('synced', () => resolve(false));
-    });
-    expect(failed).toBe(true);
+    const db = await freshDatabase();
+    const { ws } = await startServer(db);
+    const { token } = await account(db);
+    expect(await connect(ws, 'anything-else', token).synced).toBe(false);
   });
 });
 

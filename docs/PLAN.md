@@ -135,10 +135,12 @@ But : écrire sur le Mac, retrouver son roman sur une autre machine (le X250 plu
 ### 4.1 Serveur de synchro
 `apps/server` (Node, TypeScript) : Hocuspocus (MIT) avec persistance Postgres (`pg`, MIT) des états Yjs, un document Hocuspocus par document Yjs du projet (racine, scènes, historique, mentor) et le document `library`. `infra/docker-compose.yml` (serveur + Postgres, volumes, vérification de santé). Tests avec PGlite (Postgres en WASM, Apache 2.0), sans Docker.
 **Vérifiable** : deux clients Yjs branchés sur le serveur convergent ; arrêté puis relancé, le serveur rend les documents.
+Réalisé (13 novembre 2026). Image Docker non construite faute de Docker sur le Mac : à faire en 4.5.
 
 ### 4.2 Comptes et sessions
 Inscription fermée par défaut, premier compte par une commande du serveur (`create-user`), réinitialisation de mot de passe par commande. API HTTP : connexion (e-mail + mot de passe → jeton de session de l'appareil), déconnexion, liste et révocation des appareils. Mots de passe en Argon2id (`@node-rs/argon2`, MIT), jetons opaques stockés hachés, limitation des tentatives. Hocuspocus refuse toute connexion sans jeton valide et n'ouvre que les documents des projets du compte.
 **Vérifiable** : sans jeton, ou avec un jeton révoqué, aucune lecture ni écriture ; un compte ne voit pas les projets d'un autre.
+Réalisé : Argon2id de Node (24.7+, aucune dépendance native ; image Docker en Node 24), sessions par appareil (jeton opaque, empreinte SHA-256 en base), 10 tentatives par adresse et e-mail en 15 min, commandes `create-user` et `reset-password`. Le premier compte qui ouvre un projet le revendique (ids aléatoires).
 
 ### 4.3 Synchro dans l'app de bureau
 Service `Sync` de la plateforme ; dans le main, un fournisseur Hocuspocus par document des projets synchronisés, branché sur le `DocStore` (le journal local reste la persistance de l'appareil). Projets découverts par le document `library` du compte ; un projet arrivé d'ailleurs est créé dans la bibliothèque locale avec son miroir Markdown. Jeton dans `safeStorage`. Reconnexion automatique, rien ne bloque l'écriture.

@@ -18,6 +18,32 @@ export async function migrate(db: Database): Promise<void> {
       updated_at timestamptz not null default now()
     )
   `);
+  await db.query(`
+    create table if not exists users (
+      id uuid primary key,
+      email text not null unique,
+      password_hash text not null,
+      created_at timestamptz not null default now()
+    )
+  `);
+  await db.query(`
+    create table if not exists sessions (
+      id uuid primary key,
+      user_id uuid not null references users (id),
+      token_hash text not null unique,
+      device text not null default '',
+      created_at timestamptz not null default now(),
+      last_seen_at timestamptz not null default now(),
+      revoked_at timestamptz
+    )
+  `);
+  await db.query(`
+    create table if not exists projects (
+      id text primary key,
+      user_id uuid not null references users (id),
+      created_at timestamptz not null default now()
+    )
+  `);
 }
 
 /** A document's whole Yjs state, as stored by the last save, or null if it is new. */
