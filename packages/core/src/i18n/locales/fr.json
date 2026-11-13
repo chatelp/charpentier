@@ -157,7 +157,7 @@
     "cycleTheme": "Changer de thème (système, clair, sombre)",
     "toggleReducedMotion": "Réduire les animations",
     "toggleAtelier": "Basculer entre Écrire et l’Atelier",
-    "atelierMeta": "Atelier : Méta",
+    "atelierMeta": "Atelier : Le projet",
     "atelierCharacters": "Atelier : Personnages",
     "atelierStructure": "Atelier : Structure",
     "atelierWorldRules": "Atelier : Règles du monde",
@@ -291,7 +291,7 @@
     "write": "Écrire",
     "modulesLabel": "Modules",
     "modules": {
-      "meta": "Méta",
+      "meta": "Le projet",
       "characters": "Personnages",
       "structure": "Structure",
       "worldRules": "Règles du monde",

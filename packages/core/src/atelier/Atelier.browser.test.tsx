@@ -60,7 +60,7 @@ describe('Atelier', () => {
 
     await userEvent.keyboard(mod('e'));
     await screen.findByRole('region', { name: 'Atelier' });
-    // Méta has no list: the focus lands on the first field of the sheet.
+    // « Le projet » has no list: the focus lands on the first field of the sheet.
     await waitFor(() => expect(document.activeElement).toBe(field('Pitch')));
     await userEvent.keyboard('{Enter}');
     await userEvent.keyboard('Une enquêtrice des serres découvre qui a ouvert le sas.{Enter}');

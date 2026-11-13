@@ -209,3 +209,16 @@ Build Electron pour Linux x64 (dictionnaire Hunspell compris), puis paquet Nix r
 ### 5.10 Déploiement à distance
 Mise à jour du X250 depuis le Mac par `nixos-rebuild switch --flake .#x250 --target-host …` ; connexion au serveur de synchro (étape 4a) pour retrouver les projets.
 **Vérifiable** : je mets à jour le X250 sans le toucher ; une scène écrite sur le Mac s'y retrouve, et inversement.
+
+---
+
+## Étape 6 : l'entretien avec le Compagnon [D-26]
+L'Atelier se remplit en parlant. La page « Méta » s'appelle déjà « Le projet » (13 novembre 2026). Place dans l'ordre du plan à décider ; maquette par la session de design.
+
+### 6.1 Agent d'entretien
+Un agent du paquet `agents`, en deux modes. **Libre** : il répond à ce que l'auteur dit et range ce qui relève de l'Atelier dans la bonne section (le projet, personnages, structure, règles du monde, indices), en propositions par l'`AgentWriter`, sortie validée par schéma et bornée ; il dit où il a rangé quoi. **Dirigé** : il pose une question à la fois, section par section, en commençant par ce qui est vide ou seulement proposé. Historique dans le document mentor, à part de la conversation sur le texte. Jamais un champ validé ou rejeté, jamais une ligne du roman (tests adversariaux).
+**Vérifiable** : je dis « mon héroïne, Hélène, est batelière sur la Loire en 1890 » ; une fiche Hélène est proposée dans Personnages et l'époque dans Le projet ; en mode dirigé, il me demande ce qui manque.
+
+### 6.2 Page de l'entretien dans l'Atelier
+En tête du rail : la conversation, le choix du mode, et ce qu'elle propose qui apparaît dans les sections au fil de l'échange, à valider ou rejeter sur place ou dans la fiche.
+**Vérifiable** : sans quitter la page, je valide une proposition née de la conversation et je la retrouve validée dans sa fiche.
