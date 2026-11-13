@@ -2988,6 +2988,99 @@
           box-shadow 0.12s var(--ease),
           color 0.12s;
       }
+      /* ───────────── X250: the monitor ───────────── */
+      .spark {
+        letter-spacing: -0.5px;
+        color: var(--ink-2);
+      }
+      .mon {
+        position: absolute;
+        inset: 0;
+        overflow: auto;
+        padding: 16px 22px 22px;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+      .mon .mh {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 14px;
+        color: var(--ink);
+      }
+      .mon .mh svg {
+        width: 14px;
+        height: 14px;
+      }
+      .mon .mh .sp {
+        flex: 1;
+      }
+      .mon .mh .dim {
+        color: var(--faint);
+      }
+      .mgrid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+      }
+      .mc {
+        padding: 12px 14px 12px;
+        border-radius: var(--r-md);
+        box-shadow: var(--raise-s);
+        min-width: 0;
+      }
+      .mc.w2 {
+        grid-column: span 2;
+      }
+      .mc h4 {
+        display: flex;
+        justify-content: space-between;
+        margin: 0 0 6px;
+        font: inherit;
+        color: var(--muted);
+      }
+      .mc h4 b {
+        color: var(--ink);
+        font-weight: 500;
+      }
+      .mc svg.ch {
+        display: block;
+        width: 100%;
+        height: 74px;
+        margin: 4px 0 8px;
+        border-radius: 6px;
+        box-shadow: var(--inset);
+      }
+      .mc.w2 svg.ch {
+        height: 96px;
+      }
+      .mc .kv {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        color: var(--muted);
+      }
+      .mc .kv span:last-child {
+        color: var(--ink-2);
+      }
+      .mc table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .mc td,
+      .mc th {
+        padding: 2px 0;
+        text-align: right;
+        font-weight: 400;
+        color: var(--ink-2);
+      }
+      .mc th {
+        color: var(--faint);
+      }
+      .mc td:first-child,
+      .mc th:first-child {
+        text-align: left;
+      }
     </style>
   </head>
   <body>
@@ -3021,6 +3114,7 @@
         ['palette', 'Ligne de commande'],
         ['accueil', 'Premier lancement'],
         ['biblio', 'Bibliothèque'],
+        ['moniteur', 'X250 · Moniteur'],
         ['reglages', 'X250 · Réglages'],
         ['verrou', 'X250 · Verrou'],
         ['demarrage', 'X250 · Démarrage'],
@@ -3945,6 +4039,7 @@
         const lum = S.msg === 'fn' ? 0.7 : 0.6;
         const right =
           (S.msg === 'usb' ? sg('usb', `<b>usb</b>KINGSTON`) : '') +
+          `<button class="sg" data-go="moniteur" title="Moniteur (⊞M)"><b>cpu</b><span class="wide">${spark(CPU.filter((_, i) => i % 10 === 0))}</span>12${N}%<span class="dim wide">48°</span></button>` +
           sg(
             'wifi',
             `<b>wifi</b>Maison-5G<span class="wide">▂▄▆<span class="dim">█</span></span>`,
@@ -4158,6 +4253,59 @@
           <div class="field"><span class="grow">Mot de passe de Maison-5G…</span><kbd>⏎</kbd></div>
           <div class="na">${btn(['Continuer', '⏎', true])}${btn(['Plus tard', 'Échap'])}</div></div></section>`;
       }
+
+      // ───────────── X250: the monitor ─────────────
+      const series = (seed, n, base, amp, burst = 0) => {
+        let x = seed;
+        const rnd = () => ((x = (x * 9301 + 49297) % 233280), x / 233280);
+        let v = base;
+        return Array.from({ length: n }, (_, i) => {
+          v += (rnd() - 0.5) * amp;
+          v = Math.max(base * 0.4, Math.min(base * 1.8, v));
+          return Math.max(0, Math.min(100, v + (burst && i > n * 0.62 && i < n * 0.7 ? burst : 0)));
+        });
+      };
+      const BLOCKS = '▁▂▃▄▅▆▇█';
+      const spark = (vals, max = 100) =>
+        `<span class="spark">${vals.map((v) => BLOCKS[Math.min(7, Math.floor((v / max) * 8))]).join('')}</span>`;
+      const CPU = series(7, 120, 14, 9, 46);
+      function chart(lines, max = 100) {
+        const path = (vals) =>
+          vals
+            .map(
+              (v, i) =>
+                `${i ? 'L' : 'M'}${((i / (vals.length - 1)) * 300).toFixed(1)} ${(58 - (v / max) * 54).toFixed(1)}`,
+            )
+            .join(' ');
+        const grid = [15, 30, 45]
+          .map(
+            (y) =>
+              `<path d="M0 ${y}H300" stroke="var(--faint)" stroke-width="0.5" stroke-dasharray="1 5"/>`,
+          )
+          .join('');
+        return `<svg class="ch" viewBox="0 0 300 60" preserveAspectRatio="none">${grid}${lines
+          .map(
+            (vals, i) =>
+              `${i === 0 ? `<path d="${path(vals)} L300 60 L0 60 Z" fill="var(--ink-2)" opacity="0.08"/>` : ''}<path d="${path(vals)}" fill="none" stroke="${i === 0 ? 'var(--ink)' : 'var(--muted)'}" stroke-width="${i === 0 ? 1.4 : 1}" vector-effect="non-scaling-stroke"${i ? ' stroke-dasharray="3 3"' : ''}/>`,
+          )
+          .join('')}</svg>`;
+      }
+      const kv = (k, v) => `<div class="kv"><span>${k}</span><span>${v}</span></div>`;
+      function monitor() {
+        const c = (title, value, body, cls = '') =>
+          `<div class="mc ${cls}"><h4><b>${title}</b><span>${value}</span></h4>${body}</div>`;
+        return `<section class="mon sysmat"><div class="mh">${EQ}<span>moniteur</span><span class="dim">x250 · i5-5300U · 8 Go · allumé depuis 3 h 12</span><span class="sp"></span>${segs(['1 min', '10 min', '1 h'], 1)}<span class="dim"><kbd>Échap</kbd> revenir au texte</span></div>
+          <div class="mgrid">
+          ${c('processeur', '12 % · 1,4 GHz', chart([CPU]) + ['fil 0', 'fil 1', 'fil 2', 'fil 3'].map((t, i) => kv(t, `${gauge([0.2, 0.1, 0.3, 0.1][i])} ${[18, 7, 21, 4][i]} %`)).join('') + kv('charge moyenne', '0,42 · 0,38 · 0,31'), 'w2')}
+          ${c('températures', '48 °C', chart([series(3, 120, 46, 2.5, 9), series(5, 120, 38, 1.5)], 100) + kv('processeur', '48 °C') + kv('carte', '39 °C') + kv('ventilateur', '0 tr/min · à l’arrêt'))}
+          ${c('mémoire', '2,9 Go sur 8', chart([series(11, 120, 36, 1.2)], 100) + kv('utilisée', `${gauge(0.36)} 2,9 Go`) + kv('cache', '1,8 Go') + kv('swap', '0'))}
+          ${c('réseau', '↓ 2 ko/s · ↑ 1 ko/s', chart([series(13, 120, 8, 10, 60), series(17, 120, 4, 5)], 100) + kv('wifi', 'Maison-5G · 72 Mbit/s') + kv('reçu / envoyé', '18 Mo / 4 Mo'))}
+          ${c('batterie', '7,4 W · 5 h 40', chart([series(19, 120, 30, 6, 22)], 100) + kv('interne', `${gauge(0.96)} 96 % · usure 12 %`) + kv('amovible', `${gauge(0.71)} 71 % · usure 31 %`))}
+          ${c('disque', '41 Go sur 232', chart([series(23, 120, 3, 5, 30)], 100) + kv('occupé', `${gauge(0.18)} 18 %`) + kv('lecture / écriture', '0 / 12 ko/s'))}
+          ${c('charpentier', '3 processus', `<table><tr><th>processus</th><th>cpu</th><th>mém.</th></tr><tr><td>principal</td><td>1 %</td><td>142 Mo</td></tr><tr><td>interface</td><td>4 %</td><td>318 Mo</td></tr><tr><td>correcteur</td><td>0 %</td><td>61 Mo</td></tr></table>` + kv('documents ouverts', '3'))}
+          ${c('graphique', 'HD 5500', kv('fréquence', '300 MHz') + kv('charge', '<span class="dim">non mesurée</span>') + kv('écran', '1920 × 1080 · 125 %'))}
+          </div></section>`;
+      }
       function library() {
         const projs = [
           ['Les Serres d’Hespéride', 'Roman · 13 984 mots · 10 scènes · ouvert aujourd’hui', true],
@@ -4277,6 +4425,9 @@
             case 'biblio':
               body = library();
               break;
+            case 'moniteur':
+              body = monitor();
+              break;
             case 'reglages':
               body = settings();
               break;
@@ -4316,7 +4467,7 @@
           }
         if (
           disc === 'rails' &&
-          !['fiche', 'biblio', 'reglages', 'verrou', 'demarrage'].includes(S.screen) &&
+          !['fiche', 'biblio', 'moniteur', 'reglages', 'verrou', 'demarrage'].includes(S.screen) &&
           !(S.screen === 'manuscrit' && S.plan)
         )
           body += edges(S.screen);
@@ -4410,7 +4561,7 @@
                     : v;
           if (
             ['sysbar', 'msg', 'batt'].includes(k.dataset.k) ||
-            /^(reglages|verrou|demarrage)$/.test(v)
+            /^(moniteur|reglages|verrou|demarrage)$/.test(v)
           )
             S.frame = 'x250';
           if (k.dataset.k === 'screen' || k.dataset.k === 'disc') {
