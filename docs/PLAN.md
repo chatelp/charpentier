@@ -2,7 +2,7 @@
 
 Chaque phase est courte, se termine par un résultat vérifiable dans l'app (ou par des tests quand la phase n'a pas d'interface), puis par un arrêt pour le feu vert. Les tests prioritaires sont écrits dans la phase qui introduit le code concerné.
 
-Statut : étapes 1 à 3 réalisées (12 novembre 2026) ; étape 4a en cours, phases 4.1 et 4.2 réalisées (13 novembre 2026). Reste à éprouver le Compagnon avec la clé de l'auteur (tests adversariaux en direct, réglage des prompts). Avancement visuel : https://claude.ai/artifact/NAAMCGpuXETvPTiDXMzdS4 (régénéré par `node scripts/progress.mjs`).
+Statut : étapes 1 à 3 réalisées (12 novembre 2026) ; étape 4a en cours, phases 4.1 à 4.3 réalisées (13 novembre 2026). Reste à éprouver le Compagnon avec la clé de l'auteur (tests adversariaux en direct, réglage des prompts). Avancement visuel : https://claude.ai/artifact/NAAMCGpuXETvPTiDXMzdS4 (régénéré par `node scripts/progress.mjs`).
 
 ---
 
@@ -145,6 +145,7 @@ Réalisé : Argon2id de Node (24.7+, aucune dépendance native ; image Docker en
 ### 4.3 Synchro dans l'app de bureau
 Service `Sync` de la plateforme ; dans le main, un fournisseur Hocuspocus par document des projets synchronisés, branché sur le `DocStore` (le journal local reste la persistance de l'appareil). Projets découverts par le document `library` du compte ; un projet arrivé d'ailleurs est créé dans la bibliothèque locale avec son miroir Markdown. Jeton dans `safeStorage`. Reconnexion automatique, rien ne bloque l'écriture.
 **Vérifiable (test prioritaire)** : deux applications écrivent hors ligne dans la même scène et dans les fiches, se reconnectent, et convergent sans perte ; les statuts des fiches (validée, rejetée) survivent.
+Réalisé : `SyncEngine` dans le main, un fournisseur Hocuspocus par document sur une seule WebSocket ; bibliothèque du compte `library:<userId>` (gardée aussi sur l'appareil), projets adoptés avec leurs dates exactes pour éviter l'écho ; compte et jeton dans `safeStorage`. Test prioritaire contre un vrai serveur (PGlite), plus renommage, corbeille et session révoquée. La connexion depuis l'app vient en 4.4.
 
 ### 4.4 Se connecter, voir l'état
 Commandes « Se connecter à un serveur… » (adresse, e-mail, mot de passe), « Se déconnecter », « Appareils connectés » ; état discret dans le pied (« Synchronisé », « Hors ligne », « Synchro en pause »). Points d'entrée selon DESIGN §4.8 (menu, ligne de commande ; design demandé à la session de design si un écran est nécessaire).
