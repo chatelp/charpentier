@@ -43,16 +43,26 @@ function preferences(bridge: DesktopBridge): PreferencesService {
   };
 }
 
-/** The desktop app owns its menus: only the system's own shortcuts are kept. */
-export function desktopKeybindings(platform: string): KeybindingsService {
+/**
+ * The desktop app owns its menus: only the system's own shortcuts are kept.
+ * As a device (`appliance`), there is no menu and nothing to quit: every Ctrl
+ * shortcut is the app's, and the Super key stays the system's (the core binds
+ * none: `Mod` is Ctrl outside macOS).
+ */
+export function desktopKeybindings(platform: string, appliance = false): KeybindingsService {
   const mac = platform === 'darwin';
   return {
     primaryModifier: mac ? 'Meta' : 'Control',
-    reserved: mac ? ['Meta-q', 'Meta-w', 'Meta-h', 'Meta-m'] : ['Control-q', 'Control-w'],
+    reserved: mac
+      ? ['Meta-q', 'Meta-w', 'Meta-h', 'Meta-m']
+      : appliance
+        ? []
+        : ['Control-q', 'Control-w'],
   };
 }
 
 export function createDesktopPlatform(bridge: DesktopBridge): Platform {
+  const appliance = bridge.appliance ?? false;
   return {
     host: 'desktop',
     documents: new IpcDocumentService(bridge),
@@ -65,7 +75,7 @@ export function createDesktopPlatform(bridge: DesktopBridge): Platform {
       },
     },
     preferences: preferences(bridge),
-    keybindings: desktopKeybindings(bridge.platform),
+    keybindings: desktopKeybindings(bridge.platform, appliance),
     agents: new IpcAgentsService(bridge),
     sync: new IpcSyncService(bridge),
     llm: null,
@@ -76,15 +86,18 @@ export function createDesktopPlatform(bridge: DesktopBridge): Platform {
       suggest: (word, language) => bridge.invoke({ type: 'spell.suggest', word, language }),
     },
     system: null,
-    // docs/DESIGN.md §4.1: a 34 px title bar merged with the background.
-    titleBarHeight: bridge.platform === 'darwin' ? 34 : 0,
-    menu: {
-      set: (model) => void bridge.invoke({ type: 'host.setMenu', model }),
-      onCommand: (listener) =>
-        bridge.onMessage((message) => {
-          if (message.type === 'host.menuCommand') listener(message.id);
-        }),
-    },
+    // docs/DESIGN.md §4.1: a 34 px title bar merged with the background (none on a device).
+    titleBarHeight: bridge.platform === 'darwin' && !appliance ? 34 : 0,
+    // A device has no menu bar: the command zone stands in for it.
+    ...(!appliance && {
+      menu: {
+        set: (model) => void bridge.invoke({ type: 'host.setMenu', model }),
+        onCommand: (listener) =>
+          bridge.onMessage((message) => {
+            if (message.type === 'host.menuCommand') listener(message.id);
+          }),
+      },
+    }),
     onFullScreenChange: (listener) =>
       bridge.onMessage((message) => {
         if (message.type === 'host.fullScreen') listener(message.fullScreen);

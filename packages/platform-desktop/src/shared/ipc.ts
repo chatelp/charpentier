@@ -121,6 +121,11 @@ export type Message =
 /** What the preload script exposes to the renderer as `window.charpentier`. */
 export interface DesktopBridge {
   readonly platform: string;
+  /**
+   * Started with `--appliance` (docs/PLAN.md phase 5.2): the app is the whole
+   * screen of a writing device, without title bar or menu bar.
+   */
+  readonly appliance?: boolean;
   invoke<R extends Request>(request: R): Promise<Responses[R['type']]>;
   send(message: Message): void;
   /** Messages from the main process; returns an unsubscribe function. */

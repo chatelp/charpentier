@@ -50,3 +50,11 @@ describe('application menu', () => {
     });
   });
 });
+
+describe('shortcuts on the writing device (phase 5.2)', () => {
+  it('leaves the Super key to the system: no command of the core uses it', () => {
+    const registry = createWorkspaceRegistry('Control', [], [withSettings]);
+    const withSuper = registry.ids().filter((id) => registry.chord(id)?.meta);
+    expect(withSuper).toEqual([]);
+  });
+});

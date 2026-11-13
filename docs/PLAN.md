@@ -2,7 +2,7 @@
 
 Chaque phase est courte, se termine par un résultat vérifiable dans l'app (ou par des tests quand la phase n'a pas d'interface), puis par un arrêt pour le feu vert. Les tests prioritaires sont écrits dans la phase qui introduit le code concerné.
 
-Statut : étapes 1 à 3 réalisées (12 novembre 2026) ; étape 4a réalisée (13 novembre 2026), serveur en service sur https://charpentier.chatel.pm ; étape 5 commencée, phase 5.1 réalisée. Reste à éprouver le Compagnon avec la clé de l'auteur (tests adversariaux en direct, réglage des prompts). Avancement visuel : https://claude.ai/artifact/NAAMCGpuXETvPTiDXMzdS4 (régénéré par `node scripts/progress.mjs`).
+Statut : étapes 1 à 3 réalisées (12 novembre 2026) ; étape 4a réalisée (13 novembre 2026), serveur en service sur https://charpentier.chatel.pm ; étape 5 commencée, phases 5.1 et 5.2 réalisées. Reste à éprouver le Compagnon avec la clé de l'auteur (tests adversariaux en direct, réglage des prompts). Avancement visuel : https://claude.ai/artifact/NAAMCGpuXETvPTiDXMzdS4 (régénéré par `node scripts/progress.mjs`).
 
 ---
 
@@ -176,6 +176,7 @@ Réalisé (13 novembre 2026) : type `Feature` du cœur (`packages/core/src/featu
 ### 5.2 Mode appareil de l'app
 L'app de bureau lancée avec `--appliance` : plein écran, sans barre de titre ni barre de menus (la zone de commande en tient lieu), `Ctrl` à la place de `⌘` dans les raccourcis et leurs libellés, touche Super réservée au système. Cible 1920 × 1080 à 125 % (1 536 × 864 px CSS) : l'écran d'écriture avec une note dépliée tient sans défilement de l'interface.
 **Vérifiable** : sur Linux, `--appliance` ouvre l'app en plein écran sans chrome ; tout s'atteint par la zone de commande et les raccourcis `Ctrl`.
+Réalisé (13 novembre 2026) : `--appliance` ouvre une fenêtre en mode kiosque (plein écran, sans cadre), sans barre de menus hors macOS ni barre de titre dessinée ; l'interface le sait par le pont (`appliance`), ne publie pas de menu et ne réserve plus `Ctrl+Q` ni `Ctrl+W`. Hors macOS `Mod` est `Ctrl` : aucune commande du cœur n'emploie Super (test). Sur le Mac, le mode garde `⌘` et sa barre de menus cachée, pour développer. Tests de bout en bout : le mode appareil (kiosque, pas de barre de titre, la zone de commande ouvre la ligne de commande) et l'écran d'écriture avec une note dépliée dans 1536 × 864 sans défilement.
 
 ### 5.3 Ligne système, journal et réglages
 La fonctionnalité « Système », première cliente des points de contribution, contre un service `System` simulé (elle se développe et se teste sur le Mac) : la ligne système de 30 px en tête, dans sa matière (`.ch-system`) et sa police (JetBrains Mono embarquée, OFL 1.1), ses segments et leurs panneaux, qui cèdent la place au message quand la fenêtre est étroite (dont le segment `cpu` : mini-courbe de la dernière minute, pourcentage et température, figé pendant la frappe), les jauges à dix cellules, l'alerte en segment inversé ; le message, seul canal du système, et son journal ; Super seul et Super + lettre ; le préfixe `:` de la ligne de commande (`:lum 40`, `:wifi <nom>`, `:veille`…) ; la vue des réglages du système (Super + virgule), son rail et ses douze sections.

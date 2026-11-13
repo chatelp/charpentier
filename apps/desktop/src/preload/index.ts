@@ -10,8 +10,12 @@ import {
  * The only door between the interface and the system (contextIsolation,
  * sandbox): typed requests and messages, nothing else.
  */
+const APPLIANCE_ARG = '--charpentier-appliance';
+
 const bridge: DesktopBridge = {
   platform: process.platform,
+  // Passed by the main process to this window (webPreferences.additionalArguments).
+  appliance: process.argv.includes(APPLIANCE_ARG),
   invoke: (request) => ipcRenderer.invoke(IPC_INVOKE, request),
   send: (message) => ipcRenderer.send(IPC_MESSAGE, message),
   onMessage: (listener) => {

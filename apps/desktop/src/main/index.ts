@@ -46,6 +46,12 @@ if (process.env['CHARPENTIER_USER_DATA'])
 
 if (!app.requestSingleInstanceLock()) app.quit();
 
+/**
+ * `--appliance` (docs/PLAN.md phase 5.2): the app is the whole screen of a
+ * writing device (the X250): full screen, no frame, no menu bar.
+ */
+const appliance = process.argv.includes('--appliance');
+
 const preferences = new PreferencesFile(path.join(app.getPath('userData'), 'preferences.json'));
 const libraryFolder =
   process.env['CHARPENTIER_LIBRARY'] ??
@@ -198,7 +204,7 @@ ipcMain.handle(IPC_INVOKE, async (event, request: Request) => {
       return libraryFolder;
     case 'host.setMenu':
       // The menu bar is macOS's; elsewhere the command zone stands in for it.
-      if (process.platform === 'darwin')
+      if (process.platform === 'darwin' && !appliance)
         Menu.setApplicationMenu(
           commandMenu(request.model, (id) =>
             (
@@ -246,9 +252,12 @@ function createWindow() {
     minWidth: 960,
     minHeight: 600,
     show: false,
-    titleBarStyle: 'hiddenInset',
+    ...(appliance
+      ? { kiosk: true, fullscreen: true, frame: false, autoHideMenuBar: true }
+      : { titleBarStyle: 'hiddenInset' as const }),
     backgroundColor: '#e3e7ed',
     webPreferences: {
+      ...(appliance && { additionalArguments: ['--charpentier-appliance'] }),
       preload: path.join(import.meta.dirname, '../preload/index.cjs'),
       contextIsolation: true,
       sandbox: true,
@@ -288,7 +297,8 @@ app.on('second-instance', () => {
 });
 
 void app.whenReady().then(() => {
-  Menu.setApplicationMenu(appMenu());
+  // A device has no menu bar (on the Mac, the hidden one keeps ⌘Q for development).
+  Menu.setApplicationMenu(appliance && process.platform !== 'darwin' ? null : appMenu());
   sync.start();
   createWindow();
   app.on('activate', () => {

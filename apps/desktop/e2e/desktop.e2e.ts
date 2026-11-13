@@ -29,9 +29,13 @@ function folders() {
   return { library: path.join(root, 'Bibliothèque'), userData: path.join(root, 'data') };
 }
 
-async function launch(dirs: ReturnType<typeof folders>, env: Record<string, string> = {}) {
+async function launch(
+  dirs: ReturnType<typeof folders>,
+  env: Record<string, string> = {},
+  args: readonly string[] = [],
+) {
   const app = await electron.launch({
-    args: [appDir],
+    args: [appDir, ...args],
     env: {
       ...process.env,
       CHARPENTIER_LIBRARY: dirs.library,
@@ -252,6 +256,97 @@ describe('desktop app', () => {
         timeout: 15_000,
       })
       .toBe(1);
+  });
+
+  it('runs as a writing device with --appliance (phase 5.2)', async () => {
+    const { app, window } = await launch(folders(), {}, ['--appliance']);
+    const host = await app.evaluate(({ BrowserWindow, Menu }) => ({
+      kiosk: BrowserWindow.getAllWindows()[0]?.isKiosk(),
+      menu: Menu.getApplicationMenu() !== null,
+    }));
+    expect(host.kiosk).toBe(true);
+    // No menu bar on the device (the Mac keeps its hidden one, for ⌘Q while developing).
+    if (process.platform !== 'darwin') expect(host.menu).toBe(false);
+    expect(await window.locator('.ch-titlebar').count()).toBe(0);
+    // Everything through the command zone, its shortcut written with Ctrl on the device.
+    const zone = window.locator('.ch-cmdzone');
+    expect(await zone.textContent()).toContain(process.platform === 'darwin' ? '⌘K' : 'Ctrl+K');
+    await zone.click();
+    await window.getByRole('dialog', { name: 'Ligne de commande' }).waitFor();
+  });
+
+  it("fits the writing screen and an unfolded note in the X250's 1536 × 864", async () => {
+    const quote = 'Helene regardait la Loire';
+    const anthropic = await fakeAnthropic({
+      analysis: {
+        characters: [],
+        worldRules: [],
+        clues: [],
+        knowledge: [],
+        conflicts: [],
+        remarks: [
+          {
+            kind: 'craft',
+            quote,
+            title: 'Un regard sans enjeu',
+            message:
+              'Que cherche-t-elle dans ce regard ? Une scène avance quand un personnage veut quelque chose, et le lecteur le sent avant de le savoir.',
+            principle: 'Une scène avance quand un personnage veut quelque chose.',
+            correction: null,
+            example: 'Elle cherchait la barque de son père.',
+          },
+        ],
+      },
+      chat: { reply: '', example: null },
+    });
+    const { app, editor, window } = await launch(folders(), {
+      ANTHROPIC_BASE_URL: anthropic.url,
+      CHARPENTIER_ANTHROPIC_API_KEY: 'sk-ant-test',
+    });
+    // 1536 × 864 under the Mac's title bar (the device has none).
+    const titleBar = process.platform === 'darwin' ? 34 : 0;
+    await app.evaluate(
+      ({ BrowserWindow }, height) => BrowserWindow.getAllWindows()[0]?.setContentSize(1536, height),
+      864 + titleBar,
+    );
+    await editor.click();
+    await window.keyboard.type(`${quote} en silence.`);
+    await window.keyboard.press('ControlOrMeta+Shift+A');
+    const pastille = window.locator('.ch-pastille').first();
+    await pastille.waitFor({ timeout: 15_000 });
+    await pastille.click();
+    await window.locator('.ch-note').waitFor();
+    // (Runs in the page; the e2e tests are typed without the DOM.)
+    interface Box {
+      readonly bottom: number;
+      readonly right: number;
+      readonly top: number;
+    }
+    interface InPage {
+      readonly innerWidth: number;
+      readonly innerHeight: number;
+      readonly document: {
+        readonly documentElement: { readonly scrollHeight: number };
+        querySelector(s: string): { getBoundingClientRect(): Box } | null;
+      };
+    }
+    const layout = await window.evaluate(() => {
+      const page = globalThis as unknown as InPage;
+      const box = (selector: string) =>
+        page.document.querySelector(selector)?.getBoundingClientRect();
+      const rect = (b: Box | undefined) => b && { top: b.top, bottom: b.bottom, right: b.right };
+      return {
+        width: page.innerWidth,
+        height: page.innerHeight,
+        scroll: page.document.documentElement.scrollHeight - page.innerHeight,
+        note: rect(box('.ch-note')),
+        footer: rect(box('.ch-footer')),
+      };
+    });
+    expect([layout.width, layout.height]).toEqual([1536, 864 + titleBar]);
+    expect(layout.scroll).toBeLessThanOrEqual(0);
+    expect(layout.note?.bottom).toBeLessThanOrEqual(layout.footer?.top ?? 0);
+    expect(layout.note?.right).toBeLessThanOrEqual(1536);
   });
 
   it.runIf(process.platform === 'darwin')('has no title bar in full screen', async () => {
