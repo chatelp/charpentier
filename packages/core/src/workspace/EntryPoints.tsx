@@ -283,6 +283,26 @@ export function DisplaySheet({
           onChange={(reducedMotion) => updatePrefs({ reducedMotion })}
         />
       </Row>
+      <Row label={t('display.uiSounds')}>
+        <Choice
+          value={prefs.uiSounds}
+          options={[
+            [true, t('display.yes')],
+            [false, t('display.no')],
+          ]}
+          onChange={(uiSounds) => updatePrefs({ uiSounds })}
+        />
+      </Row>
+      <Row label={t('display.typingSounds')}>
+        <Choice
+          value={prefs.typingSounds}
+          options={[
+            [true, t('display.yes')],
+            [false, t('display.no')],
+          ]}
+          onChange={(typingSounds) => updatePrefs({ typingSounds })}
+        />
+      </Row>
     </div>
   );
 }

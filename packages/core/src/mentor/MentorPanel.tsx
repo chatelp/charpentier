@@ -13,6 +13,7 @@ import {
 } from '@charpentier/schema';
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { playSound } from '../sound/sounds';
 import type * as Y from 'yjs';
 import { readAtelier, sceneNumbers, shownValue, type SheetTarget } from '../atelier/atelier-data';
 import { moduleDefs, type AtelierModule } from '../atelier/module-defs';
@@ -174,6 +175,7 @@ export function MentorPanel(props: MentorPanelProps) {
   }, [props.active, props.tab, selected?.id]);
 
   const decide = (proposal: Proposal, accept: boolean) => {
+    playSound(accept ? 'click' : 'toc');
     if (proposal.field) {
       const ref: FieldRef = {
         module: proposal.module,
@@ -230,6 +232,7 @@ export function MentorPanel(props: MentorPanelProps) {
       open(selected);
     } else if ((key === 'r' || key === 'i') && selected?.kind === 'signal') {
       event.preventDefault();
+      playSound(key === 'r' ? 'click' : 'toc');
       if (key === 'r') resolveSignal(root, selected.id);
       else dismissSignal(root, selected.id);
       setSelectedId(next?.id);

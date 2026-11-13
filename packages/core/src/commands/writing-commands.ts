@@ -68,4 +68,22 @@ export const writingCommands: readonly WritingCommand[] = [
       ctx.notify(ctx.t(reducedMotion ? 'status.motionReduced' : 'status.motionNormal'));
     },
   },
+  {
+    id: 'toggleUiSounds',
+    scope: 'global',
+    run: (ctx) => {
+      const uiSounds = !ctx.prefs.uiSounds;
+      ctx.updatePrefs({ uiSounds });
+      ctx.notify(ctx.t(uiSounds ? 'status.uiSoundsOn' : 'status.uiSoundsOff'));
+    },
+  },
+  {
+    id: 'toggleTypingSounds',
+    scope: 'global',
+    run: (ctx) => {
+      const typingSounds = !ctx.prefs.typingSounds;
+      ctx.updatePrefs({ typingSounds });
+      ctx.notify(ctx.t(typingSounds ? 'status.typingSoundsOn' : 'status.typingSoundsOff'));
+    },
+  },
 ];

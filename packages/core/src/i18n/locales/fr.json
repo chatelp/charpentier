@@ -185,7 +185,9 @@
     "reviewChapter": "Bilan du chapitre par le Compagnon",
     "analyzeManuscript": "Avis du Compagnon sur tout le manuscrit",
     "toggleLightModel": "Remarques légères : Opus ou Haiku (moins cher)",
-    "replayTour": "Revoir la visite guidée"
+    "replayTour": "Revoir la visite guidée",
+    "toggleUiSounds": "Sons de l’interface",
+    "toggleTypingSounds": "Son de frappe"
   },
   "palette": {
     "label": "Ligne de commande",
@@ -255,7 +257,11 @@
     },
     "motionReduced": "Animations réduites.",
     "motionNormal": "Animations rétablies.",
-    "entityTrashed": "« {{title}} » mis à la corbeille. « Restaurer depuis la corbeille… » le ramène."
+    "entityTrashed": "« {{title}} » mis à la corbeille. « Restaurer depuis la corbeille… » le ramène.",
+    "uiSoundsOn": "Sons de l’interface activés.",
+    "uiSoundsOff": "Sons de l’interface désactivés.",
+    "typingSoundsOn": "Son de frappe activé.",
+    "typingSoundsOff": "Son de frappe désactivé."
   },
   "footer": {
     "words_one": "{{count, number}} mot",
@@ -560,7 +566,9 @@
     "no": "Non",
     "system": "Système",
     "light": "Clair",
-    "dark": "Sombre"
+    "dark": "Sombre",
+    "uiSounds": "Sons de l’interface",
+    "typingSounds": "Son de frappe"
   },
   "welcome": {
     "kind": "Bienvenue",

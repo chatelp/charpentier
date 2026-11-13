@@ -138,6 +138,9 @@ export const MENU_LAYOUT: readonly { readonly menu: string; readonly items: read
       'cycleTheme',
       'toggleReducedMotion',
       '-',
+      'toggleUiSounds',
+      'toggleTypingSounds',
+      '-',
       'role:togglefullscreen',
     ],
   },
@@ -146,7 +149,12 @@ export const MENU_LAYOUT: readonly { readonly menu: string; readonly items: read
 ];
 
 /** The menu model the host draws, labels and shortcuts from the registry. */
-export function buildMenuModel<Ctx>(registry: CommandRegistry<Ctx>, t: TFunction): MenuModel {
+export function buildMenuModel<Ctx>(
+  registry: CommandRegistry<Ctx>,
+  t: TFunction,
+  /** Commands shown as ticked settings (Présentation › sounds…). */
+  checked: Readonly<Record<string, boolean>> = {},
+): MenuModel {
   const entry = (item: Item): MenuEntry => {
     if (item === '-') return { kind: 'separator' };
     if (item.startsWith('role:')) {
@@ -163,6 +171,7 @@ export function buildMenuModel<Ctx>(registry: CommandRegistry<Ctx>, t: TFunction
           ? t('menu.whatToDo')
           : t(`commands.${item}` as 'commands.openPalette'),
       ...(shortcut && { shortcut }),
+      ...(item in checked && { checked: checked[item] ?? false }),
     };
   };
   return {

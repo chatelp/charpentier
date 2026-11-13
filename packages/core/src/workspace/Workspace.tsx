@@ -31,6 +31,7 @@ import { useMentorMarks } from '../mentor/use-mentor-marks';
 import '../mentor/mentor.css';
 import { variantLabel } from '../commands/variant-commands';
 import { buildMenuModel } from '../commands/menu-model';
+import { keySoundOf, playKeySound, playSound, setSoundSettings } from '../sound/sounds';
 import { createWorkspaceRegistry } from '../commands/workspace-commands';
 import { createLanguageChecker } from '../language/checker';
 import { knownWordsOf } from '../language/known-words';
@@ -408,12 +409,22 @@ export function ProjectWorkspace({
       setNavigatorOpen(false);
       setView('overview');
     },
-    toggleNavigator: () => setNavigatorOpen((open) => !open),
+    toggleNavigator: () => {
+      playSound(navigatorOpen ? 'toc' : 'tic');
+      setNavigatorOpen(!navigatorOpen);
+    },
     startTour,
     mentorPanel,
-    toggleMentorPanel: (tab = 'points') => setMentorPanel((open) => (open === tab ? null : tab)),
-    openSignalNote: (id) => marks.openNote(id, true),
+    toggleMentorPanel: (tab = 'points') => {
+      playSound(mentorPanel === tab ? 'toc' : 'tic');
+      setMentorPanel(mentorPanel === tab ? null : tab);
+    },
+    openSignalNote: (id) => {
+      playSound('tic');
+      marks.openNote(id, true);
+    },
     openSheet: (target) => {
+      playSound('tic');
       setMentorPanelState(null);
       setSheetPanel(target);
     },
@@ -457,9 +468,29 @@ export function ProjectWorkspace({
   useEffect(() => {
     const menu = platform.menu;
     if (!menu) return;
-    menu.set(buildMenuModel(registry, t));
     return menu.onCommand((id) => void registry.execute(id, latest.current));
-  }, [platform, registry, t]);
+  }, [platform, registry]);
+  const { uiSounds, typingSounds } = prefs;
+  useEffect(() => {
+    platform.menu?.set(
+      buildMenuModel(registry, t, { toggleUiSounds: uiSounds, toggleTypingSounds: typingSounds }),
+    );
+  }, [platform, registry, t, uiSounds, typingSounds]);
+  useEffect(
+    () => setSoundSettings({ ui: uiSounds, typing: typingSounds }),
+    [uiSounds, typingSounds],
+  );
+  // The typing sound, from the author's keys in the text only.
+  useEffect(() => {
+    if (!typingSounds || !editor || editor.isDestroyed) return;
+    const dom = editor.view.dom;
+    const onKeyDown = (event: KeyboardEvent) => {
+      const kind = keySoundOf(event);
+      if (kind) playKeySound(kind);
+    };
+    dom.addEventListener('keydown', onKeyDown);
+    return () => dom.removeEventListener('keydown', onKeyDown);
+  }, [typingSounds, editor]);
 
   // Back to the text whenever nothing else holds the focus. Synchronous on
   // purpose: TipTap's `focus()` waits a frame and could then take the focus
@@ -591,7 +622,10 @@ export function ProjectWorkspace({
           title={t('entry.manuscriptTitle')}
           shortcut={registry.shortcutLabel('toggleNavigator')}
           tour={1}
-          onOpen={() => setNavigatorOpen(true)}
+          onOpen={() => {
+            playSound('tic');
+            setNavigatorOpen(true);
+          }}
         />
       )}
       {view === 'write' && (
@@ -726,6 +760,7 @@ export function ProjectWorkspace({
             ctx.openAtelier({ rail: 'characters', target: sheetPanel });
           }}
           onClose={() => {
+            playSound('toc');
             setSheetPanel(null);
             focusTextIfIdle();
           }}
@@ -755,6 +790,7 @@ export function ProjectWorkspace({
                 notify(t('mentor.exampleInserted'));
               }}
               onClose={() => {
+                playSound('toc');
                 setMentorPanel(null);
                 focusTextIfIdle();
               }}
@@ -776,6 +812,7 @@ export function ProjectWorkspace({
             analyzeShortcut: registry.shortcutLabel('analyzeScene'),
           })}
           onClose={() => {
+            playSound('toc');
             setMentorPanel(null);
             focusTextIfIdle();
           }}
@@ -819,7 +856,10 @@ export function ProjectWorkspace({
               className={`ch-footer-button is-display ch-chrome ch-display-toggle${displayOpen ? ' is-on' : ''}`}
               title={t('entry.displayTitle')}
               aria-expanded={displayOpen}
-              onClick={() => setDisplayOpen((open) => !open)}
+              onClick={() => {
+                playSound(displayOpen ? 'toc' : 'tic');
+                setDisplayOpen(!displayOpen);
+              }}
             >
               {t('entry.display')}
             </button>
@@ -832,6 +872,7 @@ export function ProjectWorkspace({
           updatePrefs={updatePrefs}
           shortcut={(id) => registry.shortcutLabel(id)}
           onClose={(backToText) => {
+            playSound('toc');
             setDisplayOpen(false);
             if (backToText) focusTextIfIdle();
           }}
@@ -845,7 +886,10 @@ export function ProjectWorkspace({
           shortcut={registry.shortcutLabel('toggleMentorPanel')}
           count={marks.openSignals.length}
           tour={2}
-          onOpen={() => setMentorPanel('points')}
+          onOpen={() => {
+            playSound('tic');
+            setMentorPanel('points');
+          }}
         />
       )}
       {navigatorOpen && (
@@ -855,6 +899,7 @@ export function ProjectWorkspace({
           active={palette === null}
           signals={marks.openSignals}
           onClose={() => {
+            playSound('toc');
             setNavigatorOpen(false);
             focusTextIfIdle();
           }}

@@ -10,6 +10,7 @@ import {
 } from '@charpentier/schema';
 import { useId, useRef, useState, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
+import { playSound } from '../sound/sounds';
 import type { WorkspaceContext } from '../workspace/workspace-context';
 import { shownStatus, shownValue } from './atelier-data';
 import type { FieldDef } from './module-defs';
@@ -153,9 +154,11 @@ export function FieldRow({
       startEdit();
     } else if (key === 'v' && state.status === 'proposed') {
       event.preventDefault();
+      playSound('click');
       acceptProposal(ctx.root, fieldRef);
     } else if (key === 'x' && state.status === 'proposed') {
       event.preventDefault();
+      playSound('toc');
       rejectProposal(ctx.root, fieldRef);
     }
   };
@@ -255,7 +258,10 @@ export function FieldRow({
               type="button"
               tabIndex={-1}
               className="ch-btn is-mentor"
-              onClick={() => acceptProposal(ctx.root, fieldRef)}
+              onClick={() => {
+                playSound('click');
+                acceptProposal(ctx.root, fieldRef);
+              }}
             >
               {t('atelier.accept')} <kbd>{t('atelier.acceptKey')}</kbd>
             </button>
@@ -263,7 +269,10 @@ export function FieldRow({
               type="button"
               tabIndex={-1}
               className="ch-btn"
-              onClick={() => rejectProposal(ctx.root, fieldRef)}
+              onClick={() => {
+                playSound('toc');
+                rejectProposal(ctx.root, fieldRef);
+              }}
             >
               {t('atelier.reject')} <kbd>{t('atelier.rejectKey')}</kbd>
             </button>

@@ -13,6 +13,10 @@ export interface WritingPrefs {
   readonly focusMode: boolean;
   /** Keeps the current line around 42 % of the window height. */
   readonly typewriter: boolean;
+  /** Interface sounds (docs/DESIGN.md §3.4), off by default. */
+  readonly uiSounds: boolean;
+  /** Typing sound, a separate option, off by default. */
+  readonly typingSounds: boolean;
 }
 
 export const TEXT_SIZE = { min: 15, max: 26, step: 1, initial: 19 } as const;
@@ -25,6 +29,8 @@ export const DEFAULT_WRITING_PREFS: WritingPrefs = {
   measure: MEASURE.initial,
   focusMode: false,
   typewriter: true,
+  uiSounds: false,
+  typingSounds: false,
 };
 
 export const WRITING_PREFS_KEY = 'writing';
@@ -51,6 +57,8 @@ export function normalizeWritingPrefs(raw: unknown): WritingPrefs {
     measure: number('measure', MEASURE),
     focusMode: flag('focusMode'),
     typewriter: flag('typewriter'),
+    uiSounds: flag('uiSounds'),
+    typingSounds: flag('typingSounds'),
   };
 }
 

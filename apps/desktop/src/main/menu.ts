@@ -47,6 +47,10 @@ export function commandMenu(model: MenuModel, run: (id: string) => void): Menu {
         case 'command':
           return {
             label: entry.label,
+            ...(entry.checked !== undefined && {
+              type: 'checkbox' as const,
+              checked: entry.checked,
+            }),
             ...(entry.shortcut && {
               accelerator: toAccelerator(entry.shortcut),
               registerAccelerator: false,

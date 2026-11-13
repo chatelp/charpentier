@@ -1,6 +1,7 @@
 import { dismissSignal, resolveSignal, type FieldRef, type Signal } from '@charpentier/schema';
 import { useEffect, useRef, type CSSProperties, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
+import { playSound } from '../sound/sounds';
 import type * as Y from 'yjs';
 
 export interface SignalNoteActions {
@@ -46,6 +47,7 @@ export function SignalNote(props: SignalNoteProps) {
   }, [focus, signal.id]);
 
   const done = (state: 'resolved' | 'dismissed') => {
+    playSound(state === 'resolved' ? 'click' : 'toc');
     if (state === 'resolved') resolveSignal(root, signal.id);
     else dismissSignal(root, signal.id);
   };

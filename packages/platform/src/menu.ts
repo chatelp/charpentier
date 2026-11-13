@@ -35,6 +35,8 @@ export type MenuEntry =
       readonly id: string;
       readonly label: string;
       readonly shortcut?: MenuShortcut;
+      /** A setting, shown ticked or not. */
+      readonly checked?: boolean;
     }
   | { readonly kind: 'role'; readonly role: MenuRole; readonly label: string }
   | { readonly kind: 'separator' };

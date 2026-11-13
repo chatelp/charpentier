@@ -27,6 +27,7 @@ import {
 } from './atelier-data';
 import { createEntityPrompt, trashEntityAndNotify } from './atelier-actions';
 import { CommandZone, ModeSwitch } from '../workspace/EntryPoints';
+import { playSound } from '../sound/sounds';
 import { FieldRow } from './FieldRow';
 import { ATELIER_MODULES, moduleDefs, type AtelierModule, type FieldDef } from './module-defs';
 import './atelier.css';
@@ -205,6 +206,7 @@ export function Atelier({
       select(next);
     } else if (key.toLowerCase() === 'v' && entity && selected.proposed) {
       event.preventDefault();
+      playSound('click');
       validateEntity(ctx.root, module, entity);
       // Taken with its name; its other fields wait for the author, one by one.
       const def = moduleDefs[module];
@@ -215,6 +217,7 @@ export function Atelier({
       }
     } else if (key.toLowerCase() === 'x' && entity && selected.proposed) {
       event.preventDefault();
+      playSound('toc');
       rejectEntity(ctx.root, module, entity);
     }
   };
