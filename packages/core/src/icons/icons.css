@@ -1,0 +1,105 @@
+/* Engraved tools (docs/DESIGN.md §4.11): medallions, monograms, engraved rules. */
+.ch-medallion {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  box-shadow: var(--ch-raise-s);
+  color: var(--ch-ink-2);
+}
+
+.ch-medallion.is-mentor {
+  color: var(--ch-mentor);
+}
+
+.ch-medallion.is-active {
+  box-shadow: var(--ch-inset);
+  color: var(--ch-author);
+}
+
+.ch-picto {
+  display: block;
+}
+
+.ch-monogram {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  box-shadow: var(--ch-raise-s);
+  color: var(--ch-ink-2);
+  font: 500 15px / 1 var(--ch-font-text);
+}
+
+.ch-monogram.is-active {
+  box-shadow: var(--ch-inset);
+  color: var(--ch-author);
+}
+
+.ch-monogram.is-proposed {
+  color: var(--ch-mentor);
+  font-style: italic;
+}
+
+.ch-monogram.is-large {
+  width: 62px;
+  height: 62px;
+  box-shadow: var(--ch-raise);
+  color: var(--ch-author);
+  font-size: 34px;
+}
+
+/* An engraved rule after a group title, to the edge: shade then light, like a marking gauge. */
+.ch-engraved {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ch-engraved::after {
+  content: '';
+  flex: 1;
+  height: 2px;
+  border-top: 1px solid var(--ch-shade);
+  border-bottom: 1px solid var(--ch-highlight);
+}
+
+/* A panel's title: medallion, title, and its context on the right (§4.11). */
+.ch-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px 4px;
+}
+
+.ch-panel-title-name {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font: 400 19px / 1.2 var(--ch-font-text);
+}
+
+.ch-panel-title-name.is-mentor {
+  color: var(--ch-mentor);
+  font-style: italic;
+}
+
+.ch-panel-title-name.is-manuscript {
+  color: var(--ch-ink-2);
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.06em;
+}
+
+.ch-panel-title-context {
+  flex: none;
+  max-width: 50%;
+  overflow: hidden;
+  color: var(--ch-muted);
+  font: 11.5px var(--ch-font-ui);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

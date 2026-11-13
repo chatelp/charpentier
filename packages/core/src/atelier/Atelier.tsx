@@ -30,6 +30,7 @@ import {
 import { createEntityPrompt, trashEntityAndNotify } from './atelier-actions';
 import { CommandZone, ModeSwitch } from '../workspace/EntryPoints';
 import { playSound } from '../sound/sounds';
+import { Medallion, Monogram, type PictogramName } from '../icons/Pictogram';
 import { FieldRow } from './FieldRow';
 import { ATELIER_MODULES, moduleDefs, type AtelierModule, type FieldDef } from './module-defs';
 import './atelier.css';
@@ -81,6 +82,15 @@ function moveFocus(container: HTMLElement | null, selector: string, step: 1 | -1
   const index = items.findIndex((el) => el === document.activeElement);
   items[Math.max(0, Math.min(items.length - 1, index + step))]?.focus();
 }
+
+/** The pictogram of each module in the rail (docs/DESIGN.md §4.11). */
+const RAIL_PICTOS: Record<AtelierModule, PictogramName> = {
+  meta: 'meta',
+  characters: 'personnages',
+  structure: 'structure',
+  worldRules: 'regles',
+  clues: 'indices',
+};
 
 /** The « + New » buttons under the filter, by rail (docs/DESIGN.md §4.5). */
 const NEW_ENTRY: Record<AtelierModule, readonly EntityModule[]> = {
@@ -252,7 +262,7 @@ export function Atelier({
 
   return (
     <section className="ch-atelier" aria-label={t('atelier.label')} onKeyDown={onRootKeyDown}>
-      <nav className="ch-atl-rail">
+      <nav className="ch-atl-rail ch-raised ch-tool">
         <ModeSwitch
           view="atelier"
           className="is-inline"
@@ -282,7 +292,8 @@ export function Atelier({
                   setQuery('');
                 }}
               >
-                <span>{t(`atelier.modules.${m}`)}</span>
+                <Medallion name={RAIL_PICTOS[m]} size={30} active={m === location.rail} />
+                <span className="ch-atl-module-name">{t(`atelier.modules.${m}`)}</span>
                 {pending > 0 && <span className="ch-atl-count">{pending}</span>}
               </li>
             );
@@ -305,7 +316,7 @@ export function Atelier({
       </nav>
 
       {hasList && (
-        <div ref={listRef} className="ch-atl-list" onKeyDown={onListKeyDown}>
+        <div ref={listRef} className="ch-atl-list ch-raised ch-tool" onKeyDown={onListKeyDown}>
           <div className="ch-filter">
             <input
               className="ch-field"
@@ -427,8 +438,15 @@ function EntryItem({
         className={`ch-atl-entry${entry.proposed ? ' is-proposed' : ''}${entry.rejected ? ' is-rejected' : ''}`}
         onClick={onSelect}
       >
-        <div>{entry.title}</div>
-        {entry.subtitle && <div className="ch-atl-sub">{entry.subtitle}</div>}
+        <Monogram
+          title={entry.title}
+          size={30}
+          state={selected ? 'active' : entry.proposed ? 'proposed' : 'rest'}
+        />
+        <span className="ch-atl-entry-text">
+          <span className="ch-atl-entry-title">{entry.title}</span>
+          {entry.subtitle && <span className="ch-atl-sub">{entry.subtitle}</span>}
+        </span>
         {entry.rejected && (
           <button
             type="button"
@@ -626,7 +644,10 @@ export function Sheet({
 
   return (
     <article className="ch-sheet-body" aria-label={title}>
-      <h2 className="ch-sheet-title">{title}</h2>
+      <div className="ch-sheet-head">
+        <Monogram title={title} size={62} />
+        <h2 className="ch-sheet-title">{title}</h2>
+      </div>
       <p className="ch-sheet-lead">{lead}</p>
       <p className="ch-legend">
         <span aria-hidden="true">
@@ -668,7 +689,7 @@ export function Sheet({
       <div className="ch-sections">
         {def.sections.map((section) => (
           <section key={section.key} className={`ch-section${section.wide ? ' is-wide' : ''}`}>
-            <h3 className="ch-label">
+            <h3 className="ch-label ch-engraved">
               {t(
                 `atelier.sections.${target.module}.${section.key}` as 'atelier.sections.meta.story',
               )}
@@ -678,7 +699,7 @@ export function Sheet({
         ))}
         {target.module === 'clues' && (
           <section className="ch-section is-wide">
-            <h3 className="ch-label">{t('atelier.sections.clues.knownBy')}</h3>
+            <h3 className="ch-label ch-engraved">{t('atelier.sections.clues.knownBy')}</h3>
             <p className="ch-section-note">{t('atelier.knownByNote')}</p>
             {row({ key: knownByField('reader'), kind: 'scene' }, t('atelier.reader'))}
             {characters.map((c) =>
@@ -691,7 +712,7 @@ export function Sheet({
         )}
         {target.module === 'characters' && (
           <section className="ch-section is-wide">
-            <h3 className="ch-label">
+            <h3 className="ch-label ch-engraved">
               {t('atelier.sections.characters.appearances')}{' '}
               <span className="ch-section-aside">{t('atelier.appearancesNote')}</span>
             </h3>

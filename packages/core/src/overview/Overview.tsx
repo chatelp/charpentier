@@ -255,7 +255,7 @@ export function Overview({ ctx, active, onOpen, onClose }: OverviewProps) {
       {selected && (
         <footer
           ref={strip}
-          className="ch-overview-strip ch-raised"
+          className="ch-overview-strip ch-raised ch-tool"
           aria-label={t('overview.stripOf', { title: selected.scene.title })}
           onKeyDown={onStripKeyDown}
         >
@@ -387,7 +387,7 @@ function CheckpointPreview({
   return (
     <div
       ref={ref}
-      className="ch-checkpoint-preview ch-raised"
+      className="ch-checkpoint-preview ch-raised ch-tool"
       role="dialog"
       aria-label={formatCheckpointDate(ctx, checkpoint.createdAt)}
       tabIndex={-1}

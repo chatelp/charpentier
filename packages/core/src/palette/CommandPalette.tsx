@@ -193,7 +193,7 @@ export function CommandPalette({
   return (
     <div className="ch-cmd-backdrop" onMouseDown={onClose}>
       <div
-        className="ch-cmdbar"
+        className="ch-cmdbar ch-tool"
         role="dialog"
         aria-modal="true"
         aria-label={t('palette.label')}
@@ -227,7 +227,7 @@ export function CommandPalette({
           {showHint && <span className="ch-cmd-hint">{t('palette.prefixHint')}</span>}
         </div>
         {request.kind !== 'input' && (
-          <div className="ch-cmd-results ch-raised">
+          <div className="ch-cmd-results ch-raised ch-tool">
             <ul className="ch-cmd-list" id={listId} role="listbox" aria-label={placeholder}>
               {sections.map((section) => (
                 <li key={section.key} role="presentation">

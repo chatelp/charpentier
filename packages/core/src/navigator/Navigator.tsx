@@ -8,6 +8,7 @@ import {
   setActiveVariant,
   type OutlineChapter,
   type Signal,
+  readProjectMeta,
 } from '@charpentier/schema';
 import { Fragment, useEffect, useRef, useState, type DragEvent, type KeyboardEvent } from 'react';
 import { formatCheckpointDate, variantLabel } from '../commands/variant-commands';
@@ -16,6 +17,7 @@ import { variantLetter } from '../workspace/SceneChrome';
 import { toRoman } from '../workspace/roman';
 
 import { useTranslation } from 'react-i18next';
+import { PanelTitle } from '../icons/Pictogram';
 import * as Y from 'yjs';
 import {
   newChapterAt,
@@ -232,7 +234,20 @@ export function Navigator({ ctx, outline, active, onClose, signals }: NavigatorP
     Math.min(4, signals.filter((sig) => sig.textAnchor?.sceneId === sceneId).length);
 
   return (
-    <aside className="ch-navigator ch-raised" aria-label={t('navigator.label')}>
+    <aside className="ch-navigator ch-raised ch-tool" aria-label={t('navigator.label')}>
+      <PanelTitle
+        picto="manuscrit"
+        variant="manuscript"
+        name={t('navigator.title')}
+        context={[
+          readProjectMeta(ctx.root)?.title,
+          t('footer.words', {
+            count: [...words.values()].reduce((a, b) => a + b, 0),
+          }),
+        ]
+          .filter(Boolean)
+          .join(' · ')}
+      />
       <div className="ch-seg ch-nav-seg" role="group">
         <button type="button" tabIndex={-1} className="is-on" aria-pressed="true">
           {t('navigator.title')}
@@ -292,6 +307,11 @@ export function Navigator({ ctx, outline, active, onClose, signals }: NavigatorP
                 onClick={() => openItem(item)}
               >
                 <span className="ch-nav-name">
+                  {item.kind === 'chapter' && (
+                    <span className="ch-nav-fleuron" aria-hidden="true">
+                      ⁂
+                    </span>
+                  )}
                   {numberOf(item)} · {item.title}
                 </span>
                 <span className="ch-nav-meta" aria-hidden="true">

@@ -38,6 +38,16 @@
   outline: none;
 }
 
+/* Slate handles cast the page's shadow. */
+.ch-edge.ch-tool {
+  box-shadow: var(--ch-page-raise-s);
+}
+
+.ch-edge.ch-tool:hover,
+.ch-edge.ch-tool:focus-visible {
+  box-shadow: var(--ch-page-raise);
+}
+
 .ch-edge.is-left {
   left: 0;
   border-radius: 0 var(--ch-radius-md) var(--ch-radius-md) 0;

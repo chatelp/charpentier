@@ -53,6 +53,11 @@ kbd,
   box-shadow: var(--ch-raise);
 }
 
+/* A slate tool surface (tokens.css): its own shadow on the page keeps the page's colours. */
+.ch-tool.ch-tool {
+  box-shadow: var(--ch-page-raise);
+}
+
 @keyframes ch-slide-from-left {
   from {
     opacity: 0;

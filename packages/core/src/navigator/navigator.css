@@ -146,3 +146,9 @@
 .ch-nav-sub-meta {
   color: var(--ch-faint);
 }
+
+/* Chapters in Literata 15 px after the fleuron (docs/DESIGN.md §4.11). */
+.ch-nav-fleuron {
+  margin-right: 6px;
+  color: var(--ch-faint);
+}

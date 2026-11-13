@@ -15,15 +15,9 @@
   animation: ch-rise var(--ch-dur-panel) var(--ch-ease) both;
 }
 
-/* The text fades under the bar instead of being cut. */
-.ch-cmdbar::before {
-  content: '';
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: 18px;
-  transform: translateY(-100%);
-  background: linear-gradient(to top, var(--ch-bg), transparent);
-  pointer-events: none;
+/* A slate bar in relief over the page (docs/DESIGN.md §3.1). */
+.ch-cmdbar.ch-tool {
+  box-shadow: 0 calc(var(--ch-depth) * -1) var(--ch-blur) var(--ch-page-shade);
 }
 
 .ch-cmd-field {

@@ -811,6 +811,7 @@ export function ProjectWorkspace({
           tab={mentorPanel}
           onTab={setMentorPanel}
           header={<InterventionSlider root={root} level={mentorLevel} />}
+          levelName={t(`mentor.level.name.${mentorLevel}`)}
           conversation={
             <Conversation
               projectId={projectId}

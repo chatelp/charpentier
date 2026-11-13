@@ -120,7 +120,7 @@ export function GuidedTour({
   return (
     <div
       ref={tip}
-      className="ch-tip ch-raised"
+      className="ch-tip ch-raised ch-tool"
       role="dialog"
       aria-label={t(`tour.${key}.title`)}
       tabIndex={-1}

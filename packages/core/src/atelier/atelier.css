@@ -34,6 +34,14 @@
   min-height: 0;
 }
 
+/* Two slate plaques in relief (docs/DESIGN.md §3.1). */
+.ch-atl-rail.ch-tool,
+.ch-atl-list.ch-tool {
+  margin-bottom: var(--ch-space-4);
+  padding: 14px;
+  border-radius: var(--ch-radius-lg);
+}
+
 .ch-atl-rail-foot {
   margin-top: auto;
   padding-top: var(--ch-space-3);
@@ -451,4 +459,46 @@
   margin: 4px 0 0;
   color: var(--ch-faint);
   font-size: var(--ch-ui-2xs);
+}
+
+/* Engraved tools (docs/DESIGN.md §4.11): medallions in the rail, monograms in the list and the sheet. */
+.ch-atl-module {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ch-atl-module-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.ch-atl-module .ch-atl-count {
+  margin-left: auto;
+}
+
+.ch-atl-entry {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ch-atl-entry-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.ch-sheet-head {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.ch-sheet-head .ch-sheet-title {
+  min-width: 0;
+}
+
+.ch-section h3.ch-engraved {
+  margin-right: 0;
 }

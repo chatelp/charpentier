@@ -34,7 +34,7 @@ export function EdgeHandle({
   return (
     <button
       type="button"
-      className={`ch-edge ch-chrome is-${side}`}
+      className={`ch-edge ch-chrome ch-tool is-${side}`}
       title={withShortcut(title, shortcut)}
       data-tour={tour}
       onClick={onOpen}
@@ -199,7 +199,7 @@ export function DisplaySheet({
   return (
     <div
       ref={ref}
-      className="ch-display ch-raised"
+      className="ch-display ch-raised ch-tool"
       role="dialog"
       aria-label={t('display.title')}
       onKeyDown={(event) => {

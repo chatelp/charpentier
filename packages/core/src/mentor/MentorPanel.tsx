@@ -20,6 +20,7 @@ import { moduleDefs, type AtelierModule } from '../atelier/module-defs';
 import { useDocSnapshot } from '../hooks/use-doc-snapshot';
 import { toRoman } from '../workspace/roman';
 import { signalLevel } from './signal-decorations';
+import { PanelTitle } from '../icons/Pictogram';
 
 export interface MentorPanelProps {
   readonly root: Y.Doc;
@@ -41,6 +42,8 @@ export interface MentorPanelProps {
   /** Nothing to deal with: what to do instead (ask for the Compagnon's opinion on the scene). */
   readonly onAnalyze?: () => void;
   readonly analyzeShortcut?: string | undefined;
+  /** Name of the intervention level, for the panel's title (« cran Accompagnant »). */
+  readonly levelName?: string;
 }
 
 /** A sheet proposal of the Compagnon waiting for the author (a whole entry, or one field). */
@@ -253,11 +256,22 @@ export function MentorPanel(props: MentorPanelProps) {
   return (
     <aside
       ref={panel}
-      className="ch-mentor-panel ch-raised"
+      className="ch-mentor-panel ch-raised ch-tool"
       aria-label={t('mentor.panel')}
       tabIndex={-1}
       onKeyDown={onKeyDown}
     >
+      <PanelTitle
+        picto="compagnon"
+        variant="mentor"
+        name={t('mentor.name')}
+        context={[
+          t('mentor.pointsCount', { count: flat.length }),
+          props.levelName && t('mentor.levelContext', { name: props.levelName }),
+        ]
+          .filter(Boolean)
+          .join(' · ')}
+      />
       <div className="ch-seg" role="tablist" aria-label={t('mentor.panel')}>
         {(['points', 'conversation'] as const).map((tab) => (
           <button
@@ -291,7 +305,7 @@ export function MentorPanel(props: MentorPanelProps) {
           >
             {groups.map((group) => (
               <li key={group.key} role="presentation">
-                <p className="ch-points-group ch-label">{group.label}</p>
+                <p className="ch-points-group ch-label ch-engraved">{group.label}</p>
                 <ul role="presentation" className="ch-points-items">
                   {group.points.map((point) => (
                     <li

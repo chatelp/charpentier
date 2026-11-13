@@ -77,7 +77,7 @@ export function SheetPanel({ ctx, target, active, onOpenInAtelier, onClose }: Sh
   return (
     <aside
       ref={panel}
-      className="ch-mentor-panel ch-raised ch-volet"
+      className="ch-mentor-panel ch-raised ch-volet ch-tool"
       aria-label={t('atelier.sheetPanel')}
       onKeyDown={onKeyDown}
     >
