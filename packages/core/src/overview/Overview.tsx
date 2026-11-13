@@ -289,7 +289,7 @@ export function Overview({ ctx, active, onOpen, onClose }: OverviewProps) {
                 type="button"
                 tabIndex={-1}
                 data-chip={v.id}
-                className={`ch-chip ch-strip-chip${v.id === selected.scene.activeVariantId ? ' is-active' : ''}`}
+                className={`ch-chip ch-strip-chip${v.id === selected.scene.activeVariantId ? ' is-chosen' : ''}`}
                 onClick={() => setActiveVariant(ctx.root, selected.scene.id, v.id)}
               >
                 {variantLabel(t, selected.scene, v.id)}
@@ -314,7 +314,7 @@ export function Overview({ ctx, active, onOpen, onClose }: OverviewProps) {
                 type="button"
                 tabIndex={-1}
                 data-chip={c.id}
-                className={`ch-chip ch-strip-chip${c.id === previewId ? ' is-active' : ''}`}
+                className={`ch-chip ch-strip-chip${c.id === previewId ? ' is-lit' : ''}`}
                 onClick={() => setPreviewId(c.id)}
               >
                 {chipDate(c, shown[i - 1], shown[i + 1])}{' '}

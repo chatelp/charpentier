@@ -51,12 +51,14 @@
 }
 
 .ch-card.is-selected {
-  box-shadow: var(--ch-inset), var(--ch-rim);
+  background: var(--ch-lit-bg);
+  box-shadow: var(--ch-lit);
 }
 
-/* The scene being written: engraved, ringed in vermilion. */
+/* The scene being written: lit, ringed in vermilion. */
 .ch-card.is-current {
-  box-shadow: var(--ch-inset), var(--ch-rim);
+  background: var(--ch-lit-bg);
+  box-shadow: var(--ch-lit);
   outline: 1.5px solid var(--ch-author);
   outline-offset: 3px;
 }
@@ -133,10 +135,21 @@
   outline: none;
 }
 
+/* The variant kept: a choice, sunk and vermilion. The restore point in preview: lit. */
+.ch-strip-chip.is-chosen {
+  box-shadow: var(--ch-inset);
+  color: var(--ch-author);
+}
+
+.ch-strip-chip.is-lit,
 .ch-strip-chip:focus-visible {
+  background: var(--ch-lit-bg);
+  box-shadow: var(--ch-lit);
+}
+
+.ch-strip-chip.is-chosen:focus-visible {
   box-shadow:
     var(--ch-inset),
-    var(--ch-rim),
     inset 0 0 0 1.5px var(--ch-author);
 }
 

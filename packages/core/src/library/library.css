@@ -58,17 +58,14 @@
   outline: none;
 }
 
-.ch-library-item[aria-selected='true'] {
-  box-shadow: var(--ch-inset), var(--ch-rim);
-}
-
 .ch-library-item.is-trashed {
   box-shadow: none;
   opacity: 0.55;
 }
 
 .ch-library-item.is-trashed[aria-selected='true'] {
-  box-shadow: var(--ch-inset), var(--ch-rim);
+  background: var(--ch-lit-bg);
+  box-shadow: var(--ch-lit);
   opacity: 0.8;
 }
 
@@ -146,9 +143,9 @@
 }
 
 .ch-library-item[aria-selected='true'] {
+  background: var(--ch-lit-bg);
   box-shadow:
-    var(--ch-inset),
-    var(--ch-rim),
+    var(--ch-lit),
     inset 3px 0 0 var(--ch-author);
 }
 

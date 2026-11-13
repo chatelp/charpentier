@@ -63,7 +63,7 @@
   width: min(46rem, calc(100% - 2 * var(--ch-space-5)));
   max-height: 60vh;
   overflow: auto;
-  padding: var(--ch-space-2);
+  padding: var(--ch-space-2) var(--ch-space-2) 10px;
 }
 
 .ch-cmd-group {
@@ -89,7 +89,8 @@
 }
 
 .ch-cmd-item[aria-selected='true'] {
-  box-shadow: var(--ch-inset), var(--ch-rim);
+  background: var(--ch-lit-bg);
+  box-shadow: var(--ch-lit);
   color: var(--ch-ink);
 }
 

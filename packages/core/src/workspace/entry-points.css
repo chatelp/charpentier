@@ -72,8 +72,6 @@
 .ch-edge-count {
   min-width: 18px;
   padding: 2px 0;
-  border-radius: 9px;
-  box-shadow: var(--ch-inset);
   color: var(--ch-mentor);
   font: 600 11px var(--ch-font-ui);
   text-align: center;
@@ -131,8 +129,7 @@
 
 .ch-cmdzone:hover,
 .ch-cmdzone:focus-visible {
-  color: var(--ch-muted);
-  box-shadow: var(--ch-inset), var(--ch-rim);
+  color: var(--ch-ink);
   outline: none;
 }
 
@@ -173,7 +170,8 @@
 
 .ch-footer-button.is-on {
   color: var(--ch-ink);
-  box-shadow: var(--ch-inset), var(--ch-rim);
+  background: var(--ch-lit-bg);
+  box-shadow: var(--ch-lit);
 }
 
 .ch-footer-button.is-display {
@@ -216,8 +214,10 @@
   flex: 1;
 }
 
-.ch-display-choice.is-on {
-  box-shadow: var(--ch-inset), var(--ch-rim);
+.ch-display-choice.is-on,
+.ch-display-choice.is-on:active {
+  background: var(--ch-bg);
+  box-shadow: var(--ch-inset);
   color: var(--ch-ink);
 }
 

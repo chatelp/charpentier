@@ -50,7 +50,7 @@
 
 .ch-settings-sections {
   margin: 0;
-  padding: 0;
+  padding: 0 0 10px;
   list-style: none;
   overflow: auto;
 }
@@ -73,8 +73,11 @@
 }
 
 .ch-settings-section[aria-selected='true'] {
-  color: var(--ch-ink);
-  box-shadow: var(--ch-inset), var(--ch-rim);
+  color: var(--ch-author);
+  background: var(--ch-lit-bg);
+  box-shadow:
+    var(--ch-lit),
+    inset 3px 0 0 var(--ch-author);
 }
 
 .ch-settings-section-name {

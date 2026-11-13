@@ -229,7 +229,8 @@
 }
 
 .ch-point[aria-selected='true'] {
-  box-shadow: var(--ch-inset), var(--ch-rim);
+  background: var(--ch-lit-bg);
+  box-shadow: var(--ch-lit);
 }
 
 .ch-point-pastille {
@@ -369,7 +370,8 @@
   margin-top: 8px;
   padding: 10px 12px;
   border-radius: var(--ch-radius-md);
-  box-shadow: var(--ch-inset);
+  /* A proposal of the Compagnon: raised, like every proposal. */
+  box-shadow: var(--ch-raise-s);
 }
 
 .ch-example-label {

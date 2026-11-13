@@ -136,9 +136,11 @@
     --ch-mentor-soft: rgb(134 174 219 / 0.13);
     --ch-author: #e3876a;
     --ch-author-soft: rgb(227 135 106 / 0.24);
+    --ch-lit-bg: transparent;
   }
 }
 :root[data-theme='dark'] {
+  --ch-lit-bg: transparent;
   --ch-bg: #1b1e23;
   --ch-ink: #dfe3ea;
   --ch-ink-2: #b9c0ca;
@@ -161,8 +163,14 @@
  * colours: --ch-page-raise, resolved at the root.
  */
 :root {
-  /* A rim of light on what is pressed, open or selected (docs/DESIGN.md §4.7). */
-  --ch-rim: inset -1px -1px 0 color-mix(in srgb, var(--ch-highlight) 70%, #fff);
+  /*
+   * The light (docs/DESIGN.md §4.7): where the author is now (the current tab,
+   * the active line, the open panel, the held button). A white glow spilling
+   * under the element, as under the system line. On the light page the element
+   * also turns lighter than the paper; on slate and the dark page the glow is enough.
+   */
+  --ch-lit: 0 9px 14px -7px rgb(255 255 255 / 0.75);
+  --ch-lit-bg: color-mix(in srgb, var(--ch-bg) 35%, #fff);
   --ch-page-raise: var(--ch-raise);
   --ch-page-raise-s: var(--ch-raise-s);
   --ch-page-shade: var(--ch-shade);
@@ -191,7 +199,7 @@
     inset var(--ch-depth-s) var(--ch-depth-s) var(--ch-blur-s) var(--ch-shade),
     inset calc(var(--ch-depth-s) * -1) calc(var(--ch-depth-s) * -1) var(--ch-blur-s)
       var(--ch-highlight);
-  --ch-rim: inset -1px -1px 0 color-mix(in srgb, var(--ch-highlight) 70%, #fff);
+  --ch-lit-bg: transparent;
   color-scheme: dark;
   background-color: var(--ch-bg);
   color: var(--ch-ink);

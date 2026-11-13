@@ -57,11 +57,12 @@
   padding: 6px 10px;
 }
 
+/* (10 px below: the light of the last line is not cut, docs/DESIGN.md §4.7.) */
 .ch-atl-modules,
 .ch-atl-entries {
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 0 0 10px;
   overflow-y: auto;
 }
 
@@ -78,16 +79,17 @@
 }
 
 .ch-atl-module[aria-selected='true'] {
+  background: var(--ch-lit-bg);
   box-shadow:
-    var(--ch-inset),
-    var(--ch-rim),
+    var(--ch-lit),
     inset 3px 0 0 var(--ch-author);
   color: var(--ch-author);
   font-weight: 500;
 }
 
 .ch-atl-module:focus-visible:not([aria-selected='true']) {
-  box-shadow: var(--ch-inset);
+  background: var(--ch-lit-bg);
+  box-shadow: var(--ch-lit);
 }
 
 .ch-atl-count {
@@ -97,7 +99,7 @@
 
 .ch-atl-entries {
   flex: 1;
-  padding: 2px;
+  padding: 2px 2px 10px;
 }
 
 .ch-atl-group {
@@ -115,9 +117,9 @@
 }
 
 .ch-atl-entry[aria-selected='true'] {
+  background: var(--ch-lit-bg);
   box-shadow:
-    var(--ch-inset),
-    var(--ch-rim),
+    var(--ch-lit),
     inset 3px 0 0 var(--ch-author);
   color: var(--ch-author);
 }

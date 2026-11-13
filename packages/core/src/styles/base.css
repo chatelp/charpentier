@@ -88,8 +88,17 @@ kbd,
   transition: box-shadow var(--ch-dur-press) var(--ch-ease);
 }
 
+.ch-btn {
+  transition:
+    box-shadow var(--ch-dur-relief) var(--ch-ease),
+    background-color var(--ch-dur-relief) var(--ch-ease);
+}
+
+/* A held button lights up at once and fades in 350 ms (docs/DESIGN.md §4.7). */
 .ch-btn:active {
-  box-shadow: var(--ch-inset), var(--ch-rim);
+  background: var(--ch-lit-bg);
+  box-shadow: var(--ch-lit);
+  transition: none;
 }
 
 .ch-btn.is-mentor {
@@ -128,11 +137,11 @@ kbd,
   color: var(--ch-faint);
 }
 
+/* Tabs (changing views): labels laid flat, no rail; the current one is lit. */
 .ch-seg {
   display: flex;
-  padding: 4px;
-  border-radius: var(--ch-radius-md);
-  box-shadow: var(--ch-inset);
+  gap: 4px;
+  padding: 0;
 }
 
 .ch-seg button {
@@ -146,9 +155,41 @@ kbd,
   cursor: pointer;
 }
 
+.ch-seg button:hover {
+  color: var(--ch-ink);
+}
+
 .ch-seg button.is-on {
-  box-shadow: var(--ch-raise-s);
+  background: var(--ch-lit-bg);
+  box-shadow: var(--ch-lit);
   color: var(--ch-author);
+}
+
+/* Setting keys (choosing an option): raised keys side by side; the chosen one stays sunk. */
+.ch-keys {
+  display: flex;
+  gap: 6px;
+}
+
+.ch-keys button {
+  flex: 1;
+  padding: 7px 0;
+  border: 0;
+  border-radius: var(--ch-radius-sm);
+  background: var(--ch-bg);
+  box-shadow: var(--ch-raise-s);
+  color: var(--ch-muted);
+  font: 500 var(--ch-ui-sm) var(--ch-font-ui);
+  cursor: pointer;
+}
+
+.ch-keys button:hover {
+  color: var(--ch-ink);
+}
+
+.ch-keys button.is-on {
+  box-shadow: var(--ch-inset);
+  color: var(--ch-ink);
 }
 
 .ch-chip {
@@ -195,15 +236,28 @@ kbd,
   scrollbar-color: color-mix(in srgb, var(--ch-muted) 40%, transparent) transparent;
 }
 
-/* What is pressed, open or selected sinks and lights up in 120 ms (docs/DESIGN.md §4.7). */
+/*
+ * The light moves with the author in 350 ms (docs/DESIGN.md §4.7); a setting
+ * key sinks in the time of a press. None with « Réduire les animations ».
+ */
 .ch-atl-module,
 .ch-atl-entry,
-.ch-medallion,
-.ch-monogram,
 .ch-library-item,
 .ch-point,
 .ch-cmd-item,
-.ch-display-choice,
+.ch-nav-item,
+.ch-card,
+.ch-settings-section,
+.ch-footer-button,
+.ch-seg button,
 .ch-strip-chip {
+  transition:
+    box-shadow var(--ch-dur-relief) var(--ch-ease),
+    background-color var(--ch-dur-relief) var(--ch-ease),
+    color var(--ch-dur-relief) var(--ch-ease);
+}
+
+.ch-keys button,
+.ch-display-choice {
   transition: box-shadow var(--ch-dur-press) var(--ch-ease);
 }

@@ -13,8 +13,8 @@
   color: var(--ch-mentor);
 }
 
+/* The medallion of an active line stays raised; only its ink says it. */
 .ch-medallion.is-active {
-  box-shadow: var(--ch-inset), var(--ch-rim);
   color: var(--ch-author);
 }
 
@@ -36,7 +36,6 @@
 }
 
 .ch-monogram.is-active {
-  box-shadow: var(--ch-inset), var(--ch-rim);
   color: var(--ch-author);
 }
 

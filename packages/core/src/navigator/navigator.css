@@ -54,18 +54,19 @@
   font-size: var(--ch-ui-sm);
 }
 
-/* Keyboard focus: engraved. The open scene: engraved, vermilion rule. */
+/* Keyboard focus: lit. The open scene: lit, vermilion rule. */
 .ch-nav-item:focus-visible,
 .ch-nav-item[aria-selected='true']:focus {
-  box-shadow: var(--ch-inset), var(--ch-rim);
+  background: var(--ch-lit-bg);
+  box-shadow: var(--ch-lit);
   color: var(--ch-ink);
 }
 
 /* Wins over the focus rule above: the open scene keeps its vermilion rule. */
 .ch-nav-tree .ch-nav-item.is-current {
+  background: var(--ch-lit-bg);
   box-shadow:
-    var(--ch-inset),
-    var(--ch-rim),
+    var(--ch-lit),
     inset 3px 0 0 var(--ch-author);
   color: var(--ch-author);
 }

@@ -211,7 +211,7 @@ export function Library({ currentProjectId, creating = false, onOpen, onClose }:
             aria-label={t('library.titlePlaceholder')}
             onChange={(e) => setForm({ ...form, title: e.target.value })}
           />
-          <div className="ch-seg" role="radiogroup" aria-label={t('library.kind')}>
+          <div className="ch-keys" role="radiogroup" aria-label={t('library.kind')}>
             {(['novel', 'short-story'] as const).map((kind) => (
               <button
                 key={kind}
