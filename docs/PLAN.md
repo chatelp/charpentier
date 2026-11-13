@@ -1,4 +1,4 @@
-# Plan des étapes 1 à 4
+# Plan des étapes 1 à 5
 
 Chaque phase est courte, se termine par un résultat vérifiable dans l'app (ou par des tests quand la phase n'a pas d'interface), puis par un arrêt pour le feu vert. Les tests prioritaires sont écrits dans la phase qui introduit le code concerné.
 
@@ -156,3 +156,29 @@ Image Docker du serveur, `docker-compose.yml` et guide de déploiement sur `prod
 
 ## Étape 4b (ensuite) : version web synchronisée et relais IA
 La version web ouvre les projets du compte depuis le serveur, et le Compagnon y passe par un relais IA côté serveur (clé de l'auteur chiffrée sur le serveur). À détailler à la fin de 4a.
+
+---
+
+## Étape 5 : le X250, appareil d'écriture
+
+But : un ThinkPad X250 dédié qui démarre directement dans Charpentier, sans rien d'autre à l'écran, et retrouve le roman par la synchro (étape 4a). Référence : SPEC §13 (hôte `appliance`, service `System`) et le chapitre « Mode appareil » de la spec technique d'origine ; apparence : DESIGN §4.1, §4.8 et §5.4.
+
+### 5.1 Mode appareil de l'app
+L'app de bureau lancée avec `--appliance` : plein écran, sans barre de titre ni barre de menus (la zone de commande en tient lieu), `Ctrl` à la place de `⌘` dans les raccourcis et leurs libellés, raccourcis que Sway se réserve déclarés comme réservés. Cible 1920 × 1080 à 125 % (1 536 × 864 px CSS) : l'écran d'écriture avec une note dépliée tient sans défilement de l'interface.
+**Vérifiable** : sur Linux, `--appliance` ouvre l'app en plein écran sans chrome ; tout s'atteint par la zone de commande et les raccourcis `Ctrl`.
+
+### 5.2 Service `System`
+Implémentation Linux du service `System` dans le main (D-Bus) : NetworkManager (réseaux Wi-Fi, connexion), UPower (batterie), logind (veille, extinction), luminosité. Seulement en mode appareil : l'état réseau et batterie dans le pied, et des commandes (« Wi-Fi… », « Luminosité », « Mettre en veille », « Éteindre »).
+**Vérifiable** : sur le X250, je choisis un réseau Wi-Fi et règle la luminosité depuis la ligne de commande ; le pied montre la batterie.
+
+### 5.3 Build Linux et empaquetage Nix
+Build Electron pour Linux x64 (dictionnaire Hunspell compris), puis paquet Nix reproductible de l'app (dépendances npm figées). En attendant, une installation manuelle du build Linux est acceptable.
+**Vérifiable** : `nix build .#charpentier` produit l'app, qui démarre sur une machine NixOS.
+
+### 5.4 Flake NixOS du X250
+`nix/flake.nix` et `nix/hosts/x250/` : `nixos-hardware` pour le X250 ; greetd en ouverture de session automatique, qui lance un Sway minimal (pas de barre ni de bordures, Charpentier en plein écran par `for_window`, raccourcis Sway supprimés, un combo caché pour un terminal de secours) ; Electron en Wayland natif ; keyd et disposition FR ; TLP ; veille au rabat de l'écran avec reprise directe sur le texte ; systemd-boot sans délai, démarrage silencieux, services inutiles désactivés ; un TTY de secours (Ctrl+Alt+F2).
+**Vérifiable** : le X250 démarre en quelques secondes directement sur mon texte ; rabattre l'écran puis le rouvrir me ramène au curseur.
+
+### 5.5 Déploiement à distance
+Mise à jour du X250 depuis le Mac par `nixos-rebuild switch --flake .#x250 --target-host …` ; connexion au serveur de synchro (étape 4a) pour retrouver les projets.
+**Vérifiable** : je mets à jour le X250 sans le toucher ; une scène écrite sur le Mac s'y retrouve, et inversement.
