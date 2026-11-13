@@ -11,6 +11,7 @@ import {
   type OutlineChapter,
   type Signal,
 } from '@charpentier/schema';
+import { acceptAndKeep } from '../atelier/atelier-actions';
 import { firstEvidenceScene } from '../atelier/atelier-data';
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -186,7 +187,7 @@ export function MentorPanel(props: MentorPanelProps) {
         entityId: proposal.entityId,
         field: proposal.field,
       };
-      if (accept) acceptProposal(root, ref);
+      if (accept) acceptAndKeep(root, ref);
       else rejectProposal(root, ref);
     } else if (accept) {
       // A new entry is taken with its name; its other fields wait for the author, one by one.

@@ -9,7 +9,7 @@ import {
   readFieldRef,
   type InterviewSection,
 } from '@charpentier/schema';
-import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from 'vitest/browser';
 import { afterEach, describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
@@ -141,14 +141,12 @@ describe('the interview page of the Atelier (phase 6.2)', () => {
     await waitFor(() => expect(document.activeElement).toBe(field));
     await userEvent.keyboard('v');
     await waitFor(() => expect(occupation().status).toBe('validated'));
-    // It stays under its answer, sunk, « validée ».
-    screen.getByText('validée');
+    // It stays under its answer, « validée »; and keeping her occupation kept Hélène.
+    await waitFor(() => expect(screen.getAllByText('validée')).toHaveLength(2));
+    expect(helene()?.status).toBe('validated');
+    screen.getByText('nouvelle fiche');
     expect((field as HTMLTextAreaElement).value).toBe('');
-    // The sheet itself, with the button: the same field as in the Atelier.
-    const line = screen.getByText('Hélène', { selector: '.ch-interview-value' }).closest('div')
-      ?.parentElement as HTMLElement;
-    await userEvent.click(within(line).getByRole('button', { name: /Valider/ }));
-    await waitFor(() => expect(helene()?.status).toBe('validated'));
+
     expect(
       readFieldRef(root(), { module: 'characters', entityId: helene()?.id ?? '', field: 'name' })
         .status,

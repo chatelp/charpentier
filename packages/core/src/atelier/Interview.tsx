@@ -8,7 +8,6 @@ import {
   listEntities,
   listTrashedEntities,
   readFieldRef,
-  rejectEntity,
   rejectProposal,
   sectionProgress,
   sectionStates,
@@ -28,6 +27,7 @@ import { Medallion } from '../icons/Pictogram';
 import { playSound } from '../sound/sounds';
 import type { WorkspaceContext } from '../workspace/workspace-context';
 import type { AtelierLocation } from './Atelier';
+import { acceptAndKeep, hasKeptField, rejectSheet } from './atelier-actions';
 import { readAtelier } from './atelier-data';
 import { askInterview, interviewState, subscribeInterview } from './interview-requests';
 import { moduleDefs, type AtelierModule } from './module-defs';
@@ -184,17 +184,19 @@ export function Interview({
   const pending = lines.filter((l) => stateOf(root, l) === 'pending');
 
   const decide = (line: Line, accept: boolean) => {
-    playSound(accept ? 'click' : 'toc');
     const ref = refOf(line);
+    const module = line.module as EntityModule;
+    if (!accept && !ref && line.entityId && hasKeptField(root, module, line.entityId)) return;
+    playSound(accept ? 'click' : 'toc');
     if (ref) {
-      if (accept) acceptProposal(root, ref);
+      // Keeping a field of a proposed sheet keeps the sheet (« garder batelière, c'est garder Hélène »).
+      if (accept) acceptAndKeep(root, ref);
       else rejectProposal(root, ref);
       return;
     }
-    const module = line.module as EntityModule;
     if (!line.entityId) return;
     if (!accept) {
-      rejectEntity(root, module, line.entityId);
+      rejectSheet(root, module, line.entityId);
       return;
     }
     // A new sheet is taken with its name; its other fields wait for the author, one by one.
@@ -332,7 +334,7 @@ export function Interview({
         <ol className="ch-interview-progress" aria-label={t('interview.progressLabel')}>
           {interviewSections.map((s) => (
             <li key={s} className={s === section ? 'is-current' : undefined}>
-              {t(`atelier.modules.${s}`)}{' '}
+              {t(`interview.short.${s}`)}{' '}
               <span aria-hidden="true">
                 {progress[s].map((done) => (done ? '●' : '○')).join('')}
               </span>
@@ -463,7 +465,7 @@ function Proposals({
                       tabIndex={-1}
                       onClick={() => onOpen(sheet as AtelierLocation)}
                     >
-                      {nameOf(line.module, line.entityId)}
+                      {line.field ? nameOf(line.module, line.entityId) : t('interview.newSheet')}
                     </button>
                   </>
                 )}

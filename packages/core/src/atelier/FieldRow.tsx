@@ -1,6 +1,5 @@
 import {
   evidenceSceneId,
-  acceptProposal,
   clearField,
   rejectProposal,
   setField,
@@ -10,6 +9,7 @@ import {
   type Signal,
 } from '@charpentier/schema';
 import { useId, useRef, useState, type KeyboardEvent } from 'react';
+import { acceptAndKeep, keepSheetOf } from './atelier-actions';
 import { useTranslation } from 'react-i18next';
 import { playSound } from '../sound/sounds';
 import type { WorkspaceContext } from '../workspace/workspace-context';
@@ -81,8 +81,11 @@ export function FieldRow({
     if (state.status === 'validated' && same(state.value)) return;
     // Taking the proposal as is validates it; any change makes it the author's own.
     if (state.status === 'proposed' && same(state.proposal?.value))
-      acceptProposal(ctx.root, fieldRef);
-    else setField(ctx.root, fieldRef, next);
+      acceptAndKeep(ctx.root, fieldRef);
+    else {
+      setField(ctx.root, fieldRef, next);
+      keepSheetOf(ctx.root, fieldRef);
+    }
   };
 
   const commitDraft = () => {
@@ -166,7 +169,7 @@ export function FieldRow({
     } else if (key === 'v' && state.status === 'proposed') {
       event.preventDefault();
       playSound('click');
-      acceptProposal(ctx.root, fieldRef);
+      acceptAndKeep(ctx.root, fieldRef);
     } else if (key === 'x' && state.status === 'proposed') {
       event.preventDefault();
       playSound('toc');
@@ -283,7 +286,7 @@ export function FieldRow({
               className="ch-btn is-mentor"
               onClick={() => {
                 playSound('click');
-                acceptProposal(ctx.root, fieldRef);
+                acceptAndKeep(ctx.root, fieldRef);
               }}
             >
               {t('atelier.accept')} <kbd>{t('atelier.acceptKey')}</kbd>
