@@ -2561,7 +2561,9 @@
       }
       /* Narrower than the X250's 1536 px: the gauges and secondary values go first, never the message. */
       .sysline {
-        overflow: hidden;
+        /* Clip the width only: the popovers hang below the line. */
+        overflow-x: clip;
+        overflow-y: visible;
       }
       .sysline .smsg {
         min-width: 19rem;
@@ -2697,6 +2699,60 @@
         flex-wrap: wrap;
         gap: 8px;
         margin-top: 4px;
+      }
+      /* X250 updates (D-28): the ready version, its notes, the disk screen. */
+      .sysline .updot {
+        color: var(--ink);
+        margin-left: -3px;
+      }
+      .syspop .notes,
+      .spage .notes {
+        margin: 4px 0 2px;
+        padding: 0;
+        list-style: none;
+        color: var(--ink-2);
+      }
+      .syspop .notes li,
+      .spage .notes li {
+        padding-left: 1.1em;
+        text-indent: -1.1em;
+      }
+      .syspop .notes li::before,
+      .spage .notes li::before {
+        content: '· ';
+        color: var(--faint);
+      }
+      .spage .notes {
+        margin: 2px 0 6px;
+        font-size: 14px;
+        line-height: 1.55;
+      }
+      .spage .srow .btn.armed {
+        background: var(--lit-bg);
+        box-shadow: var(--lit);
+        color: var(--ink);
+      }
+      .diskov {
+        position: absolute;
+        inset: 0;
+        z-index: 40;
+        display: grid;
+        place-items: center;
+        font-size: 13px;
+        line-height: 2;
+      }
+      .diskov .in {
+        min-width: 26rem;
+      }
+      .diskov .dim {
+        color: var(--faint);
+      }
+      .diskov .cur {
+        display: inline-block;
+        width: 0.6em;
+        height: 1.1em;
+        vertical-align: -0.2em;
+        background: var(--ink-2);
       }
       .sl {
         position: relative;
@@ -3653,6 +3709,9 @@
         sysbar: 'haut',
         msg: null,
         batt: 82,
+        upd: null,
+        updui: 'segment',
+        updboot: 'ligne',
         sec: 'reseau',
         mat: 'ardoise',
         dk: 'clair',
@@ -4537,7 +4596,22 @@
         usb: `clé branchée · <kbd>⊞U</kbd> copier mes textes`,
         low: `batterie faible · branchez l’appareil, tout est enregistré`,
         fn: `luminosité 70 %`,
+        prete: `mise à jour prête · <kbd>⊞R</kbd> redémarrer`,
+        apres: `à jour · 0.6.0`,
+        echec: `mise à jour écartée · signature invalide`,
+        revenu: `revenu à 0.5.0 · 0.6.0 mise de côté`,
       };
+      // X250 updates (D-28): which version runs, which one waits.
+      const UPD_NOTES = [
+        'L’entretien avec le Compagnon, en tête de l’Atelier (⌘0).',
+        'Les mises à jour arrivent d’elles-mêmes par le serveur.',
+        'La lumière suit le clavier dans les listes.',
+      ];
+      const updReady = () => ['prete', 'confirme'].includes(S.upd);
+      const updRunning = () => (['apres', 'retour'].includes(S.upd) ? '0.6.0' : '0.5.0');
+      const updPrev = () => (['apres', 'retour'].includes(S.upd) ? '0.5.0' : '0.4.2');
+      const notesList = () =>
+        `<ul class="notes">${UPD_NOTES.map((n) => `<li>${n}</li>`).join('')}</ul>`;
       function sysline() {
         if (S.frame !== 'x250' || S.dir !== 'perle') return '';
         const low = S.batt <= 15;
@@ -4554,6 +4628,7 @@
           return `<div class="sysline sysmat"><span class="sg home">${EQ}charpentier</span><span class="smsg">verrouillé</span>${bat}${date}</div>`;
         const lum = S.msg === 'fn' ? 0.7 : 0.6;
         const right =
+          (updReady() && S.updui === 'segment' ? sg('maj', `<b>maj</b>0.6.0`) : '') +
           (S.msg === 'usb' ? sg('usb', `<b>usb</b>KINGSTON`) : '') +
           `<button class="sg" data-go="moniteur" title="Moniteur (⊞M)"><b>cpu</b><span class="wide">${spark(CPU.filter((_, i) => i % 10 === 0))}</span>12${N}%<span class="dim wide">48°</span></button>` +
           sg(
@@ -4569,25 +4644,50 @@
           bat +
           sg('sync', `<b>sync</b>ok`) +
           date;
-        const home = sg('menu', `${EQ}système<kbd>⊞</kbd>`, 'home');
+        const dot = updReady() && S.updui === 'point' ? '<span class="updot">•</span>' : '';
+        const home = sg('menu', `${EQ}système${dot}<kbd>⊞</kbd>`, 'home');
         const msg =
-          S.msg === 'usb' ? SYS_MSG.usb : low ? SYS_MSG.low : S.msg === 'fn' ? SYS_MSG.fn : '';
+          S.msg === 'usb'
+            ? SYS_MSG.usb
+            : low
+              ? SYS_MSG.low
+              : S.msg === 'fn'
+                ? SYS_MSG.fn
+                : SYS_MSG[S.upd === 'confirme' ? 'prete' : S.upd] || '';
         if (S.sysbar === 'bas')
           return `<div class="sysline sysmat bas">${home}<span class="sg"><span>${fmt(1284)} mots</span><span style="color:var(--author)">+${fmt(312)}</span></span><button class="prompt" data-go="palette"><i>›</i><span>Que voulez-vous faire ?</span><kbd>Ctrl K</kbd></button><span class="smsg">${msg || 'enregistré · 4 remarques du Compagnon'}</span>${right}${sysPop(true)}</div>`;
         return `<div class="sysline sysmat">${home}<button class="smsg${S.sys === 'journal' ? ' on' : ''}" data-sys="journal" title="Journal du système (⊞J)">${msg || '<span class="dim">journal · 7</span>'}</button>${right}${sysPop(false)}</div>`;
       }
       const POPS = {
-        menu: () => `<h4><span>charpentier</span><span>0.5.0 · nixos 26.11 · x250</span></h4>
+        menu: () => `<h4><span>charpentier</span><span>${updRunning()} · nixos 26.11 · x250</span></h4>
           <div class="r pick" data-go="reglages"><span>Réglages du système…</span><kbd>⊞,</kbd></div>
           <div class="r pick"><span>Imprimer…</span><kbd>⊞P</kbd></div>
           <div class="r pick"><span>Copier mes textes sur une clé USB</span><kbd>⊞U</kbd></div>
           <hr />
           <div class="r pick" data-go="verrou"><span>Verrouiller</span><kbd>⊞L</kbd></div>
           <div class="r pick"><span>Mettre en veille</span><kbd>⊞⏎</kbd></div>
-          <div class="r pick"><span>Redémarrer…</span><kbd></kbd></div>
+          ${
+            updReady()
+              ? S.upd === 'confirme'
+                ? `<div class="r pick sel"><span>Confirmer le redémarrage</span><kbd>⏎</kbd></div>`
+                : `<div class="r pick${S.updui === 'menu' ? ' sel' : ''}"><span>Redémarrer et passer à 0.6.0…</span><kbd>⊞R</kbd></div>`
+              : `<div class="r pick"><span>Redémarrer…</span><kbd></kbd></div>`
+          }
           <div class="r pick"><span>Éteindre…</span><kbd></kbd></div>
           <hr />
-          <div class="note2">allumé depuis 3 h 12 · <kbd>⊞</kbd> seul : parcourir la ligne avec ← →</div>`,
+          <div class="note2">${updReady() ? '0.6.0 s’installe au prochain démarrage, quel qu’il soit · ' : ''}allumé depuis 3 h 12 · <kbd>⊞</kbd> seul : parcourir la ligne avec ← →</div>`,
+        maj: () => `<h4><span>mise à jour</span><span>⊞R</span></h4>
+          <div class="r cur"><span>0.6.0 · prête</span><span class="dim">publiée le 13 nov.</span></div>
+          ${notesList()}
+          <hr />
+          ${
+            S.upd === 'confirme'
+              ? `<div class="r pick sel"><span>Confirmer le redémarrage</span><kbd>⏎</kbd></div>`
+              : `<div class="r pick sel"><span>Redémarrer maintenant</span><kbd>⏎</kbd></div>`
+          }
+          <div class="r pick"><span>Plus tard</span><kbd>Échap</kbd></div>
+          <hr />
+          <div class="note2">vos textes sont enregistrés et envoyés au serveur avant · sinon, elle s’installe au prochain démarrage</div>`,
         wifi: () => `<h4><span>wifi</span><span>⊞W</span></h4>
           <div class="r"><span>Wi-Fi</span>${segs(['oui', 'non'], 0)}</div>
           <hr />
@@ -4633,15 +4733,36 @@
           <div class="r"><span>Dernière synchro</span><span>14:31 · 3 projets</span></div>
           <div class="acts"><button class="btn">Synchroniser maintenant</button></div>`,
         journal: () => `<h4><span>journal</span><span>⊞J</span></h4>
-          ${[
-            ['14:32', 'luminosité 70 %'],
-            ['14:20', 'clé « KINGSTON » branchée'],
-            ['14:05', 'synchronisé · 3 projets'],
-            ['13:41', 'wifi : connecté à Maison-5G'],
-            ['13:40', 'réveil · code accepté'],
-            ['11:58', 'mise en veille (rabat fermé)'],
-            ['09:15', 'démarrage · charpentier 0.5.0'],
-          ]
+          ${(S.upd === 'apres'
+            ? [
+                ['14:41', 'à jour · 0.6.0'],
+                ['14:40', 'démarrage · charpentier 0.6.0'],
+                ['14:39', 'redémarrage pour la mise à jour'],
+                ['14:39', 'synchronisé · 3 projets'],
+                ['14:05', 'mise à jour 0.6.0 prête'],
+                ['13:41', 'wifi : connecté à Maison-5G'],
+                ['09:15', 'démarrage · charpentier 0.5.0'],
+              ]
+            : S.upd === 'echec'
+              ? [
+                  ['14:05', '0.6.0 écartée · signature invalide'],
+                  ['14:04', '0.6.0 reçue · vérification'],
+                  ['13:12', '0.6.0 : téléchargement interrompu'],
+                  ['13:05', '0.6.0 trouvée · téléchargement'],
+                  ['11:58', 'mise en veille (rabat fermé)'],
+                  ['09:15', 'démarrage · charpentier 0.5.0'],
+                ]
+              : [
+                  ['14:32', 'luminosité 70 %'],
+                  ['14:20', 'clé « KINGSTON » branchée'],
+                  ...(updReady() ? [['14:05', 'mise à jour 0.6.0 prête']] : []),
+                  ['14:05', 'synchronisé · 3 projets'],
+                  ['13:41', 'wifi : connecté à Maison-5G'],
+                  ['13:40', 'réveil · code accepté'],
+                  ['11:58', 'mise en veille (rabat fermé)'],
+                  ['09:15', 'démarrage · charpentier 0.5.0'],
+                ]
+          )
             .map(
               ([t, m], i) =>
                 `<div class="r${i === 0 ? ' cur' : ''}"><span>${m}</span><span class="dim">${t}</span></div>`,
@@ -4745,19 +4866,77 @@
           ${srow('Fuseau horaire', '', `<span class="val">Europe/Paris</span><button class="btn">Changer…</button>`)}
           ${srow('Régler l’heure', 'Automatique par le réseau.', yn(true))}
           ${srow('Format', '', segs(['24 h', '12 h'], 0))}`,
-        apropos: () => `<h1>À propos</h1><div class="lead">Charpentier sur ThinkPad X250.</div>
-          ${srow('Charpentier', '', `<span class="val">0.5.0</span>`)}
-          ${srow('Système', '', `<span class="val">NixOS 26.11 · génération 42</span>`)}
-          ${srow('Mise à jour', 'Elle se fait depuis le Mac ; l’appareil redémarre sur la nouvelle version.', `<span class="val">à jour au 12 nov.</span>`)}
+        apropos: () => {
+          const run = updRunning();
+          const prev = updPrev();
+          const check = `<button class="btn">Vérifier maintenant</button>`;
+          let upd;
+          if (updReady())
+            upd = `<div class="card2">${srow(
+              'Version 0.6.0 prête',
+              'Publiée le 13 nov. depuis le Mac, vérifiée et préparée. Elle s’installe au prochain démarrage, quel qu’il soit ; rien ne change pendant que vous écrivez.',
+              S.upd === 'confirme'
+                ? `<button class="btn armed">Confirmer le redémarrage <kbd>⏎</kbd></button>`
+                : `<button class="btn pri">Redémarrer <kbd>⊞R</kbd></button>`,
+            )}${notesList()}</div>
+              ${srow('Vérification', 'Toutes les heures, quand le réseau est là. Dernière : 14:05.', check)}`;
+          else if (S.upd === 'apres' || S.upd === 'retour')
+            upd = `<div class="card2">${srow('Nouveautés de 0.6.0', 'Installée aujourd’hui à 14:40.', '')}${notesList()}</div>
+              ${srow('Vérification', 'À jour. Dernière vérification : 14:41.', check)}`;
+          else if (S.upd === 'echec')
+            upd = srow(
+              'Vérification',
+              'La version 0.6.0 reçue à 14:05 n’avait pas la bonne signature : elle a été écartée, rien n’a changé. Elle sera téléchargée de nouveau à la prochaine vérification.',
+              `<span class="val">écartée</span>${check}`,
+            );
+          else if (S.upd === 'revenu')
+            upd = srow(
+              'Version 0.6.0 mise de côté',
+              'Vous êtes revenu à 0.5.0. La 0.6.0 n’est plus annoncée ; une version plus récente le sera.',
+              `<button class="btn">Repasser à 0.6.0…</button>`,
+            );
+          else
+            upd = srow(
+              'Vérification',
+              'Toutes les heures, quand le réseau est là. Dernière : 14:05.',
+              `<span class="val">à jour</span>${check}`,
+            );
+          const back =
+            S.upd === 'retour'
+              ? srow(
+                  'Revenir à la version précédente',
+                  'L’appareil redémarre sur 0.5.0. Vos textes ne bougent pas : ils sont dans vos projets, pas dans la version. La 0.6.0 restera ici pour y repasser.',
+                  `<button class="btn armed">Confirmer : redémarrer sur 0.5.0 <kbd>⏎</kbd></button>`,
+                )
+              : S.upd === 'revenu'
+                ? ''
+                : srow(
+                    'Revenir à la version précédente',
+                    `${prev} reste au menu de démarrage. Si l’appareil ne démarre plus, maintenez Espace à l’allumage et choisissez-la.`,
+                    `<button class="btn">Revenir à ${prev}…</button>`,
+                  );
+          return `<h1>À propos</h1><div class="lead">Charpentier sur ThinkPad X250.</div>
+          ${srow('Charpentier', '', `<span class="val">${run}${S.upd === 'apres' || S.upd === 'retour' ? ' · installée aujourd’hui' : ' · installée le 12 nov.'}</span>`)}
+          ${srow('Système', '', `<span class="val">NixOS 26.11 · génération ${run === '0.6.0' ? 43 : 42}</span>`)}
+          <h2>Mise à jour</h2>
+          ${upd}
+          ${back}
+          <h2>Appareil</h2>
           ${srow('Stockage', '', `${gauge(0.18)}<span class="val">41 Go sur 232</span>`)}
-          ${srow('Licences', 'Polices Literata, Inter et JetBrains Mono : SIL OFL 1.1.', `<button class="btn">Voir</button>`)}`,
+          ${srow('Licences', 'Polices Literata, Inter et JetBrains Mono : SIL OFL 1.1.', `<button class="btn">Voir</button>`)}`;
+        },
       };
       function settings() {
         const rail = SECS.map(
           ([k, l, v]) =>
-            `<div class="snav${S.sec === k ? ' on' : ''}" data-sec="${k}"><span>${l}</span><span>${v}</span></div>`,
+            `<div class="snav${S.sec === k ? ' on' : ''}" data-sec="${k}"><span>${l}</span><span>${k === 'apropos' ? (updReady() ? '0.6.0 prête' : updRunning()) : v}</span></div>`,
         ).join('');
         return `<section class="sysv"><div class="srail sysmat"><div class="sh">${EQ}réglages du système</div>${rail}<div class="sf"><kbd>↑↓</kbd> sections · <kbd>Tab</kbd> réglages<br /><kbd>Échap</kbd> revenir au texte</div></div><div class="spage">${PAGES[S.sec]()}</div></section>`;
+      }
+      // Drawn by the system before the app (disk encryption): only shown here to place the update line.
+      function diskScreen() {
+        const line = S.updboot === 'ligne' ? `<div>mise à jour 0.6.0</div>` : '';
+        return `<div class="diskov sysmat"><div class="in"><div class="dim">charpentier · x250</div>${line}<div>mot de passe du disque : •••••••<span class="cur"></span></div></div></div>`;
       }
       function lockScreen() {
         return `<section class="lock"><div><div class="t">14:32</div><div class="d">vendredi 13 novembre</div><div class="code"><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i><i></i></div><div class="h">votre code, puis ⏎</div></div></section>`;
@@ -4974,6 +5153,7 @@
           <span class="grp"><span class="lbl">Écran <kbd>1–9</kbd></span>${SCREENS.map(([k, l]) => b('screen', k, l)).join('')}</span>
           <span class="grp"><span class="lbl">Thème <kbd>T</kbd></span>${b('theme', 'light', 'Clair')}${b('theme', 'dark', 'Sombre')}</span>
           <span class="grp"><span class="lbl">X250 · ligne système</span>${b('sysbar', 'haut', 'En haut')}${b('sysbar', 'bas', 'Console en bas')}${b('msg', S.msg === 'usb' ? null : 'usb', 'Clé USB')}${b('msg', S.msg === 'fn' ? null : 'fn', 'Touche luminosité')}${b('batt', S.batt === 82 ? 9 : 82, 'Batterie faible')}</span>
+          <span class="grp"><span class="lbl">X250 · mise à jour</span>${b('upd', 'null', 'Aucune')}${b('upd', 'prete', 'Prête')}${b('upd', 'confirme', 'Redémarrer ⏎')}${b('upd', 'disque', 'Au démarrage')}${b('upd', 'apres', 'Après')}${b('upd', 'echec', 'Échec')}${b('upd', 'retour', 'Revenir…')}${b('upd', 'revenu', 'Revenu')} · ${b('updui', 'segment', 'Annonce : segment maj')}${b('updui', 'point', 'point sur système')}${b('updui', 'menu', 'message + menu')} · ${b('updboot', 'rien', 'Disque : rien')}${b('updboot', 'ligne', 'une ligne')}</span>
           <span class="grp"><span class="lbl">Cadre</span>${b('frame', 'mac', 'Mac')}${b('frame', 'x250', 'X250')}</span>
           <span class="grp"><span class="lbl">Personnalité <kbd>A B C</kbd></span>${b('warm', !S.warm, 'A · Pierre chaude')}${b('ink', !S.ink, 'B · Deux encres')}${b('sig', !S.sig, 'C · Signature')}</span>
           <span class="grp">${b('focus', !S.focus, S.focus ? 'Focus : oui' : 'Focus : non')}${b('sound', !S.sound, S.sound ? 'Sons : oui' : 'Sons : non')}${b('still', !S.still, S.still ? 'Animations : non' : 'Animations : oui')}</span>
@@ -5081,7 +5261,7 @@
         const tb = disc === 'barre' ? toolbar() : `<span class="ttl">Les Serres d’Hespéride</span>`;
         app.dataset.sysbar = S.sysbar;
         const sl = sysline();
-        app.innerHTML = `${menubar()}${S.sysbar === 'haut' ? sl : ''}<div class="tb"><span class="lights"><i></i><i></i><i></i></span>${tb}</div><div class="stage">${body}</div>${S.sysbar === 'bas' ? sl : ''}`;
+        app.innerHTML = `${menubar()}${S.sysbar === 'haut' ? sl : ''}<div class="tb"><span class="lights"><i></i><i></i><i></i></span>${tb}</div><div class="stage">${body}</div>${S.sysbar === 'bas' ? sl : ''}${S.frame === 'x250' && S.upd === 'disque' ? diskScreen() : ''}`;
         const pop = app.querySelector('.syspop');
         if (pop) {
           const seg = app.querySelector(`.sysline > [data-sys="${pop.dataset.for}"]`);
@@ -5166,10 +5346,16 @@
                     ? +v
                     : v;
           if (
-            ['sysbar', 'msg', 'batt'].includes(k.dataset.k) ||
+            ['sysbar', 'msg', 'batt', 'upd', 'updui', 'updboot'].includes(k.dataset.k) ||
             /^(moniteur|reglages|verrou|demarrage)$/.test(v)
           )
             S.frame = 'x250';
+          if (k.dataset.k === 'upd') {
+            S.sys = v === 'confirme' ? (S.updui === 'segment' ? 'maj' : 'menu') : null;
+            if (v === 'retour' || v === 'revenu')
+              Object.assign(S, { screen: 'reglages', sec: 'apropos' });
+          }
+          if (k.dataset.k === 'updboot') S.upd = 'disque';
           if (k.dataset.k === 'screen' || k.dataset.k === 'disc') {
             S.tour = 0;
             S.aa = false;
