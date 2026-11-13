@@ -6,6 +6,7 @@ import { Square } from './controls';
 import { systemPrefix } from './prefix';
 import { systemSettingsSections } from './settings';
 import { SystemLine, type SystemModifier } from './SystemLine';
+import { SystemCover } from './Cover';
 import { Monitor } from './Monitor';
 import { MONITOR_VIEW, systemUi, type Segment } from './system-store';
 import { systemTexts } from './texts';
@@ -70,6 +71,16 @@ export function createSystemFeature({ modifier }: { readonly modifier: SystemMod
     { id: 'systemBattery', scope: 'global', run: panel('bat') },
     { id: 'systemClock', scope: 'global', run: panel('date') },
     {
+      id: 'systemLock',
+      scope: 'global',
+      keybinding: key('l'),
+      isEnabled: (ctx) => system(ctx).state().lock.hasCode,
+      run: (ctx) => {
+        systemUi.open(null);
+        void system(ctx).lock();
+      },
+    },
+    {
       id: 'systemMonitor',
       scope: 'global',
       keybinding: key('m'),
@@ -98,5 +109,14 @@ export function createSystemFeature({ modifier }: { readonly modifier: SystemMod
     },
     prefixes: [systemPrefix],
     views: [{ id: MONITOR_VIEW, label: 'system.monitor.name', component: Monitor }],
+    // The lock and the first start, over everything (phase 5.6).
+    cover: {
+      active: (platform) => {
+        const state = platform.system?.state();
+        return !!state && (state.lock.locked || state.firstStart);
+      },
+      subscribe: (platform, onChange) => platform.system?.onChange(onChange) ?? (() => {}),
+      component: SystemCover,
+    },
   };
 }

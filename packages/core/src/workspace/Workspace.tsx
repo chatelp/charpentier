@@ -53,6 +53,7 @@ import { useTypingFade, useTypewriterScroll, useWordCount } from './use-writing-
 import { useWordsToday } from './use-words-today';
 import type { WorkspaceContext } from './workspace-context';
 import { useWritingPrefs } from './writing-prefs';
+import { isCovered } from '../features/cover';
 import { featureText } from '../features/feature';
 import { FeatureFooterItems, FeatureTopZones, useFeatures } from '../features/features-context';
 import { SettingsView } from '../features/SettingsView';
@@ -521,6 +522,8 @@ export function ProjectWorkspace({
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.defaultPrevented || event.isComposing || paletteOpenRef.current) return;
+      // Under a feature's cover (the X250 locked), no shortcut of the app.
+      if (isCovered()) return;
       const command = registry.forEvent(event, latest.current);
       if (!command) return;
       event.preventDefault();
@@ -534,7 +537,9 @@ export function ProjectWorkspace({
   useEffect(() => {
     const menu = platform.menu;
     if (!menu) return;
-    return menu.onCommand((id) => void registry.execute(id, latest.current));
+    return menu.onCommand((id) => {
+      if (!isCovered()) void registry.execute(id, latest.current);
+    });
   }, [platform, registry]);
   const { uiSounds, typingSounds } = prefs;
   useEffect(() => {

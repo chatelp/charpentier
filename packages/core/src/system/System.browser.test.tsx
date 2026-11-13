@@ -17,7 +17,7 @@ const mod = (keys: string) => `{ControlOrMeta>}${keys}{/ControlOrMeta}`;
 const sysKey = isMac ? 'Control' : 'Meta';
 const sys = (keys: string) => `{${sysKey}>}${keys}{/${sysKey}}`;
 
-async function start(system: SimulatedSystem | null) {
+async function start(system: SimulatedSystem | null, { focused = true } = {}) {
   const prefs = new Map<string, unknown>([['welcomed', true]]);
   const docs = new Map<string, Y.Doc>();
   const platform = createTestPlatform({
@@ -43,7 +43,7 @@ async function start(system: SimulatedSystem | null) {
     />,
   );
   const editor = await screen.findByRole('textbox', { name: 'Texte de la scène' });
-  await waitFor(() => expect(document.activeElement).toBe(editor));
+  if (focused) await waitFor(() => expect(document.activeElement).toBe(editor));
   return { editor, docs };
 }
 
@@ -221,6 +221,55 @@ describe('the system line of the X250 (phase 5.3)', () => {
 
     await userEvent.click(line().querySelector('[data-seg="cpu"]') as HTMLElement);
     await screen.findByRole('region', { name: 'moniteur' });
+  });
+
+  it('locks with its key: nothing of the project shows, no shortcut passes, the code opens', async () => {
+    const system = createSimulatedSystem({ code: '1234' });
+    const { editor } = await start(system);
+    await waitFor(() => expect(system.state().lock.hasCode).toBe(true));
+    await userEvent.keyboard(sys('l'));
+    const lock = await screen.findByRole('form', { name: 'verrouillé' });
+    expect(editor.closest('[inert]')).not.toBeNull();
+    // The line keeps only charpentier, verrouillé, the battery and the time.
+    expect(line().textContent).toContain('verrouillé');
+    expect(line().textContent).not.toContain('Maison-5G');
+    // No shortcut of the app.
+    await userEvent.keyboard(mod('k'));
+    expect(screen.queryByRole('dialog', { name: 'Ligne de commande' })).toBeNull();
+    await userEvent.keyboard('0000{Enter}');
+    await within(lock).findByText('ce n’est pas le code');
+    expect(system.state().lock.locked).toBe(true);
+    await userEvent.keyboard('1234{Enter}');
+    await waitFor(() => expect(screen.queryByRole('form', { name: 'verrouillé' })).toBeNull());
+    // Straight back to the text.
+    expect(editor.closest('[inert]')).toBeNull();
+    await waitFor(() => expect(document.activeElement).toBe(editor));
+  });
+
+  it('guides a new device through its first start, each step can wait', async () => {
+    const system = createSimulatedSystem({ firstStart: true });
+    const { editor } = await start(system, { focused: false });
+    await screen.findByText('Bienvenue');
+    expect(editor.closest('[inert]')).not.toBeNull();
+    screen.getByText('Avant d’écrire, quatre réglages. Chacun peut attendre.');
+    // Wi-Fi: already joined; ⏎ continues.
+    await screen.findByRole('listbox', { name: 'Réseaux Wi-Fi' });
+    await userEvent.keyboard('{Enter}');
+    // The code: two that differ, then a good one.
+    const code = await screen.findByLabelText('Votre code (4 à 8 lettres ou chiffres)');
+    await userEvent.type(code, '1234');
+    await userEvent.type(screen.getByLabelText('Encore une fois'), '1235{Enter}');
+    await screen.findByText('Les deux codes diffèrent.');
+    await userEvent.clear(screen.getByLabelText('Encore une fois'));
+    await userEvent.type(screen.getByLabelText('Encore une fois'), '1234{Enter}');
+    // The Compagnon: put off with Échap.
+    await screen.findByLabelText('Clé d’API (sk-ant-…)');
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByText('Bienvenue')).toBeNull());
+    expect(system.state()).toMatchObject({ firstStart: false, lock: { hasCode: true } });
+    expect(editor.closest('[inert]')).toBeNull();
+    // The writing starts there.
+    await waitFor(() => expect(document.activeElement).toBe(editor));
   });
 
   it('is not there without a System service (the Mac, the web)', async () => {

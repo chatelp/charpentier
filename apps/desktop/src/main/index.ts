@@ -100,7 +100,11 @@ function deviceSystem(): (SystemService & { dispose?(): void }) | null {
   });
   void linux.start();
   // Waking up (lid opened): everything may have changed meanwhile.
-  void app.whenReady().then(() => powerMonitor.on('resume', () => void linux.refresh()));
+  // With a code, it locks before sleeping, so nothing shows at waking (phase 5.6).
+  void app.whenReady().then(() => {
+    powerMonitor.on('suspend', () => linux.sleeping());
+    powerMonitor.on('resume', () => void linux.woke());
+  });
   return linux;
 }
 

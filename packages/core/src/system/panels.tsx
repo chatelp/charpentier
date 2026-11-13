@@ -151,6 +151,15 @@ function MenuPanel({ ctx, onDone }: PanelProps) {
         ctx?.openSettings();
       })}
       {item('systemUsb', text('system.panel.usbCopy'), () => {}, !state.usb)}
+      {item(
+        'systemLock',
+        text('system.panel.lock'),
+        () => {
+          onDone();
+          void system.lock();
+        },
+        !state.lock.hasCode,
+      )}
       {item('systemSleep', text('system.panel.sleep'), () => void system.suspend())}
       {item(
         'systemReboot',

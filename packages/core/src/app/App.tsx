@@ -13,6 +13,7 @@ import {
   topZonesHeight,
   type Feature,
 } from '../features/feature';
+import { FeatureCovers } from '../features/cover';
 import { FeaturesContext, FeatureTopZones, useFeatures } from '../features/features-context';
 import fr from '../i18n/locales/fr.json';
 
@@ -125,7 +126,7 @@ function Root() {
 
   if (library)
     return (
-      <>
+      <FeatureCovers>
         {titleBar}
         <FeatureTopZones ctx={null} />
         <Library
@@ -137,11 +138,11 @@ function Root() {
           }}
           onClose={() => setLibrary(null)}
         />
-      </>
+      </FeatureCovers>
     );
 
   return (
-    <>
+    <FeatureCovers>
       {titleBar}
       {shown.state === 'ready' && (
         <ProjectWorkspace
@@ -151,6 +152,6 @@ function Root() {
         />
       )}
       {shown.state === 'error' && <p role="alert">{t('app.openError')}</p>}
-    </>
+    </FeatureCovers>
   );
 }

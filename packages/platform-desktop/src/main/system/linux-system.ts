@@ -1,7 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {
+  createLockKeeper,
   DEFAULT_SYSTEM_SETTINGS,
+  isValidCode,
+  type LockRecord,
   MESSAGE_LENGTH,
   messageAbout,
   type MonitorSample,
@@ -51,8 +54,12 @@ import type { SystemTools } from './tools';
 export interface LinuxSystem extends SystemService {
   /** Reads everything and starts watching. */
   start(): Promise<void>;
-  /** Reads everything again (after waking up). */
+  /** Reads everything again. */
   refresh(): Promise<void>;
+  /** The device goes to sleep: with a code, it locks first, so nothing shows at waking. */
+  sleeping(): void;
+  /** It woke up: everything is read again; « after 15 min » unlocks a shorter sleep. */
+  woke(): Promise<void>;
   dispose(): void;
 }
 
@@ -67,6 +74,8 @@ export interface LinuxSystemOptions {
   readonly app?: () => MonitorSample['app'];
   /** Polling periods, in ms (the tests shorten them). */
   readonly periods?: { readonly cpu?: number; readonly power?: number; readonly slow?: number };
+  /** PBKDF2 rounds of the code (fewer in the tests). */
+  readonly lockIterations?: number;
 }
 
 const SINK = '@DEFAULT_AUDIO_SINK@';
@@ -80,6 +89,9 @@ const BATTERY_NAMES: Record<string, string> = { BAT0: 'interne', BAT1: 'amovible
 interface Stored {
   readonly settings?: Partial<SystemSettings>;
   readonly night?: NightMode;
+  /** The code's fingerprint, never the code. */
+  readonly lock?: LockRecord | null;
+  readonly firstStartDone?: boolean;
 }
 
 function loadStored(file: string): Stored {
@@ -142,6 +154,33 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
     printers: [],
     timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     settings: { ...DEFAULT_SYSTEM_SETTINGS, ...stored.settings },
+    lock: { locked: false, hasCode: !!stored.lock, retryAt: null },
+    firstStart: stored.firstStartDone !== true,
+  };
+  let lockRecord: LockRecord | null = stored.lock ?? null;
+  const keeper = createLockKeeper({
+    load: () => lockRecord,
+    save: (record) => {
+      lockRecord = record;
+      save();
+    },
+    now: () => now().getTime(),
+    ...(options.lockIterations !== undefined && { iterations: options.lockIterations }),
+  });
+  let sleptAt: number | null = null;
+  const setLocked = (locked: boolean) => {
+    const retry = keeper.retryAt();
+    const was = state.lock.locked;
+    update({
+      lock: {
+        locked: locked && keeper.hasCode(),
+        hasCode: keeper.hasCode(),
+        retryAt: retry === null ? null : new Date(retry).toISOString(),
+      },
+    });
+    // Sway's « locked » mode: no rescue terminal while locked (phase 5.9).
+    if (state.lock.locked !== was)
+      void run('swaymsg', 'mode', state.lock.locked ? 'locked' : 'default');
   };
 
   let emitted = '';
@@ -168,7 +207,12 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
 
   const save = () => {
     fs.mkdirSync(path.dirname(options.settingsFile), { recursive: true });
-    writeJsonAtomic(options.settingsFile, { settings: state.settings, night: state.night.mode });
+    writeJsonAtomic(options.settingsFile, {
+      settings: state.settings,
+      night: state.night.mode,
+      lock: lockRecord,
+      firstStartDone: !state.firstStart,
+    });
   };
 
   // — Reading —
@@ -518,6 +562,38 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
     },
     ejectUsb: async () => {
       // Phase 5.7.
+    },
+    lock: async () => setLocked(true),
+    unlock: async (code) => {
+      const result = await keeper.check(code);
+      setLocked(result !== 'ok');
+      return result;
+    },
+    setLockCode: async (code, current) => {
+      if (keeper.hasCode() && (await keeper.check(current ?? '')) !== 'ok') {
+        setLocked(state.lock.locked);
+        return 'wrong';
+      }
+      if (code !== null && !isValidCode(code)) return 'invalid';
+      await keeper.setCode(code);
+      setLocked(false);
+      return 'ok';
+    },
+    finishFirstStart: async () => {
+      update({ firstStart: false });
+      save();
+    },
+    sleeping: () => {
+      sleptAt = now().getTime();
+      if (state.settings.askCode !== 'never') setLocked(true);
+    },
+    woke: async () => {
+      const slept = sleptAt === null ? Infinity : now().getTime() - sleptAt;
+      sleptAt = null;
+      // « After 15 min of sleep »: a shorter one opens on the text again.
+      if (state.settings.askCode === 'after15' && slept < 15 * 60_000 && state.lock.locked)
+        setLocked(false);
+      await refresh();
     },
     suspend: async () => {
       await run('systemctl', 'suspend');

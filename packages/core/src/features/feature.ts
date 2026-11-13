@@ -45,6 +45,11 @@ export interface Feature {
   };
   /** Full-frame views, like the Atelier (the X250's monitor). */
   readonly views?: readonly FeatureView[];
+  /**
+   * A page over everything but the bands at the top (the X250's lock, its
+   * first start). Meanwhile the rest is inert and no shortcut reaches it.
+   */
+  readonly cover?: FeatureCover;
   /** Searches of the command line under a prefix of their own (`:` for the system). */
   readonly prefixes?: readonly CommandPrefix[];
 }
@@ -91,6 +96,14 @@ export interface SettingsSection {
   /** The sentence under the section's title. */
   readonly intro?: ComponentType<WorkspaceProps>;
   readonly component: ComponentType<WorkspaceProps>;
+}
+
+export interface FeatureCover {
+  /** Whether it covers the app now. */
+  active(platform: Platform): boolean;
+  /** Tells when `active` may have changed. */
+  subscribe(platform: Platform, onChange: () => void): () => void;
+  readonly component: ComponentType;
 }
 
 export interface FeatureView {

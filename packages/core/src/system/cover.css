@@ -1,0 +1,225 @@
+/* The lock (docs/DESIGN.md §4.12, render x250/5): on the page, nothing of the
+   projects. */
+.ch-lock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  margin: 0;
+  color: var(--ch-ink);
+}
+
+.ch-lock-time {
+  margin: 0;
+  font: 400 96px/1 var(--ch-font-text);
+  font-variant-numeric: lining-nums;
+}
+
+.ch-lock-date {
+  margin: 14px 0 34px;
+  color: var(--ch-muted);
+  font: 500 14px var(--ch-font-text);
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.14em;
+}
+
+/* The engraved field: what the author typed stays in a hollow (§1, principle 3). */
+.ch-lock-field {
+  position: relative;
+  display: flex;
+  padding: 14px 24px;
+  border-radius: 14px;
+  box-shadow: var(--ch-inset);
+  cursor: text;
+}
+
+.ch-lock-dots[data-shake] {
+  animation: ch-lock-shake 0.36s var(--ch-ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ch-lock-dots[data-shake] {
+    animation: none;
+  }
+}
+
+@keyframes ch-lock-shake {
+  20%,
+  60% {
+    transform: translateX(-7px);
+  }
+  40%,
+  80% {
+    transform: translateX(7px);
+  }
+}
+
+.ch-lock-dots {
+  display: flex;
+  gap: 13px;
+}
+
+.ch-lock-dots span {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  box-shadow: var(--ch-raise-s);
+}
+
+.ch-lock-dots span.is-typed {
+  background: var(--ch-author);
+  box-shadow: none;
+}
+
+/* The real field, unseen: the dots are what shows. */
+.ch-lock-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  opacity: 0;
+  border: 0;
+  font-size: 16px;
+}
+
+.ch-lock-hint {
+  min-height: 1.5em;
+  margin: 16px 0 0;
+  color: var(--ch-faint);
+  font: 400 12px var(--ch-font-sys);
+}
+
+/* The first start (render x250/6): a centred page, four steps. */
+.ch-first {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  padding: 40px 16px;
+}
+
+.ch-first-title {
+  margin: 0;
+  color: var(--ch-ink);
+  font: 500 36px var(--ch-font-text);
+}
+
+.ch-first-fleuron {
+  margin: 8px 0 6px;
+  color: var(--ch-faint);
+}
+
+.ch-first-mentor {
+  margin: 0 0 22px;
+  color: var(--ch-mentor);
+  font: italic 400 18px var(--ch-font-text);
+}
+
+.ch-first-steps {
+  margin: 0 0 18px;
+  padding: 0;
+  list-style: none;
+}
+
+.ch-first-steps li {
+  padding: 4px 10px;
+  border-radius: calc(var(--ch-radius-md) - 3px);
+  color: var(--ch-faint);
+  font: 400 12px var(--ch-font-sys);
+}
+
+/* The step where the author is: lit (§4.7). */
+.ch-first-steps li.is-on {
+  background: var(--ch-lit-bg);
+  box-shadow: var(--ch-lit);
+  color: var(--ch-ink);
+}
+
+.ch-first-step {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(34rem, 100%);
+}
+
+.ch-first-intro {
+  margin: 0 0 4px;
+  color: var(--ch-ink-2);
+  font: 400 14px/1.5 var(--ch-font-ui);
+  text-align: center;
+}
+
+.ch-first-networks {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ch-first-networks li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: var(--ch-radius-md);
+  box-shadow: var(--ch-raise-s);
+  color: var(--ch-ink);
+  font: 400 14px var(--ch-font-ui);
+  cursor: pointer;
+  outline: none;
+}
+
+/* The chosen network: the author's choice, in a hollow. */
+.ch-first-networks li.is-chosen {
+  box-shadow: var(--ch-inset);
+}
+
+.ch-first-networks li:focus-visible {
+  box-shadow: var(--ch-inset), var(--ch-lit);
+}
+
+.ch-first-net {
+  display: flex;
+  gap: 8px;
+  color: var(--ch-muted);
+  font: 400 12px var(--ch-font-sys);
+}
+
+.ch-first-input {
+  padding: 11px 14px;
+  border: 0;
+  border-radius: var(--ch-radius-md);
+  background: transparent;
+  box-shadow: var(--ch-inset);
+  color: var(--ch-ink);
+  font: 400 14px var(--ch-font-ui);
+  outline: none;
+}
+
+.ch-first-input:focus-visible {
+  box-shadow: var(--ch-inset), var(--ch-lit);
+}
+
+.ch-first-message {
+  min-height: 1.4em;
+  margin: 0;
+  color: var(--ch-muted);
+  font: 400 13px var(--ch-font-ui);
+  text-align: center;
+}
+
+.ch-first-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 0;
+}
+
+.ch-first-actions kbd {
+  margin-left: 4px;
+  color: var(--ch-faint);
+  font: 400 11px var(--ch-font-ui);
+}

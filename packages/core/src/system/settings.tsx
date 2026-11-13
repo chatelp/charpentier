@@ -1,5 +1,5 @@
 import { batteryLevel, type SystemService, type SystemSettings } from '@charpentier/platform';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePlatform } from '../app/platform-context';
 import { featureText, type SettingsSection, type WorkspaceProps } from '../features/feature';
@@ -294,13 +294,85 @@ function Power() {
 }
 
 function Lock() {
-  const { state, s, set } = useSettings();
+  const { system, state, s, set } = useSettings();
+  const [editing, setEditing] = useState(false);
+  const [current, setCurrent] = useState('');
+  const [code, setCode] = useState('');
+  const [message, setMessage] = useState<string | null>(null);
+  const hasCode = state.lock.hasCode;
+  const apply = async (next: string | null) => {
+    const result = await system.setLockCode(next, hasCode ? current : undefined);
+    if (result === 'ok') {
+      setEditing(false);
+      setCurrent('');
+      setCode('');
+      setMessage(s(next === null ? 'rows.codeRemoved' : 'rows.codeSaved'));
+    } else setMessage(s(result === 'wrong' ? 'rows.codeWrong' : 'rows.codeInvalid'));
+  };
   return (
     <Group title={s('groups.code')}>
       <Row
-        label={s('rows.askCode')}
+        label={s('rows.code')}
         help={s('rows.codeHelp', { encrypted: state.device.diskEncrypted ? s('on') : s('off') })}
       >
+        <span className="ch-set-value">{s(hasCode ? 'rows.codeSet' : 'rows.codeNone')}</span>
+        <button
+          type="button"
+          className="ch-btn"
+          onClick={() => {
+            setEditing((e) => !e);
+            setMessage(null);
+          }}
+        >
+          {s(hasCode ? 'rows.codeChange' : 'rows.codeChoose')}
+        </button>
+      </Row>
+      {editing && (
+        <form
+          className="ch-set-row ch-set-code"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void apply(code);
+          }}
+        >
+          {hasCode && (
+            <input
+              type="password"
+              className="ch-set-input"
+              aria-label={s('rows.codeCurrent')}
+              placeholder={s('rows.codeCurrent')}
+              autoComplete="off"
+              maxLength={8}
+              value={current}
+              onChange={(e) => setCurrent(e.target.value)}
+            />
+          )}
+          <input
+            type="password"
+            className="ch-set-input"
+            aria-label={s('rows.codeNew')}
+            placeholder={s('rows.codeNew')}
+            autoComplete="off"
+            maxLength={8}
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+          />
+          <button type="submit" className="ch-btn">
+            {s(hasCode ? 'rows.codeChange' : 'rows.codeChoose')}
+          </button>
+          {hasCode && (
+            <button type="button" className="ch-btn" onClick={() => void apply(null)}>
+              {s('rows.codeRemove')}
+            </button>
+          )}
+        </form>
+      )}
+      {message && (
+        <p className="ch-set-help" role="status">
+          {message}
+        </p>
+      )}
+      <Row label={s('rows.askCode')}>
         <Keys
           options={[
             { value: 'wake', label: s('rows.askWake') },
@@ -312,6 +384,13 @@ function Lock() {
           onChange={set('askCode')}
         />
       </Row>
+      {hasCode && (
+        <Row label={s('rows.lockNow')}>
+          <button type="button" className="ch-btn" onClick={() => void system.lock()}>
+            {s('rows.lockNow')}
+          </button>
+        </Row>
+      )}
     </Group>
   );
 }

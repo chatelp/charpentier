@@ -201,3 +201,25 @@
   color: var(--ch-ink-2);
   font: var(--ch-ui-sm) var(--ch-font-ui);
 }
+
+/* A field of the settings (the device's code): what the author types, in a hollow. */
+.ch-set-input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: var(--ch-radius-md);
+  background: transparent;
+  box-shadow: var(--ch-inset);
+  color: var(--ch-ink);
+  font: 400 var(--ch-ui-sm) var(--ch-font-ui);
+  outline: none;
+}
+
+.ch-set-input:focus-visible {
+  box-shadow: var(--ch-inset), var(--ch-lit);
+}
+
+.ch-set-code {
+  gap: 10px;
+}

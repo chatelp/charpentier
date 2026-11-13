@@ -7,6 +7,7 @@ import {
   type SystemService,
   type SystemState,
 } from './system';
+import { createLockKeeper, isValidCode, type LockRecord } from './lock-keeper';
 import { simulatedMonitor } from './monitor-simulated';
 
 /**
@@ -33,7 +34,13 @@ export interface SimulatedSystem extends SystemService {
 let sequence = 0;
 
 export function createSimulatedSystem(
-  options: { readonly now?: () => Date } = {},
+  options: {
+    readonly now?: () => Date;
+    /** A device just installed: the first start's steps come first. */
+    readonly firstStart?: boolean;
+    /** A code already chosen. */
+    readonly code?: string;
+  } = {},
 ): SimulatedSystem {
   const now = options.now ?? (() => new Date());
   const listeners = new Set<() => void>();
@@ -93,7 +100,28 @@ export function createSimulatedSystem(
     ],
     timeZone: 'Europe/Paris',
     settings: DEFAULT_SYSTEM_SETTINGS,
+    lock: { locked: false, hasCode: false, retryAt: null },
+    firstStart: options.firstStart ?? false,
   };
+  let record: LockRecord | null = null;
+  const keeper = createLockKeeper({
+    load: () => record,
+    save: (r) => void (record = r),
+    now: () => now().getTime(),
+    iterations: 1_000,
+  });
+  const lockState = (locked: boolean) => {
+    const retry = keeper.retryAt();
+    update((s) => ({
+      ...s,
+      lock: {
+        locked: locked && keeper.hasCode(),
+        hasCode: keeper.hasCode(),
+        retryAt: retry === null ? null : new Date(retry).toISOString(),
+      },
+    }));
+  };
+  const ready = options.code ? keeper.setCode(options.code).then(() => lockState(false)) : null;
 
   const emit = () => {
     for (const listener of listeners) listener();
@@ -202,6 +230,25 @@ export function createSimulatedSystem(
       update((s) => ({ ...s, usb: null }));
       if (name) post(messageAbout(name, (n) => `clé ${n} éjectée`));
     },
+    lock: async () => {
+      await ready;
+      lockState(true);
+    },
+    unlock: async (code) => {
+      await ready;
+      const result = await keeper.check(code);
+      lockState(result !== 'ok');
+      return result;
+    },
+    setLockCode: async (code, current) => {
+      await ready;
+      if (keeper.hasCode() && (await keeper.check(current ?? '')) !== 'ok') return 'wrong';
+      if (code !== null && !isValidCode(code)) return 'invalid';
+      await keeper.setCode(code);
+      lockState(false);
+      return 'ok';
+    },
+    finishFirstStart: async () => update((s) => ({ ...s, firstStart: false })),
     suspend: () => call('suspend'),
     reboot: () => call('reboot'),
     powerOff: () => call('powerOff'),

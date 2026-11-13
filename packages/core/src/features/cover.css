@@ -1,0 +1,13 @@
+/* What a cover hides keeps its layout: the wrapper adds no box. */
+.ch-under-cover {
+  display: contents;
+}
+
+/* A feature's cover: the whole window below the top bands. */
+.ch-cover {
+  position: fixed;
+  inset: var(--ch-top-offset, 0px) 0 0;
+  z-index: calc(var(--ch-z-command) + 2);
+  overflow: auto;
+  background: var(--ch-bg);
+}

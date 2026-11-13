@@ -149,6 +149,8 @@ export function SystemLine({
     }
   };
 
+  // Locked (phase 5.6): only `charpentier`, `verrouillé`, the battery and the time.
+  const locked = state.lock.locked;
   const level = batteryLevel(state);
   const low = !state.power.charging && level <= state.settings.lowBattery;
   const lastMessage = journal.at(-1);
@@ -328,8 +330,23 @@ export function SystemLine({
       aria-label={text('system.line')}
       onKeyDown={onKeyDown}
     >
-      {SEGMENTS.map((id) => shown[id])}
-      {open && (
+      {locked ? (
+        <>
+          {segment(
+            'systeme',
+            <>
+              <Square />
+              <span className="ch-sys-word">{text('system.panel.menu')}</span>
+            </>,
+          )}
+          {segment('message', <span className="ch-sys-message">{text('system.lock.label')}</span>)}
+          {shown.bat}
+          {shown.date}
+        </>
+      ) : (
+        SEGMENTS.map((id) => shown[id])
+      )}
+      {open && !locked && (
         <PanelPortal line={line} segment={open} onClose={() => systemUi.open(null)}>
           <SystemPanel segment={open} ctx={ctx} onDone={backToText} />
         </PanelPortal>

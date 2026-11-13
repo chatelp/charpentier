@@ -165,9 +165,11 @@ function fakeX250() {
   return { tools, files, net, sound, runs, daemons };
 }
 
+const clock = { now: new Date('2026-11-13T15:00:00Z') };
 const folders: string[] = [];
 const systems: LinuxSystem[] = [];
 afterEach(() => {
+  clock.now = new Date('2026-11-13T15:00:00Z');
   for (const s of systems.splice(0)) s.dispose();
   for (const f of folders.splice(0)) fs.rmSync(f, { recursive: true, force: true });
 });
@@ -180,8 +182,9 @@ async function start(x250 = fakeX250(), folder?: string) {
     appVersion: '0.5.0',
     hostname: 'x250',
     settingsFile: path.join(dir, 'system.json'),
-    now: () => new Date('2026-11-13T15:00:00Z'),
+    now: () => clock.now,
     periods: { cpu: 3_600_000, power: 3_600_000, slow: 3_600_000 },
+    lockIterations: 1_000,
   });
   systems.push(system);
   await system.start();
@@ -350,5 +353,68 @@ describe('the System service of the X250 (phase 5.4)', () => {
     expect(changes).toBeGreaterThan(0);
     system.dispose();
     expect(x250.daemons.every((d) => d.stopped)).toBe(true);
+  });
+
+  it('starts with the first start, then never again', async () => {
+    const { system, dir } = await start();
+    expect(system.state().firstStart).toBe(true);
+    await system.finishFirstStart();
+    system.dispose();
+    const again = await start(fakeX250(), dir);
+    expect(again.system.state().firstStart).toBe(false);
+  });
+
+  it('locks with a code, before sleeping, and keeps only its fingerprint', async () => {
+    const { system, x250, dir } = await start();
+    // Without a code, nothing locks.
+    await system.lock();
+    expect(system.state().lock.locked).toBe(false);
+
+    expect(await system.setLockCode('12')).toBe('invalid');
+    expect(await system.setLockCode('Loire44')).toBe('ok');
+    expect(fs.readFileSync(path.join(dir, 'system.json'), 'utf8')).not.toContain('Loire44');
+    expect(system.state().lock).toEqual({ locked: false, hasCode: true, retryAt: null });
+
+    system.sleeping();
+    expect(system.state().lock.locked).toBe(true);
+    // Sway's locked mode: no rescue terminal.
+    expect(ran(x250.runs, 'swaymsg', 'mode', 'locked')).toBe(true);
+    await system.woke();
+    expect(system.state().lock.locked).toBe(true);
+    expect(await system.unlock('faux')).toBe('wrong');
+    expect(system.state().lock.locked).toBe(true);
+    expect(await system.unlock('Loire44')).toBe('ok');
+    expect(system.state().lock.locked).toBe(false);
+    expect(ran(x250.runs, 'swaymsg', 'mode', 'default')).toBe(true);
+
+    // Changing it asks for the current one.
+    expect(await system.setLockCode('Nantes1', 'faux')).toBe('wrong');
+    expect(await system.setLockCode('Nantes1', 'Loire44')).toBe('ok');
+    system.dispose();
+    const again = await start(fakeX250(), dir);
+    expect(again.system.state().lock.hasCode).toBe(true);
+    await again.system.lock();
+    expect(await again.system.unlock('Nantes1')).toBe('ok');
+  });
+
+  it('« after 15 min of sleep »: a shorter sleep opens on the text again', async () => {
+    const { system } = await start();
+    await system.setLockCode('1234');
+    await system.setSetting('askCode', 'after15');
+    system.sleeping();
+    expect(system.state().lock.locked).toBe(true);
+    clock.now = new Date(clock.now.getTime() + 10 * 60_000);
+    await system.woke();
+    expect(system.state().lock.locked).toBe(false);
+
+    system.sleeping();
+    clock.now = new Date(clock.now.getTime() + 20 * 60_000);
+    await system.woke();
+    expect(system.state().lock.locked).toBe(true);
+
+    await system.unlock('1234');
+    await system.setSetting('askCode', 'never');
+    system.sleeping();
+    expect(system.state().lock.locked).toBe(false);
   });
 });

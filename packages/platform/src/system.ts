@@ -1,3 +1,4 @@
+import type { UnlockResult } from './lock-keeper';
 import type { SystemMonitor } from './monitor';
 
 /**
@@ -33,6 +34,16 @@ export interface SystemService {
   /** A setting of the device (`screenOffAfter`, `keyboardLayout`…), see `SystemSettings`. */
   setSetting<K extends keyof SystemSettings>(key: K, value: SystemSettings[K]): Promise<void>;
   ejectUsb(): Promise<void>;
+  /** Locks now (⊞L); nothing without a code. */
+  lock(): Promise<void>;
+  unlock(code: string): Promise<UnlockResult>;
+  /**
+   * A new code (4 to 8 letters or digits), or null for none. When a code is
+   * set, `current` must be it.
+   */
+  setLockCode(code: string | null, current?: string): Promise<'ok' | 'wrong' | 'invalid'>;
+  /** The four steps of the first start are done or put off (§4.12). */
+  finishFirstStart(): Promise<void>;
   suspend(): Promise<void>;
   reboot(): Promise<void>;
   powerOff(): Promise<void>;
@@ -132,6 +143,14 @@ export interface SystemState {
   readonly printers: readonly { readonly name: string; readonly isDefault: boolean }[];
   readonly timeZone: string;
   readonly settings: SystemSettings;
+  /** The lock screen (phase 5.6): shown while `locked`; `retryAt` after 5 wrong codes. */
+  readonly lock: {
+    readonly locked: boolean;
+    readonly hasCode: boolean;
+    readonly retryAt: string | null;
+  };
+  /** A device just installed: its first start's four steps come before anything else. */
+  readonly firstStart: boolean;
 }
 
 /** The longest message of the system line (docs/DESIGN.md §4.12). */

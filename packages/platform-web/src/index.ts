@@ -56,9 +56,12 @@ export function createWebKeybindings(userAgent: string): KeybindingsService {
 
 /**
  * `simulateSystem`: a simulated X250 (address ending in `?x250`), to see and
- * review the system line in a browser (docs/PLAN.md phase 5.3).
+ * review the system line in a browser (docs/PLAN.md phase 5.3); `'first-start'`
+ * (`?x250=premier`): a device just installed, its first start ahead (5.6).
  */
-export function createWebPlatform(options: { readonly simulateSystem?: boolean } = {}): Platform {
+export function createWebPlatform(
+  options: { readonly simulateSystem?: boolean | 'first-start' } = {},
+): Platform {
   const documents =
     typeof indexedDB === 'undefined' ? new MemoryDocumentService() : new IndexedDbDocumentService();
   return {
@@ -74,6 +77,8 @@ export function createWebPlatform(options: { readonly simulateSystem?: boolean }
     fileMirror: null,
     secrets: null,
     spellcheck: null,
-    system: options.simulateSystem ? createSimulatedSystem() : null,
+    system: options.simulateSystem
+      ? createSimulatedSystem({ firstStart: options.simulateSystem === 'first-start' })
+      : null,
   };
 }

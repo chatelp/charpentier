@@ -26,6 +26,7 @@ const WORDS = [
   'journal',
   'reglages',
   'moniteur',
+  'verrou',
 ] as const;
 type Word = (typeof WORDS)[number];
 
@@ -80,7 +81,10 @@ export const systemPrefix: CommandPrefix = {
   search(ctx, query): readonly PickItem[] {
     const { word, arg } = parse(query);
     const matches = WORDS.filter(
-      (w) => w.startsWith(word) && (w !== 'moniteur' || !!system(ctx).monitor),
+      (w) =>
+        w.startsWith(word) &&
+        (w !== 'moniteur' || !!system(ctx).monitor) &&
+        (w !== 'verrou' || system(ctx).state().lock.hasCode),
     );
     if (word && matches.length === 0)
       return [{ id: '', label: featureText(ctx.t)('system.prefixAction.unknown', { word }) }];
@@ -130,6 +134,8 @@ export const systemPrefix: CommandPrefix = {
         return ctx.openSettings();
       case 'moniteur':
         return ctx.openView(MONITOR_VIEW);
+      case 'verrou':
+        return void sys.lock();
       default:
         break;
     }
