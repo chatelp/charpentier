@@ -1,6 +1,6 @@
 # Charpentier : design language
 
-- **Version** : 1.10 (13 novembre 2026). 1.10 : les **mises à jour du X250**, tirées du serveur [D-28] : segment `maj`, `⊞R`, « À propos », retour à la version précédente (§4.12). 1.9 : l'**Entretien** avec le Compagnon en tête du rail de l'Atelier [D-26] (§4.5) ; « Méta » devient « Le projet ». 1.8 : 1.8 : **le creux garde, la lumière suit** : deux signes, deux sens, jamais sur le même élément (§1 principe 3, §4.7) ; la lumière devient la lueur blanche qui déborde sous la ligne système quand un segment s'ouvre (sur la page claire, l'élément pâlit en plus), les onglets perdent leur rail, une option choisie est une touche restée enfoncée, l'appui allume. Remplace le « relief, creux, allumé » de la 1.7 (cerne et halo de lumière, creux le temps de l'appui, « relief allumé »), où l'auteur ne voyait pas de vraie logique de séparation ; le « liseré de lumière » de la 1.5 reste abandonné. 1.6 : le moniteur du X250 (§4.12). 1.5 : la **ligne système** du X250 et tout ce qu'elle ouvre (§4.12), la matière du système (§3.1), la police à chasse fixe (§3.2), le **liseré de lumière** sur ce qu'on presse (§4.7). 1.4 : en thème sombre, l'ardoise reste la même et la page s'assombrit (§3.1). 1.3 : les outils changent de matière, **ardoise sombre**, et reçoivent des **outils gravés** (§3.1, §4.11), l'auteur trouvant l'ensemble trop neutre hors de la page d'écriture. 1.2 : finitions (sons §3.4, rejets §4.5, restauration dans la vue d'ensemble §4.4, note en fenêtre étroite §4.2, bibliothèque §4.9, icône §4.10). 1.1 : tout devient découvrable sans raccourci (§4.8, §5.1), après essai de l'app par l'auteur ; inventaire et directions comparées dans [design/decouverte.md](design/decouverte.md).
+- **Version** : 1.11 (13 novembre 2026). 1.11 : l'**installation du X250** depuis la clé USB et `scripts/flash-installer.sh` sur le Mac (§4.12 « Installation »). 1.10 : les **mises à jour du X250**, tirées du serveur [D-28] : segment `maj`, `⊞R`, « À propos », retour à la version précédente (§4.12). 1.9 : l'**Entretien** avec le Compagnon en tête du rail de l'Atelier [D-26] (§4.5) ; « Méta » devient « Le projet ». 1.8 : **le creux garde, la lumière suit** : deux signes, deux sens, jamais sur le même élément (§1 principe 3, §4.7) ; la lumière devient la lueur blanche qui déborde sous la ligne système quand un segment s'ouvre (sur la page claire, l'élément pâlit en plus), les onglets perdent leur rail, une option choisie est une touche restée enfoncée, l'appui allume. Remplace le « relief, creux, allumé » de la 1.7 (cerne et halo de lumière, creux le temps de l'appui, « relief allumé »), où l'auteur ne voyait pas de vraie logique de séparation ; le « liseré de lumière » de la 1.5 reste abandonné. 1.6 : le moniteur du X250 (§4.12). 1.5 : la **ligne système** du X250 et tout ce qu'elle ouvre (§4.12), la matière du système (§3.1), la police à chasse fixe (§3.2), le **liseré de lumière** sur ce qu'on presse (§4.7). 1.4 : en thème sombre, l'ardoise reste la même et la page s'assombrit (§3.1). 1.3 : les outils changent de matière, **ardoise sombre**, et reçoivent des **outils gravés** (§3.1, §4.11), l'auteur trouvant l'ensemble trop neutre hors de la page d'écriture. 1.2 : finitions (sons §3.4, rejets §4.5, restauration dans la vue d'ensemble §4.4, note en fenêtre étroite §4.2, bibliothèque §4.9, icône §4.10). 1.1 : tout devient découvrable sans raccourci (§4.8, §5.1), après essai de l'app par l'auteur ; inventaire et directions comparées dans [design/decouverte.md](design/decouverte.md).
 - **Direction retenue** : **Perle** pour la page, **ardoise** pour les outils, avec **Deux encres**, **Signature** et **Outils gravés** ; manuscrit en **tiroir + vue d'ensemble** ; points d'entrée en **poignées** sur les bords et **zone de commande** en pied.
 - **Sources** : brief de l'auteur ([design/brief.md](design/brief.md)), maquettes ([design/mockups/](design/mockups/), ouvrir `index.html`), tokens CSS proposés ([design/tokens.css](design/tokens.css)).
 - Complète la [SPEC](SPEC.md) (§6 mentor, §7.1 statuts, §19 exigences transverses) sans la contredire.
@@ -286,7 +286,7 @@ Du dessin plutôt que de la couleur : chaque lieu devient reconnaissable. Maquet
 - Un pictogramme n'est jamais seul : toujours à côté de son libellé. Aucune autre illustration, aucune texture.
 
 ### 4.12 Système (X250)
-Sur le X250, l'app est la partie visible du système [D-24]. Maquette : cadre « X250 », groupes « X250 · ligne système » et « X250 · mise à jour », écrans « X250 · Réglages », « Verrou », « Démarrage » ; rendus à la taille réelle dans [design/x250/](design/x250/). Rien de tout cela n'apparaît sur le Mac ni sur le web.
+Sur le X250, l'app est la partie visible du système [D-24]. Maquette : cadre « X250 », groupes « X250 · ligne système » et « X250 · mise à jour », écrans « X250 · Réglages », « Verrou », « Démarrage » ; l'installation a sa propre maquette, [design/installation.html](design/installation.html) ; rendus à la taille réelle dans [design/x250/](design/x250/). Rien de tout cela n'apparaît sur le Mac ni sur le web.
 
 **La ligne système.** Toujours affichée, 30 px, tout en haut, pleine largeur, dans la matière du système, en JetBrains Mono 11,5 px. Elle ne s'efface pas pendant la frappe et rien n'y bouge de soi-même, sauf l'heure et, hors frappe, la mini-courbe du segment `cpu`. De gauche à droite :
 
@@ -370,9 +370,94 @@ Sur le X250, l'app est la partie visible du système [D-24]. Maquette : cadre «
 
 **Verrouillage.** À l'ouverture du rabat (réglage par défaut), plein écran sur la page : l'heure en Literata 96 px, la date en petites capitales, un champ gravé où chaque caractère tapé devient un point vermillon, « votre code, puis ⏎ ». Aucun titre de projet, aucun texte. La ligne système est réduite à `charpentier`, `verrouillé`, `bat` et l'heure. Code faux : le champ tremble une fois (rien si les animations sont réduites) et se vide. Ce verrou protège des regards. Contre le vol, **le disque est chiffré** (choix de l'auteur) : un mot de passe est demandé à chaque démarrage de l'appareil, avant l'app, par le système lui-même ; son écran n'est pas dessiné par l'app (fond `#14161a`, texte en chasse fixe `--ch-ink-2`, rien d'autre que « charpentier · x250 » en `--ch-faint`, la ligne « mise à jour 0.6.0 » quand une version s'installe, et le champ). Mot de passe oublié : le disque est perdu, la synchronisation est la seule copie ; le premier démarrage le dit avant de le faire choisir. Pendant le verrouillage, la combinaison du terminal de secours est neutralisée ; elle ne doit jamais commencer par `⊞` et une lettre de la ligne système.
 
+**Installation** [5.9 bis]. La clé USB efface le disque interne et y installe le système déjà construit. Rien n'est téléchargé, et rien n'est demandé hors du clavier, de l'effacement et du mot de passe du disque. Maquette : [design/installation.html](design/installation.html). Rendus : [design/x250/](design/x250/), 13 à 17 pour la clé et 18 pour le Mac.
+- **Support** (choix de l'auteur) : **kmscon** sur la première console.
+  - Police JetBrains Mono, lissée, au corps de l'écran du disque (13 px à 125 %).
+  - Palette réduite à la matière du système : fond `#14161a`, encre `#dfe3ea`, encre 2 `#b9c0ca`, faible `#555b66`.
+  - Si kmscon ne démarre pas, le même script tourne sur la console du noyau : police bitmap Terminus (OFL), même palette par les paramètres `vt.default_*`, et `⏎` s'écrit « entrée ».
+  - Écartés : la console seule (plus grossière) et un installateur graphique (cage et une page web), le plus cher et le plus fragile au seul moment qui ne doit pas échouer.
+- **Démarrage de la clé** :
+  - Aucun menu, aucun texte du noyau : l'accueil paraît directement.
+  - L'installateur doit survivre au retrait de la clé à la fin, système chargé en mémoire. À vérifier en 5.9 bis.
+- **Mise en page** : la voix de l'écran du disque et de la ligne système.
+  - Chasse fixe, pas de majuscule, pas de point final.
+  - Un bloc aligné à gauche, à position fixe (x centré pour 84 colonnes, haut à 210 px) : rien ne saute d'un écran à l'autre.
+  - En tête, en faible : « charpentier · x250 · installation ».
+  - Puis, comme au premier démarrage, la ligne des étapes `1 disque   2 mot de passe   3 copie   4 redémarrage` : l'étape en cours en encre, les étapes faites en encre 2, les suivantes en faible.
+  - Une alerte est une ligne **inversée** (fond encre, texte `#14161a`), comme un segment d'alerte.
+  - Les touches précèdent l'action : « ⏎ continuer », « échap éteindre sans rien changer ». `Échap` ramène à l'écran précédent, et éteint depuis l'accueil et le disque.
+- **Accueil** :
+  - « installer charpentier 0.5.0 sur cet ordinateur ».
+  - « tout est sur la clé : rien à télécharger, pas besoin de réseau ».
+  - « environ 5 minutes ».
+  - Le **clavier** (choix de l'auteur) : `azerty` (inversé : le choix), `bépo`, `qwerty`, « ← → changer ».
+  - Une ligne « essai » où l'on tape librement, avec l'aide « tapez quelques lettres : ce clavier servira au mot de passe ».
+  - Ce choix vaut pour l'écran du disque à chaque démarrage et pour l'app (réglage Clavier).
+  - « secteur  branché ».
+  - « ⏎ commencer ».
+  - **Sur batterie** sous 30 % : « sur batterie · 24 % » inversé, « branchez le chargeur pour commencer ». `⏎` reste en faible tant que le chargeur manque.
+- **Disque** :
+  - « disque interne », puis son modèle et sa taille (« samsung ssd 860 evo · 250 go »).
+  - « il contient : windows 10 » (ou « rien »). S'il contient Charpentier : « charpentier 0.4.0 · ce qui n'a pas été synchronisé sera perdu ».
+  - Puis, inversé, « tout ce disque va être effacé », suivi de « ce qu'il contient sera perdu pour de bon » et de « vos textes restent sur le serveur de synchronisation, s'ils y ont été envoyés ».
+  - « ⏎ effacer et installer ».
+  - Confirmation légère, comme pour le redémarrage (choix de l'auteur) : le premier `⏎` arme « confirmer l'effacement ⏎ » pendant 3 s (« 3 s » en faible), et un second `⏎` efface. Passé ce délai, la ligne revient.
+  - **Deux disques internes** : « deux disques internes : lequel recevra charpentier ? », une ligne par disque (`›` devant le choisi), « ↑ ↓ choisir · l'autre disque n'est pas touché ».
+  - **Aucun disque** : « aucun disque interne trouvé », « vérifiez que le disque est bien en place, puis rallumez », « échap éteindre ».
+  - La clé elle-même n'est jamais proposée.
+- **Mot de passe** :
+  - « mot de passe du disque », puis trois lignes : « demandé à chaque allumage, avant tout le reste » ; « oublié, il ne se retrouve pas : le disque est perdu » ; « écrivez-le sur papier, rangé loin de l'ordinateur ».
+  - Deux champs, « mot de passe » et « encore une fois », en points.
+  - Sous les champs, en faible : « 8 caractères au moins · clavier azerty ».
+  - « ⏎ continuer », « ⇥ afficher » (montre ou masque les deux), « échap revenir ».
+  - Trop court : la ligne d'aide passe en encre, « 8 caractères au moins ».
+  - Différents : « les deux sont différents · recommencez le second », le second champ se vide.
+  - Pas de jauge de solidité.
+- **Copie** : une ligne par tâche, `effacement du disque`, `partitions`, `chiffrement`, `copie du système`, `démarrage`.
+  - Faite : en encre 2, avec « fait » en faible.
+  - En cours : en encre, avec sa jauge de 20 cellules et le pourcentage.
+  - À venir : en faible.
+  - Dessous : « ne pas éteindre, ne pas retirer la clé · encore 2 min ».
+  - Aucun journal à l'écran.
+- **Fin** :
+  - « charpentier est installé ».
+  - « au redémarrage : », puis « 1 le mot de passe du disque » et « 2 charpentier, et ses quatre réglages : wifi, code, synchronisation, compagnon ».
+  - Puis, choix de l'auteur, « retirez la clé pour continuer », avec « ⏎ redémarrer » en faible. Clé retirée : « clé retirée », et « ⏎ redémarrer » passe en encre.
+  - Jamais de redémarrage tout seul.
+  - Ensuite, l'écran du disque (§4.12 « Verrouillage »), puis le premier démarrage de l'appareil.
+- **Échec** :
+  - Inversé : « l'installation s'est arrêtée ».
+  - L'étape et la cause en une ligne (« copie du système : erreur d'écriture sur le disque »).
+  - « le disque n'est pas utilisable en l'état, la clé n'a pas bougé ».
+  - « ⏎ recommencer depuis le début » (retour à l'étape disque, avec sa confirmation), « d détail » (le journal brut ; `Échap` revient), « échap éteindre ».
+- **Sur le Mac, `scripts/flash-installer.sh`** (rendu 18).
+  - **Apparence** :
+    - Même voix que l'installateur : minuscules, pas de point final, « · » entre les mentions.
+    - Aucune couleur, pour aller avec n'importe quel thème du Terminal. Seulement le gras (titres, numéros), le faible (`\e[2m` : chemins, détails, aides) et l'inversé (`\e[7m` : alertes).
+    - Hors terminal ou avec `NO_COLOR`, du texte brut.
+  - **Déroulé** :
+    - Le titre en gras : « charpentier · clé d'installation du x250 ».
+    - « image  charpentier-x250-0.5.0.img · 3,1 Go · 13 nov. 2026 ».
+    - « clés usb branchées », une ligne par clé : le numéro en gras, puis « SanDisk Ultra · 32 Go », puis `/dev/disk4` en faible.
+    - Une clé trop petite reste listée en faible, sans numéro choisissable : « trop petite (il faut 4 Go) ».
+    - En faible : « le disque de ce Mac n'est jamais proposé ». Seuls les disques externes, physiques et amovibles sont listés.
+    - « quelle clé ? [1-2] ». Avec une seule clé, la question saute.
+    - Inversé : « SanDisk Ultra · 32 Go va être entièrement effacée », puis « ⏎ effacer · ctrl-c annuler ».
+    - Le premier `⏎` affiche « confirmer l'effacement ⏎ (3 s) ». Un second `⏎` dans les 3 s efface. Sinon : « délai passé · rien n'est effacé », et la question revient.
+    - « le Mac demande votre mot de passe pour écrire sur la clé », juste avant `sudo`.
+    - La progression sur une seule ligne réécrite : « écriture » puis 20 cellules `█`/`░`, « 61 % », et en faible « · 1,9 Go sur 3,1 Go · encore 1 min ». Puis « vérification » de même.
+    - Les deux finissent sur « fait ».
+    - « **la clé est prête** et éjectée : vous pouvez la retirer ».
+    - « sur le x250, éteint : », suivi des trois étapes « 1 branchez la clé », « 2 allumez en tenant F12 » et « 3 choisissez « USB HDD : SanDisk Ultra » ».
+    - En faible : « la clé n'apparaît pas ? au démarrage, F1 → Security → Secure Boot → Disabled ». Le chemin du menu est à vérifier sur l'appareil.
+  - **Cas** :
+    - **Aucune clé** : inversé « aucune clé usb branchée », puis « branchez-en une (4 Go au moins), puis ⏎ · ctrl-c pour quitter ».
+    - **Pas d'image** : « pas d'image d'installation · construisez-la d'abord : », suivi de la commande.
+    - **Clé retirée pendant l'écriture** : inversé « la clé a été retirée pendant l'écriture », puis « rebranchez-la et relancez : elle sera réécrite en entier ».
+
 **Premier démarrage de l'appareil.** Avant la note de bienvenue (§4.8), une page centrée : « Bienvenue », le fleuron, la phrase du Compagnon en italique bleu (« Avant d'écrire, quatre réglages. Chacun peut attendre. »), puis quatre étapes, chacune avec « Continuer `⏎` » et « Plus tard `Échap` » : `1 wifi` (réseaux, mot de passe), `2 code` (choisir le code de verrouillage, ou « Sans code »), `3 synchronisation` (adresse du serveur, identifiant), `4 compagnon` (clé d'API). Ce qui est remis à plus tard reste accessible par la ligne système et les réglages.
 
-**Hors périmètre** : portail captif (v1), duplication d'écran et bureau étendu, imprimantes USB anciennes (seules les imprimantes du réseau sans pilote sont prises en charge), toute mise à jour décidée ou construite sur l'appareil (il reçoit, annonce et installe au redémarrage ce que le Mac a publié, rien de plus), choix d'une version autre que l'installée et la précédente. Le terminal de secours reste une combinaison de touches sans interface.
+**Hors périmètre** : portail captif (v1), duplication d'écran et bureau étendu, imprimantes USB anciennes (seules les imprimantes du réseau sans pilote sont prises en charge), toute mise à jour décidée ou construite sur l'appareil (il reçoit, annonce et installe au redémarrage ce que le Mac a publié, rien de plus), choix d'une version autre que l'installée et la précédente, installation à côté d'un autre système (double démarrage), choix des partitions, installation par le réseau. Le terminal de secours reste une combinaison de touches sans interface.
 
 ## 5. Règles d'UX
 

@@ -1,0 +1,844 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Charpentier · installation du X250</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap"
+    />
+    <style>
+      /* Maquette de l'installateur (clé USB) et de scripts/flash-installer.sh.
+         La barre du haut sert à comparer ; elle ne fait pas partie du design. */
+      :root {
+        --bg: #14161a;
+        --hl: #20242a;
+        --sh: #090a0c;
+        --ink: #dfe3ea;
+        --ink-2: #b9c0ca;
+        --muted: #8a929e;
+        --faint: #555b66;
+        --accent: #86aedb;
+        --lit: 0 9px 14px -7px rgba(255, 255, 255, 0.75);
+        --raise: 5px 5px 9px var(--sh), -5px -5px 9px var(--hl);
+        --raise-s: 2px 2px 5px var(--sh), -2px -2px 5px var(--hl);
+        --inset: inset 2px 2px 5px var(--sh), inset -2px -2px 5px var(--hl);
+        --mono: 'JetBrains Mono', ui-monospace, monospace;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: #0b0c0e;
+        color: var(--ink-2);
+        font:
+          13px/1.4 system-ui,
+          sans-serif;
+      }
+      .bar {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 14px;
+        padding: 8px 12px;
+        background: #000;
+        color: #aaa;
+        font-size: 12px;
+      }
+      .bar .grp {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        align-items: center;
+      }
+      .bar .lbl {
+        color: #666;
+        margin-right: 2px;
+      }
+      .bar button {
+        font: inherit;
+        color: #ccc;
+        background: #1c1c1c;
+        border: 1px solid #333;
+        border-radius: 4px;
+        padding: 2px 7px;
+        cursor: pointer;
+      }
+      .bar button.on {
+        background: #ddd;
+        color: #000;
+      }
+      .stage {
+        padding: 16px;
+        display: grid;
+        place-items: center;
+      }
+      /* 1536 × 864 : le X250 (1920 × 1080 à 125 %). */
+      .frame {
+        position: relative;
+        width: 1536px;
+        height: 864px;
+        overflow: hidden;
+        background: var(--bg);
+        transform-origin: top left;
+      }
+      .fit {
+        width: 1536px;
+      }
+
+      /* b · kmscon : console en JetBrains Mono lissée, palette de la matière du système. */
+      /* Bloc à position fixe : les étapes ne sautent pas d'un écran à l'autre. */
+      .tty {
+        position: absolute;
+        inset: 0;
+        padding: 210px 0 0 calc((1536px - 84ch) / 2);
+        font: 13px/2 var(--mono);
+        white-space: pre;
+        color: var(--ink-2);
+      }
+      .i {
+        color: var(--ink);
+      }
+      .i2 {
+        color: var(--ink-2);
+      }
+      .f {
+        color: var(--faint);
+      }
+      .v {
+        background: var(--ink);
+        color: var(--bg);
+      }
+      .cur {
+        display: inline-block;
+        width: 0.6em;
+        height: 1.1em;
+        vertical-align: -0.2em;
+        background: var(--ink-2);
+      }
+      /* a · console Linux : rendu sur canvas, sans lissage, police bitmap. */
+      canvas.vt {
+        position: absolute;
+        inset: 0;
+        width: 1536px;
+        height: 864px;
+        image-rendering: pixelated;
+      }
+
+      /* c · graphique : la matière du système, avec ses reliefs. */
+      .gui {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        font: 13px/1.6 var(--mono);
+        color: var(--ink-2);
+      }
+      .gui .card {
+        width: 40rem;
+        padding: 28px 34px 26px;
+        border-radius: 18px;
+        box-shadow: var(--raise);
+      }
+      .gui .hd {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--faint);
+        margin-bottom: 18px;
+      }
+      .gui .hd svg {
+        width: 14px;
+        height: 14px;
+        color: var(--ink-2);
+      }
+      .gui .steps {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 22px;
+      }
+      .gui .steps span {
+        padding: 3px 10px;
+        border-radius: 8px;
+        color: var(--faint);
+      }
+      .gui .steps .done {
+        color: var(--ink-2);
+        box-shadow: var(--inset);
+      }
+      .gui .steps .on {
+        color: var(--ink);
+        box-shadow: var(--lit);
+        background: #1b1e23;
+      }
+      .gui h1 {
+        margin: 0 0 6px;
+        font: 500 15px var(--mono);
+        color: var(--ink);
+      }
+      .gui p {
+        margin: 0 0 4px;
+      }
+      .gui .warn {
+        margin: 16px 0;
+        padding: 12px 16px;
+        border-radius: 10px;
+        background: var(--ink);
+        color: var(--bg);
+      }
+      .gui .warn b {
+        font-weight: 500;
+      }
+      .gui .row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 10px 0;
+      }
+      .gui .row .k {
+        width: 11rem;
+        color: var(--muted);
+      }
+      .gui .field {
+        flex: 1;
+        padding: 7px 12px;
+        border-radius: 9px;
+        box-shadow: var(--inset);
+        color: var(--ink);
+        min-height: 34px;
+      }
+      .gui .keys {
+        display: inline-flex;
+        gap: 2px;
+        padding: 3px;
+        border-radius: 10px;
+        box-shadow: var(--raise-s);
+      }
+      .gui .keys span {
+        padding: 4px 12px;
+        border-radius: 7px;
+      }
+      .gui .keys .on {
+        box-shadow: var(--inset);
+        color: var(--ink);
+      }
+      .gui .acts {
+        display: flex;
+        gap: 12px;
+        margin-top: 22px;
+      }
+      .gui .btn {
+        display: inline-flex;
+        gap: 10px;
+        align-items: center;
+        padding: 7px 14px;
+        border-radius: 10px;
+        box-shadow: var(--raise-s);
+        color: var(--ink-2);
+      }
+      .gui .btn.lit {
+        box-shadow: var(--lit);
+        background: #1b1e23;
+        color: var(--ink);
+      }
+      .gui .btn kbd {
+        font: inherit;
+        color: var(--faint);
+      }
+      .gui .hint {
+        color: var(--faint);
+      }
+      .gui .gauge {
+        flex: 1;
+        height: 10px;
+        border-radius: 5px;
+        box-shadow: var(--inset);
+        overflow: hidden;
+      }
+      .gui .gauge i {
+        display: block;
+        height: 100%;
+        background: var(--ink-2);
+        border-radius: 5px;
+      }
+      .gui .task {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        margin: 6px 0;
+      }
+      .gui .task .n {
+        width: 13rem;
+      }
+      .gui .task.wait {
+        color: var(--faint);
+      }
+      .gui .task .s {
+        color: var(--faint);
+      }
+
+      /* Terminal du Mac : thème neutre, l'auteur garde le sien. */
+      .mac {
+        position: absolute;
+        inset: 60px 150px;
+        border-radius: 10px;
+        overflow: hidden;
+        background: #1e1e1e;
+        box-shadow: 0 20px 60px #000;
+        font:
+          13px/1.55 Menlo,
+          ui-monospace,
+          monospace;
+        color: #d4d4d4;
+      }
+      .mac .tb {
+        height: 28px;
+        background: #2b2b2b;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0 12px;
+        color: #999;
+        font: 12px system-ui;
+      }
+      .mac .tb i {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #555;
+      }
+      .mac .tb span {
+        flex: 1;
+        text-align: center;
+        margin-right: 60px;
+      }
+      .mac pre {
+        margin: 0;
+        padding: 14px 18px;
+        font: inherit;
+        white-space: pre;
+      }
+      .mac b {
+        font-weight: 700;
+        color: #fff;
+      }
+      .mac .d {
+        opacity: 0.55;
+      }
+      .mac .r {
+        background: #d4d4d4;
+        color: #1e1e1e;
+      }
+      .mac .u {
+        color: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="bar" id="bar"></div>
+    <div class="stage">
+      <div class="fit" id="fit"><div class="frame" id="frame"></div></div>
+    </div>
+    <script>
+      const S = {
+        medium: 'kmscon',
+        screen: 'disque',
+        mac: 'liste',
+        contains: 'windows',
+        armed: false,
+        key: true,
+      };
+      const equerre =
+        '<svg viewBox="0 0 24 24"><path d="M3 2h6v13h13v6H3z" fill="currentColor"/><circle cx="17" cy="8" r="3" fill="#86aedb"/></svg>';
+
+      // ───── Texte de chaque écran (commun aux trois supports) ─────
+      // Une ligne = suite de segments [texte, classe] ; classes : i (encre), i2, f (faible), v (inversé), cur.
+      const STEPS = ['disque', 'mot de passe', 'copie', 'redémarrage'];
+      // Confirmation légère (§4.12) : ⏎ arme « confirmer l'effacement ⏎ » pendant 3 s, un second ⏎ efface.
+      const armLine = () =>
+        S.armed
+          ? [
+              ['confirmer l’effacement ⏎', 'i'],
+              ['', 'cur'],
+              ['   3 s', 'f'],
+            ]
+          : [['⏎ effacer et installer', 'i']];
+      const stepOf = { disque: 0, plusieurs: 0, mdp: 1, mdperr: 1, copie: 2, fini: 3 };
+      const head = [['charpentier · x250 · installation', 'f']];
+      const stepsLine = (n) =>
+        STEPS.flatMap((s, k) => [
+          [`${k + 1} ${s}`, k === n ? 'i' : k < n ? 'i2' : 'f'],
+          ...(k < 3 ? [['   ', 'f']] : []),
+        ]);
+      const pad = (s, n) => s + ' '.repeat(Math.max(0, n - [...s].length));
+      const gauge = (p, n = 20) => [
+        ['▮'.repeat(Math.round(p * n)), 'i2'],
+        ['▮'.repeat(n - Math.round(p * n)), 'f'],
+        [`  ${Math.round(p * 100)} %`, 'i'],
+      ];
+      const containsTxt = {
+        windows: 'windows 10',
+        charpentier: 'charpentier 0.4.0 · ce qui n’a pas été synchronisé sera perdu',
+        vide: 'rien',
+      };
+
+      function lines(screen) {
+        const L = [head, []];
+        const st = stepOf[screen];
+        if (st !== undefined) L.push(stepsLine(st), []);
+        switch (screen) {
+          case 'accueil':
+            L.push(
+              [['installer charpentier 0.5.0 sur cet ordinateur', 'i']],
+              [['tout est sur la clé : rien à télécharger, pas besoin de réseau', 'i2']],
+              [['environ 5 minutes', 'i2']],
+              [],
+              [
+                ['clavier   ', 'f'],
+                [' azerty ', 'v'],
+                ['  bépo   qwerty     ', 'i2'],
+                ['← → changer', 'f'],
+              ],
+              [
+                ['essai     ', 'f'],
+                ['é à ç ù « » €', 'i'],
+                ['', 'cur'],
+              ],
+              [['          tapez quelques lettres : ce clavier servira au mot de passe', 'f']],
+              [],
+              [
+                ['secteur   ', 'f'],
+                ['branché', 'i2'],
+              ],
+              [],
+              [
+                ['⏎ commencer', 'i'],
+                ['     échap éteindre sans rien changer', 'f'],
+              ],
+            );
+            break;
+          case 'disque':
+            L.push(
+              [['disque interne', 'i']],
+              [['  samsung ssd 860 evo · 250 go', 'i2']],
+              [
+                ['  il contient : ', 'f'],
+                [containsTxt[S.contains], 'i2'],
+              ],
+              [],
+              [[' tout ce disque va être effacé ', 'v']],
+              [['ce qu’il contient sera perdu pour de bon', 'i2']],
+              [
+                [
+                  'vos textes restent sur le serveur de synchronisation, s’ils y ont été envoyés',
+                  'i2',
+                ],
+              ],
+              [],
+              armLine(),
+              [],
+              [['échap éteindre sans rien changer', 'f']],
+            );
+            break;
+          case 'plusieurs':
+            L.push(
+              [['deux disques internes : lequel recevra charpentier ?', 'i']],
+              [
+                ['› samsung ssd 860 evo · 250 go · ', 'i'],
+                ['windows 10', 'i2'],
+              ],
+              [
+                ['  sandisk m.2 · 16 go · ', 'f'],
+                ['vide', 'f'],
+              ],
+              [['  ↑ ↓ choisir · l’autre disque n’est pas touché', 'f']],
+              [],
+              [[' tout ce disque va être effacé ', 'v']],
+              [['ce qu’il contient sera perdu pour de bon', 'i2']],
+              [],
+              armLine(),
+              [],
+              [['échap éteindre sans rien changer', 'f']],
+            );
+            break;
+          case 'mdp':
+          case 'mdperr':
+            L.push(
+              [['mot de passe du disque', 'i']],
+              [['demandé à chaque allumage, avant tout le reste', 'i2']],
+              [['oublié, il ne se retrouve pas : le disque est perdu', 'i2']],
+              [['écrivez-le sur papier, rangé loin de l’ordinateur', 'i2']],
+              [],
+              [
+                ['mot de passe      ', 'f'],
+                ['••••••••••••', 'i'],
+              ],
+              screen === 'mdp'
+                ? [
+                    ['encore une fois   ', 'f'],
+                    ['•••••', 'i'],
+                    ['', 'cur'],
+                  ]
+                : [
+                    ['encore une fois   ', 'f'],
+                    ['', 'cur'],
+                  ],
+              screen === 'mdp'
+                ? [['                  8 caractères au moins · clavier azerty', 'f']]
+                : [
+                    ['                  ', 'f'],
+                    ['les deux sont différents · recommencez le second', 'i'],
+                  ],
+              [],
+              [
+                ['⏎ continuer', 'i'],
+                ['     ⇥ afficher     échap revenir', 'f'],
+              ],
+            );
+            break;
+          case 'copie':
+            L.push(
+              [
+                [pad('effacement du disque', 22), 'i2'],
+                ['fait', 'f'],
+              ],
+              [
+                [pad('partitions', 22), 'i2'],
+                ['fait', 'f'],
+              ],
+              [
+                [pad('chiffrement', 22), 'i2'],
+                ['fait', 'f'],
+              ],
+              [[pad('copie du système', 22), 'i'], ...gauge(0.62)],
+              [[pad('démarrage', 22), 'f']],
+              [],
+              [['ne pas éteindre, ne pas retirer la clé · encore 2 min', 'f']],
+            );
+            break;
+          case 'fini':
+            L.push(
+              [['charpentier est installé', 'i']],
+              [],
+              [['au redémarrage :', 'i2']],
+              [['  1  le mot de passe du disque', 'i2']],
+              [
+                [
+                  '  2  charpentier, et ses quatre réglages : wifi, code, synchronisation, compagnon',
+                  'i2',
+                ],
+              ],
+              [],
+              S.key ? [['retirez la clé pour continuer', 'i']] : [['clé retirée', 'i2']],
+              [],
+              [['⏎ redémarrer', S.key ? 'f' : 'i']],
+            );
+            break;
+          case 'echec':
+            L.push(
+              [[' l’installation s’est arrêtée ', 'v']],
+              [['copie du système : erreur d’écriture sur le disque', 'i']],
+              [['le disque n’est pas utilisable en l’état, la clé n’a pas bougé', 'i2']],
+              [],
+              [
+                ['⏎ recommencer depuis le début', 'i'],
+                ['     d détail     échap éteindre', 'f'],
+              ],
+            );
+            break;
+          case 'aucun':
+            L.push(
+              [['aucun disque interne trouvé', 'i']],
+              [['vérifiez que le disque est bien en place, puis rallumez', 'i2']],
+              [],
+              [['échap éteindre', 'f']],
+            );
+            break;
+          case 'batterie':
+            L.push(
+              [['installer charpentier 0.5.0 sur cet ordinateur', 'i']],
+              [],
+              [[' sur batterie · 24 % ', 'v']],
+              [['branchez le chargeur pour commencer', 'i2']],
+              [],
+              [
+                ['⏎ commencer', 'f'],
+                ['     échap éteindre sans rien changer', 'f'],
+              ],
+            );
+            break;
+        }
+        return L;
+      }
+
+      // ───── b · kmscon ─────
+      function ttyHTML(L) {
+        const esc = (t) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+        const html = L.map((segs) =>
+          segs
+            .map(([t, c]) =>
+              c === 'cur' ? '<span class="cur"></span>' : `<span class="${c}">${esc(t)}</span>`,
+            )
+            .join(''),
+        ).join('\n');
+        return `<div class="tty"><div>${html}</div></div>`;
+      }
+
+      // ───── a · console Linux (police bitmap, 16 couleurs, pas de lissage) ─────
+      const VT_SUB = [
+        ['⏎', 'entrée'],
+        ['⇥', 'tab'],
+        ['▮', '█'],
+        ['←', '<'],
+        ['→', '>'],
+        ['↑', '^'],
+        ['↓', 'v'],
+        ['›', '>'],
+      ];
+      function drawVT(canvas, L) {
+        // 960 × 540, cellules 8 × 16, agrandies 2× sans lissage → 1920 × 1080 (police de 16 × 32).
+        const W = 960,
+          H = 540,
+          cw = 8,
+          ch = 16;
+        canvas.width = W;
+        canvas.height = H;
+        const g = canvas.getContext('2d');
+        const col = { i: '#dfe3ea', i2: '#b9c0ca', f: '#555b66', v: '#dfe3ea', bg: '#14161a' };
+        g.fillStyle = col.bg;
+        g.fillRect(0, 0, W, H);
+        const sub = (t) => VT_SUB.reduce((s, [a, b]) => s.split(a).join(b), t);
+        const LL = L.map((segs) => segs.map(([t, c]) => [sub(t), c]));
+        const x0 = Math.floor((W / cw - 84) / 2);
+        const y0 = 8;
+        g.font = '13.3px "JetBrains Mono"';
+        g.textBaseline = 'top';
+        LL.forEach((segs, r) => {
+          let x = x0;
+          segs.forEach(([t, c]) => {
+            if (c === 'cur') {
+              g.fillStyle = col.i2;
+              g.fillRect(x * cw, (y0 + r) * ch + 1, cw, ch - 2);
+              x++;
+              return;
+            }
+            for (const chr of t) {
+              if (c === 'v') {
+                g.fillStyle = col.v;
+                g.fillRect(x * cw, (y0 + r) * ch, cw, ch);
+              }
+              g.fillStyle = c === 'v' ? col.bg : col[c];
+              if (chr === '█') g.fillRect(x * cw, (y0 + r) * ch + 2, cw - 1, ch - 4);
+              else g.fillText(chr, x * cw, (y0 + r) * ch + 2);
+              x++;
+            }
+          });
+        });
+        // Pas de lissage : chaque pixel est soit le fond, soit l'encre la plus proche.
+        const img = g.getImageData(0, 0, W, H);
+        const d = img.data;
+        const pal = ['#14161a', '#dfe3ea', '#b9c0ca', '#555b66'].map((h) =>
+          [1, 3, 5].map((k) => parseInt(h.substr(k, 2), 16)),
+        );
+        for (let p = 0; p < d.length; p += 4) {
+          const lum = d[p] + d[p + 1] + d[p + 2];
+          // seuil : un pixel à moins de la moitié du chemin vers l'encre retombe sur le fond
+          let best = 0,
+            bd = 1e9;
+          for (let k = 0; k < pal.length; k++) {
+            const dd =
+              Math.abs(pal[k][0] - d[p]) +
+              Math.abs(pal[k][1] - d[p + 1]) +
+              Math.abs(pal[k][2] - d[p + 2]);
+            if (dd < bd) ((bd = dd), (best = k));
+          }
+          const bgLum = 20 + 22 + 26;
+          const target =
+            best === 0
+              ? pal[0]
+              : lum - bgLum < (pal[best].reduce((a, b) => a + b) - bgLum) * 0.5
+                ? pal[0]
+                : pal[best];
+          d[p] = target[0];
+          d[p + 1] = target[1];
+          d[p + 2] = target[2];
+        }
+        g.putImageData(img, 0, 0);
+      }
+
+      // ───── c · graphique ─────
+      function gui(screen) {
+        const st = stepOf[screen];
+        const steps =
+          st === undefined
+            ? ''
+            : `<div class="steps">${STEPS.map((s, k) => `<span class="${k === st ? 'on' : k < st ? 'done' : ''}">${k + 1} ${s}</span>`).join('')}</div>`;
+        const btn = (label, key, lit) =>
+          `<span class="btn${lit ? ' lit' : ''}">${label}<kbd>${key}</kbd></span>`;
+        const quit = btn('Éteindre sans rien changer', 'Échap');
+        let body = '';
+        switch (screen) {
+          case 'accueil':
+            body = `<h1>Installer Charpentier 0.5.0 sur cet ordinateur</h1><p>Tout est sur la clé : rien à télécharger, pas besoin de réseau. Environ 5 minutes.</p>
+              <div class="row"><span class="k">clavier</span><span class="keys"><span class="on">azerty</span><span>bépo</span><span>qwerty</span></span><span class="hint">← →</span></div>
+              <div class="row"><span class="k">essai</span><span class="field">é à ç ù « » €</span></div>
+              <p class="hint">Tapez quelques lettres : ce clavier servira au mot de passe.</p>
+              <div class="acts">${btn('Commencer', '⏎', true)}${quit}</div>`;
+            break;
+          case 'disque':
+          case 'plusieurs':
+            body = `<h1>Disque interne</h1><p>Samsung SSD 860 EVO · 250 Go</p><p class="hint">Il contient : ${containsTxt[S.contains]}</p>
+              <div class="warn"><b>Tout ce disque va être effacé.</b><br>Ce qu’il contient sera perdu pour de bon. Vos textes restent sur le serveur de synchronisation, s’ils y ont été envoyés.</div>
+              <div class="acts">${S.armed ? btn('Confirmer l’effacement', '⏎', true) : btn('Effacer et installer', '⏎')}${quit}</div>`;
+            break;
+          case 'mdp':
+          case 'mdperr':
+            body = `<h1>Mot de passe du disque</h1><p>Demandé à chaque allumage, avant tout le reste. Oublié, il ne se retrouve pas : le disque est perdu. Écrivez-le sur papier, rangé loin de l’ordinateur.</p>
+              <div class="row"><span class="k">mot de passe</span><span class="field">••••••••••••</span></div>
+              <div class="row"><span class="k">encore une fois</span><span class="field">${screen === 'mdp' ? '•••••' : ''}</span></div>
+              <p class="hint">${screen === 'mdp' ? '8 caractères au moins · clavier azerty' : '<span style="color:var(--ink)">Les deux sont différents : recommencez le second.</span>'}</p>
+              <div class="acts">${btn('Continuer', '⏎', true)}${btn('Afficher', '⇥')}${btn('Revenir', 'Échap')}</div>`;
+            break;
+          case 'copie':
+            body =
+              ['effacement du disque', 'partitions', 'chiffrement']
+                .map(
+                  (n) =>
+                    `<div class="task"><span class="n">${n}</span><span class="s">fait</span></div>`,
+                )
+                .join('') +
+              `<div class="task"><span class="n" style="color:var(--ink)">copie du système</span><span class="gauge"><i style="width:62%"></i></span><span>62 %</span></div><div class="task wait"><span class="n">démarrage</span></div>
+              <p class="hint" style="margin-top:18px">Ne pas éteindre, ne pas retirer la clé · encore 2 min</p>`;
+            break;
+          case 'fini':
+            body = `<h1>Charpentier est installé</h1><p>Au redémarrage : le mot de passe du disque, puis Charpentier et ses quatre réglages (Wi-Fi, code, synchronisation, Compagnon).</p><p class="hint">Vous pouvez retirer la clé.</p>
+              <div class="acts">${btn('Redémarrer', '⏎', true)}</div>`;
+            break;
+          case 'echec':
+            body = `<div class="warn"><b>L’installation s’est arrêtée.</b><br>Copie du système : erreur d’écriture sur le disque.</div><p>Le disque n’est pas utilisable en l’état.</p>
+              <div class="acts">${btn('Recommencer', '⏎', true)}${btn('Détail', 'D')}${btn('Éteindre', 'Échap')}</div>`;
+            break;
+          case 'aucun':
+            body = `<h1>Aucun disque interne trouvé</h1><p>Vérifiez que le disque est bien en place, puis rallumez.</p><div class="acts">${btn('Éteindre', 'Échap')}</div>`;
+            break;
+          case 'batterie':
+            body = `<h1>Installer Charpentier 0.5.0 sur cet ordinateur</h1><div class="warn"><b>Sur batterie · 24 %</b><br>Branchez le chargeur pour commencer.</div><div class="acts">${quit}</div>`;
+            break;
+        }
+        return `<div class="gui"><div class="card"><div class="hd">${equerre}<span>charpentier · x250 · installation</span></div>${steps}${body}</div></div>`;
+      }
+
+      // ───── Mac : scripts/flash-installer.sh ─────
+      function mac(state) {
+        const top = `<span class="d">~/Dev/charpentier-writer</span> <b>%</b> scripts/flash-installer.sh
+
+<b>charpentier · clé d’installation du x250</b>
+
+image   <span class="u">charpentier-x250-0.5.0.img</span> <span class="d">· 3,1 Go · 13 nov. 2026</span>
+`;
+        const list = `
+clés usb branchées
+  <b>1</b>  SanDisk Ultra · 32 Go <span class="d">· /dev/disk4</span>
+  <b>2</b>  Kingston DataTraveler · 16 Go <span class="d">· /dev/disk6</span>
+  <span class="d">3  Verbatim Store'n'Go · 2 Go · trop petite (il faut 4 Go)</span>
+<span class="d">le disque de ce Mac n’est jamais proposé</span>
+`;
+        const pick = `
+quelle clé ? [1-2] <span class="u">1</span>
+
+<span class="r"> SanDisk Ultra · 32 Go va être entièrement effacée </span>
+⏎ effacer · ctrl-c annuler `;
+        const armed = `
+confirmer l’effacement ⏎ <span class="d">(3 s)</span> `;
+        const writing = `${armed}
+
+le Mac demande votre mot de passe pour écrire sur la clé
+Password:
+
+écriture       ████████████░░░░░░░░  61 %  <span class="d">· 1,9 Go sur 3,1 Go · encore 1 min</span>
+`;
+        const done = `${armed}
+
+le Mac demande votre mot de passe pour écrire sur la clé
+Password:
+
+écriture       ████████████████████  fait
+vérification   ████████████████████  fait
+
+<b>la clé est prête</b> et éjectée : vous pouvez la retirer
+
+sur le x250, éteint :
+  1  branchez la clé
+  2  allumez en tenant F12
+  3  choisissez « USB HDD : SanDisk Ultra »
+<span class="d">la clé n’apparaît pas ? au démarrage, F1 → Security → Secure Boot → Disabled</span>
+
+<span class="d">~/Dev/charpentier-writer</span> <b>%</b> `;
+        const none = `
+<span class="r"> aucune clé usb branchée </span>
+branchez-en une (4 Go au moins), puis ⏎ · ctrl-c pour quitter`;
+        const body =
+          state === 'liste'
+            ? top + list + pick + '█'
+            : state === 'ecriture'
+              ? top + list + pick + writing
+              : state === 'fini'
+                ? top + list + pick + done
+                : top + none + '█';
+        return `<div class="mac"><div class="tb"><i></i><i></i><i></i><span>charpentier-writer — zsh — 100×30</span></div><pre>${body}</pre></div>`;
+      }
+
+      // ───── rendu ─────
+      function render() {
+        const f = document.getElementById('frame');
+        if (S.medium === 'mac') {
+          f.style.background = '#3a3f47';
+          f.innerHTML = mac(S.mac);
+        } else {
+          f.style.background = '';
+          const L = lines(S.screen);
+          if (S.medium === 'kmscon') f.innerHTML = ttyHTML(L);
+          else if (S.medium === 'gui') f.innerHTML = gui(S.screen);
+          else {
+            f.innerHTML = '<canvas class="vt"></canvas>';
+            document.fonts.ready.then(() => drawVT(f.querySelector('canvas'), L));
+          }
+        }
+        const b = (k, v, label) =>
+          `<button data-k="${k}" data-v="${v}" class="${S[k] === v ? 'on' : ''}">${label}</button>`;
+        document.getElementById('bar').innerHTML = `
+          <span class="grp"><span class="lbl">Support</span>${b('medium', 'tty', 'a · console Linux')}${b('medium', 'kmscon', 'b · kmscon')}${b('medium', 'gui', 'c · graphique')}${b('medium', 'mac', 'Mac · flash-installer.sh')}</span>
+          <span class="grp"><span class="lbl">Écran</span>${b('screen', 'accueil', 'Accueil')}${b('screen', 'disque', 'Disque')}${b('screen', 'plusieurs', 'Deux disques')}${b('screen', 'mdp', 'Mot de passe')}${b('screen', 'mdperr', 'Différents')}${b('screen', 'copie', 'Copie')}${b('screen', 'fini', 'Fini')}${b('screen', 'echec', 'Échec')}${b('screen', 'aucun', 'Aucun disque')}${b('screen', 'batterie', 'Batterie')}</span>
+          <span class="grp"><span class="lbl">Effacement</span>${b('armed', false, '⏎ effacer')}${b('armed', true, 'armé : confirmer ⏎')} · <span class="lbl">Fin</span>${b('key', true, 'clé branchée')}${b('key', false, 'clé retirée')}</span>
+          <span class="grp"><span class="lbl">Le disque contient</span>${b('contains', 'windows', 'Windows')}${b('contains', 'charpentier', 'Charpentier')}${b('contains', 'vide', 'rien')}</span>
+          <span class="grp"><span class="lbl">Mac</span>${b('mac', 'liste', 'Liste')}${b('mac', 'ecriture', 'Écriture')}${b('mac', 'fini', 'Fini')}${b('mac', 'aucune', 'Aucune clé')}</span>`;
+        fit();
+      }
+      function fit() {
+        const s = Math.min(1, (innerWidth - 32) / 1536);
+        const f = document.getElementById('frame');
+        f.style.transform = `scale(${s})`;
+        const w = document.getElementById('fit');
+        w.style.width = 1536 * s + 'px';
+        w.style.height = 864 * s + 'px';
+      }
+      document.addEventListener('click', (e) => {
+        const t = e.target.closest('button[data-k]');
+        if (!t) return;
+        const v = t.dataset.v;
+        S[t.dataset.k] = v === 'true' ? true : v === 'false' ? false : v;
+        if (t.dataset.k === 'mac') S.medium = 'mac';
+        if (t.dataset.k === 'screen' && S.medium === 'mac') S.medium = 'kmscon';
+        render();
+      });
+      addEventListener('resize', fit);
+      render();
+    </script>
+  </body>
+</html>
