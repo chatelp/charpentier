@@ -22,6 +22,8 @@ export class RendererSession {
       readonly preferences: PreferencesFile;
       readonly spell?: SpellClient;
       readonly agents?: AgentHost;
+      /** The library changed here (the sync tells the account, step 4.3). */
+      readonly onLibraryChange?: () => void;
     },
     private readonly push: (message: Message) => void,
   ) {}
@@ -54,19 +56,26 @@ export class RendererSession {
         return library.list();
       case 'library.listTrashed':
         return library.listTrashed();
-      case 'library.create':
-        return library.create(request.input);
+      case 'library.create': {
+        const created = await library.create(request.input);
+        this.services.onLibraryChange?.();
+        return created;
+      }
       case 'library.rename':
         await library.rename(request.projectId, request.title);
+        this.services.onLibraryChange?.();
         return null;
       case 'library.touch':
         await library.touch(request.projectId);
+        this.services.onLibraryChange?.();
         return null;
       case 'library.trash':
         await library.trash(request.projectId);
+        this.services.onLibraryChange?.();
         return null;
       case 'library.restore':
         await library.restore(request.projectId);
+        this.services.onLibraryChange?.();
         return null;
       case 'prefs.get':
         return preferences.get(request.key);

@@ -24,6 +24,8 @@ import {
   OPUS,
   RendererSession,
   SecretStore,
+  SyncEngine,
+  type SyncAccount,
   SpellClient,
   type MirrorStrings,
 } from '@charpentier/platform-desktop/main';
@@ -89,6 +91,33 @@ const agents = new AgentHost(llm, secrets, store, {
   get: () => (preferences.get(LIGHT_MODEL_PREF) === 'haiku' ? 'haiku' : 'opus'),
   set: (model) => preferences.set(LIGHT_MODEL_PREF, model),
 });
+// ─── Sync with the author's server (step 4.3); signing in comes with phase 4.4 ───
+
+const SYNC_ACCOUNT_SECRET = 'sync.account';
+const sync = new SyncEngine({
+  store,
+  library,
+  credentials: {
+    load: () => {
+      const stored = secrets.get(SYNC_ACCOUNT_SECRET);
+      if (!stored) return null;
+      try {
+        return JSON.parse(stored) as SyncAccount;
+      } catch {
+        return null;
+      }
+    },
+    save: (account) => {
+      if (account) secrets.set(SYNC_ACCOUNT_SECRET, JSON.stringify(account));
+      else secrets.delete(SYNC_ACCOUNT_SECRET);
+    },
+  },
+  stateDir: path.join(app.getPath('userData'), 'sync'),
+  device: os.hostname(),
+});
+// Projects that came from another device get their Markdown mirror too.
+sync.onStatusChange(() => syncMirrors());
+
 llm.onStatusChange((status) => {
   for (const contents of sessions.keys())
     if (!contents.isDestroyed()) contents.send(IPC_MESSAGE, { type: 'agents.status', status });
@@ -127,7 +156,14 @@ function sessionOf(contents: WebContents): RendererSession {
   let session = sessions.get(contents);
   if (!session) {
     const created = new RendererSession(
-      { store, library, preferences, spell, agents },
+      {
+        store,
+        library,
+        preferences,
+        spell,
+        agents,
+        onLibraryChange: () => void sync.reconcile(),
+      },
       (message) => {
         if (!contents.isDestroyed()) contents.send(IPC_MESSAGE, message);
       },
@@ -248,6 +284,7 @@ app.on('second-instance', () => {
 
 void app.whenReady().then(() => {
   Menu.setApplicationMenu(appMenu());
+  sync.start();
   createWindow();
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
@@ -260,6 +297,7 @@ app.on('window-all-closed', () => {
 
 // Every document is compacted on the way out (the journal already holds everything).
 app.on('will-quit', () => {
+  sync.stop();
   for (const mirror of mirrors.values()) mirror.stop();
   mirrors.clear();
   store.closeAll();

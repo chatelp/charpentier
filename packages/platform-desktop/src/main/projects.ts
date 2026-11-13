@@ -15,6 +15,9 @@ interface ProjectFile {
   trashedAt?: string;
 }
 
+/** A project as the library keeps it: identity, title, kind, dates. */
+export type ProjectRecord = Readonly<ProjectFile>;
+
 /** A file name a human can read in the Finder, safe on every system. */
 export function folderName(title: string): string {
   const cleaned = title
@@ -125,6 +128,33 @@ export class FolderLibrary implements LibraryService {
 
   async trash(projectId: string): Promise<void> {
     this.#update(projectId, (p) => ({ ...p, trashedAt: new Date().toISOString() }));
+  }
+
+  /** Every project, live and trashed, with its dates (for the account's library, D-21). */
+  async all(): Promise<readonly ProjectRecord[]> {
+    return this.#scan().map(({ project }) => ({ ...project }));
+  }
+
+  /**
+   * Takes a project as another device knows it (sync, step 4): created with
+   * the same id if it is not here yet, else updated with exactly its title,
+   * kind, dates and trash state, so that the change is not seen as new here.
+   */
+  async adopt(record: ProjectRecord): Promise<void> {
+    if (!this.#scan().some((p) => p.project.id === record.id))
+      await this.create({ id: record.id, title: record.title, kind: record.kind });
+    this.#update(record.id, (p) => {
+      const next: ProjectFile = {
+        ...p,
+        title: record.title,
+        kind: record.kind,
+        createdAt: record.createdAt,
+        updatedAt: record.updatedAt,
+      };
+      if (record.trashedAt) next.trashedAt = record.trashedAt;
+      else delete next.trashedAt;
+      return next;
+    });
   }
 
   async restore(projectId: string): Promise<void> {
