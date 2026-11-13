@@ -2976,12 +2976,38 @@
       .app[data-rim='non'] * {
         --rim: 0 0 0 0 transparent;
       }
-      /* « Marqué » : a brighter rim and a soft glow rising from the lit corner. */
-      .app[data-rim='marque'],
-      .app[data-rim='marque'] * {
-        --rim:
-          inset -1px -1px 0 color-mix(in srgb, var(--hl) 30%, #fff),
-          inset -7px -7px 12px -7px color-mix(in srgb, var(--hl) 35%, #fff);
+      /* « Lèvre » : nothing is added inside the well. Its outer lip catches the light: a dark line
+         above and to the left, a light line below and to the right, like the grooves of the system line. */
+      .app[data-rim='levre'],
+      .app[data-rim='levre'] * {
+        --rim: 1px 1px 0 color-mix(in srgb, var(--hl) 62%, #fff), -1px -1px 0 var(--sh);
+      }
+      /* « Éclair » : nothing permanent. The well lights up while it is being pressed, then settles. */
+      .app[data-rim='eclair'],
+      .app[data-rim='eclair'] * {
+        --rim: 0 0 0 0 transparent;
+      }
+      .app[data-rim='eclair']
+        :is(
+          .btn,
+          .tbtn,
+          .sg,
+          .smsg,
+          .nav,
+          .ent,
+          .snav,
+          .pt,
+          .proj,
+          .ms .sc,
+          .seg button,
+          .edge,
+          .cmdz
+        ):active {
+        box-shadow:
+          var(--inset),
+          inset 0 0 0 1px color-mix(in srgb, var(--hl) 45%, #fff),
+          inset 0 0 16px color-mix(in srgb, #fff 16%, transparent);
+        transition: none;
       }
       .app
         :is(
@@ -3017,9 +3043,9 @@
       .app[data-orn='true'] :is(.nav.on .pic, .ent.on .mono) {
         box-shadow: var(--inset), var(--rim);
       }
-      .app :is(.btn, .tbtn, .sg, .smsg, .nav, .ent, .snav, .pt, .cmdz) {
+      .app :is(.btn, .tbtn, .sg, .smsg, .nav, .ent, .snav, .pt, .cmdz, .proj, .edge) {
         transition:
-          box-shadow 0.12s var(--ease),
+          box-shadow 0.35s var(--ease),
           color 0.12s;
       }
       /* ───────────── X250: the monitor ───────────── */
@@ -3182,7 +3208,7 @@
         sec: 'reseau',
         mat: 'ardoise',
         dk: 'clair',
-        rim: 'marque',
+        rim: 'levre',
         full: false,
         orn: true,
       };
@@ -4405,7 +4431,7 @@
             .map(([k, d]) => b('dir', k, d.name))
             .join('')}</span>
           <span class="grp"><span class="lbl">Caractère <kbd>M E O</kbd></span>${MATS.map(([k, l]) => b('mat', k, l)).join('')}${b('dk', 'profond', 'Sombre : outils profonds')}${b('dk', 'clair', 'Sombre : outils clairs')}${b('full', !S.full, 'E · Encres pleines')}</span>
-          <span class="grp"><span class="lbl">Lumière <kbd>L</kbd></span>${b('rim', 'non', 'Sans')}${b('rim', 'discret', 'Discrète')}${b('rim', 'marque', 'Marquée')}${b('orn', !S.orn, 'O · Outils gravés')}</span>
+          <span class="grp"><span class="lbl">Lumière <kbd>L</kbd></span>${b('rim', 'non', 'Sans')}${b('rim', 'levre', 'Lèvre')}${b('rim', 'eclair', 'Éclair au clic')}${b('orn', !S.orn, 'O · Outils gravés')}</span>
           <span class="grp"><span class="lbl">Découverte <kbd>G</kbd></span>${DISC_KEYS.map((k) => b('disc', k, DISC[k][0])).join('')}${b('quiet', !S.quiet, S.quiet ? 'Frappe : en cours' : 'Frappe : à l’arrêt')}</span>
           <span class="grp"><span class="lbl">Écran <kbd>1–9</kbd></span>${SCREENS.map(([k, l]) => b('screen', k, l)).join('')}</span>
           <span class="grp"><span class="lbl">Thème <kbd>T</kbd></span>${b('theme', 'light', 'Clair')}${b('theme', 'dark', 'Sombre')}</span>
@@ -4703,7 +4729,7 @@
         else if (e.key === 'm')
           S.mat = MATS[(MATS.findIndex(([k]) => k === S.mat) + 1) % MATS.length][0];
         else if (e.key === 'e') S.full = !S.full;
-        else if (e.key === 'l') S.rim = { non: 'discret', discret: 'marque', marque: 'non' }[S.rim];
+        else if (e.key === 'l') S.rim = { non: 'levre', levre: 'eclair', eclair: 'non' }[S.rim];
         else if (e.key === 'o') S.orn = !S.orn;
         else if (e.key === 't') S.theme = S.theme === 'light' ? 'dark' : 'light';
         else if (e.key === 'a') S.warm = !S.warm;
