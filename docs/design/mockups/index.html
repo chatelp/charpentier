@@ -2497,7 +2497,8 @@
       .sysline .sg:hover {
         color: var(--ink);
       }
-      .sysline .sg.on {
+      .sysline .sg.on,
+      .sysline .smsg.on {
         box-shadow: var(--inset);
         color: var(--ink);
       }
@@ -2519,6 +2520,11 @@
         height: 13px;
       }
       .sysline .smsg {
+        border: 0;
+        background: transparent;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
         flex: 1;
         min-width: 0;
         overflow: hidden;
@@ -2936,6 +2942,51 @@
         display: flex;
         gap: 10px;
         justify-content: center;
+      }
+
+      /* ───────────── « Ce qu'on presse s'allume » : a rim of light on anything pressed, open or selected ───────────── */
+      .app,
+      .app * {
+        --rim: inset -1px -1px 0 color-mix(in srgb, var(--hl) 70%, #fff);
+      }
+      .app
+        :is(
+          .btn:active,
+          .btn.on,
+          .tbtn.on,
+          .pt.sel,
+          .sg.on,
+          .smsg.on,
+          .r.pick.sel,
+          .card2.sel,
+          .net.sel,
+          .proj.on,
+          .cmdz:hover,
+          .edge:active,
+          .ri.sel,
+          .segs span.on:active
+        ) {
+        box-shadow: var(--inset), var(--rim);
+      }
+      .app :is(.nav.on, .ent.on, .ms .sc.act, .snav.on) {
+        box-shadow:
+          var(--inset),
+          inset 3px 0 0 var(--author, var(--ink)),
+          var(--rim);
+      }
+      .app .srail .snav.on {
+        box-shadow:
+          var(--inset),
+          inset 3px 0 0 var(--ink),
+          var(--rim);
+      }
+      .app[data-orn='true'] :is(.nav.on .pic, .ent.on .mono) {
+        box-shadow: var(--inset), var(--rim);
+      }
+      .app :is(.btn, .tbtn, .sg, .smsg, .nav, .ent, .snav, .pt, .cmdz) {
+        transition:
+          box-shadow 0.12s var(--ease),
+          color 0.12s;
       }
     </style>
   </head>
@@ -3913,7 +3964,7 @@
           S.msg === 'usb' ? SYS_MSG.usb : low ? SYS_MSG.low : S.msg === 'fn' ? SYS_MSG.fn : '';
         if (S.sysbar === 'bas')
           return `<div class="sysline sysmat bas">${home}<span class="sg"><span>${fmt(1284)} mots</span><span style="color:var(--author)">+${fmt(312)}</span></span><button class="prompt" data-go="palette"><i>›</i><span>Que voulez-vous faire ?</span><kbd>Ctrl K</kbd></button><span class="smsg">${msg || 'enregistré · 4 remarques du Compagnon'}</span>${right}${sysPop(true)}</div>`;
-        return `<div class="sysline sysmat">${home}<span class="smsg">${msg}</span>${right}${sysPop(false)}</div>`;
+        return `<div class="sysline sysmat">${home}<button class="smsg${S.sys === 'journal' ? ' on' : ''}" data-sys="journal" title="Journal du système (⊞J)">${msg || '<span class="dim">journal · 7</span>'}</button>${right}${sysPop(false)}</div>`;
       }
       const POPS = {
         menu: () => `<h4><span>charpentier</span><span>0.5.0 · nixos 26.11 · x250</span></h4>
@@ -3971,6 +4022,23 @@
           <div class="r"><span>Serveur</span><span>charpentier.maison.lan</span></div>
           <div class="r"><span>Dernière synchro</span><span>14:31 · 3 projets</span></div>
           <div class="acts"><button class="btn">Synchroniser maintenant</button></div>`,
+        journal: () => `<h4><span>journal</span><span>⊞J</span></h4>
+          ${[
+            ['14:32', 'luminosité 70 %'],
+            ['14:20', 'clé « KINGSTON » branchée'],
+            ['14:05', 'synchronisé · 3 projets'],
+            ['13:41', 'wifi : connecté à Maison-5G'],
+            ['13:40', 'réveil · code accepté'],
+            ['11:58', 'mise en veille (rabat fermé)'],
+            ['09:15', 'démarrage · charpentier 0.5.0'],
+          ]
+            .map(
+              ([t, m], i) =>
+                `<div class="r${i === 0 ? ' cur' : ''}"><span>${m}</span><span class="dim">${t}</span></div>`,
+            )
+            .join('')}
+          <hr />
+          <div class="note2">depuis le démarrage · effacé à l’extinction · <kbd>↑↓</kbd> parcourir</div>`,
         date: () => `<div class="bigtime">14:32</div>
           <div class="r"><span>vendredi 13 novembre 2026</span><span class="dim">sem. 46</span></div>
           <hr />
@@ -4259,7 +4327,7 @@
         app.innerHTML = `${menubar()}${S.sysbar === 'haut' ? sl : ''}<div class="tb"><span class="lights"><i></i><i></i><i></i></span>${tb}</div><div class="stage">${body}</div>${S.sysbar === 'bas' ? sl : ''}`;
         const pop = app.querySelector('.syspop');
         if (pop) {
-          const seg = app.querySelector(`.sg[data-sys="${pop.dataset.for}"]`);
+          const seg = app.querySelector(`.sysline > [data-sys="${pop.dataset.for}"]`);
           const line = app.querySelector('.sysline');
           const right = line.getBoundingClientRect().right - seg.getBoundingClientRect().right;
           const left = seg.getBoundingClientRect().left - line.getBoundingClientRect().left;

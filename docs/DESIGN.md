@@ -1,6 +1,6 @@
 # Charpentier : design language
 
-- **Version** : 1.4 (13 novembre 2026). 1.4 : en thème sombre, l'ardoise reste la même et la page s'assombrit (§3.1). 1.3 : les outils changent de matière, **ardoise sombre**, et reçoivent des **outils gravés** (§3.1, §4.11), l'auteur trouvant l'ensemble trop neutre hors de la page d'écriture. 1.2 : finitions (sons §3.4, rejets §4.5, restauration dans la vue d'ensemble §4.4, note en fenêtre étroite §4.2, bibliothèque §4.9, icône §4.10). 1.1 : tout devient découvrable sans raccourci (§4.8, §5.1), après essai de l'app par l'auteur ; inventaire et directions comparées dans [design/decouverte.md](design/decouverte.md).
+- **Version** : 1.5 (13 novembre 2026). 1.5 : la **ligne système** du X250 et tout ce qu'elle ouvre (§4.12), la matière du système (§3.1), la police à chasse fixe (§3.2), le **liseré de lumière** sur ce qu'on presse (§4.7). 1.4 : en thème sombre, l'ardoise reste la même et la page s'assombrit (§3.1). 1.3 : les outils changent de matière, **ardoise sombre**, et reçoivent des **outils gravés** (§3.1, §4.11), l'auteur trouvant l'ensemble trop neutre hors de la page d'écriture. 1.2 : finitions (sons §3.4, rejets §4.5, restauration dans la vue d'ensemble §4.4, note en fenêtre étroite §4.2, bibliothèque §4.9, icône §4.10). 1.1 : tout devient découvrable sans raccourci (§4.8, §5.1), après essai de l'app par l'auteur ; inventaire et directions comparées dans [design/decouverte.md](design/decouverte.md).
 - **Direction retenue** : **Perle** pour la page, **ardoise** pour les outils, avec **Deux encres**, **Signature** et **Outils gravés** ; manuscrit en **tiroir + vue d'ensemble** ; points d'entrée en **poignées** sur les bords et **zone de commande** en pied.
 - **Sources** : brief de l'auteur ([design/brief.md](design/brief.md)), maquettes ([design/mockups/](design/mockups/), ouvrir `index.html`), tokens CSS proposés ([design/tokens.css](design/tokens.css)).
 - Complète la [SPEC](SPEC.md) (§6 mentor, §7.1 statuts, §19 exigences transverses) sans la contredire.
@@ -67,6 +67,20 @@ Thème : suit le système par défaut, forçable (`data-theme` sur la racine) et
 
 **L'ardoise est la même dans les deux thèmes** (choix de l'auteur, « outils clairs ») : seule la page change. En thème clair, les outils sont sombres sur une page claire ; en thème sombre, ils sont plus clairs que la page (`#2b3038` sur `#1b1e23`), comme des plaques posées dessus. L'ardoise porte toujours les encres du thème sombre.
 
+**Matière du système (X250).** La zone système a sa propre matière, **la plus sombre de l'écran dans les deux thèmes**, plus profonde que l'ardoise des outils : on la reconnaît sans la lire. Classe unique (par exemple `.ch-system`), même mécanique que `.ch-tool`, avec la police `--ch-font-sys`.
+
+| Token dans une surface système | Valeur, dans les deux thèmes | Contraste |
+|---|---|---|
+| `--ch-bg` | `#14161a` | – |
+| `--ch-highlight` | `#20242a` | – |
+| `--ch-shade` | `#090a0c` | – |
+| `--ch-ink` | `#dfe3ea` | 14,1 |
+| `--ch-ink-2` | `#b9c0ca` | 9,9 |
+| `--ch-muted` | `#8a929e` | 5,8 |
+| `--ch-faint` | `#555b66` | 2,7 (décoratif) |
+
+Le système n'a **pas de couleur à lui** : ni vermillon ni bleu (sauf le point bleu de l'équerre, son emblème). Une alerte est un **segment inversé** (fond `--ch-ink`, texte `--ch-bg`), jamais du rouge.
+
 | Surface d'outil (ardoise) | Reste sur la page (perle) |
 |---|---|
 | panneau du Compagnon, fiche en volet, tiroir du manuscrit | page d'écriture, en-tête, ouverture de scène, pied |
@@ -88,8 +102,9 @@ Thème : suit le système par défaut, forçable (`data-theme` sur la racine) et
 | Valeurs de fiche | Literata | 15,5 px | italique si proposée |
 | Interface courante | Inter | 13 px (méta 12, accent 14, ligne de commande 15) | graisse 400/500, jamais de capitales |
 | Raccourcis | Inter | 10,5–11 px | `--ch-faint`, après le libellé de l'action |
+| Système (X250 : ligne, panneaux déroulants, rail des réglages) | JetBrains Mono | 11,5 px (12 dans les panneaux) | chasse fixe, libellés en minuscules sans majuscule initiale (`wifi`, `bat`, `lum`), valeurs en `--ch-ink-2`, token `--ch-font-sys` |
 
-Polices : **Literata** (TypeTogether, SIL OFL 1.1, variable `opsz` + `wght`, build complet avec petites capitales `smcp`/`c2sc`) et **Inter** (SIL OFL 1.1, variable). Embarquées en WOFF2, sous-ensemble latin + latin étendu, en vérifiant la présence de U+00A0, U+202F, « », —, ’, `⁂`. L'OFL n'est pas dans la liste blanche de `CLAUDE.md` : à ajouter comme licence acceptée (ou exception documentée dans `licenses.exceptions.json`) au moment de l'intégration.
+Polices : **Literata** (TypeTogether, SIL OFL 1.1, variable `opsz` + `wght`, build complet avec petites capitales `smcp`/`c2sc`) et **Inter** (SIL OFL 1.1, variable). **JetBrains Mono** (SIL OFL 1.1, graisses 400 et 500) s'y ajoute pour la zone système du X250 ; à embarquer avec le même script, en gardant les blocs U+2581 à U+2588 (signal Wi-Fi). Embarquées en WOFF2, sous-ensemble latin + latin étendu, en vérifiant la présence de U+00A0, U+202F, « », —, ’, `⁂`. L'OFL n'est pas dans la liste blanche de `CLAUDE.md` : à ajouter comme licence acceptée (ou exception documentée dans `licenses.exceptions.json`) au moment de l'intégration.
 
 Typographie française du texte : espaces fines insécables avant `? ! ; :` et dans les guillemets, tirets cadratins de dialogue, apostrophe typographique. Le séparateur interne de scène se compose comme un fleuron centré `⁂` en `--ch-faint`.
 
@@ -197,6 +212,7 @@ Attaques et chutes en rampes exponentielles depuis et vers 0,0001. Réglages : �
 - **Contrôle segmenté** : rail creux, segment actif en relief.
 - **Puce** : relief léger, 12 px ; active = creux, vermillon.
 - **Barres de défilement** : fines, **sans fond** (piste transparente, jamais de bande blanche entre le texte et un panneau), curseur en `--ch-muted` à 40 % ; elles prennent donc la teinte de la matière où elles se trouvent, en clair comme en sombre.
+- **Liseré de lumière** (« ce qu'on presse s'allume ») : tout élément pressé, ouvert ou sélectionné passe en creux **et** reçoit un liseré d'un pixel de lumière sur son bord bas et droit : `box-shadow: var(--ch-inset), inset -1px -1px 0 color-mix(in srgb, var(--ch-highlight) 70%, #fff)` (token proposé : `--ch-rim`, à déclarer sur chaque élément pour qu'il prenne la lumière de sa matière). Transition de 120 ms. S'applique partout : segment de la ligne système, bouton pressé, bouton `Aa` ouvert, zone de commande survolée, entrée active d'une liste ou d'un rail (avec son filet vermillon), médaillon ou monogramme actif, point sélectionné, carte de projet sélectionnée. Ne s'applique pas aux valeurs validées des fiches : là, le creux dit un statut, pas un geste.
 - **Focus clavier** : l'élément focalisé passe en creux ; pour les cartes et lignes, filet vermillon. Jamais d'anneau bleu par défaut du navigateur.
 
 ### 4.8 Points d'entrée et découverte
@@ -237,6 +253,63 @@ Du dessin plutôt que de la couleur : chaque lieu devient reconnaissable. Maquet
 - **Tiroir** : chaque titre de chapitre est en Literata 15 px, précédé du fleuron ⁂ en `--ch-faint`.
 - Un pictogramme n'est jamais seul : toujours à côté de son libellé. Aucune autre illustration, aucune texture.
 
+### 4.12 Système (X250)
+Sur le X250, l'app est la partie visible du système [D-24]. Maquette : cadre « X250 », groupe « X250 · ligne système », écrans « X250 · Réglages », « Verrou », « Démarrage » ; rendus à la taille réelle dans [design/x250/](design/x250/). Rien de tout cela n'apparaît sur le Mac ni sur le web.
+
+**La ligne système.** Toujours affichée, 30 px, tout en haut, pleine largeur, dans la matière du système, en JetBrains Mono 11,5 px. Elle ne s'efface pas pendant la frappe et rien n'y bouge de soi-même, sauf l'heure. De gauche à droite :
+
+| Segment | Affiche | Un clic ou sa touche déplie |
+|---|---|---|
+| `système` `⊞` | l'équerre et le mot | le menu : Réglages du système… `⊞,`, Imprimer… `⊞P`, Copier mes textes sur une clé USB `⊞U`, Verrouiller `⊞L`, Mettre en veille `⊞⏎`, Redémarrer…, Éteindre… ; en tête la version (`0.5.0 · nixos 26.11 · x250`), en pied « allumé depuis 3 h 12 » |
+| message | le dernier message du système, en `--ch-muted` ; vide : `journal · 7` en `--ch-faint` | le **journal** `⊞J` : les messages depuis le démarrage, du plus récent au plus ancien, avec leur heure ; effacé à l'extinction |
+| `usb` | le nom de la clé, seulement si une clé est branchée | Copier mes textes `⊞U`, Éjecter |
+| `wifi` | le réseau et la force du signal (`▂▄▆█`, barres manquantes en `--ch-faint`) ; `wifi non` si coupé | interrupteur Wi-Fi, réseaux visibles, mot de passe, Oublier, adresse `⊞W` |
+| `bt` | `non` ou le nombre d'appareils connectés | interrupteur, appareils connus, Appairer… `⊞B` |
+| `lum` | jauge et valeur | luminosité, mode nuit (auto, oui, non), écran externe |
+| `vol` | jauge et valeur ; `muet` | volume, muet, les deux réglages de sons de l'app |
+| `bat` | jauge, pourcentage, autonomie (`5h40`) ; `⚡` en charge | les deux batteries, la puissance, écran éteint après, veille après |
+| `sync` | `ok`, `…` en cours, `hors ligne` | serveur, dernière synchronisation, Synchroniser maintenant |
+| date | `ven. 13 nov. 14:32` | l'heure en grand, la date complète et la semaine, le fuseau, les mots et le temps d'écriture du jour |
+
+- **Segments** : séparés par un filet gravé vertical (1 px `--ch-shade`, 1 px `--ch-highlight`) ; libellé en `--ch-muted`, valeur en `--ch-ink-2` ; survol : `--ch-ink` ; déplié : en creux avec le liseré de lumière (§4.7).
+- **Jauge en cellules** : dix cellules de 4 × 9 px espacées de 2 px, pleines en `--ch-ink-2`, vides en `--ch-faint`. Pas d'icône.
+- **Panneau déroulant** : sous son segment, aligné sur lui, 21 rem, rayon 12 px, matière du système, ombre de la page. En-tête : nom en minuscules à gauche, touche ou état à droite. Lignes libellé / contrôle ; ligne choisie en creux ; aides de touches en pied. `Échap` ou un clic ailleurs le ferme. Un seul ouvert à la fois.
+- **Contrôles du système** : interrupteur à deux ou trois segments (rail en creux, segment actif en relief), curseur (rail en creux de 10 px, remplissage `--ch-muted`, bouton rond de 18 px en relief), boutons de l'app.
+- **Touches du ThinkPad** (luminosité, volume, muet) : la jauge du segment bouge, le segment s'allume une seconde et le message dit « luminosité 70 % ». Aucune fenêtre par-dessus le texte.
+- **Messages** : le seul canal du système, à la place de toute notification. Un message naît d'un geste de l'auteur ou d'un changement d'état (clé branchée, réseau perdu, synchronisation faite, batterie faible) ; il reste jusqu'au suivant, sans animation ni son. Jamais de message du Compagnon ici.
+- **Batterie faible** : à 15 %, le segment `bat` s'inverse et le message dit « batterie faible · branchez l'appareil, tout est enregistré ». À 3 % : point de restauration de la scène, message, puis veille. Rien n'interrompt la frappe.
+- **Portail captif** : un réseau qui demande une page de connexion est marqué `portail` ; l'appareil ne l'ouvre pas (pas de navigateur) et le dit : « Ce réseau demande une page de connexion. Utilisez le partage de connexion de votre téléphone. »
+
+**Clavier.**
+- La touche **Super** (`⊞`) est celle du système. Seule : le focus va à la ligne, `←` `→` parcourent les segments, `⏎` ou `↓` déplie, `Échap` rend le focus au texte. Avec une lettre : `⊞W` Wi-Fi, `⊞B` Bluetooth, `⊞J` journal, `⊞L` verrouiller, `⊞P` imprimer, `⊞U` clé USB, `⊞,` réglages, `⊞⏎` veille.
+- Dans la ligne de commande, le préfixe **`:`** appelle le système, avec un argument éventuel : `:lum 40`, `:vol 20`, `:muet`, `:wifi Maison-5G`, `:wifi non`, `:nuit`, `:veille`, `:verrou`, `:eteindre`, `:redemarrer`, `:imprimer scène`, `:usb`, `:reglages`. Sans argument, la commande ouvre le panneau du segment. Ces commandes figurent aussi, en clair, dans la liste ordinaire (« Mettre en veille », « Régler la luminosité… »).
+
+**Réglages du système** (`⊞,`). Vue plein cadre, comme l'Atelier : à gauche un rail de 17 rem dans la matière du système (titre « réglages du système » avec l'équerre, une ligne par section avec sa valeur courante à droite, section active en creux avec un filet `--ch-ink`) ; à droite la section, **sur la page**, avec les composants ordinaires de l'app (titre Literata 30 px, intertitres en petites capitales, lignes libellé / aide / contrôle). `Échap` revient au texte.
+
+| Section | Contenu |
+|---|---|
+| Réseau | Wi-Fi oui / non ; réseaux (connecté, protégé, portail), Se connecter, Oublier ; Ethernet automatique |
+| Bluetooth | oui / non ; appareils connus, Oublier ; Appairer un appareil (le code éventuel s'affiche ici) |
+| Écran | luminosité ; mode nuit (auto de 21 h à 7 h, oui, non) et chaleur ; écran externe : Dupliquer ou Externe seul (pas de bureau étendu : une seule fenêtre), échelle |
+| Son | volume, muet ; sons de l'interface, son de frappe |
+| Batterie et veille | les deux batteries ; écran éteint après (5, 15 min, jamais) ; veille après (15, 30 min, jamais) ; rabat fermé = veille ; seuils de batterie faible |
+| Verrouillage | demander le code : à chaque réveil (défaut), après 15 min de veille, jamais ; changer le code (4 à 8 chiffres ou lettres) ; après 5 erreurs, 30 s d'attente, doublées à chaque série ; code oublié : réinitialisé depuis le Mac |
+| Clavier et pavé tactile | disposition (AZERTY, BÉPO, QWERTY) ; couper le pavé pendant la frappe (oui par défaut), toucher pour cliquer, défilement naturel, pavé oui / non |
+| Impression | imprimantes du réseau (sans pilote), par défaut, page de test ; format A4 / Lettre, interligne |
+| Clé USB | état ; Copier mes textes (tous les projets en Markdown dans `Charpentier/<date>/`, rien n'est effacé sur la clé) ; Éjecter |
+| Date et heure | fuseau, heure automatique par le réseau, format 24 h / 12 h |
+| À propos | versions de l'app et du système, mise à jour (depuis le Mac), stockage, licences |
+
+**Imprimer** (`⊞P`) : une feuille en ardoise au centre : quoi (cette scène, ce chapitre, tout le manuscrit), imprimante, copies ; « Imprimer `⏎` ». Mise en page de manuscrit fixe : Literata 12 pt, interligne double, marges de 2,5 cm, titre courant et folio.
+
+**Éteindre et redémarrer** : une confirmation légère. La ligne du menu devient « Confirmer l'extinction `⏎` » pendant 3 secondes ; un second appui éteint. La veille est immédiate.
+
+**Verrouillage.** À l'ouverture du rabat (réglage par défaut), plein écran sur la page : l'heure en Literata 96 px, la date en petites capitales, un champ gravé où chaque caractère tapé devient un point vermillon, « votre code, puis ⏎ ». Aucun titre de projet, aucun texte. La ligne système est réduite à `charpentier`, `verrouillé`, `bat` et l'heure. Code faux : le champ tremble une fois (rien si les animations sont réduites) et se vide. Ce verrou protège des regards ; ce n'est pas un chiffrement du disque.
+
+**Premier démarrage de l'appareil.** Avant la note de bienvenue (§4.8), une page centrée : « Bienvenue », le fleuron, la phrase du Compagnon en italique bleu (« Avant d'écrire, quatre réglages. Chacun peut attendre. »), puis quatre étapes, chacune avec « Continuer `⏎` » et « Plus tard `Échap` » : `1 wifi` (réseaux, mot de passe), `2 code` (choisir le code de verrouillage, ou « Sans code »), `3 synchronisation` (adresse du serveur, identifiant), `4 compagnon` (clé d'API). Ce qui est remis à plus tard reste accessible par la ligne système et les réglages.
+
+**Hors périmètre** : portail captif (v1), bureau étendu, mises à jour depuis l'appareil. Le terminal de secours reste une combinaison de touches sans interface.
+
 ## 5. Règles d'UX
 
 ### 5.1 Distraction-free
@@ -269,9 +342,10 @@ Registre central dans le cœur, tous modifiables. `⌘` = `Ctrl` sur le X250.
 | Plus d'aide / moins d'aide (réglette) | ligne de commande |
 | Taille du texte / largeur de colonne / mode focus | `⌘+` `⌘−` / `⌘⌥←` `⌘⌥→` / `⌘⇧F` |
 | Revenir au texte | `Échap` |
+| Système (X250 seulement) | `⊞` et ses lettres, voir §4.12 |
 
 ### 5.4 Appareils
-- **X250** (cible 1920×1080, mise à l'échelle Sway 125 % → 1536×864 px CSS) : plein écran, pas de barre de titre, état système (réseau, batterie) dans le pied. Tout l'écran d'écriture avec une note dépliée tient sans défilement de l'interface.
+- **X250** (cible 1920×1080, mise à l'échelle Sway 125 % → 1536×864 px CSS) : plein écran, pas de barre de titre ni de barre de menus ; la **ligne système** (§4.12) occupe les 30 px du haut, la page et son pied sont ceux du Mac. Tout l'écran d'écriture avec une note dépliée tient sans défilement de l'interface.
 - **Mac** : barre de titre intégrée discrète ; plein écran macOS conseillé pour écrire.
 - Largeur minimale prise en charge : 960 px. Sous 1180 px : notes sous le paragraphe ; sous 1100 px : l'Atelier masque la colonne de liste (accessible par la ligne de commande `@`).
 
