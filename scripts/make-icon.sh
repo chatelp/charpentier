@@ -1,5 +1,6 @@
 #!/bin/sh
-# Builds the macOS app icon (apps/desktop/resources/icon.icns) from the design
+# Builds the app icons (apps/desktop/resources/icon.icns for macOS, icon.png
+# 512 px for Linux) from the design
 # renders in docs/design/icon (see its README): the simplified variant for
 # 16 and 32 px, the full icon reduced for 128 px and more. macOS only (sips, iconutil).
 set -eu
@@ -17,4 +18,5 @@ for size in 128 256 512; do
   sips -z $double $double "$src/charpentier-1024.png" --out "$set_dir/icon_${size}x${size}@2x.png" >/dev/null
 done
 iconutil -c icns "$set_dir" -o apps/desktop/resources/icon.icns
-echo "apps/desktop/resources/icon.icns"
+sips -z 512 512 "$src/charpentier-1024.png" --out apps/desktop/resources/icon.png >/dev/null
+echo "apps/desktop/resources/icon.icns apps/desktop/resources/icon.png"

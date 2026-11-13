@@ -21,6 +21,7 @@
     "dev:desktop": "pnpm --filter @charpentier/desktop dev",
     "test:desktop": "pnpm --filter @charpentier/desktop test:e2e",
     "package:desktop": "pnpm --filter @charpentier/desktop package",
+    "package:linux": "pnpm --filter @charpentier/desktop package:linux",
     "test:llm": "vitest run packages/platform-desktop/src/main/compagnon.live.test.ts"
   },
   "devDependencies": {

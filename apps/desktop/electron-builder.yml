@@ -26,3 +26,14 @@ mac:
   identity: '-'
   hardenedRuntime: false
   darkModeSupport: true
+# The X250's build (docs/PLAN.md phase 5.8): Linux x64, the same bundle and
+# dictionaries; the Nix package wraps it (nix/).
+linux:
+  executableName: charpentier
+  category: Office
+  icon: resources/icon.png
+  synopsis: Écrire un roman avec un mentor
+  artifactName: charpentier-${version}-linux-${arch}.${ext}
+  target:
+    - target: tar.gz
+      arch: [x64]
