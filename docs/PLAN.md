@@ -2,7 +2,7 @@
 
 Chaque phase est courte, se termine par un résultat vérifiable dans l'app (ou par des tests quand la phase n'a pas d'interface), puis par un arrêt pour le feu vert. Les tests prioritaires sont écrits dans la phase qui introduit le code concerné.
 
-Statut : étapes 1 à 3 réalisées (12 novembre 2026) ; étape 4a en cours, phases 4.1 à 4.3 réalisées (13 novembre 2026). Reste à éprouver le Compagnon avec la clé de l'auteur (tests adversariaux en direct, réglage des prompts). Avancement visuel : https://claude.ai/artifact/NAAMCGpuXETvPTiDXMzdS4 (régénéré par `node scripts/progress.mjs`).
+Statut : étapes 1 à 3 réalisées (12 novembre 2026) ; étape 4a en cours, phases 4.1 à 4.4 réalisées (13 novembre 2026). Reste à éprouver le Compagnon avec la clé de l'auteur (tests adversariaux en direct, réglage des prompts). Avancement visuel : https://claude.ai/artifact/NAAMCGpuXETvPTiDXMzdS4 (régénéré par `node scripts/progress.mjs`).
 
 ---
 
@@ -150,6 +150,7 @@ Réalisé : `SyncEngine` dans le main, un fournisseur Hocuspocus par document su
 ### 4.4 Se connecter, voir l'état
 Commandes « Se connecter à un serveur… » (adresse, e-mail, mot de passe), « Se déconnecter », « Appareils connectés » ; état discret dans le pied (« Synchronisé », « Hors ligne », « Synchro en pause »). Points d'entrée selon DESIGN §4.8 (menu, ligne de commande ; design demandé à la session de design si un écran est nécessaire).
 **Vérifiable** : je me connecte depuis le Mac, puis depuis une seconde installation ; mon roman y apparaît, et une phrase écrite d'un côté arrive de l'autre.
+Réalisé : service `Sync` de la plateforme (absent sur le web) ; commandes « Se connecter à un serveur de synchro… » (adresse, e-mail, mot de passe à la suite), « Appareils connectés… », « Se déconnecter du serveur », aussi dans le menu Fichier ; état dans le pied, « Synchro en pause » cliquable pour se reconnecter. Test de bout en bout avec un vrai serveur et deux installations de l'app.
 
 ### 4.5 Déploiement
 Image Docker du serveur, `docker-compose.yml` et guide de déploiement sur `prodesk2021.local` derrière le reverse proxy en HTTPS (WebSocket), sauvegarde de Postgres.
