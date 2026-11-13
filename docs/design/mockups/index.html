@@ -2559,6 +2559,29 @@
         width: calc(round(down, var(--v) * 10, 1) * 6px);
         background: repeating-linear-gradient(90deg, currentColor 0 4px, transparent 4px 6px);
       }
+      /* Narrower than the X250's 1536 px: the gauges and secondary values go first, never the message. */
+      .sysline {
+        overflow: hidden;
+      }
+      .sysline .smsg {
+        min-width: 19rem;
+      }
+      @media (max-width: 1500px) {
+        .sysline .wide {
+          display: none;
+        }
+      }
+      @media (max-width: 1150px) {
+        .sysline .sg b {
+          display: none;
+        }
+        .sysline .sg {
+          padding: 0 8px;
+        }
+        .sysline .smsg {
+          min-width: 11rem;
+        }
+      }
       .sysline.bas .wide {
         display: none;
       }
@@ -2949,6 +2972,17 @@
       .app * {
         --rim: inset -1px -1px 0 color-mix(in srgb, var(--hl) 70%, #fff);
       }
+      .app[data-rim='non'],
+      .app[data-rim='non'] * {
+        --rim: 0 0 0 0 transparent;
+      }
+      /* « Marqué » : a brighter rim and a soft glow rising from the lit corner. */
+      .app[data-rim='marque'],
+      .app[data-rim='marque'] * {
+        --rim:
+          inset -1px -1px 0 color-mix(in srgb, var(--hl) 30%, #fff),
+          inset -7px -7px 12px -7px color-mix(in srgb, var(--hl) 35%, #fff);
+      }
       .app
         :is(
           .btn:active,
@@ -3148,6 +3182,7 @@
         sec: 'reseau',
         mat: 'ardoise',
         dk: 'clair',
+        rim: 'discret',
         full: false,
         orn: true,
       };
@@ -4018,7 +4053,7 @@
         `<span class="segs">${items.map((t, i) => `<span class="${i === on ? 'on' : ''}">${t}</span>`).join('')}</span>`;
       const SYS_MSG = {
         null: '',
-        usb: `clé « KINGSTON » branchée · <kbd>⊞U</kbd> copier mes textes`,
+        usb: `clé branchée · <kbd>⊞U</kbd> copier mes textes`,
         low: `batterie faible · branchez l’appareil, tout est enregistré`,
         fn: `luminosité 70 %`,
       };
@@ -4033,7 +4068,7 @@
           `<b>bat</b>${gauge(S.batt / 100)}${S.batt}${N}%<span class="dim wide">${low ? '0h35' : '5h40'}</span>`,
           low ? 'alert' : '',
         );
-        const date = sg('date', `<span class="dim wide">ven. 13 nov.</span>14:32`);
+        const date = sg('date', `<span class="dim wide">ven. 13</span>14:32`);
         if (locked)
           return `<div class="sysline sysmat"><span class="sg home">${EQ}charpentier</span><span class="smsg">verrouillé</span>${bat}${date}</div>`;
         const lum = S.msg === 'fn' ? 0.7 : 0.6;
@@ -4044,7 +4079,6 @@
             'wifi',
             `<b>wifi</b>Maison-5G<span class="wide">▂▄▆<span class="dim">█</span></span>`,
           ) +
-          sg('bt', `<b>bt</b><span class="dim">non</span>`, 'wide') +
           sg(
             'lum',
             `<b>lum</b><span class="wide">${gauge(lum)}</span>${lum * 100}`,
@@ -4182,7 +4216,7 @@
           ${srow('Lumière plus chaude', 'Automatique : de 21 h à 7 h.', segs(['Auto', 'Oui', 'Non'], 0))}
           ${srow('Chaleur', '', slider(0.5))}
           <h2>Écran externe</h2>
-          ${srow('Quand un écran est branché', 'L’appareil n’a qu’une fenêtre : pas de bureau étendu.', segs(['Dupliquer', 'Externe seul'], 0))}
+          ${srow('Quand un écran est branché', 'L’app passe sur le moniteur, l’écran du portable s’éteint. Ni duplication ni bureau étendu.', `<span class="val">externe seul</span>`)}
           ${srow('Échelle sur l’écran externe', '', segs(['100 %', '125 %', '150 %'], 1))}`,
         son: () => `<h1>Son</h1><div class="lead">L’appareil ne joue que les sons de Charpentier.</div>
           ${srow('Volume', 'Touches F2 et F3.', `${slider(0.4)}<span class="val">40</span>`)}
@@ -4206,6 +4240,7 @@
           ${srow('Demander le code', '', segs(['À chaque réveil', 'Après 15 min de veille', 'Jamais'], 0))}
           ${srow('Code', '4 à 8 chiffres ou lettres.', `<button class="btn">Changer le code…</button>`)}
           ${srow('Après 5 erreurs', 'Attente de 30 secondes, puis doublée à chaque série.', `<span class="val">fixe</span>`)}
+          ${srow('Disque chiffré', 'Un mot de passe est demandé à chaque démarrage, avant l’app. Oublié, le disque est perdu.', `<span class="val">oui</span>`)}
           ${srow('Code oublié', 'Il se réinitialise depuis le Mac, avec la mise à jour de l’appareil.', `<span class="val"></span>`)}`,
         clavier: () => `<h1>Clavier et pavé tactile</h1><div class="lead"></div>
           ${srow('Disposition du clavier', '', segs(['AZERTY', 'BÉPO', 'QWERTY'], 0))}
@@ -4369,7 +4404,8 @@
           <span class="grp"><span class="lbl">Direction <kbd>D</kbd></span>${Object.entries(DIRS)
             .map(([k, d]) => b('dir', k, d.name))
             .join('')}</span>
-          <span class="grp"><span class="lbl">Caractère <kbd>M E O</kbd></span>${MATS.map(([k, l]) => b('mat', k, l)).join('')}${b('dk', 'profond', 'Sombre : outils profonds')}${b('dk', 'clair', 'Sombre : outils clairs')}${b('full', !S.full, 'E · Encres pleines')}${b('orn', !S.orn, 'O · Outils gravés')}</span>
+          <span class="grp"><span class="lbl">Caractère <kbd>M E O</kbd></span>${MATS.map(([k, l]) => b('mat', k, l)).join('')}${b('dk', 'profond', 'Sombre : outils profonds')}${b('dk', 'clair', 'Sombre : outils clairs')}${b('full', !S.full, 'E · Encres pleines')}</span>
+          <span class="grp"><span class="lbl">Lumière</span>${b('rim', 'non', 'Sans')}${b('rim', 'discret', 'Discrète')}${b('rim', 'marque', 'Marquée')}${b('orn', !S.orn, 'O · Outils gravés')}</span>
           <span class="grp"><span class="lbl">Découverte <kbd>G</kbd></span>${DISC_KEYS.map((k) => b('disc', k, DISC[k][0])).join('')}${b('quiet', !S.quiet, S.quiet ? 'Frappe : en cours' : 'Frappe : à l’arrêt')}</span>
           <span class="grp"><span class="lbl">Écran <kbd>1–9</kbd></span>${SCREENS.map(([k, l]) => b('screen', k, l)).join('')}</span>
           <span class="grp"><span class="lbl">Thème <kbd>T</kbd></span>${b('theme', 'light', 'Clair')}${b('theme', 'dark', 'Sombre')}</span>
@@ -4399,6 +4435,7 @@
         app.dataset.mat = S.dir === 'perle' ? S.mat : 'none';
         app.dataset.full = S.dir === 'perle' && S.full;
         app.dataset.dk = S.dk;
+        app.dataset.rim = S.rim;
         app.dataset.orn = S.dir === 'perle' && S.orn;
         app.dataset.quiet = S.quiet;
         let body = '';

@@ -265,19 +265,20 @@ Sur le X250, l'app est la partie visible du système [D-24]. Maquette : cadre «
 | `usb` | le nom de la clé, seulement si une clé est branchée | Copier mes textes `⊞U`, Éjecter |
 | `cpu` | une mini-courbe de douze colonnes en caractères de bloc (`▁▂▃▅`), le pourcentage et la température (`12 % 48°`) | le **moniteur** `⊞M`, plein cadre (voir plus bas) |
 | `wifi` | le réseau et la force du signal (`▂▄▆█`, barres manquantes en `--ch-faint`) ; `wifi non` si coupé | interrupteur Wi-Fi, réseaux visibles, mot de passe, Oublier, adresse `⊞W` |
-| `bt` | `non` ou le nombre d'appareils connectés | interrupteur, appareils connus, Appairer… `⊞B` |
+| `bt` | le nombre d'appareils connectés ; **absent quand le Bluetooth est coupé** (il se rallume par `⊞B`, les réglages ou `:bt oui`) | interrupteur, appareils connus, Appairer… `⊞B` |
 | `lum` | jauge et valeur | luminosité, mode nuit (auto, oui, non), écran externe |
 | `vol` | jauge et valeur ; `muet` | volume, muet, les deux réglages de sons de l'app |
 | `bat` | jauge, pourcentage, autonomie (`5h40`) ; `⚡` en charge | les deux batteries, la puissance, écran éteint après, veille après |
 | `sync` | `ok`, `…` en cours, `hors ligne` | serveur, dernière synchronisation, Synchroniser maintenant |
-| date | `ven. 13 nov. 14:32` | l'heure en grand, la date complète et la semaine, le fuseau, les mots et le temps d'écriture du jour |
+| date | `ven. 13 14:32` | l'heure en grand, la date complète et la semaine, le fuseau, les mots et le temps d'écriture du jour |
 
 - **Segments** : séparés par un filet gravé vertical (1 px `--ch-shade`, 1 px `--ch-highlight`) ; libellé en `--ch-muted`, valeur en `--ch-ink-2` ; survol : `--ch-ink` ; déplié : en creux avec le liseré de lumière (§4.7).
 - **Jauge en cellules** : dix cellules de 4 × 9 px espacées de 2 px, pleines en `--ch-ink-2`, vides en `--ch-faint`. Pas d'icône.
 - **Panneau déroulant** : sous son segment, aligné sur lui, 21 rem, rayon 12 px, matière du système, ombre de la page. En-tête : nom en minuscules à gauche, touche ou état à droite. Lignes libellé / contrôle ; ligne choisie en creux ; aides de touches en pied. `Échap` ou un clic ailleurs le ferme. Un seul ouvert à la fois.
 - **Contrôles du système** : interrupteur à deux ou trois segments (rail en creux, segment actif en relief), curseur (rail en creux de 10 px, remplissage `--ch-muted`, bouton rond de 18 px en relief), boutons de l'app.
 - **Touches du ThinkPad** (luminosité, volume, muet) : la jauge du segment bouge, le segment s'allume une seconde et le message dit « luminosité 70 % ». Aucune fenêtre par-dessus le texte.
-- **Messages** : le seul canal du système, à la place de toute notification. Un message naît d'un geste de l'auteur ou d'un changement d'état (clé branchée, réseau perdu, synchronisation faite, batterie faible) ; il reste jusqu'au suivant, sans animation ni son. Jamais de message du Compagnon ici.
+- **Largeur** : la ligne est dessinée pour 1536 px. Le message garde toujours au moins 19 rem ; si la place manque (fenêtre plus étroite, écran externe à forte échelle), ce sont les jauges, l'autonomie et le jour qui s'effacent d'abord, puis les libellés des segments. Le message n'est jamais coupé à mi-hauteur ni recouvert.
+- **Messages** : quarante signes au plus, sans majuscule ni point (« clé branchée · ⊞U copier mes textes »). C'est le seul canal du système, à la place de toute notification. Un message naît d'un geste de l'auteur ou d'un changement d'état (clé branchée, réseau perdu, synchronisation faite, batterie faible) ; il reste jusqu'au suivant, sans animation ni son. Jamais de message du Compagnon ici.
 - **Batterie faible** : à 15 %, le segment `bat` s'inverse et le message dit « batterie faible · branchez l'appareil, tout est enregistré ». À 3 % : point de restauration de la scène, message, puis veille. Rien n'interrompt la frappe.
 - **Portail captif** : un réseau qui demande une page de connexion est marqué `portail` ; l'appareil ne l'ouvre pas (pas de navigateur) et le dit : « Ce réseau demande une page de connexion. Utilisez le partage de connexion de votre téléphone. »
 
@@ -291,7 +292,7 @@ Sur le X250, l'app est la partie visible du système [D-24]. Maquette : cadre «
 |---|---|
 | Réseau | Wi-Fi oui / non ; réseaux (connecté, protégé, portail), Se connecter, Oublier ; Ethernet automatique |
 | Bluetooth | oui / non ; appareils connus, Oublier ; Appairer un appareil (le code éventuel s'affiche ici) |
-| Écran | luminosité ; mode nuit (auto de 21 h à 7 h, oui, non) et chaleur ; écran externe : Dupliquer ou Externe seul (pas de bureau étendu : une seule fenêtre), échelle |
+| Écran | luminosité ; mode nuit (auto de 21 h à 7 h, oui, non) et chaleur ; écran externe : **externe seul** (l'app passe sur le moniteur branché, l'écran du portable s'éteint ; elle revient quand on le débranche), échelle 100, 125 ou 150 % ; ni duplication ni bureau étendu en v1 |
 | Son | volume, muet ; sons de l'interface, son de frappe |
 | Batterie et veille | les deux batteries ; écran éteint après (5, 15 min, jamais) ; veille après (15, 30 min, jamais) ; rabat fermé = veille ; seuils de batterie faible |
 | Verrouillage | demander le code : à chaque réveil (défaut), après 15 min de veille, jamais ; changer le code (4 à 8 chiffres ou lettres) ; après 5 erreurs, 30 s d'attente, doublées à chaque série ; code oublié : réinitialisé depuis le Mac |
@@ -324,11 +325,11 @@ Sur le X250, l'app est la partie visible du système [D-24]. Maquette : cadre «
 
 **Éteindre et redémarrer** : une confirmation légère. La ligne du menu devient « Confirmer l'extinction `⏎` » pendant 3 secondes ; un second appui éteint. La veille est immédiate.
 
-**Verrouillage.** À l'ouverture du rabat (réglage par défaut), plein écran sur la page : l'heure en Literata 96 px, la date en petites capitales, un champ gravé où chaque caractère tapé devient un point vermillon, « votre code, puis ⏎ ». Aucun titre de projet, aucun texte. La ligne système est réduite à `charpentier`, `verrouillé`, `bat` et l'heure. Code faux : le champ tremble une fois (rien si les animations sont réduites) et se vide. Ce verrou protège des regards ; ce n'est pas un chiffrement du disque.
+**Verrouillage.** À l'ouverture du rabat (réglage par défaut), plein écran sur la page : l'heure en Literata 96 px, la date en petites capitales, un champ gravé où chaque caractère tapé devient un point vermillon, « votre code, puis ⏎ ». Aucun titre de projet, aucun texte. La ligne système est réduite à `charpentier`, `verrouillé`, `bat` et l'heure. Code faux : le champ tremble une fois (rien si les animations sont réduites) et se vide. Ce verrou protège des regards. Contre le vol, **le disque est chiffré** (choix de l'auteur) : un mot de passe est demandé à chaque démarrage de l'appareil, avant l'app, par le système lui-même ; son écran n'est pas dessiné par l'app (fond `#14161a`, texte en chasse fixe `--ch-ink-2`, rien d'autre). Mot de passe oublié : le disque est perdu, la synchronisation est la seule copie ; le premier démarrage le dit avant de le faire choisir. Pendant le verrouillage, la combinaison du terminal de secours est neutralisée ; elle ne doit jamais commencer par `⊞` et une lettre de la ligne système.
 
 **Premier démarrage de l'appareil.** Avant la note de bienvenue (§4.8), une page centrée : « Bienvenue », le fleuron, la phrase du Compagnon en italique bleu (« Avant d'écrire, quatre réglages. Chacun peut attendre. »), puis quatre étapes, chacune avec « Continuer `⏎` » et « Plus tard `Échap` » : `1 wifi` (réseaux, mot de passe), `2 code` (choisir le code de verrouillage, ou « Sans code »), `3 synchronisation` (adresse du serveur, identifiant), `4 compagnon` (clé d'API). Ce qui est remis à plus tard reste accessible par la ligne système et les réglages.
 
-**Hors périmètre** : portail captif (v1), bureau étendu, mises à jour depuis l'appareil. Le terminal de secours reste une combinaison de touches sans interface.
+**Hors périmètre** : portail captif (v1), duplication d'écran et bureau étendu, imprimantes USB anciennes (seules les imprimantes du réseau sans pilote sont prises en charge), mises à jour depuis l'appareil. Le terminal de secours reste une combinaison de touches sans interface.
 
 ## 5. Règles d'UX
 
