@@ -105,6 +105,10 @@ export const MENU_LAYOUT: readonly { readonly menu: string; readonly items: read
     items: [
       'toggleAtelier',
       '-',
+      'atelierInterview',
+      'toggleInterviewMode',
+      'interviewOtherSection',
+      '-',
       'atelierMeta',
       'atelierCharacters',
       'atelierStructure',

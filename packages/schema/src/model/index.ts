@@ -6,6 +6,7 @@ export * from './dictionary';
 export * from './fields';
 export * from './history';
 export * from './ids';
+export * from './interview';
 export * from './manuscript';
 export * from './mentor-chat';
 export * from './modules';

@@ -13,7 +13,8 @@ import {
 } from '@charpentier/schema';
 import { describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
-import { interviewTurn, nextSection, SECTION_SPECIALISTS } from './interview';
+import { nextSection } from '@charpentier/schema';
+import { interviewTurn, SECTION_SPECIALISTS } from './interview';
 
 function project() {
   const root = new Y.Doc({ guid: 'project:p1' });
@@ -253,5 +254,26 @@ describe('the interview with the Compagnon (phase 6.1)', () => {
     // The project now has a proposal: the empty characters come next, unless left for later.
     expect(nextSection(root)).toBe('characters');
     expect(nextSection(root, ['characters'])).toBe('structure');
+  });
+
+  it('keeps the guided question apart, with its why; passes, or goes to the section chosen', async () => {
+    const { root, mentorDoc } = project();
+    const { llm, asked } = fakeLlm({
+      reply: '',
+      question: 'Comment le roman se termine-t-il pour Hélène ?',
+      why: 'La fin fixe ce vers quoi chaque scène avance.',
+      proposals: [],
+    });
+
+    await interviewTurn({ llm, root, mentorDoc, mode: 'guided', section: 'structure' });
+    expect(asked[0]?.system).toContain(SECTION_SPECIALISTS.structure);
+    expect(interviewMessages(mentorDoc).at(-1)).toMatchObject({
+      section: 'structure',
+      question: 'Comment le roman se termine-t-il pour Hélène ?',
+      why: 'La fin fixe ce vers quoi chaque scène avance.',
+    });
+
+    await interviewTurn({ llm, root, mentorDoc, mode: 'guided', section: 'structure', pass: true });
+    expect(asked[1]?.messages.at(-1)).toContain('passes on this question');
   });
 });

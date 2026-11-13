@@ -157,6 +157,9 @@
     "cycleTheme": "Changer de thème (système, clair, sombre)",
     "toggleReducedMotion": "Réduire les animations",
     "toggleAtelier": "Basculer entre Écrire et l’Atelier",
+    "atelierInterview": "Atelier : Entretien",
+    "toggleInterviewMode": "Entretien : libre / dirigé",
+    "interviewOtherSection": "Entretien : autre section…",
     "atelierMeta": "Atelier : Le projet",
     "atelierCharacters": "Atelier : Personnages",
     "atelierStructure": "Atelier : Structure",
@@ -295,7 +298,8 @@
       "characters": "Personnages",
       "structure": "Structure",
       "worldRules": "Règles du monde",
-      "clues": "Indices et révélations"
+      "clues": "Indices et révélations",
+      "interview": "Entretien"
     },
     "kind": {
       "characters": "Personnage",
@@ -304,7 +308,7 @@
       "worldRules": "Règle du monde",
       "clues": "Indice ou révélation"
     },
-    "railHint": "{{toggle}} écrire · {{modules}} modules · Échap revenir au texte",
+    "railHint": "{{toggle}} écrire · {{interview}} entretien · {{modules}} modules · Échap revenir au texte",
     "listHint": "↑↓ parcourir · ↵ fiche · N nouveau · ⌫ corbeille · V valider · X rejeter · / filtrer",
     "filter": "Filtrer…",
     "emptyList": {
@@ -737,5 +741,35 @@
       "offline": "Hors ligne",
       "unauthorized": "Synchro en pause : se reconnecter"
     }
+  },
+  "interview": {
+    "label": "Entretien",
+    "free": "Libre",
+    "guided": "Dirigé",
+    "modesLabel": "Mode de l’entretien",
+    "freeLine": "Parlez de votre roman : il range ce que vous dites dans l’Atelier.",
+    "guidedLine": "Il vous pose ses questions une à une, en commençant par ce qui est vide.",
+    "you": "Vous",
+    "freePlaceholder": "Parlez de votre roman…",
+    "guidedPlaceholder": "Votre réponse…",
+    "proposals_one": "{{count}} proposition",
+    "proposals_other": "{{count}} propositions",
+    "validated": "validée",
+    "rejected": "rejetée",
+    "pathLabel": "Ouvrir {{step}}",
+    "progressLabel": "Avancement de l’Atelier",
+    "state": {
+      "empty": "vide",
+      "proposed": "proposé",
+      "validated": "validé"
+    },
+    "pass": "Passer",
+    "later": "Plus tard",
+    "otherSection": "Autre section…",
+    "pickSection": "Quelle section ?",
+    "hint": "↵ envoyer · ⇧↵ à la ligne · V X valider, rejeter la dernière proposition · {{mode}} libre / dirigé · Échap revenir au texte",
+    "welcome": "Racontez-moi votre roman comme il vous vient : je range ce que vous dites dans l’Atelier, en propositions que vous validez ou non. En mode dirigé, je vous pose mes questions une à une, section par section. Voulez-vous commencer par « Le projet » ?",
+    "startGuided": "Commencer en dirigé",
+    "unavailable": "Le Compagnon n’est pas disponible dans cette version : l’entretien demande l’app de bureau."
   }
 }

@@ -1,0 +1,261 @@
+/* The interview with the Compagnon (docs/DESIGN.md §4.5, D-26): one column on the page. */
+.ch-interview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ch-space-3);
+  min-height: 0;
+  width: min(46rem, 100%);
+  margin: 0 auto;
+  padding-bottom: 12px;
+}
+
+.ch-interview-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.ch-interview-title {
+  flex: 1;
+}
+
+.ch-interview-title h2 {
+  margin: 0;
+  color: var(--ch-ink);
+  font: 400 26px / 1.2 var(--ch-font-text);
+}
+
+.ch-interview-title p {
+  margin: 2px 0 0;
+  color: var(--ch-muted);
+  font: var(--ch-ui-sm) var(--ch-font-ui);
+}
+
+.ch-interview-modes {
+  align-items: center;
+}
+
+.ch-interview-modes button {
+  flex: none;
+  padding: 5px 11px;
+}
+
+.ch-interview-modes kbd {
+  margin-left: 6px;
+  color: var(--ch-faint);
+}
+
+.ch-interview-log {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 4px 10px 10px;
+}
+
+/* The author's words, in a hollow frame: they stay. */
+.ch-interview-author {
+  margin: var(--ch-space-4) 0 var(--ch-space-4) 4rem;
+  padding: 11px 16px;
+  border-radius: var(--ch-radius-md);
+  box-shadow: var(--ch-inset);
+  color: var(--ch-ink);
+  font: 16px / 1.5 var(--ch-font-text);
+  white-space: pre-wrap;
+}
+
+.ch-interview-turn {
+  margin: var(--ch-space-4) 0;
+}
+
+.ch-interview-who {
+  margin: 0 0 4px;
+  color: var(--ch-mentor);
+}
+
+.ch-interview-say {
+  margin: 0 0 var(--ch-space-2);
+  color: var(--ch-ink-2);
+  font: 15px / 1.55 var(--ch-font-ui);
+  white-space: pre-wrap;
+}
+
+.ch-interview-say.is-question {
+  color: var(--ch-mentor);
+  font: italic 16px / 1.5 var(--ch-font-text);
+}
+
+.ch-interview-proposals-title {
+  margin: var(--ch-space-3) 0 6px;
+  color: var(--ch-mentor);
+  font-size: 11px;
+}
+
+/* A proposal: raised, like every proposal; sinks when validated, fades when rejected. */
+.ch-interview-proposal {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  padding: 9px 12px;
+  border-radius: var(--ch-radius-md);
+  box-shadow: var(--ch-raise-s);
+  outline: none;
+  transition:
+    box-shadow var(--ch-dur-relief) var(--ch-ease),
+    background-color var(--ch-dur-relief) var(--ch-ease);
+}
+
+.ch-interview-proposal:focus-visible {
+  background: var(--ch-lit-bg);
+  box-shadow:
+    var(--ch-lit),
+    inset 3px 0 0 var(--ch-author);
+}
+
+.ch-interview-proposal.is-validated {
+  box-shadow: var(--ch-inset);
+}
+
+.ch-interview-proposal.is-validated .ch-interview-value {
+  color: var(--ch-ink);
+  font-style: normal;
+}
+
+.ch-interview-proposal.is-rejected {
+  box-shadow: none;
+  opacity: 0.45;
+}
+
+.ch-interview-proposal.is-rejected .ch-interview-value {
+  text-decoration: line-through;
+}
+
+.ch-interview-proposal-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.ch-interview-path {
+  margin: 0;
+  color: var(--ch-muted);
+  font: 11.5px var(--ch-font-ui);
+}
+
+.ch-interview-path button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.ch-interview-path button:hover {
+  color: var(--ch-ink);
+  text-decoration: underline;
+}
+
+.ch-interview-value {
+  margin: 2px 0 0;
+  color: var(--ch-mentor);
+  font: italic 15px / 1.4 var(--ch-font-text);
+}
+
+.ch-interview-proposal-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.ch-interview-proposal-state {
+  color: var(--ch-faint);
+  font: var(--ch-ui-xs) var(--ch-font-ui);
+}
+
+/* Guided mode: the progress line, then the question in progress. */
+.ch-interview-progress {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 0;
+  padding: 0 4px;
+  list-style: none;
+  color: var(--ch-ink-2);
+  font: var(--ch-ui-sm) var(--ch-font-ui);
+}
+
+.ch-interview-progress .is-current {
+  color: var(--ch-mentor);
+}
+
+.ch-interview-question {
+  padding: 14px 18px;
+  border-radius: var(--ch-radius-lg);
+  box-shadow: var(--ch-raise);
+}
+
+.ch-interview-question-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  color: var(--ch-mentor);
+}
+
+.ch-interview-question-head .ch-label {
+  margin: 0;
+}
+
+.ch-interview-question-state {
+  margin-left: auto;
+  color: var(--ch-muted);
+  font: 500 10.5px var(--ch-font-ui);
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.06em;
+}
+
+.ch-interview-question-text {
+  margin: 10px 0 4px;
+  color: var(--ch-mentor);
+  font: italic 20px / 1.4 var(--ch-font-text);
+}
+
+.ch-interview-question-why {
+  margin: 0 0 10px;
+  color: var(--ch-muted);
+  font: var(--ch-ui-sm) var(--ch-font-ui);
+}
+
+.ch-interview-question-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.ch-interview-other {
+  margin-left: auto;
+}
+
+.ch-interview-field {
+  resize: none;
+  font: 15px / 1.5 var(--ch-font-text);
+  field-sizing: content;
+  max-height: 10rem;
+}
+
+.ch-interview-hint {
+  margin: 0;
+  color: var(--ch-faint);
+  font: var(--ch-ui-2xs) var(--ch-font-ui);
+}
+
+/* The interview in the rail: its medallion in blue, a rule before the modules. */
+.ch-atl-rail-rule {
+  height: 0;
+  margin: 6px 4px 10px;
+  border-top: 1px solid var(--ch-shade);
+  border-bottom: 1px solid var(--ch-highlight);
+}
+
+/* The Atelier with the interview: the rail, then the column on the page. */
+.ch-atelier:has(.ch-interview) {
+  grid-template-columns: 13.5rem minmax(0, 1fr);
+}

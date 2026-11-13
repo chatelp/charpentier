@@ -1,4 +1,5 @@
-import type { EntityModule } from '@charpentier/schema';
+import { interviewSections, type EntityModule } from '@charpentier/schema';
+import { askInterview } from '../atelier/interview-requests';
 import { createEntityPrompt } from '../atelier/atelier-actions';
 import { ATELIER_MODULES, type AtelierModule } from '../atelier/module-defs';
 import type { WorkspaceContext } from '../workspace/workspace-context';
@@ -39,6 +40,46 @@ export const atelierCommands: readonly AtelierCommand[] = [
     id: 'toggleRejected',
     scope: 'global',
     run: (ctx) => ctx.updatePrefs((p) => ({ showRejected: !p.showRejected })),
+  },
+  {
+    // The interview with the Compagnon heads the rail (D-26).
+    id: 'atelierInterview',
+    scope: 'global',
+    keybinding: 'Mod-0',
+    run: (ctx) => ctx.openAtelier({ rail: 'interview' }),
+  },
+  {
+    id: 'toggleInterviewMode',
+    scope: 'global',
+    keybinding: 'Mod-Shift-m',
+    run: (ctx) => {
+      ctx.updatePrefs((p) => ({ interviewGuided: !p.interviewGuided }));
+      ctx.openAtelier({ rail: 'interview' });
+    },
+  },
+  {
+    // « Autre section… »: the guided interview goes on with the section chosen.
+    id: 'interviewOtherSection',
+    scope: 'global',
+    keybinding: 'Mod-Shift-s',
+    isEnabled: (ctx) => ctx.platform.agents.status() !== 'disabled',
+    run: (ctx) =>
+      ctx.openPalette({
+        kind: 'pick',
+        placeholder: ctx.t('interview.pickSection'),
+        items: interviewSections.map((section) => ({
+          id: section,
+          label: ctx.t(`atelier.modules.${section}`),
+        })),
+        onPick: (section) => {
+          ctx.updatePrefs({ interviewGuided: true });
+          ctx.openAtelier({ rail: 'interview' });
+          void askInterview(ctx, {
+            mode: 'guided',
+            section: section as (typeof interviewSections)[number],
+          });
+        },
+      }),
   },
   ...ATELIER_MODULES.map((rail, i): AtelierCommand => ({
     id: RAIL_COMMANDS[rail],

@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import './icons.css';
 
 /**
- * The seven engraved pictograms (docs/design/pictos, docs/DESIGN.md §4.11):
+ * The eight engraved pictograms (docs/design/pictos, docs/DESIGN.md §4.11):
  * 24 × 24, a 1.5 px stroke in the current colour. Never alone: always next
  * to their label, so they are hidden from assistive technologies.
  */
@@ -17,6 +17,7 @@ const DRAWINGS = {
     <path d="M4 5.5c3-1 6-.8 8 1 2-1.8 5-2 8-1V18c-3-1-6-.8-8 1-2-1.8-5-2-8-1zM12 6.5V19" />
   ),
   meta: <path d="M6 3h9l4 4v14H6zM15 3v4h4M9 12h7M9 16h5" />,
+  entretien: <path d="M4 5h16v11H10l-4 4v-4H4zM8 9.5h8M8 12.5h5" />,
   personnages: (
     <>
       <circle cx="12" cy="8" r="3.5" />
@@ -63,8 +64,8 @@ export function Medallion({
   mentor = false,
 }: {
   readonly name: PictogramName;
-  /** 34 in a panel title, 30 in the Atelier's rail. */
-  readonly size: 34 | 30;
+  /** 46 at the head of the interview, 34 in a panel title, 30 in the Atelier's rail. */
+  readonly size: 46 | 34 | 30;
   readonly active?: boolean;
   readonly mentor?: boolean;
 }) {
@@ -73,7 +74,7 @@ export function Medallion({
       className={`ch-medallion${active ? ' is-active' : ''}${mentor ? ' is-mentor' : ''}`}
       style={{ width: size, height: size }}
     >
-      <Pictogram name={name} size={size === 34 ? 19 : 17} />
+      <Pictogram name={name} size={size === 46 ? 24 : size === 34 ? 19 : 17} />
     </span>
   );
 }

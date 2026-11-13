@@ -33,11 +33,16 @@ import { CommandZone, ModeSwitch } from '../workspace/EntryPoints';
 import { playSound } from '../sound/sounds';
 import { Medallion, Monogram, type PictogramName } from '../icons/Pictogram';
 import { FieldRow } from './FieldRow';
+import { Interview } from './Interview';
 import { ATELIER_MODULES, moduleDefs, type AtelierModule, type FieldDef } from './module-defs';
 import './atelier.css';
 
+/** The rail: the interview with the Compagnon (D-26), then the modules. */
+export type AtelierRail = 'interview' | AtelierModule;
+const RAIL: readonly AtelierRail[] = ['interview', ...ATELIER_MODULES];
+
 export interface AtelierLocation {
-  readonly rail: AtelierModule;
+  readonly rail: AtelierRail;
   readonly target?: SheetTarget;
 }
 
@@ -85,7 +90,7 @@ function moveFocus(container: HTMLElement | null, selector: string, step: 1 | -1
 }
 
 /** The pictogram of each module in the rail (docs/DESIGN.md §4.11). */
-const RAIL_PICTOS: Record<AtelierModule, PictogramName> = {
+export const RAIL_PICTOS: Record<AtelierModule, PictogramName> = {
   meta: 'meta',
   characters: 'personnages',
   structure: 'structure',
@@ -124,12 +129,16 @@ export function Atelier({
 
   const showRejected = ctx.prefs.showRejected;
   const toggleRejected = () => ctx.updatePrefs((p) => ({ showRejected: !p.showRejected }));
-  const entries = useEntries(data, location.rail, numbers, showRejected);
-  const rejectedEntries = RAIL_SOURCES[location.rail].reduce(
+  const interview = location.rail === 'interview';
+  // (On the interview's page, the module hooks read « Le projet » and show nothing.)
+  const rail: AtelierModule = location.rail === 'interview' ? 'meta' : location.rail;
+  const [interviewFocus, setInterviewFocus] = useState(0);
+  const entries = useEntries(data, rail, numbers, showRejected);
+  const rejectedEntries = RAIL_SOURCES[rail].reduce(
     (n, m) => n + (data.rejectedEntities[m as EntityModule]?.length ?? 0),
     0,
   );
-  const hasList = location.rail !== 'meta';
+  const hasList = !interview && rail !== 'meta';
   const shown = filterByQuery(entries, query, (e) => `${e.title} ${e.subtitle ?? ''}`);
   const selected =
     entries.find(
@@ -138,12 +147,13 @@ export function Atelier({
         e.target.entityId === location.target.entityId,
     ) ?? entries[0];
 
-  const select = (entry: Entry | undefined) =>
-    entry && onLocation({ rail: location.rail, target: entry.target });
+  const select = (entry: Entry | undefined) => entry && onLocation({ rail, target: entry.target });
 
   // Focus: on the list (or the sheet when there is none) when asked.
   useEffect(() => {
     if (!active) return;
+    // (The interview takes the focus itself, on the same request.)
+    if (interview) return;
     if (hasList && selected) focusWithin(listRef);
     else if (hasList) focusWithin(railRef);
     else sheetRef.current?.querySelector<HTMLElement>('[data-field-value]')?.focus();
@@ -170,26 +180,22 @@ export function Atelier({
       !(event.target instanceof HTMLElement && event.target.hasAttribute('data-field-value'))
     ) {
       // N: a new entry, from the rail or the list.
-      const module = newEntityModule(location.rail, selected);
+      if (interview) return;
+      const module = newEntityModule(rail, selected);
       if (!module) return;
       event.preventDefault();
       createEntityPrompt(ctx, module, (id) =>
-        onLocation({ rail: location.rail, target: { module, entityId: id } }, true),
+        onLocation({ rail, target: { module, entityId: id } }, true),
       );
     }
   };
 
   const onRailKeyDown = (event: KeyboardEvent<HTMLUListElement>) => {
-    const index = ATELIER_MODULES.indexOf(location.rail);
+    const index = RAIL.indexOf(location.rail);
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault();
       const next =
-        ATELIER_MODULES[
-          Math.max(
-            0,
-            Math.min(ATELIER_MODULES.length - 1, index + (event.key === 'ArrowDown' ? 1 : -1)),
-          )
-        ];
+        RAIL[Math.max(0, Math.min(RAIL.length - 1, index + (event.key === 'ArrowDown' ? 1 : -1)))];
       if (next) {
         onLocation({ rail: next });
         setQuery('');
@@ -197,7 +203,8 @@ export function Atelier({
       }
     } else if (event.key === 'Enter' || event.key === 'ArrowRight') {
       event.preventDefault();
-      if (hasList) focusWithin(listRef);
+      if (interview) setInterviewFocus((n) => n + 1);
+      else if (hasList) focusWithin(listRef);
       else sheetRef.current?.querySelector<HTMLElement>('[data-field-value]')?.focus();
     }
   };
@@ -278,6 +285,18 @@ export function Atelier({
           aria-label={t('atelier.modulesLabel')}
           onKeyDown={onRailKeyDown}
         >
+          <li
+            role="option"
+            aria-selected={interview}
+            tabIndex={interview ? 0 : -1}
+            data-atl-focus=""
+            className="ch-atl-module is-interview"
+            onClick={() => onLocation({ rail: 'interview' })}
+          >
+            <Medallion name="entretien" size={30} mentor />
+            <span className="ch-atl-module-name">{t('atelier.modules.interview')}</span>
+          </li>
+          <li role="separator" className="ch-atl-rail-rule" aria-hidden="true" />
           {ATELIER_MODULES.map((m) => {
             const pending = pendingCount(data, m);
             return (
@@ -310,6 +329,7 @@ export function Atelier({
         <p className="ch-atl-hint">
           {t('atelier.railHint', {
             toggle: ctx.shortcutLabel('toggleAtelier') ?? '',
+            interview: ctx.shortcutLabel('atelierInterview') ?? '',
             // ⌘1 or ⌥⌘1 (where a browser keeps ⌘1…9) → ⌘1…5
             modules: `${ctx.shortcutLabel('atelierMeta') ?? ''}…${ATELIER_MODULES.length}`,
           })}
@@ -338,7 +358,7 @@ export function Atelier({
             />
             <kbd className="ch-filter-key">{t('atelier.filterKey')}</kbd>
           </div>
-          {NEW_ENTRY[location.rail].map((module) => (
+          {NEW_ENTRY[rail].map((module) => (
             <button
               key={module}
               type="button"
@@ -346,21 +366,15 @@ export function Atelier({
               title={t('atelier.newKeyHint')}
               onClick={() =>
                 createEntityPrompt(ctx, module, (id) =>
-                  onLocation({ rail: location.rail, target: { module, entityId: id } }, true),
+                  onLocation({ rail, target: { module, entityId: id } }, true),
                 )
               }
             >
               {t(`atelier.newEntry.${module}`)}
             </button>
           ))}
-          {entries.length === 0 && (
-            <p className="ch-atl-empty">{t(`atelier.emptyList.${location.rail}`)}</p>
-          )}
-          <ul
-            className="ch-atl-entries"
-            role="listbox"
-            aria-label={t(`atelier.modules.${location.rail}`)}
-          >
+          {entries.length === 0 && <p className="ch-atl-empty">{t(`atelier.emptyList.${rail}`)}</p>}
+          <ul className="ch-atl-entries" role="listbox" aria-label={t(`atelier.modules.${rail}`)}>
             {shown.map((entry, i) => (
               <EntryItem
                 key={entry.key}
@@ -390,8 +404,17 @@ export function Atelier({
         </div>
       )}
 
-      <div ref={sheetRef} className="ch-sheet" onKeyDown={onSheetKeyDown}>
-        {selected && (
+      {interview && (
+        <Interview
+          ctx={ctx}
+          active={active}
+          focusRequest={focusRequest + interviewFocus}
+          onOpen={(location) => onLocation(location, true)}
+        />
+      )}
+
+      <div ref={sheetRef} className="ch-sheet" hidden={interview} onKeyDown={onSheetKeyDown}>
+        {selected && !interview && (
           <Sheet
             ctx={ctx}
             data={data}

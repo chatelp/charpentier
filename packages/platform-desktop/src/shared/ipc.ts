@@ -58,6 +58,8 @@ export type Request =
       readonly projectId: string;
       readonly mode: 'free' | 'guided';
       readonly skip?: readonly string[];
+      readonly section?: string;
+      readonly pass?: boolean;
     }
   | { readonly type: 'sync.status' }
   | { readonly type: 'sync.account' }

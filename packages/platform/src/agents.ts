@@ -50,6 +50,10 @@ export interface AgentsService {
     readonly projectId: string;
     readonly mode: 'free' | 'guided';
     readonly skip?: readonly string[];
+    /** « Autre section… »: this section instead of the emptiest one. */
+    readonly section?: string;
+    /** « Passer »: another question on the same section. */
+    readonly pass?: boolean;
   }): Promise<AskResult>;
   /** D-20: the model of the light, frequent work. */
   lightModel(): Promise<'opus' | 'haiku'>;

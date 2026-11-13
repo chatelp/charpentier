@@ -168,10 +168,11 @@ export class AgentHost {
     projectId: string,
     mode: 'free' | 'guided',
     skip: readonly string[],
+    choice: { section?: string; pass?: boolean },
   ): Promise<AskResult> {
     if (this.llm.status() === 'unconfigured') return 'unavailable';
     const previous = this.#running.get(projectId) ?? Promise.resolve();
-    const run = previous.then(() => this.#interviewNow(projectId, mode, skip));
+    const run = previous.then(() => this.#interviewNow(projectId, mode, skip, choice));
     this.#running.set(
       projectId,
       run.catch(() => {}),
@@ -183,7 +184,10 @@ export class AgentHost {
     projectId: string,
     mode: 'free' | 'guided',
     skip: readonly string[],
+    choice: { section?: string; pass?: boolean },
   ): Promise<AskResult> {
+    const isSection = (s: string | undefined): s is InterviewSection =>
+      s !== undefined && (interviewSections as readonly string[]).includes(s);
     const rootGuid = guids.project(projectId);
     const mentorGuid = guids.mentor(projectId);
     try {
@@ -197,9 +201,9 @@ export class AgentHost {
           root,
           mentorDoc,
           mode,
-          skip: skip.filter((s): s is InterviewSection =>
-            (interviewSections as readonly string[]).includes(s),
-          ),
+          skip: skip.filter(isSection),
+          ...(isSection(choice.section) && { section: choice.section }),
+          ...(choice.pass && { pass: true }),
         });
         return 'answered' as const;
       });
@@ -282,7 +286,10 @@ export class AgentHost {
       case 'agents.reviewChapter':
         return this.#reviewChapter(request.projectId, request.chapterId, request.automatic);
       case 'agents.interview':
-        return this.#interview(request.projectId, request.mode, request.skip ?? []);
+        return this.#interview(request.projectId, request.mode, request.skip ?? [], {
+          ...(request.section !== undefined && { section: request.section }),
+          ...(request.pass !== undefined && { pass: request.pass }),
+        });
       case 'agents.lightModel':
         return this.lightModel.get();
       case 'agents.setLightModel':

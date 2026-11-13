@@ -5,7 +5,6 @@ import {
   createAgentWriter,
   fieldChoices,
   interviewMessages,
-  interviewSections,
   knownFields,
   listEntities,
   listTrashedEntities,
@@ -20,6 +19,7 @@ import {
   type InterviewMode,
   type InterviewPlacement,
   type InterviewSection,
+  nextSection,
   type SingletonModule,
 } from '@charpentier/schema';
 import type * as Y from 'yjs';
@@ -84,6 +84,8 @@ const string = { type: 'string' };
 /** JSON Schema of one turn of the interview (structured output). */
 export const interviewSchema = object({
   reply: string,
+  question: nullable(string),
+  why: nullable(string),
   proposals: {
     type: 'array',
     items: object({
@@ -99,6 +101,8 @@ export const interviewSchema = object({
 
 interface Turn {
   reply: string;
+  question: string | null;
+  why: string | null;
   proposals: {
     module: InterviewModule;
     entityId: string | null;
@@ -125,8 +129,8 @@ export function interviewSystemPrompt(input: {
     input.mode === 'free'
       ? `MODE: FREE. The author talks freely about their book, as to a friend who knows the craft. Answer what they say or ask, briefly, and put what they tell you about the book in the right section of the Atelier (see PROPOSALS). In "reply", say in a few words where you put what ("I noted Hélène in the characters, and the period in the project."). You may end with one question, if it helps.`
       : input.section
-        ? `MODE: GUIDED. You lead, one question at a time, on one section of the Atelier. Take what the author just answered into PROPOSALS, then ask ONE next question about this section (what is still missing or only proposed in it), in "reply", after a short acknowledgement. If the author just asked to move on, ask your first question.\n${SECTION_SPECIALISTS[input.section]}`
-        : `MODE: GUIDED. Every section of the Atelier has a first answer. Take the author's last answer into PROPOSALS, say so in "reply", and invite them to review the proposals in the Atelier or to go on freely.`;
+        ? `MODE: GUIDED. You lead, one question at a time, on one section of the Atelier. Take what the author just answered into PROPOSALS and acknowledge it briefly in "reply" (where you put what; empty acknowledgement when there was no answer). Then ask ONE next question about this section (what is still missing or only proposed in it) in "question", and say in "why" in one short sentence why it matters for the book. If the author passed on your last question, ask a different one.\n${SECTION_SPECIALISTS[input.section]}`
+        : `MODE: GUIDED. Every section of the Atelier has a first answer. Take the author's last answer into PROPOSALS, say so in "reply", and invite them to review the proposals in the Atelier or to go on freely; "question" and "why" are null.`;
   return `${compagnonSystemPrompt(input)}
 
 THE INTERVIEW
@@ -147,7 +151,7 @@ ${choices}
 - No proposal is fine: an empty list when the author said nothing for the sheets.
 
 OUTPUT
-Return JSON with "reply" (what you say to the author) and "proposals". There is no example sentence in the interview.`;
+Return JSON with "reply" (what you say to the author), "question" and "why" (guided mode only, null otherwise) and "proposals". There is no example sentence in the interview.`;
 }
 
 const normalize = (s: string) =>
@@ -199,52 +203,6 @@ export function atelierState(root: Y.Doc): string {
   return lines.join('\n');
 }
 
-type SectionState = 'empty' | 'proposed' | 'validated';
-
-const entitiesState = (root: Y.Doc, modules: readonly EntityModule[]): SectionState => {
-  const entities = modules
-    .flatMap((m) => listEntities(root, m))
-    .filter((e) => e.status !== 'rejected');
-  if (entities.some((e) => e.status === 'validated')) return 'validated';
-  return entities.length ? 'proposed' : 'empty';
-};
-
-const singletonState = (root: Y.Doc, module: SingletonModule, keys: readonly string[]) => {
-  const fields = readSingleton(root, module);
-  const states = keys.map((k) => fields[k]?.status);
-  if (states.some((s) => s === 'validated')) return 'validated';
-  return states.some((s) => s === 'proposed') ? 'proposed' : 'empty';
-};
-
-/** How far each section of the Atelier is filled. */
-export function sectionStates(root: Y.Doc): Record<InterviewSection, SectionState> {
-  const structure = singletonState(root, 'structure', ['narrativeModel']);
-  const acts = entitiesState(root, ['acts', 'arcs']);
-  const rank = { empty: 0, proposed: 1, validated: 2 } as const;
-  return {
-    meta: singletonState(root, 'meta', ['pitch', 'intention']),
-    characters: entitiesState(root, ['characters']),
-    structure: rank[structure] >= rank[acts] ? structure : acts,
-    worldRules: entitiesState(root, ['worldRules']),
-    clues: entitiesState(root, ['clues']),
-  };
-}
-
-/**
- * The section the guided interview asks about: the first empty one, then the
- * first only proposed, in the Atelier's order; none when all are validated.
- */
-export function nextSection(
-  root: Y.Doc,
-  skip: readonly InterviewSection[] = [],
-): InterviewSection | null {
-  const states = sectionStates(root);
-  const open = interviewSections.filter((s) => !skip.includes(s));
-  return (
-    open.find((s) => states[s] === 'empty') ?? open.find((s) => states[s] === 'proposed') ?? null
-  );
-}
-
 /** Texts the agent says itself, by language. */
 const FALLBACK: Record<string, string> = {
   fr: 'Je préfère ne rien écrire pour votre roman : c’est votre voix qui compte. Parlez-moi plutôt de votre histoire, je range ce que vous me dites dans l’Atelier.',
@@ -256,9 +214,14 @@ const CORRECTION = `Your previous answer broke THE RULE: it contained text writt
 function parseTurn(text: string): Turn | undefined {
   try {
     const value = JSON.parse(text) as Partial<Turn>;
-    if (typeof value.reply !== 'string' || !value.reply.trim()) return undefined;
+    if (typeof value.reply !== 'string') return undefined;
+    const text_ = (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim() : null);
+    const question = text_(value.question);
+    if (!value.reply.trim() && !question) return undefined;
     return {
       reply: value.reply.trim(),
+      question,
+      why: question ? text_(value.why) : null,
       proposals: Array.isArray(value.proposals) ? value.proposals : [],
     };
   } catch {
@@ -288,6 +251,10 @@ export async function interviewTurn(input: {
   readonly mode: InterviewMode;
   /** Sections the author asked to leave for later (guided mode). */
   readonly skip?: readonly InterviewSection[];
+  /** The section the author chose (« Autre section… »), instead of the emptiest one. */
+  readonly section?: InterviewSection;
+  /** The author passes on the question in progress: another one, same section. */
+  readonly pass?: boolean;
   readonly signal?: AbortSignal;
 }): Promise<InterviewResult> {
   const { llm, root, mentorDoc, mode } = input;
@@ -297,7 +264,7 @@ export async function interviewTurn(input: {
   if (mode === 'free' && !authorSpoke)
     return { answered: false, placed: [], dropped: 0, guarded: false };
 
-  const section = mode === 'guided' ? nextSection(root, input.skip) : null;
+  const section = mode === 'guided' ? (input.section ?? nextSection(root, input.skip)) : null;
   const language = readProjectMeta(root)?.language ?? 'fr';
   const level = readMentorLevel(root);
   const history = messages.slice(-HISTORY);
@@ -312,14 +279,24 @@ export async function interviewTurn(input: {
     },
     ...history.map((m) => ({
       role: m.role === 'author' ? ('user' as const) : ('assistant' as const),
-      content: m.role === 'author' ? m.text : JSON.stringify({ reply: m.text, proposals: [] }),
+      content:
+        m.role === 'author'
+          ? m.text
+          : JSON.stringify({
+              reply: m.text,
+              question: m.question ?? null,
+              why: m.why ?? null,
+              proposals: [],
+            }),
     })),
     // Guided mode, the Compagnon speaks first (or again): the request is said plainly.
     ...(!authorSpoke
       ? [
           {
             role: 'user' as const,
-            content: '[The author opens the guided interview: ask your question.]',
+            content: input.pass
+              ? '[The author passes on this question: ask a different one, same section.]'
+              : '[The author opens the guided interview: ask your question.]',
           },
         ]
       : []),
@@ -339,7 +316,13 @@ export async function interviewTurn(input: {
       input.signal,
     );
     const parsed = parseTurn(response.text);
-    if (parsed && narrativeProseIn(parsed.reply, authorText).length === 0) turn = parsed;
+    if (
+      parsed &&
+      [parsed.reply, parsed.question ?? '', parsed.why ?? ''].every(
+        (t) => narrativeProseIn(t, authorText).length === 0,
+      )
+    )
+      turn = parsed;
   }
   if (!turn) {
     addInterviewMessage(
@@ -368,6 +351,8 @@ export async function interviewTurn(input: {
       text: turn.reply,
       mode,
       ...(section && { section }),
+      ...(turn.question && { question: turn.question }),
+      ...(turn.why && { why: turn.why }),
       ...(placed.length > 0 && { placed }),
     },
     agentOrigin('interview'),

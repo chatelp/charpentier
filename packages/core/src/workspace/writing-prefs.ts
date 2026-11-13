@@ -19,6 +19,8 @@ export interface WritingPrefs {
   readonly typingSounds: boolean;
   /** Rejected values and entries shown in the Atelier (docs/DESIGN.md §4.5), hidden by default. */
   readonly showRejected: boolean;
+  /** The interview with the Compagnon in guided mode (D-26), free by default. */
+  readonly interviewGuided: boolean;
 }
 
 export const TEXT_SIZE = { min: 15, max: 26, step: 1, initial: 19 } as const;
@@ -34,6 +36,7 @@ export const DEFAULT_WRITING_PREFS: WritingPrefs = {
   uiSounds: false,
   typingSounds: false,
   showRejected: false,
+  interviewGuided: false,
 };
 
 export const WRITING_PREFS_KEY = 'writing';
@@ -63,6 +66,7 @@ export function normalizeWritingPrefs(raw: unknown): WritingPrefs {
     uiSounds: flag('uiSounds'),
     typingSounds: flag('typingSounds'),
     showRejected: flag('showRejected'),
+    interviewGuided: flag('interviewGuided'),
   };
 }
 

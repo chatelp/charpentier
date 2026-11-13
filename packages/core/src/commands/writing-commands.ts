@@ -23,7 +23,8 @@ export const writingCommands: readonly WritingCommand[] = [
   {
     id: 'resetTextSize',
     scope: 'global',
-    keybinding: ['Mod-0'],
+    // ⌘0 opens the interview, before ⌘1…5 in the Atelier's rail (DESIGN §4.5).
+    keybinding: ['Mod-Alt-0'],
     run: (ctx) => ctx.updatePrefs((p) => stepTextSize(p, 0)),
   },
   {

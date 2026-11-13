@@ -29,8 +29,8 @@ export {
   interviewTurn,
   INTERVIEW_FIELDS,
   MAX_INTERVIEW_VALUE,
-  nextSection,
   SECTION_SPECIALISTS,
-  sectionStates,
   type InterviewResult,
 } from './interview';
+// The progress of the interview lives in the schema (the interface reads it too).
+export { nextSection, sectionStates } from '@charpentier/schema';

@@ -55,6 +55,9 @@ export interface InterviewMessage extends Omit<ChatMessage, 'example' | 'sceneId
   readonly mode?: InterviewMode;
   /** The section the Compagnon's question is about (guided mode). */
   readonly section?: InterviewSection;
+  /** Guided mode: the Compagnon's next question, and why he asks it. */
+  readonly question?: string;
+  readonly why?: string;
   /** What this answer proposed in the Atelier (the field, or the new sheet). */
   readonly placed?: readonly InterviewPlacement[];
 }
@@ -98,6 +101,8 @@ export function addInterviewMessage(
         text: message.text,
         ...(message.mode !== undefined && { mode: message.mode }),
         ...(message.section !== undefined && { section: message.section }),
+        ...(message.question !== undefined && { question: message.question }),
+        ...(message.why !== undefined && { why: message.why }),
         ...(message.placed !== undefined && { placed: message.placed }),
       },
     ]);

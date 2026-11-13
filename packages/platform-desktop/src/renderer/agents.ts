@@ -58,6 +58,8 @@ export class IpcAgentsService implements AgentsService {
     readonly projectId: string;
     readonly mode: 'free' | 'guided';
     readonly skip?: readonly string[];
+    readonly section?: string;
+    readonly pass?: boolean;
   }) {
     return this.bridge.invoke({ type: 'agents.interview', ...input });
   }
