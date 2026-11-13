@@ -13,4 +13,6 @@ Huit pictogrammes au trait, pour les médaillons des panneaux et des modules (DE
 | `regles.svg` | module Règles du monde | fil à plomb |
 | `indices.svg` | module Indices et révélations | loupe |
 
+À part, **`equerre.svg`** : la marque du système du X250 (segment `système`, titre des réglages du système, moniteur), en aplat et non au trait. C'est la forme de l'icône de l'app ([`../icon/charpentier-petit.svg`](../icon/charpentier-petit.svg)) : l'équerre en `currentColor`, le point en bleu du Compagnon de la matière du système (`#86aedb`). 13 px dans la ligne, 14 px dans les titres.
+
 Tailles d'usage : 19 px dans un médaillon de 34 px (titre de panneau), 17 px dans un médaillon de 30 px (rail de l'Atelier). Jamais seuls : toujours à côté de leur libellé.

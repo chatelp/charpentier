@@ -292,12 +292,12 @@ Sur le X250, l'app est la partie visible du système [D-24]. Maquette : cadre «
 
 | Segment | Affiche | Un clic ou sa touche déplie |
 |---|---|---|
-| `système` `⊞` | l'équerre et le mot | le menu : Réglages du système… `⊞,`, Imprimer… `⊞P`, Copier mes textes sur une clé USB `⊞U`, Verrouiller `⊞L`, Mettre en veille `⊞⏎`, Redémarrer…, Éteindre… ; en tête la version (`0.5.0 · nixos 26.11 · x250`), en pied « allumé depuis 3 h 12 ». Une version prête : « Redémarrer… » devient « Redémarrer et passer à 0.6.0… `⊞R` », et le pied commence par « 0.6.0 s'installe au prochain démarrage, quel qu'il soit » |
+| `système` `⊞` | l'équerre ([design/pictos/equerre.svg](design/pictos/equerre.svg), en aplat, la forme de l'icône) et le mot | le menu : Réglages du système… `⊞,`, Imprimer… `⊞P`, Copier mes textes sur une clé USB `⊞U`, Verrouiller `⊞L`, Mettre en veille `⊞⏎`, Redémarrer…, Éteindre… ; en tête la version (`0.5.0 · nixos 26.11 · x250`), en pied « allumé depuis 3 h 12 ». Une version prête : « Redémarrer… » devient « Redémarrer et passer à 0.6.0… `⊞R` », et le pied commence par « 0.6.0 s'installe au prochain démarrage, quel qu'il soit » |
 | message | le dernier message du système, en `--ch-muted` ; vide : `journal · 7` en `--ch-faint` | le **journal** `⊞J` : les messages depuis le démarrage, du plus récent au plus ancien, avec leur heure ; effacé à l'extinction |
 | `maj` | la version prête (`maj 0.6.0`), **seulement tant qu'une mise à jour attend le redémarrage** ; disparaît au démarrage suivant | la mise à jour `⊞R` : version, date de publication, notes, Redémarrer maintenant, Plus tard (voir « Mises à jour ») |
 | `usb` | le nom de la clé, seulement si une clé est branchée | Copier mes textes `⊞U`, Éjecter |
 | `cpu` | une mini-courbe de douze colonnes en caractères de bloc (`▁▂▃▅`), le pourcentage et la température (`12 % 48°`) | le **moniteur** `⊞M`, plein cadre (voir plus bas) |
-| `wifi` | le réseau et la force du signal (`▂▄▆█`, barres manquantes en `--ch-faint`) ; `wifi non` si coupé | interrupteur Wi-Fi, réseaux visibles, mot de passe, Oublier, adresse `⊞W` |
+| `wifi` | le réseau et la force du signal (`▂▄▆█`, barres manquantes en `--ch-faint`) ; `wifi non` si coupé | interrupteur Wi-Fi, réseaux visibles (signal, puis `connecté`, `protégé` ou `portail` écrits en toutes lettres, en `--ch-faint` ; jamais d'émoji ni de cadenas), mot de passe, Oublier, adresse `⊞W` |
 | `bt` | le nombre d'appareils connectés ; **absent quand le Bluetooth est coupé** (il se rallume par `⊞B`, les réglages ou `:bt oui`) | interrupteur, appareils connus, Appairer… `⊞B` |
 | `lum` | jauge et valeur | luminosité, mode nuit (auto, oui, non), écran externe |
 | `vol` | jauge et valeur ; `muet` | volume, muet, les deux réglages de sons de l'app |
