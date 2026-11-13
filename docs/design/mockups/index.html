@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,500;1,7..72,400&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Public+Sans:wght@400;500;600&family=Source+Sans+3:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;1,8..60,400&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,500;1,7..72,400&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Public+Sans:wght@400;500;600&family=Source+Sans+3:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;1,8..60,400&family=JetBrains+Mono:wght@400;500&display=swap"
     />
     <style>
       /* ───────────── Mockup chrome (not part of the design) ───────────── */
@@ -2431,6 +2431,512 @@
         scrollbar-width: thin;
         scrollbar-color: color-mix(in srgb, var(--muted) 40%, transparent) transparent;
       }
+      /* ───────────── X250: the system line (« ligne système ») ───────────── */
+      .app {
+        --font-sys: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+      }
+      /* The system's own material: the deepest on screen, in both themes. */
+      .sysmat {
+        --bg: #14161a;
+        --hl: #20242a;
+        --sh: #090a0c;
+        --ink: #dfe3ea;
+        --ink-2: #b9c0ca;
+        --muted: #8a929e;
+        --faint: #555b66;
+        --accent: #86aedb;
+        --accent-soft: rgba(134, 174, 219, 0.13);
+        --author: #e3876a;
+        --on-ink: #14161a;
+        --raise:
+          var(--d) var(--d) var(--b) var(--sh),
+          calc(var(--d) * -1) calc(var(--d) * -1) var(--b) var(--hl);
+        --raise-s:
+          var(--ds) var(--ds) var(--bs) var(--sh),
+          calc(var(--ds) * -1) calc(var(--ds) * -1) var(--bs) var(--hl);
+        --inset:
+          inset var(--ds) var(--ds) var(--bs) var(--sh),
+          inset calc(var(--ds) * -1) calc(var(--ds) * -1) var(--bs) var(--hl);
+        background: var(--bg);
+        color: var(--ink-2);
+        font-family: var(--font-sys);
+      }
+      .sysline {
+        flex: none;
+        position: relative;
+        z-index: 9;
+        display: flex;
+        align-items: stretch;
+        height: 30px;
+        padding: 0 4px;
+        font-size: 11.5px;
+        line-height: 30px;
+        white-space: nowrap;
+      }
+      .sysline .sg {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 0 11px;
+        border: 0;
+        border-left: 1px solid var(--sh);
+        box-shadow: inset 1px 0 0 var(--hl);
+        background: transparent;
+        color: var(--ink-2);
+        font: inherit;
+        cursor: pointer;
+      }
+      .sysline .sg:first-child {
+        border-left: 0;
+        box-shadow: none;
+      }
+      .sysline .sg b {
+        color: var(--muted);
+        font-weight: 400;
+      }
+      .sysline .sg:hover {
+        color: var(--ink);
+      }
+      .sysline .sg.on {
+        box-shadow: var(--inset);
+        color: var(--ink);
+      }
+      .sysline .sg.alert {
+        background: var(--ink);
+        color: var(--bg);
+        box-shadow: none;
+      }
+      .sysline .sg.alert b {
+        color: var(--bg);
+      }
+      .sysline .home {
+        gap: 8px;
+        color: var(--ink);
+        font-weight: 500;
+      }
+      .sysline .home svg {
+        width: 13px;
+        height: 13px;
+      }
+      .sysline .smsg {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding: 0 14px;
+        color: var(--muted);
+        border-left: 1px solid var(--sh);
+        box-shadow: inset 1px 0 0 var(--hl);
+      }
+      .sysline .smsg kbd,
+      .sysline kbd,
+      .syspop kbd,
+      .srail kbd {
+        font: inherit;
+        color: var(--faint);
+      }
+      .sysline .dim {
+        color: var(--faint);
+      }
+      /* Text-mode gauge: ten cells. */
+      .g {
+        position: relative;
+        display: inline-block;
+        width: 58px;
+        height: 9px;
+        background: repeating-linear-gradient(90deg, var(--faint) 0 4px, transparent 4px 6px);
+      }
+      .g::after {
+        content: '';
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: calc(round(down, var(--v) * 10, 1) * 6px);
+        background: repeating-linear-gradient(90deg, currentColor 0 4px, transparent 4px 6px);
+      }
+      .sysline.bas .wide {
+        display: none;
+      }
+      .sysline .prompt {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        width: 17rem;
+        margin: 4px 6px;
+        padding: 0 10px;
+        border: 0;
+        border-radius: 7px;
+        background: transparent;
+        box-shadow: var(--inset);
+        color: var(--faint);
+        font: inherit;
+        line-height: 22px;
+        cursor: text;
+      }
+      .sysline .prompt i {
+        color: var(--accent);
+        font-style: normal;
+      }
+      .sysline .prompt span {
+        flex: 1;
+        text-align: left;
+      }
+      .app[data-sysbar='bas'][data-frame='x250'] .wfoot {
+        display: none;
+      }
+      /* System popovers: same material, opened under (or over) their segment. */
+      .syspop {
+        position: absolute;
+        z-index: 12;
+        top: 36px;
+        width: 21rem;
+        padding: 12px 14px 12px;
+        border-radius: 12px;
+        box-shadow: var(--praise);
+        font-size: 12px;
+        line-height: 1.5;
+        animation: rise 0.2s var(--ease) both;
+        white-space: normal;
+        text-align: left;
+      }
+      .syspop.up {
+        top: auto;
+        bottom: 36px;
+      }
+      .syspop h4 {
+        display: flex;
+        justify-content: space-between;
+        margin: 0 0 8px;
+        color: var(--muted);
+        font: inherit;
+        text-transform: lowercase;
+      }
+      .syspop h4 span:first-child {
+        color: var(--ink);
+      }
+      .syspop .r,
+      .spage .srow {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 5px 0;
+      }
+      .syspop .r > span:first-child {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .syspop .r.cur > span:first-child {
+        color: var(--ink);
+      }
+      .syspop .r.pick {
+        margin: 0 -8px;
+        padding: 5px 8px;
+        border-radius: 7px;
+        cursor: pointer;
+      }
+      .syspop .r.pick:hover,
+      .syspop .r.pick.sel {
+        box-shadow: var(--inset);
+      }
+      .syspop hr,
+      .spage hr {
+        border: 0;
+        border-top: 1px solid var(--sh);
+        border-bottom: 1px solid var(--hl);
+        margin: 8px 0;
+      }
+      .syspop .note2 {
+        color: var(--muted);
+        font-size: 11.5px;
+      }
+      .syspop .btn,
+      .syspop .tbtn,
+      .syspop .field {
+        font-family: var(--font-sys);
+        font-size: 11.5px;
+      }
+      .syspop .field {
+        margin: 6px 0;
+        padding: 8px 10px;
+        border-radius: 8px;
+        font-size: 12px;
+      }
+      .syspop .acts {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 4px;
+      }
+      .sl {
+        position: relative;
+        flex: none;
+        width: 9.5rem;
+        height: 10px;
+        border-radius: 5px;
+        box-shadow: var(--inset);
+      }
+      .sl::before {
+        content: '';
+        position: absolute;
+        inset: 3px auto 3px 3px;
+        width: calc(var(--v) * (100% - 6px));
+        border-radius: 3px;
+        background: var(--muted);
+      }
+      .sl::after {
+        content: '';
+        position: absolute;
+        top: -4px;
+        left: calc(var(--v) * (100% - 18px));
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: var(--bg);
+        box-shadow: var(--raise-s);
+      }
+      .num {
+        flex: none;
+        width: 2.2rem;
+        text-align: right;
+        color: var(--ink);
+      }
+      .segs {
+        display: inline-flex;
+        padding: 2px;
+        border-radius: 8px;
+        box-shadow: var(--inset);
+      }
+      .segs span {
+        padding: 2px 9px;
+        border-radius: 6px;
+        color: var(--muted);
+        cursor: pointer;
+      }
+      .segs span.on {
+        box-shadow: var(--raise-s);
+        color: var(--ink);
+      }
+      .bigtime {
+        font: 500 38px/1.1 var(--font-sys);
+        color: var(--ink);
+        letter-spacing: -0.02em;
+      }
+      /* Full system settings: a rail in the system's material, the page beside it. */
+      .sysv {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        grid-template-columns: 17rem minmax(0, 1fr);
+        gap: 26px;
+        padding: 14px 22px 18px;
+        animation: zoom 0.3s var(--ease) both;
+      }
+      .srail {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        padding: 14px 12px;
+        border-radius: var(--r-lg);
+        box-shadow: var(--praise);
+        font-size: 12px;
+        min-height: 0;
+      }
+      .srail .sh {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 2px 8px 12px;
+        color: var(--ink);
+        font-weight: 500;
+      }
+      .srail .sh svg {
+        width: 14px;
+        height: 14px;
+      }
+      .snav {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 7px 10px;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+      .snav span:last-child {
+        color: var(--faint);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .snav.on {
+        box-shadow:
+          var(--inset),
+          inset 3px 0 0 var(--ink);
+        color: var(--ink);
+      }
+      .srail .sf {
+        margin-top: auto;
+        padding: 10px 8px 0;
+        color: var(--faint);
+        font-size: 11px;
+        line-height: 1.6;
+      }
+      .spage {
+        overflow: auto;
+        padding: 6px 12px 30px 4px;
+        max-width: 46rem;
+      }
+      .spage h1 {
+        margin: 0 0 2px;
+        font: 500 30px/1.15 var(--font-text);
+      }
+      .spage .lead {
+        margin: 0 0 18px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .spage h2 {
+        margin: 22px 0 8px;
+        color: var(--muted);
+        font: 500 13.5px var(--font-text);
+        font-variant-caps: all-small-caps;
+        letter-spacing: 0.08em;
+      }
+      .spage .srow {
+        padding: 9px 0;
+        font-size: 13.5px;
+        color: var(--ink-2);
+      }
+      .spage .srow > span:first-child {
+        flex: 1;
+      }
+      .spage .srow small {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .spage .srow .val {
+        color: var(--muted);
+        font: 12px var(--font-sys);
+      }
+      .spage .card2 {
+        margin: 0 0 10px;
+        padding: 10px 14px;
+        border-radius: var(--r-md);
+        box-shadow: var(--raise-s);
+      }
+      .spage .card2.sel {
+        box-shadow: var(--inset);
+      }
+      .spage .segs,
+      .spage .sl {
+        flex: none;
+      }
+      .spage .segs span {
+        font-size: 12.5px;
+        padding: 4px 11px;
+      }
+      /* Lock screen and first boot: on the page, with the system line. */
+      .lock,
+      .boot {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        text-align: center;
+      }
+      .lock .t {
+        font: 400 96px/1 var(--font-text);
+        letter-spacing: -0.02em;
+      }
+      .lock .d {
+        margin: 10px 0 34px;
+        color: var(--muted);
+        font: 500 15px var(--font-text);
+        font-variant-caps: all-small-caps;
+        letter-spacing: 0.1em;
+      }
+      .lock .code {
+        display: inline-flex;
+        gap: 14px;
+        padding: 16px 26px;
+        border-radius: var(--r-md);
+        box-shadow: var(--inset);
+      }
+      .lock .code i {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        box-shadow: var(--inset);
+      }
+      .lock .code i.f {
+        background: var(--author, var(--ink));
+        box-shadow: none;
+      }
+      .lock .h {
+        margin-top: 16px;
+        color: var(--faint);
+        font: 12px var(--font-sys);
+      }
+      .boot .in {
+        width: 34rem;
+        text-align: left;
+      }
+      .boot h1 {
+        margin: 0;
+        font: 500 34px/1.15 var(--font-text);
+        text-align: center;
+      }
+      .boot .orn {
+        text-align: center;
+        color: var(--faint);
+        margin: 6px 0;
+      }
+      .boot .say {
+        margin: 0 0 22px;
+        text-align: center;
+        color: var(--accent);
+        font: italic 16px/1.5 var(--font-text);
+      }
+      .boot .steps {
+        display: flex;
+        justify-content: center;
+        gap: 22px;
+        margin-bottom: 20px;
+        color: var(--faint);
+        font: 12px var(--font-sys);
+      }
+      .boot .steps .on {
+        color: var(--ink);
+        text-decoration: underline;
+        text-underline-offset: 5px;
+        text-decoration-color: var(--author, var(--ink));
+      }
+      .boot .net {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        padding: 10px 14px;
+        border-radius: var(--r-md);
+        box-shadow: var(--raise-s);
+        font-size: 14px;
+      }
+      .boot .net.sel {
+        box-shadow: var(--inset);
+      }
+      .boot .net span:last-child {
+        color: var(--muted);
+        font: 12px var(--font-sys);
+      }
+      .boot .field {
+        margin: 4px 0 16px;
+      }
+      .boot .na {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+      }
     </style>
   </head>
   <body>
@@ -2464,6 +2970,9 @@
         ['palette', 'Ligne de commande'],
         ['accueil', 'Premier lancement'],
         ['biblio', 'Bibliothèque'],
+        ['reglages', 'X250 · Réglages'],
+        ['verrou', 'X250 · Verrou'],
+        ['demarrage', 'X250 · Démarrage'],
       ];
       const S = {
         dir: 'perle',
@@ -2487,6 +2996,11 @@
         tour: 0,
         rejects: false,
         cp: 0,
+        sys: null,
+        sysbar: 'haut',
+        msg: null,
+        batt: 82,
+        sec: 'reseau',
         mat: 'ardoise',
         dk: 'clair',
         full: false,
@@ -3011,7 +3525,7 @@
         ]
           .filter(Boolean)
           .join(' ');
-        const status = S.frame === 'x250' ? 'Enregistré · Wi-Fi · 82' + N + '%' : 'Enregistré';
+        const status = 'Enregistré';
         const count = signals
           ? `<span class="cnt" data-go="points">4 remarques du Compagnon</span>`
           : '';
@@ -3350,6 +3864,232 @@
           .join('');
         return `<div class="fiche"><h1>${mono('Hélène')}<span>Hélène Varenne</span></h1><div class="lead">Personnage principal · enquêtrice · 9 scènes</div>${compact ? '' : legend}<div class="${compact ? '' : 'secs'}">${secs}${compact ? '' : `<div class="sec wide"><h2>Apparitions <span style="text-transform:none;letter-spacing:0;font-weight:400">(remplies automatiquement)</span></h2>${apps}</div>`}</div></div>`;
       }
+
+      // ───────────── X250: the system line ─────────────
+      const EQ = `<svg viewBox="0 0 24 24"><path d="M3 2h6v13h13v6H3z" fill="currentColor"/><circle cx="17" cy="8" r="3" fill="var(--accent)"/></svg>`;
+      const gauge = (v) => `<i class="g" style="--v:${v}"></i>`;
+      const slider = (v) => `<i class="sl" style="--v:${v}"></i>`;
+      const segs = (items, on) =>
+        `<span class="segs">${items.map((t, i) => `<span class="${i === on ? 'on' : ''}">${t}</span>`).join('')}</span>`;
+      const SYS_MSG = {
+        null: '',
+        usb: `clé « KINGSTON » branchée · <kbd>⊞U</kbd> copier mes textes`,
+        low: `batterie faible · branchez l’appareil, tout est enregistré`,
+        fn: `luminosité 70 %`,
+      };
+      function sysline() {
+        if (S.frame !== 'x250' || S.dir !== 'perle') return '';
+        const low = S.batt <= 15;
+        const locked = S.screen === 'verrou';
+        const sg = (id, html, cls = '') =>
+          `<button class="sg ${cls}${S.sys === id ? ' on' : ''}" data-sys="${id}">${html}</button>`;
+        const bat = sg(
+          'bat',
+          `<b>bat</b>${gauge(S.batt / 100)}${S.batt}${N}%<span class="dim wide">${low ? '0h35' : '5h40'}</span>`,
+          low ? 'alert' : '',
+        );
+        const date = sg('date', `<span class="dim wide">ven. 13 nov.</span>14:32`);
+        if (locked)
+          return `<div class="sysline sysmat"><span class="sg home">${EQ}charpentier</span><span class="smsg">verrouillé</span>${bat}${date}</div>`;
+        const lum = S.msg === 'fn' ? 0.7 : 0.6;
+        const right =
+          (S.msg === 'usb' ? sg('usb', `<b>usb</b>KINGSTON`) : '') +
+          sg(
+            'wifi',
+            `<b>wifi</b>Maison-5G<span class="wide">▂▄▆<span class="dim">█</span></span>`,
+          ) +
+          sg('bt', `<b>bt</b><span class="dim">non</span>`, 'wide') +
+          sg(
+            'lum',
+            `<b>lum</b><span class="wide">${gauge(lum)}</span>${lum * 100}`,
+            S.msg === 'fn' ? 'on' : '',
+          ) +
+          sg('vol', `<b>vol</b><span class="wide">${gauge(0.4)}</span>40`) +
+          bat +
+          sg('sync', `<b>sync</b>ok`) +
+          date;
+        const home = sg('menu', `${EQ}système<kbd>⊞</kbd>`, 'home');
+        const msg =
+          S.msg === 'usb' ? SYS_MSG.usb : low ? SYS_MSG.low : S.msg === 'fn' ? SYS_MSG.fn : '';
+        if (S.sysbar === 'bas')
+          return `<div class="sysline sysmat bas">${home}<span class="sg"><span>${fmt(1284)} mots</span><span style="color:var(--author)">+${fmt(312)}</span></span><button class="prompt" data-go="palette"><i>›</i><span>Que voulez-vous faire ?</span><kbd>Ctrl K</kbd></button><span class="smsg">${msg || 'enregistré · 4 remarques du Compagnon'}</span>${right}${sysPop(true)}</div>`;
+        return `<div class="sysline sysmat">${home}<span class="smsg">${msg}</span>${right}${sysPop(false)}</div>`;
+      }
+      const POPS = {
+        menu: () => `<h4><span>charpentier</span><span>0.5.0 · nixos 26.11 · x250</span></h4>
+          <div class="r pick" data-go="reglages"><span>Réglages du système…</span><kbd>⊞,</kbd></div>
+          <div class="r pick"><span>Imprimer…</span><kbd>⊞P</kbd></div>
+          <div class="r pick"><span>Copier mes textes sur une clé USB</span><kbd>⊞U</kbd></div>
+          <hr />
+          <div class="r pick" data-go="verrou"><span>Verrouiller</span><kbd>⊞L</kbd></div>
+          <div class="r pick"><span>Mettre en veille</span><kbd>⊞⏎</kbd></div>
+          <div class="r pick"><span>Redémarrer…</span><kbd></kbd></div>
+          <div class="r pick"><span>Éteindre…</span><kbd></kbd></div>
+          <hr />
+          <div class="note2">allumé depuis 3 h 12 · <kbd>⊞</kbd> seul : parcourir la ligne avec ← →</div>`,
+        wifi: () => `<h4><span>wifi</span><span>⊞W</span></h4>
+          <div class="r"><span>Wi-Fi</span>${segs(['oui', 'non'], 0)}</div>
+          <hr />
+          <div class="r pick sel cur"><span>Maison-5G</span><span>connecté ▂▄▆<span class="dim">█</span></span></div>
+          <div class="r pick"><span>Maison-2G</span><span>▂▄<span class="dim">▆█</span> 🔒</span></div>
+          <div class="r pick"><span>Hotel_du_Port</span><span>▂▄▆█ portail</span></div>
+          <div class="r pick"><span>Livebox-4A2C</span><span>▂<span class="dim">▄▆█</span> 🔒</span></div>
+          <div class="field"><span class="grow">mot de passe de Maison-2G…</span><kbd>⏎</kbd></div>
+          <div class="note2">« portail » : ce réseau demande une page de connexion, que l’appareil n’ouvre pas. Utilisez le partage de connexion de votre téléphone.</div>
+          <hr />
+          <div class="note2"><kbd>↑↓</kbd> choisir · <kbd>⏎</kbd> se connecter · <kbd>O</kbd> oublier · 192.168.1.42</div>`,
+        bt: () => `<h4><span>bluetooth</span><span>⊞B</span></h4>
+          <div class="r"><span>Bluetooth</span>${segs(['oui', 'non'], 1)}</div>
+          <hr />
+          <div class="r"><span>Clavier K380</span><span class="dim">connu, hors de portée</span></div>
+          <div class="acts"><button class="btn">Appairer un appareil…</button></div>`,
+        lum: () => `<h4><span>écran</span><span>F5 F6</span></h4>
+          <div class="r"><span>Luminosité</span>${slider(0.6)}<span class="num">60</span></div>
+          <div class="r"><span>Mode nuit</span>${segs(['auto', 'oui', 'non'], 0)}</div>
+          <div class="note2">auto : lumière plus chaude de 21 h à 7 h</div>
+          <hr />
+          <div class="r"><span>Écran externe</span><span class="dim">aucun</span></div>`,
+        vol: () => `<h4><span>son</span><span>F1 F2 F3</span></h4>
+          <div class="r"><span>Volume</span>${slider(0.4)}<span class="num">40</span></div>
+          <div class="r"><span>Muet</span>${segs(['oui', 'non'], 1)}</div>
+          <hr />
+          <div class="r"><span>Sons de l’interface</span>${segs(['oui', 'non'], 1)}</div>
+          <div class="r"><span>Son de frappe</span>${segs(['oui', 'non'], 1)}</div>`,
+        bat: () => `<h4><span>batterie</span><span>${S.batt} % · ${S.batt <= 15 ? 'environ 35 min' : 'environ 5 h 40'}</span></h4>
+          <div class="r"><span>Interne</span>${gauge(S.batt <= 15 ? 0.1 : 0.96)}<span class="num">${S.batt <= 15 ? 12 : 96}</span></div>
+          <div class="r"><span>Amovible</span>${gauge(S.batt <= 15 ? 0.05 : 0.71)}<span class="num">${S.batt <= 15 ? 6 : 71}</span></div>
+          <div class="note2">sur batterie · 7,4 W</div>
+          <hr />
+          <div class="r"><span>Écran éteint après</span>${segs(['5 min', '15', 'jamais'], 0)}</div>
+          <div class="r"><span>Veille après</span>${segs(['15 min', '30', 'jamais'], 0)}</div>
+          <div class="note2">à 3 % : point de restauration, puis veille</div>`,
+        usb: () => `<h4><span>usb</span><span>KINGSTON · 14,2 Go libres</span></h4>
+          <div class="r"><span>3 projets, 41 scènes en Markdown</span></div>
+          <div class="acts"><button class="btn pri">Copier mes textes <kbd>⊞U</kbd></button><button class="btn">Éjecter</button></div>
+          <div class="note2" style="margin-top:8px">copie dans Charpentier/2026-11-13/ · rien n’est effacé sur la clé</div>`,
+        sync: () => `<h4><span>synchronisation</span><span>ok</span></h4>
+          <div class="r"><span>Serveur</span><span>charpentier.maison.lan</span></div>
+          <div class="r"><span>Dernière synchro</span><span>14:31 · 3 projets</span></div>
+          <div class="acts"><button class="btn">Synchroniser maintenant</button></div>`,
+        date: () => `<div class="bigtime">14:32</div>
+          <div class="r"><span>vendredi 13 novembre 2026</span><span class="dim">sem. 46</span></div>
+          <hr />
+          <div class="r"><span>Fuseau</span><span>Europe/Paris</span></div>
+          <div class="r"><span>Aujourd’hui</span><span>+312 mots · 1 h 48 d’écriture</span></div>`,
+      };
+      function sysPop(up) {
+        if (!S.sys || !POPS[S.sys]) return '';
+        return `<div class="syspop sysmat${up ? ' up' : ''}" data-for="${S.sys}">${POPS[S.sys]()}</div>`;
+      }
+      const SECS = [
+        ['reseau', 'Réseau', 'Maison-5G'],
+        ['bluetooth', 'Bluetooth', 'non'],
+        ['ecran', 'Écran', '60 · nuit auto'],
+        ['son', 'Son', '40'],
+        ['batterie', 'Batterie et veille', '82 %'],
+        ['verrou', 'Verrouillage', 'code au réveil'],
+        ['clavier', 'Clavier et pavé tactile', 'azerty'],
+        ['impression', 'Impression', '1 imprimante'],
+        ['usb', 'Clé USB', 'aucune'],
+        ['date', 'Date et heure', 'Europe/Paris'],
+        ['apropos', 'À propos', '0.5.0'],
+      ];
+      const srow = (label, hint, ctrl) =>
+        `<div class="srow"><span>${label}${hint ? `<small>${hint}</small>` : ''}</span>${ctrl}</div>`;
+      const yn = (on) => segs(['Oui', 'Non'], on ? 0 : 1);
+      const PAGES = {
+        reseau:
+          () => `<h1>Réseau</h1><div class="lead">Le Wi-Fi sert au Compagnon et à la synchronisation. L’écriture n’en a pas besoin.</div>
+          ${srow('Wi-Fi', 'Coupez-le pour écrire déconnecté et ménager la batterie.', yn(true))}
+          <h2>Réseaux</h2>
+          <div class="card2 sel">${srow('Maison-5G', 'Connecté · 192.168.1.42', `<span class="val">▂▄▆· </span><button class="btn">Oublier</button>`)}</div>
+          <div class="card2">${srow('Maison-2G', 'Protégé', `<button class="btn">Se connecter</button>`)}</div>
+          <div class="card2">${srow('Hotel_du_Port', 'Demande une page de connexion : l’appareil ne l’ouvre pas. Utilisez le partage de connexion de votre téléphone.', `<span class="val">portail</span>`)}</div>
+          <h2>Câble</h2>${srow('Ethernet', 'Automatique dès qu’un câble est branché.', `<span class="val">débranché</span>`)}`,
+        bluetooth:
+          () => `<h1>Bluetooth</h1><div class="lead">Pour un clavier, une souris ou un casque.</div>
+          ${srow('Bluetooth', '', yn(false))}
+          <h2>Appareils connus</h2>
+          <div class="card2">${srow('Clavier K380', 'Hors de portée', `<button class="btn">Oublier</button>`)}</div>
+          ${srow('Appairer un appareil', 'Mettez-le en mode appairage ; il apparaîtra ici. Si un code s’affiche, tapez-le sur l’appareil.', `<button class="btn">Chercher…</button>`)}`,
+        ecran:
+          () => `<h1>Écran</h1><div class="lead">La taille du texte et le thème sont dans « Aa ».</div>
+          ${srow('Luminosité', 'Touches F5 et F6.', `${slider(0.6)}<span class="val">60</span>`)}
+          <h2>Mode nuit</h2>
+          ${srow('Lumière plus chaude', 'Automatique : de 21 h à 7 h.', segs(['Auto', 'Oui', 'Non'], 0))}
+          ${srow('Chaleur', '', slider(0.5))}
+          <h2>Écran externe</h2>
+          ${srow('Quand un écran est branché', 'L’appareil n’a qu’une fenêtre : pas de bureau étendu.', segs(['Dupliquer', 'Externe seul'], 0))}
+          ${srow('Échelle sur l’écran externe', '', segs(['100 %', '125 %', '150 %'], 1))}`,
+        son: () => `<h1>Son</h1><div class="lead">L’appareil ne joue que les sons de Charpentier.</div>
+          ${srow('Volume', 'Touches F2 et F3.', `${slider(0.4)}<span class="val">40</span>`)}
+          ${srow('Muet', 'Touche F1.', yn(false))}
+          <h2>Sons de Charpentier</h2>
+          ${srow('Sons de l’interface', 'Déclic, toc, tic. Jamais pour une remarque du Compagnon.', yn(false))}
+          ${srow('Son de frappe', '', yn(false))}`,
+        batterie:
+          () => `<h1>Batterie et veille</h1><div class="lead">82 % · environ 5 h 40 sur batterie.</div>
+          ${srow('Batterie interne', '', `${gauge(0.96)}<span class="val">96 %</span>`)}
+          ${srow('Batterie amovible', '', `${gauge(0.71)}<span class="val">71 %</span>`)}
+          <h2>Veille automatique</h2>
+          ${srow('Éteindre l’écran après', '', segs(['5 min', '15 min', 'Jamais'], 0))}
+          ${srow('Mettre en veille après', '', segs(['15 min', '30 min', 'Jamais'], 0))}
+          ${srow('Rabat fermé', '', `<span class="val">veille</span>`)}
+          <h2>Batterie faible</h2>
+          ${srow('À 15 %', 'Le segment « bat » de la ligne système s’inverse.', `<span class="val">discret</span>`)}
+          ${srow('À 3 %', 'Point de restauration, puis mise en veille.', `<span class="val">automatique</span>`)}`,
+        verrou:
+          () => `<h1>Verrouillage</h1><div class="lead">Un code protège vos textes des regards. Ce n’est pas un chiffrement du disque.</div>
+          ${srow('Demander le code', '', segs(['À chaque réveil', 'Après 15 min de veille', 'Jamais'], 0))}
+          ${srow('Code', '4 à 8 chiffres ou lettres.', `<button class="btn">Changer le code…</button>`)}
+          ${srow('Après 5 erreurs', 'Attente de 30 secondes, puis doublée à chaque série.', `<span class="val">fixe</span>`)}
+          ${srow('Code oublié', 'Il se réinitialise depuis le Mac, avec la mise à jour de l’appareil.', `<span class="val"></span>`)}`,
+        clavier: () => `<h1>Clavier et pavé tactile</h1><div class="lead"></div>
+          ${srow('Disposition du clavier', '', segs(['AZERTY', 'BÉPO', 'QWERTY'], 0))}
+          <h2>Pavé tactile</h2>
+          ${srow('Couper le pavé pendant la frappe', 'Évite les sauts de curseur.', yn(true))}
+          ${srow('Toucher pour cliquer', '', yn(true))}
+          ${srow('Défilement naturel', '', yn(false))}
+          ${srow('Pavé tactile', 'Le TrackPoint reste actif.', yn(true))}`,
+        impression:
+          () => `<h1>Impression</h1><div class="lead">« Imprimer… » (<kbd>⊞P</kbd>) propose la scène, le chapitre ou le manuscrit, en mise en page de manuscrit.</div>
+          <h2>Imprimantes</h2>
+          <div class="card2 sel">${srow('Brother HL-L2350', 'Réseau · prête · par défaut', `<button class="btn">Page de test</button>`)}</div>
+          ${srow('Ajouter une imprimante', 'Les imprimantes du réseau apparaissent d’elles-mêmes ; sans pilote à installer.', `<button class="btn">Chercher…</button>`)}
+          <h2>Mise en page</h2>
+          ${srow('Format', '', segs(['A4', 'Lettre'], 0))}
+          ${srow('Interligne', '', segs(['Simple', 'Double'], 1))}`,
+        usb: () => `<h1>Clé USB</h1><div class="lead">Un filet de sécurité quand la synchronisation n’est pas disponible.</div>
+          ${srow('Aucune clé branchée', 'Branchez une clé : le segment « usb » apparaît dans la ligne système.', `<span class="val"></span>`)}
+          ${srow('Copier mes textes', 'Tous les projets en Markdown, dans Charpentier/date du jour/. Rien n’est effacé sur la clé.', `<button class="btn">Copier <kbd>⊞U</kbd></button>`)}`,
+        date: () => `<h1>Date et heure</h1><div class="lead">vendredi 13 novembre 2026 · 14:32</div>
+          ${srow('Fuseau horaire', '', `<span class="val">Europe/Paris</span><button class="btn">Changer…</button>`)}
+          ${srow('Régler l’heure', 'Automatique par le réseau.', yn(true))}
+          ${srow('Format', '', segs(['24 h', '12 h'], 0))}`,
+        apropos: () => `<h1>À propos</h1><div class="lead">Charpentier sur ThinkPad X250.</div>
+          ${srow('Charpentier', '', `<span class="val">0.5.0</span>`)}
+          ${srow('Système', '', `<span class="val">NixOS 26.11 · génération 42</span>`)}
+          ${srow('Mise à jour', 'Elle se fait depuis le Mac ; l’appareil redémarre sur la nouvelle version.', `<span class="val">à jour au 12 nov.</span>`)}
+          ${srow('Stockage', '', `${gauge(0.18)}<span class="val">41 Go sur 232</span>`)}
+          ${srow('Licences', 'Polices Literata, Inter et JetBrains Mono : SIL OFL 1.1.', `<button class="btn">Voir</button>`)}`,
+      };
+      function settings() {
+        const rail = SECS.map(
+          ([k, l, v]) =>
+            `<div class="snav${S.sec === k ? ' on' : ''}" data-sec="${k}"><span>${l}</span><span>${v}</span></div>`,
+        ).join('');
+        return `<section class="sysv"><div class="srail sysmat"><div class="sh">${EQ}réglages du système</div>${rail}<div class="sf"><kbd>↑↓</kbd> sections · <kbd>Tab</kbd> réglages<br /><kbd>Échap</kbd> revenir au texte</div></div><div class="spage">${PAGES[S.sec]()}</div></section>`;
+      }
+      function lockScreen() {
+        return `<section class="lock"><div><div class="t">14:32</div><div class="d">vendredi 13 novembre</div><div class="code"><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i><i></i></div><div class="h">votre code, puis ⏎</div></div></section>`;
+      }
+      function bootScreen() {
+        return `<section class="boot"><div class="in"><h1>Bienvenue</h1><div class="orn">⁂</div><p class="say">Avant d’écrire, quatre réglages. Chacun peut attendre.</p>
+          <div class="steps"><span class="on">1 wifi</span><span>2 code</span><span>3 synchronisation</span><span>4 compagnon</span></div>
+          <div class="net sel"><span>Maison-5G</span><span>▂▄▆█ protégé</span></div><div class="net"><span>Maison-2G</span><span>▂▄ protégé</span></div><div class="net"><span>Livebox-4A2C</span><span>▂ protégé</span></div>
+          <div class="field"><span class="grow">Mot de passe de Maison-5G…</span><kbd>⏎</kbd></div>
+          <div class="na">${btn(['Continuer', '⏎', true])}${btn(['Plus tard', 'Échap'])}</div></div></section>`;
+      }
       function library() {
         const projs = [
           ['Les Serres d’Hespéride', 'Roman · 13 984 mots · 10 scènes · ouvert aujourd’hui', true],
@@ -3417,6 +4157,7 @@
           <span class="grp"><span class="lbl">Découverte <kbd>G</kbd></span>${DISC_KEYS.map((k) => b('disc', k, DISC[k][0])).join('')}${b('quiet', !S.quiet, S.quiet ? 'Frappe : en cours' : 'Frappe : à l’arrêt')}</span>
           <span class="grp"><span class="lbl">Écran <kbd>1–9</kbd></span>${SCREENS.map(([k, l]) => b('screen', k, l)).join('')}</span>
           <span class="grp"><span class="lbl">Thème <kbd>T</kbd></span>${b('theme', 'light', 'Clair')}${b('theme', 'dark', 'Sombre')}</span>
+          <span class="grp"><span class="lbl">X250 · ligne système</span>${b('sysbar', 'haut', 'En haut')}${b('sysbar', 'bas', 'Console en bas')}${b('msg', S.msg === 'usb' ? null : 'usb', 'Clé USB')}${b('msg', S.msg === 'fn' ? null : 'fn', 'Touche luminosité')}${b('batt', S.batt === 82 ? 9 : 82, 'Batterie faible')}</span>
           <span class="grp"><span class="lbl">Cadre</span>${b('frame', 'mac', 'Mac')}${b('frame', 'x250', 'X250')}</span>
           <span class="grp"><span class="lbl">Personnalité <kbd>A B C</kbd></span>${b('warm', !S.warm, 'A · Pierre chaude')}${b('ink', !S.ink, 'B · Deux encres')}${b('sig', !S.sig, 'C · Signature')}</span>
           <span class="grp">${b('focus', !S.focus, S.focus ? 'Focus : oui' : 'Focus : non')}${b('sound', !S.sound, S.sound ? 'Sons : oui' : 'Sons : non')}${b('still', !S.still, S.still ? 'Animations : non' : 'Animations : oui')}</span>
@@ -3468,6 +4209,15 @@
             case 'biblio':
               body = library();
               break;
+            case 'reglages':
+              body = settings();
+              break;
+            case 'verrou':
+              body = lockScreen();
+              break;
+            case 'demarrage':
+              body = bootScreen();
+              break;
             case 'ecrire':
               body = scene();
               break;
@@ -3498,13 +4248,24 @@
           }
         if (
           disc === 'rails' &&
-          !['fiche', 'biblio'].includes(S.screen) &&
+          !['fiche', 'biblio', 'reglages', 'verrou', 'demarrage'].includes(S.screen) &&
           !(S.screen === 'manuscrit' && S.plan)
         )
           body += edges(S.screen);
         if (disc === 'barre' && S.aa) body += aaPop(true);
         const tb = disc === 'barre' ? toolbar() : `<span class="ttl">Les Serres d’Hespéride</span>`;
-        app.innerHTML = `${menubar()}<div class="tb"><span class="lights"><i></i><i></i><i></i></span>${tb}</div><div class="stage">${body}</div>`;
+        app.dataset.sysbar = S.sysbar;
+        const sl = sysline();
+        app.innerHTML = `${menubar()}${S.sysbar === 'haut' ? sl : ''}<div class="tb"><span class="lights"><i></i><i></i><i></i></span>${tb}</div><div class="stage">${body}</div>${S.sysbar === 'bas' ? sl : ''}`;
+        const pop = app.querySelector('.syspop');
+        if (pop) {
+          const seg = app.querySelector(`.sg[data-sys="${pop.dataset.for}"]`);
+          const line = app.querySelector('.sysline');
+          const right = line.getBoundingClientRect().right - seg.getBoundingClientRect().right;
+          const left = seg.getBoundingClientRect().left - line.getBoundingClientRect().left;
+          if (left < 200) pop.style.left = Math.max(6, left) + 'px';
+          else pop.style.right = Math.max(6, right) + 'px';
+        }
         placeTip(app);
         renderBar();
         history.replaceState(null, '', `#${S.dir}/${S.theme}/${S.screen}/${S.disc}`);
@@ -3530,6 +4291,17 @@
         if (S.menu !== null) {
           S.menu = null;
           render();
+        }
+        const sy = e.target.closest('[data-sys]');
+        if (sy && !e.target.closest('.syspop')) {
+          S.sys = S.sys === sy.dataset.sys ? null : sy.dataset.sys;
+          return render();
+        }
+        if (S.sys && !e.target.closest('.syspop')) S.sys = null;
+        const sc = e.target.closest('[data-sec]');
+        if (sc) {
+          S.sec = sc.dataset.sec;
+          return render();
         }
         const rj = e.target.closest('[data-rejects]');
         if (rj) {
@@ -3558,7 +4330,21 @@
         const k = e.target.closest('[data-k]');
         if (k) {
           const v = k.dataset.v;
-          S[k.dataset.k] = v === 'true' ? true : v === 'false' ? false : v;
+          S[k.dataset.k] =
+            v === 'true'
+              ? true
+              : v === 'false'
+                ? false
+                : v === 'null'
+                  ? null
+                  : /^\d+$/.test(v)
+                    ? +v
+                    : v;
+          if (
+            ['sysbar', 'msg', 'batt'].includes(k.dataset.k) ||
+            /^(reglages|verrou|demarrage)$/.test(v)
+          )
+            S.frame = 'x250';
           if (k.dataset.k === 'screen' || k.dataset.k === 'disc') {
             S.tour = 0;
             S.aa = false;
@@ -3588,6 +4374,7 @@
         const go = e.target.closest('[data-go]');
         if (go) {
           S.screen = go.dataset.go;
+          S.sys = null;
           S.tour = 0;
           S.aa = false;
           S.plan = false;
@@ -3641,6 +4428,7 @@
           S.menu = null;
           S.aa = false;
           S.tour = 0;
+          S.sys = null;
           e.preventDefault();
           return render();
         }
