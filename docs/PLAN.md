@@ -212,13 +212,17 @@ Mise à jour du X250 depuis le Mac par `nixos-rebuild switch --flake .#x250 --ta
 
 ---
 
-## Étape 6 : l'entretien avec le Compagnon [D-26]
-L'Atelier se remplit en parlant. La page « Méta » s'appelle déjà « Le projet » (13 novembre 2026). Place dans l'ordre du plan à décider ; maquette par la session de design.
+## Étape 6 : l'entretien avec le Compagnon et les agents spécialisés [D-26, D-27]
+L'Atelier se remplit en parlant, et le Compagnon gagne des agents spécialisés pour le travail de fond (D-27). La page « Méta » s'appelle déjà « Le projet » (13 novembre 2026). Place dans l'ordre du plan à décider ; maquette par la session de design.
 
 ### 6.1 Agent d'entretien
-Un agent du paquet `agents`, en deux modes. **Libre** : il répond à ce que l'auteur dit et range ce qui relève de l'Atelier dans la bonne section (le projet, personnages, structure, règles du monde, indices), en propositions par l'`AgentWriter`, sortie validée par schéma et bornée ; il dit où il a rangé quoi. **Dirigé** : il pose une question à la fois, section par section, en commençant par ce qui est vide ou seulement proposé. Historique dans le document mentor, à part de la conversation sur le texte. Jamais un champ validé ou rejeté, jamais une ligne du roman (tests adversariaux).
+Un agent du paquet `agents`, en deux modes. **Libre** : il répond à ce que l'auteur dit et range ce qui relève de l'Atelier dans la bonne section (le projet, personnages, structure, règles du monde, indices), en propositions par l'`AgentWriter`, sortie validée par schéma et bornée ; il dit où il a rangé quoi. **Dirigé** : il pose une question à la fois, section par section, en commençant par ce qui est vide ou seulement proposé ; les questions de chaque section viennent de son agent spécialisé (D-27), le Compagnon restant la seule voix. Historique dans le document mentor, à part de la conversation sur le texte. Jamais un champ validé ou rejeté, jamais une ligne du roman (tests adversariaux).
 **Vérifiable** : je dis « mon héroïne, Hélène, est batelière sur la Loire en 1890 » ; une fiche Hélène est proposée dans Personnages et l'époque dans Le projet ; en mode dirigé, il me demande ce qui manque.
 
 ### 6.2 Page de l'entretien dans l'Atelier
 En tête du rail : la conversation, le choix du mode, et ce qu'elle propose qui apparaît dans les sections au fil de l'échange, à valider ou rejeter sur place ou dans la fiche.
 **Vérifiable** : sans quitter la page, je valide une proposition née de la conversation et je la retrouve validée dans sa fiche.
+
+### 6.3 Agents spécialisés à la demande [D-27]
+Un agent par section de l'Atelier, chacun avec son prompt et son schéma, lancé par une commande : vérifier la structure sur tout le manuscrit (actes, arcs, tension), suivre les indices (posés, exploités, révélations préparées), faire le point sur un personnage (ce qu'il veut, ce qu'il sait, scène par scène). Ils lisent le document du projet et y laissent propositions et signalements, ou un bilan dans la conversation ; une tâche à la fois par projet ; coût annoncé avant un travail sur tout le manuscrit. Chacun a son test de bout en bout sur un manuscrit d'exemple, et un essai en direct avec la clé de l'auteur avant d'être déclaré fait.
+**Vérifiable** : je lance « Vérifier la structure » ; le Compagnon signale un arc abandonné, ancré dans la scène où il s'arrête, et propose l'acte qui manque dans Structure.
