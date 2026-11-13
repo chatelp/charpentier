@@ -3223,8 +3223,7 @@
         box-shadow: none;
         color: var(--ink);
       }
-      /* The press: the hand pushes the element down for as long as it is held, then it springs back.
-         A lit element loses its light while pressed: the two never show at once. */
+      /* The touch: light at once, never a hollow that would spring back. */
       .app[data-rim='garde']
         :is(
           .btn,
@@ -3244,8 +3243,8 @@
           .chip.cp,
           .chip.more
         ):active {
-        background: var(--bg);
-        box-shadow: var(--inset);
+        background: var(--lit-bg);
+        box-shadow: var(--lit);
         transition: none;
       }
 
@@ -4573,7 +4572,7 @@
             .map(([k, d]) => b('dir', k, d.name))
             .join('')}</span>
           <span class="grp"><span class="lbl">Caractère <kbd>M E O</kbd></span>${MATS.map(([k, l]) => b('mat', k, l)).join('')}${b('dk', 'profond', 'Sombre : outils profonds')}${b('dk', 'clair', 'Sombre : outils clairs')}${b('full', !S.full, 'E · Encres pleines')}</span>
-          <span class="grp"><span class="lbl">Lumière <kbd>L</kbd></span>${b('rim', 'non', 'Avant : tout en creux')}${b('rim', 'garde', 'Creux = la main · lumière = le regard')}${b('orn', !S.orn, 'O · Outils gravés')}</span>
+          <span class="grp"><span class="lbl">Lumière <kbd>L</kbd></span>${b('rim', 'non', 'Avant : tout en creux')}${b('rim', 'garde', 'Le creux garde, la lumière suit')}${b('orn', !S.orn, 'O · Outils gravés')}</span>
           <span class="grp"><span class="lbl">Découverte <kbd>G</kbd></span>${DISC_KEYS.map((k) => b('disc', k, DISC[k][0])).join('')}${b('quiet', !S.quiet, S.quiet ? 'Frappe : en cours' : 'Frappe : à l’arrêt')}</span>
           <span class="grp"><span class="lbl">Écran <kbd>1–9</kbd></span>${SCREENS.map(([k, l]) => b('screen', k, l)).join('')}</span>
           <span class="grp"><span class="lbl">Thème <kbd>T</kbd></span>${b('theme', 'light', 'Clair')}${b('theme', 'dark', 'Sombre')}</span>
