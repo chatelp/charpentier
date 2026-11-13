@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+<title>Charpentier : piste Crayon (16 et 32 px)</title>
+<rect x="64" y="64" width="896" height="896" rx="200" fill="#e6eaf0"/>
+<rect x="64" y="64" width="896" height="896" rx="200" fill="none" stroke="#b3becc" stroke-width="24"/>
+<g transform="translate(440 600) rotate(-38)">
+    <path d="M -330 -95 H 190 L 330 -24 V 24 L 190 95 H -330 Z" fill="#b2432a"/>
+    <path d="M 190 -95 L 330 -24 V 24 L 190 95 Z" fill="#e9dccb"/>
+    <path d="M 280 -50 L 330 -24 V 24 L 280 50 Z" fill="#22262d"/></g><circle cx="760" cy="260" r="100" fill="#1f4f7c"/>
+</svg>

@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+<title>Charpentier : piste Crayon</title>
+<defs>
+  <linearGradient id="plate" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#eef1f5"/><stop offset="1" stop-color="#d8dde5"/>
+  </linearGradient>
+  <filter id="drop" x="-10%" y="-10%" width="120%" height="125%">
+    <feGaussianBlur in="SourceAlpha" stdDeviation="14"/>
+    <feOffset dy="12" result="b"/>
+    <feFlood flood-color="#000" flood-opacity="0.28"/>
+    <feComposite in2="b" operator="in" result="s"/>
+    <feMerge><feMergeNode in="s"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="raise" x="-40%" y="-40%" width="180%" height="180%">
+    <feGaussianBlur in="SourceAlpha" stdDeviation="18" result="b"/>
+    <feOffset in="b" dx="18" dy="18" result="o1"/>
+    <feFlood flood-color="#b3becc"/><feComposite in2="o1" operator="in" result="dark"/>
+    <feOffset in="b" dx="-18" dy="-18" result="o2"/>
+    <feFlood flood-color="#ffffff"/><feComposite in2="o2" operator="in" result="light"/>
+    <feMerge><feMergeNode in="dark"/><feMergeNode in="light"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="inset" x="-20%" y="-20%" width="140%" height="140%">
+    <feComponentTransfer in="SourceAlpha" result="inv"><feFuncA type="table" tableValues="1 0"/></feComponentTransfer>
+    <feOffset in="inv" dx="10" dy="10" result="i1"/><feGaussianBlur in="i1" stdDeviation="8" result="i1b"/>
+    <feFlood flood-color="#b3becc"/><feComposite in2="i1b" operator="in"/><feComposite in2="SourceAlpha" operator="in" result="dark"/>
+    <feOffset in="inv" dx="-10" dy="-10" result="i2"/><feGaussianBlur in="i2" stdDeviation="8" result="i2b"/>
+    <feFlood flood-color="#ffffff" flood-opacity="0.9"/><feComposite in2="i2b" operator="in"/><feComposite in2="SourceAlpha" operator="in" result="light"/>
+    <feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="dark"/><feMergeNode in="light"/></feMerge>
+  </filter>
+</defs>
+<rect x="100" y="100" width="824" height="824" rx="185" fill="url(#plate)" filter="url(#drop)"/>
+<g transform="translate(452 584) rotate(-38) scale(0.9)">
+  <g filter="url(#raise)">
+    <path d="M -330 -62 H 210 L 318 -16 V 16 L 210 62 H -330 Q -350 62 -350 42 V -42 Q -350 -62 -330 -62 Z" fill="#b2432a"/>
+  </g>
+  <path d="M -330 -62 H 210 L 232 -52 H -350 V -42 Q -350 -62 -330 -62 Z" fill="#c95a40"/>
+  <rect x="-350" y="-4" width="560" height="8" fill="#8e3320" opacity="0.35"/>
+  <path d="M 210 -62 L 318 -16 V 16 L 210 62 Z" fill="#e9dccb"/>
+  <path d="M 284 -30 L 318 -16 V 16 L 284 30 Z" fill="#22262d"/>
+</g>
+<g filter="url(#raise)"><circle cx="724" cy="292" r="64" fill="#eef1f5"/></g><circle cx="724" cy="292" r="28" fill="#1f4f7c"/>
+</svg>
