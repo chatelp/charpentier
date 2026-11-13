@@ -1,10 +1,41 @@
-import { moveScene, moveSceneStep, readProjectMeta, setActiveVariant } from '@charpentier/schema';
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import {
+  checkpointText,
+  createVariantFromCheckpoint,
+  fragmentPlainText,
+  listCheckpoints,
+  moveScene,
+  moveSceneStep,
+  readProjectMeta,
+  restoreCheckpoint,
+  setActiveVariant,
+  variantFragment,
+  type CheckpointInfo,
+} from '@charpentier/schema';
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type Ref } from 'react';
 import { useTranslation } from 'react-i18next';
-import { variantLabel } from '../commands/variant-commands';
+import { Doc as YDoc } from 'yjs';
+import type * as Y from 'yjs';
+import { formatCheckpointDate, variantLabel } from '../commands/variant-commands';
 import { sceneNumbers } from '../atelier/atelier-data';
+import { countWords } from '../editor/word-count';
+import { useDocSnapshot } from '../hooks/use-doc-snapshot';
 import type { WorkspaceContext } from '../workspace/workspace-context';
+import { useSceneHistory } from './use-scene-history';
 import './overview.css';
+
+const readCheckpoints = (doc: Y.Doc) => listCheckpoints(doc);
+/** Restore points shown in the strip; the others through « Tous (N)… ». */
+const SHOWN_CHECKPOINTS = 3;
+/** Opening lines of a restore point in its preview. */
+const PREVIEW_LENGTH = 220;
+
+/** Moves the focus to the previous or next chip of the same group in the strip. */
+function stepChip(from: HTMLElement, step: number) {
+  const chips = [
+    ...(from.closest('[data-strip-group]')?.querySelectorAll<HTMLElement>('[data-chip]') ?? []),
+  ];
+  chips[Math.max(0, Math.min(chips.length - 1, chips.indexOf(from) + step))]?.focus();
+}
 
 export interface OverviewProps {
   readonly ctx: WorkspaceContext;
@@ -38,17 +69,86 @@ export function Overview({ ctx, active, onOpen, onClose }: OverviewProps) {
   const total = [...words.values()].reduce((a, b) => a + b, 0);
   const project = readProjectMeta(ctx.root);
 
+  // ─── The strip: variants and restore points of the selected scene (docs/DESIGN.md §4.4) ───
+  const history = useSceneHistory(ctx.platform, ctx.projectId, selected?.scene.id);
+  const allCheckpoints = useDocSnapshot(history?.historyDoc ?? noHistoryDoc(), readCheckpoints);
+  const checkpoints = history
+    ? allCheckpoints.filter((c) => c.variantId === selected?.scene.activeVariantId)
+    : [];
+  const [previewId, setPreviewId] = useState<string | null>(null);
+  const preview = checkpoints.find((c) => c.id === previewId);
+  const previewRef = useRef<HTMLDivElement>(null);
+  const strip = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (preview) previewRef.current?.focus();
+  }, [preview]);
+
+  const closePreview = () => {
+    setPreviewId(null);
+    strip.current?.querySelector<HTMLElement>(`[data-chip="${previewId}"]`)?.focus();
+  };
+  const restore = (checkpoint: CheckpointInfo) => {
+    if (!history) return;
+    restoreCheckpoint(history.sceneDoc, history.historyDoc, checkpoint.id);
+    ctx.notify(
+      t('status.checkpointRestored', { date: formatCheckpointDate(ctx, checkpoint.createdAt) }),
+    );
+    closePreview();
+  };
+  const toVariant = (checkpoint: CheckpointInfo) => {
+    if (!history || !selected) return;
+    const name = formatCheckpointDate(ctx, checkpoint.createdAt);
+    createVariantFromCheckpoint(ctx.root, history.sceneDoc, history.historyDoc, selected.scene.id, {
+      checkpointId: checkpoint.id,
+      name,
+      activate: true,
+    });
+    ctx.notify(t('status.variantCreated', { name }));
+    closePreview();
+  };
+  const allPoints = () =>
+    ctx.openPalette({
+      kind: 'pick',
+      placeholder: t('palette.pickCheckpoint'),
+      empty: t('palette.noCheckpoints'),
+      items: checkpoints.map((c) => ({
+        id: c.id,
+        label: [formatCheckpointDate(ctx, c.createdAt), c.label].filter(Boolean).join(' · '),
+        detail: t(`history.reason.${c.reason}`),
+      })),
+      onPick: setPreviewId,
+    });
+
+  const onStripKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+    const target = event.target as HTMLElement;
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+      event.preventDefault();
+      stepChip(target, event.key === 'ArrowRight' ? 1 : -1);
+    } else if (event.key === 'Escape') {
+      // Up to the cards.
+      event.preventDefault();
+      if (selected) cards.current.get(selected.scene.id)?.focus();
+    }
+    // ↵ on a chip is the button's own click.
+  };
+
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (!selected) return;
+    if ((event.target as HTMLElement).closest('.ch-overview-strip')) return;
     const { ci, si, scene } = selected;
     const handled = () => {
       event.preventDefault();
       event.stopPropagation();
     };
     const column = (i: number) => outline[i]?.scenes ?? [];
+    const key = event.key.toLowerCase();
     if (event.key === 'Escape') {
       handled();
       onClose();
+    } else if ((key === 'v' || key === 'h') && !event.metaKey && !event.ctrlKey && !event.altKey) {
+      // V, H: into the variants or the restore points of the strip.
+      handled();
+      strip.current?.querySelector<HTMLElement>(`[data-strip-group="${key}"] [data-chip]`)?.focus();
     } else if (event.key === 'Enter') {
       handled();
       onOpen(scene.id);
@@ -143,24 +243,191 @@ export function Overview({ ctx, active, onOpen, onClose }: OverviewProps) {
         ))}
       </div>
       {selected && (
-        <footer className="ch-overview-strip ch-raised">
-          <span className="ch-label">
-            {t('overview.variantsOf', { title: selected.scene.title })}
-          </span>
-          {selected.scene.variants.map((v) => (
-            <button
-              key={v.id}
-              type="button"
-              tabIndex={-1}
-              className={`ch-strip-variant${v.id === selected.scene.activeVariantId ? ' is-active' : ''}`}
-              onClick={() => setActiveVariant(ctx.root, selected.scene.id, v.id)}
-            >
-              {variantLabel(t, selected.scene, v.id)}
-            </button>
-          ))}
+        <footer
+          ref={strip}
+          className="ch-overview-strip ch-raised"
+          aria-label={t('overview.stripOf', { title: selected.scene.title })}
+          onKeyDown={onStripKeyDown}
+        >
+          {preview && history && (
+            <CheckpointPreview
+              ref={previewRef}
+              ctx={ctx}
+              checkpoint={preview}
+              text={checkpointText(history.historyDoc, preview.id)}
+              current={fragmentPlainText(
+                variantFragment(history.sceneDoc, selected.scene.activeVariantId),
+              )}
+              variant={variantLabel(t, selected.scene, selected.scene.activeVariantId)}
+              onRestore={() => restore(preview)}
+              onVariant={() => toVariant(preview)}
+              onClose={closePreview}
+            />
+          )}
+          <div
+            className="ch-strip-group"
+            data-strip-group="v"
+            role="group"
+            aria-label={t('overview.variantsGroup')}
+          >
+            <span className="ch-label">
+              {t('overview.variantsGroup')} <kbd>{t('overview.variantsKey')}</kbd>
+            </span>
+            {selected.scene.variants.map((v) => (
+              <button
+                key={v.id}
+                type="button"
+                tabIndex={-1}
+                data-chip={v.id}
+                className={`ch-chip ch-strip-chip${v.id === selected.scene.activeVariantId ? ' is-active' : ''}`}
+                onClick={() => setActiveVariant(ctx.root, selected.scene.id, v.id)}
+              >
+                {variantLabel(t, selected.scene, v.id)}
+              </button>
+            ))}
+          </div>
+          <div
+            className="ch-strip-group"
+            data-strip-group="h"
+            role="group"
+            aria-label={t('overview.restoreGroup')}
+          >
+            <span className="ch-label">
+              {t('overview.restoreGroup')} <kbd>{t('overview.restoreKey')}</kbd>
+            </span>
+            {checkpoints.length === 0 && (
+              <span className="ch-strip-none">{t('overview.noCheckpoint')}</span>
+            )}
+            {checkpoints.slice(0, SHOWN_CHECKPOINTS).map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                tabIndex={-1}
+                data-chip={c.id}
+                className={`ch-chip ch-strip-chip${c.id === previewId ? ' is-active' : ''}`}
+                onClick={() => setPreviewId(c.id)}
+              >
+                {formatCheckpointDate(ctx, c.createdAt)}{' '}
+                <span className="ch-strip-reason">
+                  {'· '}
+                  {c.label ? `« ${c.label} »` : t(`history.reason.${c.reason}`)}
+                </span>
+              </button>
+            ))}
+            {checkpoints.length > SHOWN_CHECKPOINTS && (
+              <button
+                type="button"
+                tabIndex={-1}
+                data-chip="all"
+                className="ch-strip-more"
+                onClick={allPoints}
+              >
+                {t('overview.allCheckpoints', { count: checkpoints.length })}
+              </button>
+            )}
+          </div>
           <span className="ch-overview-hint">{t('overview.hint')}</span>
         </footer>
       )}
     </section>
+  );
+}
+
+/** An empty document, while the selected scene's history opens. */
+let emptyHistory: Y.Doc | undefined;
+function noHistoryDoc(): Y.Doc {
+  emptyHistory ??= new YDoc();
+  return emptyHistory;
+}
+
+/**
+ * The preview of a restore point, above the strip (docs/DESIGN.md §4.4): its
+ * date and reason, the opening lines of that version, the difference in words,
+ * and what can be done with it. ↵ restores, ⇧↵ makes it a variant, Échap closes.
+ */
+function CheckpointPreview({
+  ref,
+  ctx,
+  checkpoint,
+  text,
+  current,
+  variant,
+  onRestore,
+  onVariant,
+  onClose,
+}: {
+  readonly ref: Ref<HTMLDivElement>;
+  readonly ctx: WorkspaceContext;
+  readonly checkpoint: CheckpointInfo;
+  readonly text: string;
+  readonly current: string;
+  readonly variant: string;
+  readonly onRestore: () => void;
+  readonly onVariant: () => void;
+  readonly onClose: () => void;
+}) {
+  const { t, i18n } = useTranslation();
+  const number = new Intl.NumberFormat(i18n.language);
+  const words = countWords(text);
+  const delta = words - countWords(current);
+  const opening = text.replace(/\s+/g, ' ').trim();
+  const reason = checkpoint.label
+    ? `« ${checkpoint.label} »`
+    : t(`history.reason.${checkpoint.reason}`);
+  return (
+    <div
+      ref={ref}
+      className="ch-checkpoint-preview ch-raised"
+      role="dialog"
+      aria-label={formatCheckpointDate(ctx, checkpoint.createdAt)}
+      tabIndex={-1}
+      onKeyDown={(event) => {
+        event.stopPropagation();
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          if (event.shiftKey) onVariant();
+          else onRestore();
+        } else if (event.key === 'Escape') {
+          event.preventDefault();
+          onClose();
+        }
+      }}
+    >
+      <p className="ch-checkpoint-head">
+        {formatCheckpointDate(ctx, checkpoint.createdAt)} · {reason}
+      </p>
+      <p className="ch-checkpoint-text">
+        {opening
+          ? opening.length > PREVIEW_LENGTH
+            ? `${opening.slice(0, PREVIEW_LENGTH)}…`
+            : opening
+          : t('history.emptyText')}
+      </p>
+      <p className="ch-checkpoint-words">
+        {t(
+          delta < 0
+            ? 'overview.previewWordsLess'
+            : delta > 0
+              ? 'overview.previewWordsMore'
+              : 'overview.previewWordsSame',
+          {
+            words: number.format(words),
+            delta: number.format(Math.abs(delta)),
+            variant,
+          },
+        )}
+      </p>
+      <p className="ch-note-actions">
+        <button type="button" tabIndex={-1} className="ch-btn is-author" onClick={onRestore}>
+          {t('overview.restore')} <kbd>{t('overview.restoreActionKey')}</kbd>
+        </button>
+        <button type="button" tabIndex={-1} className="ch-btn" onClick={onVariant}>
+          {t('overview.toVariant')} <kbd>{t('overview.toVariantKey')}</kbd>
+        </button>
+        <button type="button" tabIndex={-1} className="ch-btn" onClick={onClose}>
+          {t('overview.close')} <kbd>{t('overview.closeKey')}</kbd>
+        </button>
+      </p>
+    </div>
   );
 }

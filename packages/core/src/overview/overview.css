@@ -79,6 +79,7 @@
 }
 
 .ch-overview-strip {
+  position: relative;
   flex: none;
   display: flex;
   flex-wrap: wrap;
@@ -110,4 +111,89 @@
   margin-left: auto;
   color: var(--ch-faint);
   font-size: var(--ch-ui-2xs);
+}
+
+/* Variants and restore points of the selected scene (docs/DESIGN.md §4.4). */
+.ch-strip-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.ch-strip-group .ch-label {
+  margin-right: 6px;
+}
+
+.ch-strip-chip {
+  border: 0;
+  font: inherit;
+  font-size: var(--ch-ui-sm);
+  cursor: pointer;
+  outline: none;
+}
+
+.ch-strip-chip:focus-visible {
+  box-shadow:
+    var(--ch-inset),
+    inset 0 0 0 1.5px var(--ch-author);
+}
+
+.ch-strip-reason,
+.ch-strip-none {
+  color: var(--ch-muted);
+}
+
+.ch-strip-more {
+  padding: 4px 6px;
+  border: 0;
+  background: none;
+  color: var(--ch-muted);
+  font: inherit;
+  font-size: var(--ch-ui-sm);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.ch-checkpoint-preview {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 34%;
+  z-index: var(--ch-z-note);
+  width: 27rem;
+  padding: 14px 16px;
+  border-radius: var(--ch-radius-md);
+  outline: none;
+  animation: ch-rise var(--ch-dur-note) var(--ch-ease) both;
+}
+
+.ch-checkpoint-preview p {
+  margin: 0;
+}
+
+.ch-checkpoint-head {
+  color: var(--ch-muted);
+  font: 500 13.5px var(--ch-font-text);
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.08em;
+}
+
+.ch-checkpoint-text {
+  margin: 8px 0 !important;
+  padding: 10px 12px;
+  border-radius: var(--ch-radius-sm);
+  box-shadow: var(--ch-inset);
+  color: var(--ch-ink-2);
+  font: italic 14px / 1.5 var(--ch-font-text);
+}
+
+.ch-checkpoint-words {
+  margin-bottom: 10px !important;
+  color: var(--ch-muted);
+  font-size: var(--ch-ui-xs);
+}
+
+.ch-btn.is-author {
+  color: var(--ch-author);
 }

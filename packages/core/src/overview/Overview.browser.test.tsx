@@ -67,4 +67,31 @@ describe('overview of the manuscript', () => {
     await waitFor(() => expect(document.title).toBe('C · Charpentier'));
     expect(screen.queryByRole('region', { name: 'Vue d’ensemble du manuscrit' })).toBeNull();
   });
+
+  it('previews a restore point from the strip and restores it, from the keyboard', async () => {
+    await startApp();
+    await userEvent.keyboard('Premier jet.');
+    await userEvent.keyboard('{ControlOrMeta>}s{/ControlOrMeta}');
+    await screen.findByText('Point de restauration créé.');
+    await userEvent.keyboard(' Ajout regretté.');
+
+    await userEvent.keyboard('{ControlOrMeta>}{Shift>}p{/Shift}{/ControlOrMeta}');
+    const strip = await screen.findByRole('contentinfo', { name: /Variantes et restauration/ });
+    await waitFor(() => expect(strip.textContent).toContain('Point manuel'));
+    // H: into the restore points; ↵ opens the preview.
+    await userEvent.keyboard('h');
+    await waitFor(() => expect(document.activeElement?.textContent).toContain('Point manuel'));
+    await userEvent.keyboard('{Enter}');
+    const preview = await screen.findByRole('dialog');
+    expect(preview.textContent).toContain('Premier jet.');
+    expect(preview.textContent).toContain('2 mots, soit 2 de moins qu’aujourd’hui');
+    await waitFor(() => expect(document.activeElement).toBe(preview));
+    // ↵ restores, no confirmation; the previous state is a restore point itself.
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    await waitFor(() => expect(strip.textContent).toContain('Avant une restauration'));
+    await userEvent.keyboard('{Escape}{Escape}');
+    const editor = await screen.findByRole('textbox', { name: 'Texte de la scène' });
+    await waitFor(() => expect(editor.textContent).toBe('Premier jet.'));
+  });
 });
