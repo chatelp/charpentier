@@ -223,7 +223,7 @@ export const systemTexts: TextTree = {
         uiSounds: 'Sons de l’interface',
         typingSounds: 'Son de frappe',
         battery: '{{name}}',
-        batteryHelp: '{{level}} %, usure {{wear}} %',
+        batteryHelp: 'usure {{wear}} %',
         screenOff: 'Écran éteint après',
         sleepAfter: 'Veille après',
         lidHelp: 'Rabat fermé : veille.',

@@ -244,7 +244,7 @@ function Power() {
           <Row
             key={b.name}
             label={s('rows.battery', { name: b.name })}
-            help={s('rows.batteryHelp', { level: b.level, wear: 100 - b.health })}
+            help={s('rows.batteryHelp', { wear: 100 - b.health })}
           >
             <Gauge value={b.level} />
             <span className="ch-set-value">{b.level} %</span>
