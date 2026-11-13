@@ -4,7 +4,8 @@
 //
 // A phase is done when its section has a « Réalisé » line, or when its step
 // is among those the « Statut » line says are done (« étapes 1 à 3 réalisées »).
-// The first phase not done, in the plan's order, is the next one.
+// The first phase not done, in the plan's order, is the next one (a step
+// marked « (ensuite) » excepted).
 import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -43,6 +44,7 @@ for (const line of lines) {
       realised: '',
       check: '',
       placeholder: true,
+      later: Boolean(step.later),
     });
     continue;
   }
@@ -60,6 +62,7 @@ for (const line of lines) {
       done: Number.parseInt(step.id, 10) <= doneUpTo && /^\d+$/.test(step.id),
       realised: '',
       check: '',
+      later: Boolean(step.later),
     };
     rows.push(phase);
     continue;
@@ -76,7 +79,8 @@ for (const line of lines) {
 
 let next = false;
 const out = rows.map((r, order) => {
-  const state = r.done ? 'fait' : next ? 'à venir' : ((next = true), 'prochaine');
+  // A step marked « (ensuite) » waits its turn: it is never the next one.
+  const state = r.done ? 'fait' : next || r.later ? 'à venir' : ((next = true), 'prochaine');
   return {
     order: order + 1,
     step: r.step,
