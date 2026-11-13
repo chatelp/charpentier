@@ -2,7 +2,7 @@
 
 Chaque phase est courte, se termine par un résultat vérifiable dans l'app (ou par des tests quand la phase n'a pas d'interface), puis par un arrêt pour le feu vert. Les tests prioritaires sont écrits dans la phase qui introduit le code concerné.
 
-Statut : étapes 1 à 3 réalisées (12 novembre 2026). Reste à éprouver le Compagnon avec la clé de l'auteur (tests adversariaux en direct, réglage des prompts).
+Statut : étapes 1 à 3 réalisées (12 novembre 2026) ; étape 4a en cours, phases 4.1 et 4.2 réalisées (13 novembre 2026). Reste à éprouver le Compagnon avec la clé de l'auteur (tests adversariaux en direct, réglage des prompts). Avancement visuel : https://claude.ai/artifact/NAAMCGpuXETvPTiDXMzdS4 (régénéré par `node scripts/progress.mjs`).
 
 ---
 

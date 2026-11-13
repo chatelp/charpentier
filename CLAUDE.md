@@ -32,6 +32,7 @@ Miroir Markdown (desktop) : un `.md` par scène, appariement par id dans le fron
 - Chaque dépendance ajoutée : vérifier sa licence. MIT/ISC/BSD/Apache OK ; MPL/LGPL au cas par cas, documenté ; GPL/AGPL refusé. Polices : SIL OFL 1.1 acceptée (fichiers dans `packages/core/src/fonts`, licence jointe, hors `check:licenses`).
 - Questions ouvertes : proposer 2 ou 3 options argumentées, ne pas trancher seul.
 - Fin de chaque phase : résumer fait / testé / restant, puis attendre le feu vert.
+- Avancement visuel (https://claude.ai/artifact/NAAMCGpuXETvPTiDXMzdS4) : à chaque mise à jour de `docs/PLAN.md` (phase réalisée, ligne « Statut »), lancer `node scripts/progress.mjs <fichier.json>`, joindre le fichier à l'artefact et pointer la source `datasets/phases` dessus.
 - Garder ce fichier court et à jour.
 
 ## Commandes
