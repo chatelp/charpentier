@@ -1809,6 +1809,189 @@
         color: var(--faint);
         font-size: 11.5px;
       }
+      /* ───────────── Finishing touches (v1.2) ───────────── */
+      /* Rejects: a toggle in the legend, hidden by default. */
+      .legend .lgt {
+        padding: 2px 8px 2px 4px;
+        border: 0;
+        border-radius: var(--r-sm);
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        cursor: pointer;
+      }
+      .legend .lgt:hover,
+      .legend .lgt.on {
+        box-shadow: var(--raise-s);
+        color: var(--ink);
+      }
+      .legend .lgt u {
+        text-underline-offset: 2px;
+      }
+      .fm .rj {
+        color: var(--faint);
+        cursor: pointer;
+      }
+      .fm .rj:hover {
+        color: var(--muted);
+        text-decoration: underline;
+      }
+      .fld .rh {
+        grid-column: 2;
+        color: var(--muted);
+        font-size: 11.5px;
+      }
+      .fld .rh s {
+        opacity: 0.7;
+        font-family: var(--font-text);
+        font-size: 13px;
+      }
+      .ent.rej {
+        opacity: 0.45;
+      }
+      .ent.rej > div:first-child {
+        text-decoration: line-through;
+      }
+      .list .lfoot {
+        margin-top: 6px;
+        color: var(--faint);
+        font-size: 11.5px;
+        cursor: pointer;
+      }
+      .list .lfoot:hover {
+        color: var(--muted);
+      }
+      /* Overview strip: the last checkpoints and a preview of the chosen one. */
+      .strip {
+        position: relative;
+      }
+      .chip.cp {
+        cursor: pointer;
+      }
+      .chip.cp .d {
+        color: var(--muted);
+      }
+      .chip.more {
+        box-shadow: none;
+        color: var(--muted);
+        text-decoration: underline;
+        text-underline-offset: 2px;
+        cursor: pointer;
+      }
+      .cprev {
+        position: absolute;
+        bottom: calc(100% + 10px);
+        left: 34%;
+        width: 27rem;
+        padding: 14px 16px;
+        border-radius: var(--r-md);
+        background: var(--bg);
+        box-shadow: var(--raise);
+        animation: rise 0.22s var(--ease) both;
+        z-index: 3;
+      }
+      .cprev .h2 {
+        font: 500 13.5px var(--font-text);
+        font-variant-caps: all-small-caps;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+      }
+      .cprev .x {
+        margin: 8px 0;
+        padding: 10px 12px;
+        border-radius: var(--r-sm);
+        box-shadow: var(--inset);
+        font: italic 14px/1.5 var(--font-text);
+        color: var(--ink-2);
+      }
+      .cprev .dw {
+        font-size: 12px;
+        color: var(--muted);
+        margin-bottom: 10px;
+      }
+      .cprev .na {
+        display: flex;
+        gap: 8px;
+      }
+      /* Library. */
+      .lib {
+        position: absolute;
+        inset: 0;
+        overflow: auto;
+        padding: 9vh 0 40px;
+      }
+      .lib .in {
+        width: min(46rem, calc(100% - 4rem));
+        margin: 0 auto;
+      }
+      .lib .top {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 6px;
+      }
+      .lib h1 {
+        flex: 1;
+        margin: 0;
+        font: 500 22px var(--font-text);
+        font-variant-caps: all-small-caps;
+        letter-spacing: 0.08em;
+        color: var(--author, var(--ink));
+      }
+      .lib .hint {
+        color: var(--faint);
+        font-size: 11.5px;
+        margin-bottom: 22px;
+      }
+      .proj {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 4px 14px;
+        margin-bottom: 14px;
+        padding: 14px 18px;
+        border-radius: var(--r-md);
+        box-shadow: var(--raise-s);
+      }
+      .proj.on {
+        box-shadow: var(--inset);
+        border-left: 2px solid var(--author, var(--ink));
+      }
+      .proj .t {
+        font: 500 19px var(--font-text);
+      }
+      .proj .m {
+        grid-column: 1;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .proj .acts {
+        grid-row: 1 / 3;
+        grid-column: 2;
+        display: flex;
+        gap: 8px;
+        opacity: 0;
+      }
+      .proj:hover .acts,
+      .proj.on .acts {
+        opacity: 1;
+      }
+      .lib .foot {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 18px;
+        margin-top: 26px;
+        padding-top: 14px;
+        border-top: 1px solid color-mix(in srgb, var(--ink) 8%, transparent);
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .lib .foot a {
+        color: var(--ink-2);
+        text-decoration: underline;
+        text-underline-offset: 2px;
+        cursor: pointer;
+      }
     </style>
   </head>
   <body>
@@ -1841,6 +2024,7 @@
         ['points', 'Points & conversation'],
         ['palette', 'Ligne de commande'],
         ['accueil', 'Premier lancement'],
+        ['biblio', 'Bibliothèque'],
       ];
       const S = {
         dir: 'perle',
@@ -1862,6 +2046,8 @@
         menu: null,
         aa: false,
         tour: 0,
+        rejects: false,
+        cp: 0,
       };
       const [hd, ht, hs, hdisc] = location.hash.slice(1).split('/');
       if (DISC_KEYS.includes(hdisc)) S.disc = hdisc;
@@ -2571,11 +2757,20 @@
         const vars = VARIANTS.map(
           ([n, , on]) => `<span class="chip${on ? ' on' : ''}">${n}</span>`,
         ).join('');
-        const cps = CHECKPOINTS.slice(0, 3)
-          .map(([d]) => `<span class="chip">${d}</span>`)
-          .join('');
-        return `<section class="board">${S.dir === 'perle' ? `<div class="seg" style="position:absolute;right:28px;top:18px;width:18rem;margin:0"><button data-plan="0">Tiroir <kbd>⌘\\</kbd></button><button class="on">Plan</button></div>` : ''}<h2>Les Serres d’Hespéride</h2><div class="sub2">Plan du manuscrit · 4 chapitres · 10 scènes · ${fmt(13984)} mots</div><div class="cols">${cols}</div>
-          <div class="strip"><div><span class="h">Variantes</span>${vars}</div><div><span class="h">Restauration</span>${cps}</div><div class="pfoot" style="padding:0;margin-left:auto"><span><kbd>←→↑↓</kbd>parcourir</span><span><kbd>⌥ flèches</kbd>déplacer</span><span><kbd>⏎</kbd>écrire</span><span><kbd>Échap</kbd>revenir</span></div></div></section>`;
+        const cps =
+          CHECKPOINTS.slice(0, 3)
+            .map(
+              ([d, r], i) =>
+                `<span class="chip cp${S.cp === i ? ' on' : ''}" data-cp="${i}">${d.replace('Aujourd’hui', 'Auj.')} <span class="d">· ${r.replace('automatique', 'auto')}</span></span>`,
+            )
+            .join('') +
+          `<span class="chip more" title="Revenir à un point de restauration…">Tous (12)…</span>`;
+        const prev =
+          S.cp === null
+            ? ''
+            : `<div class="cprev"><div class="h2">${CHECKPOINTS[S.cp][0]} · ${CHECKPOINTS[S.cp][1]}</div><div class="x">La porte du bureau n’était pas verrouillée. Hélène Varenne la poussa du bout de son gant et resta un moment sur le seuil…</div><div class="dw">${fmt(1242)} mots, soit 42 de moins qu’aujourd’hui · variante A</div><div class="na">${btn(['Restaurer', '⏎', true])}${btn(['En faire une variante', '⇧⏎'])}${btn(['Fermer', 'Échap'])}</div></div>`;
+        return `<section class="board">${S.dir === 'perle' ? `<div class="seg" style="position:absolute;right:28px;top:18px;width:18rem;margin:0"><button data-plan="0">Tiroir <kbd>⌘J</kbd></button><button class="on">Plan</button></div>` : ''}<h2>Les Serres d’Hespéride</h2><div class="sub2">Plan du manuscrit · 4 chapitres · 10 scènes · ${fmt(13984)} mots</div><div class="cols">${cols}</div>
+          <div class="strip">${prev}<div><span class="h">Variantes <kbd>V</kbd></span>${vars}</div><div><span class="h">Restauration <kbd>H</kbd></span>${cps}</div><div class="pfoot" style="padding:0;margin-left:auto"><span><kbd>←→↑↓</kbd>parcourir</span><span><kbd>⌥ flèches</kbd>déplacer</span><span><kbd>⏎</kbd>écrire</span><span><kbd>Échap</kbd>revenir</span></div></div></section>`;
       }
       function gresNav() {
         const items = results('#' + S.q.replace(/^#/, ''));
@@ -2597,7 +2792,7 @@
           'Identité et apparence',
           [
             ['Nom', 'Hélène Varenne', 'validated'],
-            ['Âge', '47 ans', 'validated'],
+            ['Âge', '47 ans', 'validated', '', ['« 52 ans »', '9 nov.']],
             [
               'Couleur des yeux',
               'bleus',
@@ -2656,14 +2851,22 @@
           true,
         ],
       ];
-      function field([label, value, st, meta]) {
+      function field([label, value, st, meta, history]) {
+        if (st === 'rejected' && !S.rejects)
+          return `<div class="fld" data-st="empty"><div class="fl">${label}</div><div class="fv">À écrire, ou laissez le Compagnon proposer</div><div class="fm"><span class="rj" data-rejects="1" title="Afficher les rejets (⇧X)">1 rejet</span></div></div>`;
+        const hist = history
+          ? S.rejects
+            ? `<div class="rh">Rejetée : <s>${history[0]}</s>, le ${history[1]}</div>`
+            : `<div class="fm"><span class="rj" data-rejects="1" title="Afficher les rejets (⇧X)">1 rejet</span></div>`
+          : '';
         let fm = '';
         if (st === 'proposed')
           fm = `<div class="fm"><span>Proposée · ${meta}</span>${btn(['Valider', 'V'])}${btn(['Rejeter', 'X'])}</div>`;
         else if (st === 'contradicted')
           fm = `<div class="fm"><span>${meta}</span><a>Voir le passage</a></div>`;
-        else if (st === 'rejected') fm = `<div class="fm"><span>${meta}</span></div>`;
-        return `<div class="fld" data-st="${st}"><div class="fl">${label}</div><div class="fv">${value}</div>${fm}</div>`;
+        else if (st === 'rejected')
+          fm = `<div class="fm"><span>${meta}</span>${btn(['Utiliser cette valeur'])}</div>`;
+        return `<div class="fld" data-st="${st}"><div class="fl">${label}</div><div class="fv">${value}</div>${fm}${hist}</div>`;
       }
       function ficheBody(compact) {
         const secs = (compact ? FIELDS.slice(0, 2) : FIELDS)
@@ -2672,11 +2875,26 @@
               `<div class="sec${wide ? ' wide' : ''}"><h2>${h}</h2>${fs.map(field).join('')}</div>`,
           )
           .join('');
-        const legend = `<div class="legend"><span><i class="lp"></i>en relief : proposée</span><span><i class="lv"></i>gravée : validée</span><span><i class="lr"></i>estompée : rejetée</span><span><i class="lc"></i>contredite</span></div>`;
+        const legend = `<div class="legend"><span><i class="lp"></i>en relief : proposée</span><span><i class="lv"></i>gravée : validée</span><button class="lgt${S.rejects ? ' on' : ''}" data-rejects="1" title="Afficher ou masquer les rejets (⇧X)"><i class="lr"></i>estompée : rejetée · <u>${S.rejects ? 'masquer' : 'afficher'}</u> (3) <kbd>⇧X</kbd></button><span><i class="lc"></i>contredite</span></div>`;
         const apps = ['I.1', 'I.3', 'II.2', 'III.1', 'III.2']
           .map((s) => `<span class="chip">${s}</span>`)
           .join('');
         return `<div class="fiche"><h1>Hélène Varenne</h1><div class="lead">Personnage principal · enquêtrice · 9 scènes</div>${compact ? '' : legend}<div class="${compact ? '' : 'secs'}">${secs}${compact ? '' : `<div class="sec wide"><h2>Apparitions <span style="text-transform:none;letter-spacing:0;font-weight:400">(remplies automatiquement)</span></h2>${apps}</div>`}</div></div>`;
+      }
+      function library() {
+        const projs = [
+          ['Les Serres d’Hespéride', 'Roman · 13 984 mots · 10 scènes · ouvert aujourd’hui', true],
+          ['La Nuit des pompes', 'Nouvelle · 4 210 mots · ouverte le 2 nov.'],
+          ['Carnets d’Irène', 'Roman · 860 mots · ouvert le 14 oct.'],
+        ]
+          .map(
+            ([t, m, on]) =>
+              `<div class="proj${on ? ' on' : ''}"><div class="t">${t}</div><div class="m">${m}</div><div class="acts">${btn(['Ouvrir', '⏎', true])}${btn(['Renommer', 'R'])}${btn(['Corbeille', '⌫'])}</div></div>`,
+          )
+          .join('');
+        return `<section class="lib"><div class="in"><div class="top"><h1>Bibliothèque</h1>${btn(['+ Nouveau roman', 'N', true])}${btn(['+ Nouvelle', '⇧N'])}</div>
+          <div class="hint">↑↓ parcourir · ⏎ ouvrir · N nouveau roman · ⇧N nouvelle · R renommer · ⌫ corbeille · Échap revenir</div>${projs}
+          <div class="foot"><a>Corbeille (2)</a><span>Dossier : ~/Documents/Charpentier · <a>Changer…</a> · <a>Afficher dans le Finder</a></span></div></div></section>`;
       }
       function atelier() {
         const mods = [
@@ -2697,6 +2915,7 @@
           ['Inès Varenne', 'fille d’Hélène', ''],
           ['Irène Sol', 'déléguée du conseil', ''],
           ['Le technicien', 'proposé · scène III.2', 'prop'],
+          ...(S.rejects ? [['Le gardien du sas', 'rejeté le 8 nov. · Reprendre', 'rej']] : []),
         ]
           .map(
             ([n, s, c]) => `<div class="ent ${c}"><div>${n}</div><div class="s">${s}</div></div>`,
@@ -2712,7 +2931,7 @@
             ? ''
             : `<button class="btn" title="Nouveau personnage (ligne de commande : « nouveau personnage »)">+ Nouveau personnage</button>`;
         return `<section class="atelier"><div class="rail"><div class="seg"><button data-go="ecrire">Écrire</button><button class="on">Atelier</button></div>${mods}${cmd}<div class="pfoot" style="${cmd ? 'margin-top:10px' : 'margin-top:auto'};padding:0"><span><kbd>⌘E</kbd>écrire / atelier</span><span><kbd>⌘1…5</kbd>modules</span></div></div>
-          <div class="list"><div class="field"><span class="grow">Filtrer les personnages…</span><kbd>/</kbd></div>${add}${ents}<div class="pfoot" style="margin-top:auto;padding:0"><span><kbd>V</kbd>valider</span><span><kbd>X</kbd>rejeter</span><span><kbd>⏎</kbd>modifier</span></div></div>${ficheBody(false)}</section>`;
+          <div class="list"><div class="field"><span class="grow">Filtrer les personnages…</span><kbd>/</kbd></div>${add}${ents}<div class="lfoot" data-rejects="1">${S.rejects ? 'Masquer les propositions rejetées' : '1 proposition rejetée · Afficher'} <kbd>⇧X</kbd></div><div class="pfoot" style="margin-top:auto;padding:0"><span><kbd>V</kbd>valider</span><span><kbd>X</kbd>rejeter</span><span><kbd>⏎</kbd>modifier</span></div></div>${ficheBody(false)}</section>`;
       }
 
       // ───────────── Render ─────────────
@@ -2725,7 +2944,7 @@
             .map(([k, d]) => b('dir', k, d.name))
             .join('')}</span>
           <span class="grp"><span class="lbl">Découverte <kbd>G</kbd></span>${DISC_KEYS.map((k) => b('disc', k, DISC[k][0])).join('')}${b('quiet', !S.quiet, S.quiet ? 'Frappe : en cours' : 'Frappe : à l’arrêt')}</span>
-          <span class="grp"><span class="lbl">Écran <kbd>1–8</kbd></span>${SCREENS.map(([k, l]) => b('screen', k, l)).join('')}</span>
+          <span class="grp"><span class="lbl">Écran <kbd>1–9</kbd></span>${SCREENS.map(([k, l]) => b('screen', k, l)).join('')}</span>
           <span class="grp"><span class="lbl">Thème <kbd>T</kbd></span>${b('theme', 'light', 'Clair')}${b('theme', 'dark', 'Sombre')}</span>
           <span class="grp"><span class="lbl">Cadre</span>${b('frame', 'mac', 'Mac')}${b('frame', 'x250', 'X250')}</span>
           <span class="grp"><span class="lbl">Personnalité <kbd>A B C</kbd></span>${b('warm', !S.warm, 'A · Pierre chaude')}${b('ink', !S.ink, 'B · Deux encres')}${b('sig', !S.sig, 'C · Signature')}</span>
@@ -2771,6 +2990,9 @@
             case 'accueil':
               body = scene({ empty: true });
               break;
+            case 'biblio':
+              body = library();
+              break;
             case 'ecrire':
               body = scene();
               break;
@@ -2799,7 +3021,12 @@
               else body = scene({ behind: true, crumbs: true }) + gresNav();
               break;
           }
-        if (disc === 'rails' && S.screen !== 'fiche') body += edges(S.screen);
+        if (
+          disc === 'rails' &&
+          !['fiche', 'biblio'].includes(S.screen) &&
+          !(S.screen === 'manuscrit' && S.plan)
+        )
+          body += edges(S.screen);
         if (disc === 'barre' && S.aa) body += aaPop(true);
         const tb = disc === 'barre' ? toolbar() : `<span class="ttl">Les Serres d’Hespéride</span>`;
         app.innerHTML = `${menubar()}<div class="tb"><span class="lights"><i></i><i></i><i></i></span>${tb}</div><div class="stage">${body}</div>`;
@@ -2828,6 +3055,16 @@
         if (S.menu !== null) {
           S.menu = null;
           render();
+        }
+        const rj = e.target.closest('[data-rejects]');
+        if (rj) {
+          S.rejects = !S.rejects;
+          return render();
+        }
+        const cp = e.target.closest('[data-cp]');
+        if (cp) {
+          S.cp = S.cp === +cp.dataset.cp ? null : +cp.dataset.cp;
+          return render();
         }
         const aa = e.target.closest('[data-aa]');
         if (aa) {
@@ -2920,6 +3157,11 @@
         }
         if (inInput) return;
         if (e.metaKey || e.ctrlKey || e.altKey) return;
+        if (e.key === 'X' && e.shiftKey) {
+          S.rejects = !S.rejects;
+          e.preventDefault();
+          return render();
+        }
         if (e.key === 'Escape') {
           S.menu = null;
           S.aa = false;
@@ -2927,7 +3169,7 @@
           e.preventDefault();
           return render();
         }
-        const i = '12345678'.indexOf(e.key);
+        const i = '123456789'.indexOf(e.key);
         if (i >= 0) {
           S.screen = SCREENS[i][0];
           S.sel = 0;

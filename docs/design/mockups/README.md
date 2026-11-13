@@ -4,7 +4,8 @@ Ouvrir `index.html` dans un navigateur (aucune installation). La barre noire du 
 
 - **Direction** (touche `D`) : Perle, Vélin, Grès.
 - **Découverte** (touche `G`, direction Perle) : comment un débutant trouve les outils sans raccourci. Actuel ; 1 · Poignées (retenue) ; 2 · Établi ouvert ; 3 · Barre d'outils. **Frappe** (touche `W`) montre ce qui s'efface pendant l'écriture. Inventaire et arguments : [`../decouverte.md`](../decouverte.md).
-- **Écran** (touches `1` à `8`) : écrire ; écrire avec le Compagnon ; manuscrit ; fiche personnage (Atelier) ; fiche en volet ; points à traiter et conversation ; ligne de commande ; premier lancement.
+- **Écran** (touches `1` à `9`) : écrire ; écrire avec le Compagnon ; manuscrit (bouton « Plan » pour la vue d'ensemble et son bandeau de restauration) ; fiche personnage (Atelier, `⇧X` affiche ou masque les rejets) ; fiche en volet ; points à traiter et conversation ; ligne de commande ; premier lancement ; bibliothèque.
+- Sons : page d'écoute séparée, [`../sons.html`](../sons.html). Icône : [`../icon/`](../icon/README.md).
 - **Thème** (touche `T`) : clair, sombre. **Cadre** : Mac (barre de titre intégrée) ou X250 (plein écran, état système en pied). **Focus** (touche `F`), **sons** (désactivés par défaut), **animations**.
 - À essayer : en cadre Mac, ouvrir les menus de la barre de menus ; au premier lancement, « Faire le tour » ; cliquer une pastille en marge, cliquer « Hélène » dans le texte, valider ou rejeter une proposition dans une fiche (le relief change), taper dans la ligne de commande (`>` commandes, `@` fiches, `#` scènes), `↑` `↓`.
 

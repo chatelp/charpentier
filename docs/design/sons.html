@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Charpentier · sons</title>
+    <style>
+      :root {
+        --bg: #e3e7ed;
+        --ink: #22262d;
+        --ink-2: #474d57;
+        --muted: #7a828e;
+        --hl: #fff;
+        --sh: #b3becc;
+        --mentor: #1f4f7c;
+        --author: #b2432a;
+      }
+      body {
+        margin: 0;
+        padding: 40px 24px 60px;
+        background: var(--bg);
+        color: var(--ink);
+        font:
+          14px/1.5 system-ui,
+          sans-serif;
+      }
+      main {
+        max-width: 60rem;
+        margin: 0 auto;
+      }
+      h1 {
+        font:
+          600 15px Georgia,
+          serif;
+        font-variant-caps: all-small-caps;
+        letter-spacing: 0.08em;
+        color: var(--author);
+        margin: 0 0 6px;
+      }
+      p.lead {
+        color: var(--ink-2);
+        margin: 0 0 24px;
+      }
+      .snd {
+        display: grid;
+        grid-template-columns: 11rem 1fr;
+        gap: 18px;
+        margin: 0 0 18px;
+        padding: 16px 18px;
+        border-radius: 14px;
+        box-shadow:
+          6px 6px 14px var(--sh),
+          -6px -6px 14px var(--hl);
+      }
+      button {
+        align-self: start;
+        padding: 10px 14px;
+        border: 0;
+        border-radius: 9px;
+        background: var(--bg);
+        box-shadow:
+          3px 3px 7px var(--sh),
+          -3px -3px 7px var(--hl);
+        color: var(--ink);
+        font:
+          500 13px system-ui,
+          sans-serif;
+        cursor: pointer;
+        text-align: left;
+      }
+      button:active {
+        box-shadow:
+          inset 3px 3px 7px var(--sh),
+          inset -3px -3px 7px var(--hl);
+      }
+      button small {
+        display: block;
+        color: var(--muted);
+        font-weight: 400;
+      }
+      .r h2 {
+        margin: 0 0 4px;
+        font:
+          600 14px system-ui,
+          sans-serif;
+      }
+      .r p {
+        margin: 0 0 8px;
+        color: var(--ink-2);
+      }
+      table {
+        border-collapse: collapse;
+        font-size: 12.5px;
+        width: 100%;
+      }
+      td,
+      th {
+        padding: 3px 8px 3px 0;
+        text-align: left;
+        vertical-align: top;
+        border-top: 1px solid rgba(0, 0, 0, 0.06);
+      }
+      th {
+        color: var(--muted);
+        font-weight: 500;
+        white-space: nowrap;
+      }
+      textarea {
+        width: 100%;
+        box-sizing: border-box;
+        margin-top: 8px;
+        padding: 10px;
+        border: 0;
+        border-radius: 14px;
+        background: var(--bg);
+        box-shadow:
+          inset 3px 3px 7px var(--sh),
+          inset -3px -3px 7px var(--hl);
+        font:
+          16px Georgia,
+          serif;
+        color: var(--ink);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Sons de Charpentier</h1>
+      <p class="lead">
+        Désactivés par défaut. Synthétisés avec Web Audio (aucun fichier, aucune licence). Jamais
+        pour une remarque du Compagnon : un son ne suit qu'un geste de l'auteur. Les volumes sont
+        des gains absolus d'un `GainNode` ; le volume du système fait le reste.
+      </p>
+
+      <section class="snd">
+        <button data-play="declic">Déclic<small>validation</small></button>
+        <div class="r">
+          <h2>Déclic : une proposition qui s'enfonce</h2>
+          <p>
+            Deux impulsions claires, la seconde plus aiguë et plus douce : la valeur passe du relief
+            au creux.
+          </p>
+          <table>
+            <tr>
+              <th>Voix 1</th>
+              <td>
+                sinus, 1 320 → 990 Hz (rampe exponentielle sur 40 ms) ; attaque 3 ms jusqu'à 0,09 ;
+                chute exponentielle jusqu'à 0,0001 à 60 ms
+              </td>
+            </tr>
+            <tr>
+              <th>Voix 2</th>
+              <td>
+                départ à +28 ms ; sinus 1 980 Hz fixe ; attaque 2 ms jusqu'à 0,05 ; chute
+                exponentielle à 45 ms
+              </td>
+            </tr>
+            <tr>
+              <th>Durée</th>
+              <td>75 ms en tout</td>
+            </tr>
+            <tr>
+              <th>Quand</th>
+              <td>Valider une proposition (champ, fiche proposée), point résolu</td>
+            </tr>
+          </table>
+        </div>
+      </section>
+
+      <section class="snd">
+        <button data-play="toc">Toc<small>rejet, fermeture</small></button>
+        <div class="r">
+          <h2>Toc : un coup sur le bois</h2>
+          <p>Grave et sec, un peu boisé. Plus bas que le déclic, sans être négatif.</p>
+          <table>
+            <tr>
+              <th>Corps</th>
+              <td>
+                triangle, 220 → 150 Hz (rampe exponentielle sur 90 ms) ; attaque 4 ms jusqu'à 0,12 ;
+                chute exponentielle à 120 ms
+              </td>
+            </tr>
+            <tr>
+              <th>Attaque</th>
+              <td>
+                bruit blanc de 15 ms, filtre passe-bande 900 Hz, Q 1,2 ; gain 0,04 ; chute
+                exponentielle à 15 ms
+              </td>
+            </tr>
+            <tr>
+              <th>Durée</th>
+              <td>120 ms</td>
+            </tr>
+            <tr>
+              <th>Quand</th>
+              <td>
+                Rejeter, ignorer un point, fermer un panneau ou une feuille (pas à
+                <code>Échap</code> pendant la frappe)
+              </td>
+            </tr>
+          </table>
+        </div>
+      </section>
+
+      <section class="snd">
+        <button data-play="tic">Tic<small>ouverture d'une note</small></button>
+        <div class="r">
+          <h2>Tic : une page qu'on effleure</h2>
+          <p>Le plus léger des quatre, à peine audible.</p>
+          <table>
+            <tr>
+              <th>Voix</th>
+              <td>sinus 2 600 Hz ; attaque 1 ms jusqu'à 0,035 ; chute exponentielle à 25 ms</td>
+            </tr>
+            <tr>
+              <th>Durée</th>
+              <td>25 ms</td>
+            </tr>
+            <tr>
+              <th>Quand</th>
+              <td>
+                L'auteur déplie une note (clic sur une pastille, <code>⌥⏎</code>) ou ouvre un
+                panneau. Jamais quand une pastille apparaît d'elle-même.
+              </td>
+            </tr>
+          </table>
+        </div>
+      </section>
+
+      <section class="snd">
+        <button data-play="frappe">Frappe<small>option séparée</small></button>
+        <div class="r">
+          <h2>Frappe : du papier sous les doigts</h2>
+          <p>
+            Un souffle très court par caractère, légèrement différent à chaque touche pour ne pas
+            devenir mécanique.
+          </p>
+          <table>
+            <tr>
+              <th>Caractère</th>
+              <td>
+                bruit blanc de 12 ms, passe-bande 2 200 Hz (± 15 % au hasard), Q 0,8 ; gain 0,025 (±
+                20 % au hasard) ; plus un sinus 180 Hz de 20 ms, gain 0,02 ; attaques 1 ms, chutes
+                exponentielles
+              </td>
+            </tr>
+            <tr>
+              <th>Espace</th>
+              <td>même recette, passe-bande 1 400 Hz, bruit de 18 ms</td>
+            </tr>
+            <tr>
+              <th>Retour</th>
+              <td>le Toc à 50 % du gain</td>
+            </tr>
+            <tr>
+              <th>Effacement</th>
+              <td>bruit de 10 ms, passe-bande 3 000 Hz, gain 0,015</td>
+            </tr>
+            <tr>
+              <th>Règles</th>
+              <td>
+                au plus un son toutes les 30 ms ; aucun son sur la répétition automatique
+                (<code>event.repeat</code>) ni pendant la composition d'un caractère (IME, accents
+                morts)
+              </td>
+            </tr>
+          </table>
+          <textarea rows="3" placeholder="Tapez ici pour essayer le son de frappe…"></textarea>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      let ac;
+      const ctx = () => (ac ||= new AudioContext());
+      function env(g, t, peak, attack, end) {
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(peak, t + attack);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + end);
+      }
+      function tone(type, f0, f1, ramp, peak, attack, end, delay = 0) {
+        const a = ctx();
+        const t = a.currentTime + delay;
+        const o = a.createOscillator();
+        const g = a.createGain();
+        o.type = type;
+        o.frequency.setValueAtTime(f0, t);
+        if (f1 !== f0) o.frequency.exponentialRampToValueAtTime(f1, t + ramp);
+        env(g, t, peak, attack, end);
+        o.connect(g).connect(a.destination);
+        o.start(t);
+        o.stop(t + end + 0.01);
+      }
+      function noise(ms, freq, q, peak) {
+        const a = ctx();
+        const t = a.currentTime;
+        const len = Math.ceil((a.sampleRate * ms) / 1000);
+        const buf = a.createBuffer(1, len, a.sampleRate);
+        const d = buf.getChannelData(0);
+        for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+        const s = a.createBufferSource();
+        s.buffer = buf;
+        const f = a.createBiquadFilter();
+        f.type = 'bandpass';
+        f.frequency.value = freq;
+        f.Q.value = q;
+        const g = a.createGain();
+        env(g, t, peak, 0.001, ms / 1000);
+        s.connect(f).connect(g).connect(a.destination);
+        s.start(t);
+      }
+      const jitter = (v, r) => v * (1 + (Math.random() * 2 - 1) * r);
+      const SOUNDS = {
+        declic() {
+          tone('sine', 1320, 990, 0.04, 0.09, 0.003, 0.06);
+          tone('sine', 1980, 1980, 0, 0.05, 0.002, 0.045, 0.028);
+        },
+        toc(scale = 1) {
+          tone('triangle', 220, 150, 0.09, 0.12 * scale, 0.004, 0.12);
+          noise(15, 900, 1.2, 0.04 * scale);
+        },
+        tic() {
+          tone('sine', 2600, 2600, 0, 0.035, 0.001, 0.025);
+        },
+        key(kind = 'char') {
+          if (kind === 'enter') return SOUNDS.toc(0.5);
+          if (kind === 'back') return noise(10, 3000, 0.8, 0.015);
+          const space = kind === 'space';
+          noise(space ? 18 : 12, jitter(space ? 1400 : 2200, 0.15), 0.8, jitter(0.025, 0.2));
+          tone('sine', 180, 180, 0, 0.02, 0.001, 0.02);
+        },
+        frappe() {
+          'Le dégel'
+            .split('')
+            .forEach((c, i) => setTimeout(() => SOUNDS.key(c === ' ' ? 'space' : 'char'), i * 110));
+        },
+      };
+      document.addEventListener('click', (e) => {
+        const b = e.target.closest('[data-play]');
+        if (b) SOUNDS[b.dataset.play]();
+      });
+      let last = 0;
+      document.querySelector('textarea').addEventListener('keydown', (e) => {
+        if (e.repeat || e.isComposing || e.metaKey || e.ctrlKey) return;
+        const now = performance.now();
+        if (now - last < 30) return;
+        last = now;
+        if (e.key === 'Enter') SOUNDS.key('enter');
+        else if (e.key === 'Backspace') SOUNDS.key('back');
+        else if (e.key === ' ') SOUNDS.key('space');
+        else if (e.key.length === 1) SOUNDS.key('char');
+      });
+    </script>
+  </body>
+</html>

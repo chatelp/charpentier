@@ -1,6 +1,6 @@
 # Charpentier : design language
 
-- **Version** : 1.1 (12 novembre 2026). 1.1 : tout devient découvrable sans raccourci (§4.8, §5.1), après essai de l'app par l'auteur ; inventaire et directions comparées dans [design/decouverte.md](design/decouverte.md).
+- **Version** : 1.2 (13 novembre 2026). 1.2 : finitions (sons §3.4, rejets §4.5, restauration dans la vue d'ensemble §4.4, note en fenêtre étroite §4.2, bibliothèque §4.9, icône §4.10). 1.1 : tout devient découvrable sans raccourci (§4.8, §5.1), après essai de l'app par l'auteur ; inventaire et directions comparées dans [design/decouverte.md](design/decouverte.md).
 - **Direction retenue** : **Perle**, avec **Deux encres** et **Signature** ; manuscrit en **tiroir + vue d'ensemble** ; points d'entrée en **poignées** sur les bords et **zone de commande** en pied.
 - **Sources** : brief de l'auteur ([design/brief.md](design/brief.md)), maquettes ([design/mockups/](design/mockups/), ouvrir `index.html`), tokens CSS proposés ([design/tokens.css](design/tokens.css)).
 - Complète la [SPEC](SPEC.md) (§6 mentor, §7.1 statuts, §19 exigences transverses) sans la contredire.
@@ -89,7 +89,16 @@ Typographie française du texte : espaces fines insécables avant `? ! ; :` et d
 
 Courbe unique `cubic-bezier(0.2, 0.7, 0.2, 1)`. **Rien ne bouge pendant la frappe.** Respect de `prefers-reduced-motion` et interrupteur « Réduire les animations » dans l'app (tous les tokens de durée à 0).
 
-Sons : **désactivés par défaut**, discrets, hors ligne. Un déclic clair à la validation, un toc plus grave au rejet et à la fermeture, un tic léger à l'ouverture d'une note. Option séparée, également désactivée, pour un son de frappe. Jamais de son pour signaler une remarque du Compagnon.
+Sons : **désactivés par défaut**, discrets, hors ligne, synthétisés par Web Audio (aucun fichier). Un son ne suit **qu'un geste de l'auteur** : jamais pour signaler une remarque du Compagnon, jamais quand une pastille apparaît d'elle-même. Les gains sont absolus (un `GainNode` par son, sortie directe) ; le volume du système fait le reste. Page d'écoute : [design/sons.html](design/sons.html).
+
+| Son | Quand | Recette |
+|---|---|---|
+| **Déclic** | valider (champ, fiche proposée), point résolu | sinus 1 320 → 990 Hz (rampe exp. 40 ms), attaque 3 ms à 0,09, chute exp. à 60 ms ; puis à +28 ms sinus 1 980 Hz, attaque 2 ms à 0,05, chute à 45 ms. 75 ms en tout |
+| **Toc** | rejeter, ignorer un point, fermer un panneau ou une feuille | triangle 220 → 150 Hz (rampe exp. 90 ms), attaque 4 ms à 0,12, chute exp. à 120 ms ; avec un bruit blanc de 15 ms, passe-bande 900 Hz Q 1,2, gain 0,04 |
+| **Tic** | l'auteur déplie une note ou ouvre un panneau | sinus 2 600 Hz, attaque 1 ms à 0,035, chute exp. à 25 ms |
+| **Frappe** (option séparée) | chaque caractère tapé dans le texte | bruit blanc 12 ms, passe-bande 2 200 Hz ± 15 % au hasard, Q 0,8, gain 0,025 ± 20 % ; plus sinus 180 Hz de 20 ms, gain 0,02. Espace : passe-bande 1 400 Hz, 18 ms. Retour : le Toc à 50 %. Effacement : bruit 10 ms, 3 000 Hz, gain 0,015. Au plus un son toutes les 30 ms ; rien sur la répétition automatique ni pendant une composition (accents morts, IME) |
+
+Attaques et chutes en rampes exponentielles depuis et vers 0,0001. Réglages : « Sons de l'interface » et « Son de frappe », tous deux désactivés par défaut, dans la feuille `Aa` (deux lignes Oui / Non) et dans le menu Présentation (cases à cocher), aussi dans la ligne de commande ; pas de raccourci. Préférence d'appareil.
 
 ## 4. Composants
 
@@ -108,7 +117,7 @@ Sons : **désactivés par défaut**, discrets, hors ligne. Un déclic clair à l
 - **Pastille** : cercle de 14 px en relief (`--ch-raise-s`) au cœur bleu de Prusse de 6 px, à 1,5 rem du texte, alignée sur la première ligne du paragraphe. Opacité selon l'importance : 0,42 (langue, encouragement), 0,72 (métier, indice), 1 (conflit avec une information validée).
 - **Note** : carte en relief de 18,5 rem à droite de la pastille. Contenu : type en petites capitales bleues + « Le Compagnon » en italique ; titre (Literata 16 px) ; message (Inter 13 px) ; « pourquoi » en italique `--ch-muted` sous un filet ; actions en boutons avec leur touche (`1`, `2`, `3` ou `⏎`, `I`, `Échap`).
 - **Ancrage** : le passage visé reçoit un lavis `--ch-mentor-soft` et un soulignement bleu 1,5 px, seulement quand la note est dépliée (décoration ProseMirror, aucune marque dans le contenu). Typographie et orthographe : soulignement ondulé fin.
-- **Comportement** : une seule note dépliée à la fois ; elle se déplie quand le curseur entre dans le passage après une pause, ou au raccourci ; se replie quand le curseur s'éloigne ou à `Échap`. Fenêtre étroite (< 1180 px) : la note se déplie sous son paragraphe et pousse le texte, sans le recouvrir.
+- **Comportement** : une seule note dépliée à la fois ; elle se déplie quand le curseur entre dans le passage après une pause, ou au raccourci ; se replie quand le curseur s'éloigne ou à `Échap`. Fenêtre étroite (< 1180 px) : la note se déplie **sous son paragraphe**, en pleine largeur de colonne, et pousse le texte qui suit ; elle ne recouvre jamais le texte (décoration ProseMirror de type widget placée après le paragraphe, pas une couche positionnée). La pastille reste dans ce qui reste de marge, à 0,5 rem du bord de la colonne ; la note garde sa carte en relief, avec 10 px au-dessus et 14 px au-dessous.
 
 ### 4.3 Panneau droit : Points à traiter / Conversation
 - Panneau en relief de 25,5 rem, détaché des bords (10–12 px), ouvert par `⌘L` ou la poignée « Compagnon » (§4.8), sur l'onglet Points ; le contrôle segmenté passe à la conversation [D-18]. Il **remplace la marge** : les pastilles disparaissent et le texte se recentre dans l'espace restant.
@@ -119,7 +128,13 @@ Sons : **désactivés par défaut**, discrets, hors ligne. Un déclic clair à l
 
 ### 4.4 Manuscrit : tiroir et vue d'ensemble
 - **Tiroir** (`⌘J` ou la poignée « Manuscrit », [D-18]) : panneau gauche en relief de 22 rem, la scène derrière s'estompe. Contrôle segmenté « Manuscrit | Plan ». Chapitres en Literata, scènes en lignes ; scène active gravée avec un filet vermillon à gauche ; pastilles bleues `•••` et nombre de mots à droite. Sous la scène active : variantes (active en vermillon) et derniers points de restauration. Clavier : `↑↓`, `⏎` ouvrir, `⌥↑↓` déplacer, `V` variantes, `⌘N` nouvelle scène.
-- **Vue d'ensemble** (`⌘⇧P` ou « Plan ») : plein cadre, titre du roman en Literata, une colonne par chapitre, une carte en relief par scène (numéro, titre en Literata, mots, variantes, pastilles). Scène active gravée et cerclée de vermillon. Bandeau en pied : variantes et points de restauration de la scène sélectionnée. Clavier : flèches, `⌥` + flèches pour déplacer, `⏎` écrire, `Échap` revenir.
+- **Vue d'ensemble** (`⌘⇧P` ou « Plan ») : plein cadre, titre du roman en Literata, une colonne par chapitre, une carte en relief par scène (numéro, titre en Literata, mots, variantes, pastilles). Scène active gravée et cerclée de vermillon. Clavier : flèches, `⌥` + flèches pour déplacer, `⏎` écrire, `Échap` revenir.
+- **Bandeau en pied de la vue d'ensemble** (scène sélectionnée) : deux groupes, libellés en petites capitales avec leur touche.
+  - « Variantes `V` » : une puce par variante, l'active gravée en vermillon ; un clic ou `⏎` la rend active.
+  - « Restauration `H` » : les **3 derniers points** de la variante active, en puces (« Auj. 14:32 · auto », « Hier 18:40 · « avant de couper la fin » ») puis un lien « Tous (12)… » qui ouvre « Revenir à un point de restauration… » dans la ligne de commande, filtré sur la scène.
+  - Choisir un point ouvre au-dessus du bandeau un **aperçu** en relief : date et raison en petites capitales, les premières lignes de cette version dans un cadre gravé (Literata italique), l'écart de mots avec aujourd'hui et la variante, puis « Restaurer `⏎` », « En faire une variante `⇧⏎` », « Fermer `Échap` ».
+  - Restaurer ne demande pas de confirmation : c'est une nouvelle transaction et l'état précédent devient lui-même un point de restauration (message d'état « Version restaurée… »). « En faire une variante » crée une variante nommée d'après la date et la rend active.
+  - Clavier : `V` ou `H` font entrer le focus dans le groupe, `←` `→` parcourent les puces, `⏎` choisit, `Échap` remonte au groupe puis aux cartes.
 
 ### 4.5 Atelier (modules) et fiches
 - **Atelier** (`⌘E` bascule Écrire / Atelier) : trois colonnes, rail des modules (13,5 rem), liste des entrées (16,5 rem) avec filtre gravé, fiche.
@@ -132,11 +147,14 @@ Sons : **désactivés par défaut**, discrets, hors ligne. Un déclic clair à l
 |---|---|---|
 | Proposée | **en relief**, italique bleu | « Proposée · d'après la scène II.1 » + Valider `V` / Rejeter `X` |
 | Validée | **gravée**, encre, filet vermillon de 2 px à gauche | rien |
-| Rejetée | à plat, 45 %, barrée | « Rejetée le 10 nov. · conservée pour ne pas être reproposée » ; masquables (« Afficher les rejets ») |
+| Rejetée | à plat, 45 %, barrée | « Rejetée le 10 nov. · conservée pour ne pas être reproposée » + « Utiliser cette valeur » ; visible seulement avec « Afficher les rejets » |
 | Contredite | gravée + médaillon « ! » bleu en relief | en bleu : « Contredite : la scène III.2 dit… » + « Voir le passage » |
 | Vide | cadre pointillé, invite en Inter | « À écrire, ou laissez le Compagnon proposer » |
 
   Valider fait passer la valeur du relief au creux en 350 ms : le geste se voit.
+- **Afficher les rejets** : l'étiquette « estompée : rejetée » de la légende est un interrupteur : « estompée : rejetée · afficher (3) `⇧X` » (« masquer » quand ils sont visibles ; le nombre compte les rejets de la fiche et les fiches rejetées du module). Survol ou état actif : relief léger. **Masqués par défaut** ; le choix vaut pour tout l'Atelier et la fiche en volet, préférence d'appareil.
+  - Masqués : un champ dont la seule valeur est rejetée s'affiche **vide** (pointillés, invite habituelle) avec, dessous, « 1 rejet » en `--ch-faint`, cliquable (affiche les rejets) ; un champ validé qui a des rejets passés porte le même « 1 rejet » ; une fiche rejetée disparaît de la liste, dont le pied indique « 1 proposition rejetée · Afficher `⇧X` ».
+  - Affichés : le champ rejeté reprend son aspect (à plat, 45 %, barré) avec « Utiliser cette valeur » (l'auteur la reprend comme sa valeur, validée) ; sous un champ validé, une ligne « Rejetée : ~~« 52 ans »~~, le 9 nov. » ; la fiche rejetée revient dans la liste, estompée et barrée, avec « Reprendre » (elle redevient proposée).
 - **Apparitions** : puces en relief (`I.1`, `III.2`…), remplies automatiquement.
 - **Fiche en volet** : depuis le texte (clic ou raccourci sur un nom connu), la fiche s'ouvre dans le panneau droit, en une colonne ; `⌘⏎` l'ouvre dans l'Atelier, `Échap` la ferme.
 
@@ -167,6 +185,16 @@ Un débutant doit pouvoir tout trouver à la souris ; le raccourci s'affiche à 
 - **Visite guidée** : trois étapes, une bulle en relief à côté de chaque point d'entrée (Manuscrit, Compagnon, zone de commande), le point d'entrée cerclé de bleu ; titre en petites capitales bleues avec le raccourci, deux phrases, « Suivant `⏎` » et « 1 / 3 ». Jamais relancée d'elle-même.
 - **États vides** : tout panneau ou liste vide dit quoi faire et comment (« Rien à traiter pour l'instant. Demandez l'avis du Compagnon sur la scène : `⌘⇧A` » ; « Aucun personnage. + Nouveau personnage »).
 - **Bulles d'aide** : chaque bouton, poignée ou contrôle a une bulle native « Libellé (raccourci) ». Tous sont atteignables à la tabulation, dans l'ordre : poignée gauche, Écrire | Atelier, texte, zone de commande, `Aa`, poignée droite.
+
+### 4.9 Bibliothèque des projets
+Maquette : écran 9.
+- En tête : « Bibliothèque » en petites capitales vermillon, à droite « + Nouveau roman `N` » (principal) et « + Nouvelle `⇧N` ». Sous le titre, la ligne de touches en `--ch-faint`.
+- Un projet = une carte en relief léger : titre en Literata 19 px ; dessous, genre, mots, scènes et dernière ouverture en Inter 12 px `--ch-muted`. Projet sélectionné (ou ouvert) gravé avec un filet vermillon à gauche. Au survol ou au focus, à droite : « Ouvrir `⏎` », « Renommer `R` », « Corbeille `⌫` ».
+- Pied, sous un filet : « Corbeille (2) » (projets restaurables) ; sur le bureau, « Dossier : ~/Documents/Charpentier · Changer… · Afficher dans le Finder ».
+- État vide : « Aucun projet pour l'instant. Commencez un roman ou une nouvelle. » avec les deux boutons.
+
+### 4.10 Icône
+L'**Équerre** : une équerre de charpentier gravée dans une plaque perle, bord intérieur vermillon, graduations, pastille du Compagnon dans l'angle. Sources, rendus et règles des petites tailles (version simplifiée sous 128 px) : [design/icon/](design/icon/README.md).
 
 ## 5. Règles d'UX
 
