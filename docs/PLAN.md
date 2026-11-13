@@ -164,28 +164,42 @@ La version web ouvre les projets du compte depuis le serveur, et le Compagnon y 
 
 ## Étape 5 : le X250, appareil d'écriture
 
-But : un ThinkPad X250 dédié qui démarre directement dans Charpentier, sans rien d'autre à l'écran, et retrouve le roman par la synchro (étape 4a). Référence : SPEC §13 (hôte `appliance`, service `System`) et le chapitre « Mode appareil » de la spec technique d'origine ; apparence : DESIGN §4.1, §4.8 et §5.4.
+But : un ThinkPad X250 dédié qui démarre directement dans Charpentier, sans rien d'autre à l'écran, et retrouve le roman par la synchro (étape 4a). Sur cet appareil, l'app est la partie visible de l'OS [D-24] : tout ce qu'offrirait un gestionnaire de fenêtres est dans son interface. Référence : SPEC §13 (hôte `appliance`, service `System`) et le chapitre « Mode appareil » de la spec technique d'origine ; apparence et périmètre validés avec la session de design : DESIGN §4.12 (ligne système, réglages, verrou, premier démarrage), §3.1 (matière du système), §3.2 (JetBrains Mono), rendus dans `docs/design/x250/`.
+
+Hors périmètre de la v1 de l'appareil : portail captif (seulement détecté), bureau étendu, mises à jour lancées depuis l'appareil. Le terminal de secours reste sans interface.
 
 ### 5.1 Points de contribution du cœur [D-24]
-Une « fonctionnalité » est un module compilé avec l'app qui déclare ce qu'elle apporte et sa condition d'activation : commandes (le registre le fait déjà), éléments d'état du pied, lignes ou sections de réglages, entrées de menu, panneaux, textes. Le pied, la feuille de réglages et le menu, aujourd'hui câblés en dur, lisent ces contributions. Pas d'extensions tierces : rien n'est chargé à l'exécution.
-**Vérifiable** : une fonctionnalité de test ajoute une commande, un état dans le pied et un réglage sans toucher aux composants du cœur ; retirée, il n'en reste rien.
+Une « fonctionnalité » est un module compilé avec l'app qui déclare ce qu'elle apporte et sa condition d'activation : commandes (le registre le fait déjà), zone en tête de fenêtre, éléments d'état du pied, sections de réglages, vue plein cadre, préfixe de la ligne de commande, entrées de menu, textes. Le pied, les réglages et le menu, aujourd'hui câblés en dur, lisent ces contributions. Pas d'extensions tierces : rien n'est chargé à l'exécution.
+**Vérifiable** : une fonctionnalité de test ajoute une commande, une zone en tête, un état dans le pied et une section de réglages sans toucher aux composants du cœur ; retirée, il n'en reste rien.
 
 ### 5.2 Mode appareil de l'app
-L'app de bureau lancée avec `--appliance` : plein écran, sans barre de titre ni barre de menus (la zone de commande en tient lieu), `Ctrl` à la place de `⌘` dans les raccourcis et leurs libellés, raccourcis que Sway se réserve déclarés comme réservés. Cible 1920 × 1080 à 125 % (1 536 × 864 px CSS) : l'écran d'écriture avec une note dépliée tient sans défilement de l'interface.
+L'app de bureau lancée avec `--appliance` : plein écran, sans barre de titre ni barre de menus (la zone de commande en tient lieu), `Ctrl` à la place de `⌘` dans les raccourcis et leurs libellés, touche Super réservée au système. Cible 1920 × 1080 à 125 % (1 536 × 864 px CSS) : l'écran d'écriture avec une note dépliée tient sans défilement de l'interface.
 **Vérifiable** : sur Linux, `--appliance` ouvre l'app en plein écran sans chrome ; tout s'atteint par la zone de commande et les raccourcis `Ctrl`.
 
-### 5.3 Service `System` et fonctionnalité « Système »
-Dans le main, l'implémentation Linux du service `System` (D-Bus) : NetworkManager, UPower, logind, luminosité, son. Dans le cœur, la fonctionnalité « Système », première cliente des points de contribution (5.1), active seulement quand le service existe : tout ce qu'offrirait un gestionnaire de fenêtres. Périmètre et écrans : inventaire mené avec la session de design (à reporter ici et dans DESIGN.md une fois validé).
-**Vérifiable** : sur le X250, je choisis un réseau Wi-Fi et règle la luminosité sans quitter l'app ; le pied montre le réseau et la batterie ; sur le Mac, rien de tout cela n'apparaît.
+### 5.3 Ligne système, journal et réglages
+La fonctionnalité « Système », première cliente des points de contribution, contre un service `System` simulé (elle se développe et se teste sur le Mac) : la ligne système de 30 px en tête, dans sa matière (`.ch-system`) et sa police (JetBrains Mono embarquée, OFL 1.1), ses segments et leurs panneaux, les jauges à dix cellules, l'alerte en segment inversé ; le message, seul canal du système, et son journal ; Super seul et Super + lettre ; le préfixe `:` de la ligne de commande (`:lum 40`, `:wifi <nom>`, `:veille`…) ; la vue des réglages du système (Super + virgule), son rail et ses onze sections.
+**Vérifiable** : avec le service simulé, je parcours la ligne au clavier, je déplie le Wi-Fi, je tape `:lum 40`, j'ouvre les réglages ; sur le Mac sans service, rien de tout cela n'apparaît.
 
-### 5.4 Build Linux et empaquetage Nix
+### 5.4 Service `System` : l'essentiel
+Dans le main, l'implémentation Linux (D-Bus et outils du système) de ce qu'il faut pour écrire en déplacement : Wi-Fi (radio, réseaux, connexion, oubli, état, portail détecté) et Ethernet, luminosité et son avec les touches du ThinkPad, les deux batteries (niveau, charge, puissance, autonomie ; à 15 % le segment s'inverse, à 3 % point de restauration puis veille), veille, extinction et redémarrage avec leur confirmation, délais d'écran et de veille, rabat et réveil, date, heure et fuseau, « À propos ».
+**Vérifiable** : sur le X250, je choisis un réseau Wi-Fi, je règle la luminosité et le volume aux touches, je vois la batterie, je mets en veille et j'éteins, sans quitter l'app.
+
+### 5.5 Verrouillage et premier démarrage
+Code de 4 à 8 caractères demandé au réveil (ou après 15 min, ou jamais), empreinte gardée hors du projet, attente croissante après 5 erreurs, écran de verrouillage plein cadre sans contenu de projet ; le terminal de secours est neutralisé tant que l'appareil est verrouillé. Premier démarrage en quatre étapes passables (Wi-Fi, code, synchronisation, Compagnon) avant la note de bienvenue.
+**Vérifiable** : je rabats l'écran, je le rouvre, le code m'est demandé et aucun texte n'est visible avant ; un appareil neuf me guide jusqu'à mon roman synchronisé.
+
+### 5.6 Périphériques et confort
+Clé USB (détection, copie du miroir Markdown de tous les projets dans `Charpentier/<date>/`, éjection) ; impression (imprimantes du réseau sans pilote, PDF en mise en page de manuscrit : scène, chapitre ou manuscrit) ; Bluetooth (appareils connus, recherche, appairage, oubli) ; écran externe (dupliquer ou externe seul, échelle) ; mode nuit (automatique de 21 h à 7 h, chaleur) ; disposition du clavier (AZERTY, BÉPO, QWERTY) et pavé tactile.
+**Vérifiable** : je copie mon roman sur une clé, j'imprime une scène, j'appaire un casque, je branche un écran, le mode nuit s'active le soir.
+
+### 5.7 Build Linux et empaquetage Nix
 Build Electron pour Linux x64 (dictionnaire Hunspell compris), puis paquet Nix reproductible de l'app (dépendances npm figées). En attendant, une installation manuelle du build Linux est acceptable.
 **Vérifiable** : `nix build .#charpentier` produit l'app, qui démarre sur une machine NixOS.
 
-### 5.5 Flake NixOS du X250
-`nix/flake.nix` et `nix/hosts/x250/` : `nixos-hardware` pour le X250 ; greetd en ouverture de session automatique, qui lance un Sway minimal (pas de barre ni de bordures, Charpentier en plein écran par `for_window`, raccourcis Sway supprimés, un combo caché pour un terminal de secours) ; Electron en Wayland natif ; keyd et disposition FR ; TLP ; veille au rabat de l'écran avec reprise directe sur le texte ; systemd-boot sans délai, démarrage silencieux, services inutiles désactivés ; un TTY de secours (Ctrl+Alt+F2).
+### 5.8 Flake NixOS du X250
+`nix/flake.nix` et `nix/hosts/x250/` : `nixos-hardware` pour le X250 ; greetd en ouverture de session automatique, qui lance un Sway minimal (pas de barre ni de bordures, Charpentier en plein écran par `for_window`, raccourcis Sway supprimés, un combo caché pour un terminal de secours) ; Electron en Wayland natif ; les services que demande `System` (NetworkManager, BlueZ, PipeWire, UPower, udisks, CUPS) et les droits pour les piloter sans mot de passe ; keyd ; TLP ; veille au rabat de l'écran avec reprise directe sur le texte ; systemd-boot sans délai, démarrage silencieux, services inutiles désactivés ; un TTY de secours (Ctrl+Alt+F2).
 **Vérifiable** : le X250 démarre en quelques secondes directement sur mon texte ; rabattre l'écran puis le rouvrir me ramène au curseur.
 
-### 5.6 Déploiement à distance
+### 5.9 Déploiement à distance
 Mise à jour du X250 depuis le Mac par `nixos-rebuild switch --flake .#x250 --target-host …` ; connexion au serveur de synchro (étape 4a) pour retrouver les projets.
 **Vérifiable** : je mets à jour le X250 sans le toucher ; une scène écrite sur le Mac s'y retrouve, et inversement.
