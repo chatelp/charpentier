@@ -1,5 +1,6 @@
+import type { SystemService } from '@charpentier/platform';
 import * as Y from 'yjs';
-import type { Message, Request, Responses } from '../shared/ipc';
+import { SYSTEM_ACTIONS, type Message, type Request, type Responses } from '../shared/ipc';
 import type { DocStore } from './doc-store';
 import type { FolderLibrary } from './projects';
 import type { PreferencesFile } from './preferences';
@@ -15,6 +16,7 @@ import type { SyncEngine } from './sync-engine';
  */
 export class RendererSession {
   readonly #unsubscribe = new Map<string, () => void>();
+  #unwatchSystem: (() => void) | null = null;
 
   constructor(
     private readonly services: {
@@ -26,6 +28,8 @@ export class RendererSession {
       /** The library changed here (the sync tells the account, step 4.3). */
       readonly onLibraryChange?: () => void;
       readonly sync?: SyncEngine;
+      /** The device's system: the X250's, or a simulated one (`--simulate-system`). */
+      readonly system?: SystemService | null;
     },
     private readonly push: (message: Message) => void,
   ) {}
@@ -115,6 +119,28 @@ export class RendererSession {
         return (await this.services.sync?.devices()) ?? null;
       case 'sync.revokeDevice':
         return (await this.services.sync?.revokeDevice(request.id)) ?? false;
+      case 'system.snapshot': {
+        const system = this.services.system;
+        if (!system) return null;
+        if (!this.#unwatchSystem)
+          this.#unwatchSystem = system.onChange(() =>
+            this.push({
+              type: 'system.changed',
+              snapshot: { state: system.state(), journal: [...system.journal()] },
+            }),
+          );
+        return { state: system.state(), journal: [...system.journal()] };
+      }
+      case 'system.post':
+        this.services.system?.post(request.text);
+        return null;
+      case 'system.call': {
+        const system = this.services.system;
+        if (!system || !SYSTEM_ACTIONS.includes(request.method))
+          throw new Error(`No system action ${request.method}`);
+        const action = system[request.method] as (...args: readonly unknown[]) => Promise<unknown>;
+        return (await action.apply(system, [...request.args])) ?? null;
+      }
       default:
         throw new Error(`Not handled by the session: ${request.type}`);
     }
@@ -130,6 +156,8 @@ export class RendererSession {
 
   /** The renderer went away (window closed, reload): let go of its documents. */
   dispose(): void {
+    this.#unwatchSystem?.();
+    this.#unwatchSystem = null;
     for (const unsubscribe of this.#unsubscribe.values()) unsubscribe();
     this.#unsubscribe.clear();
     this.services.store.releaseAll(this);

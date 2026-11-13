@@ -7,6 +7,9 @@ import type {
   SyncAccountInfo,
   SyncDevice,
   SyncStatus,
+  SystemMessage,
+  SystemService,
+  SystemState,
   ProjectKind,
   ProjectSummary,
 } from '@charpentier/platform';
@@ -72,6 +75,13 @@ export type Request =
   | { readonly type: 'sync.signOut' }
   | { readonly type: 'sync.devices' }
   | { readonly type: 'sync.revokeDevice'; readonly id: string }
+  | { readonly type: 'system.snapshot' }
+  | { readonly type: 'system.post'; readonly text: string }
+  | {
+      readonly type: 'system.call';
+      readonly method: SystemAction;
+      readonly args: readonly unknown[];
+    }
   | { readonly type: 'agents.lightModel' }
   | { readonly type: 'agents.setLightModel'; readonly model: 'opus' | 'haiku' }
   // Handled by the Electron host itself (dialogs, Finder).
@@ -109,6 +119,9 @@ export interface Responses {
   'sync.devices': readonly SyncDevice[] | null;
   'sync.revokeDevice': boolean;
   'agents.setLightModel': null;
+  'system.snapshot': SystemSnapshot | null;
+  'system.post': null;
+  'system.call': unknown;
   'host.libraryFolder': string;
   'host.chooseLibraryFolder': boolean;
   'host.revealLibraryFolder': null;
@@ -124,6 +137,8 @@ export type Message =
   | { readonly type: 'host.fullScreen'; readonly fullScreen: boolean }
   /** Where the sync stands changed (main → renderer). */
   | { readonly type: 'sync.status'; readonly status: SyncStatus }
+  /** The device's system changed (main → renderer). */
+  | { readonly type: 'system.changed'; readonly snapshot: SystemSnapshot }
   /** A command was chosen in the application menu (main → renderer). */
   | { readonly type: 'host.menuCommand'; readonly id: string };
 
@@ -135,13 +150,37 @@ export interface DesktopBridge {
    * screen of a writing device, without title bar or menu bar.
    */
   readonly appliance?: boolean;
-  /** Started with `--simulate-system`: a simulated X250 system, for development on the Mac. */
-  readonly simulateSystem?: boolean;
   invoke<R extends Request>(request: R): Promise<Responses[R['type']]>;
   send(message: Message): void;
   /** Messages from the main process; returns an unsubscribe function. */
   onMessage(listener: (message: Message) => void): () => void;
 }
+
+/** The device's system as the interface sees it (docs/PLAN.md phases 5.3, 5.4). */
+export interface SystemSnapshot {
+  readonly state: SystemState;
+  readonly journal: readonly SystemMessage[];
+}
+
+/** The actions of the System service the interface may call, nothing else. */
+export const SYSTEM_ACTIONS = [
+  'setWifi',
+  'connectWifi',
+  'forgetWifi',
+  'setBluetooth',
+  'forgetBluetooth',
+  'setBrightness',
+  'setNightMode',
+  'setVolume',
+  'setMuted',
+  'setSetting',
+  'ejectUsb',
+  'suspend',
+  'reboot',
+  'powerOff',
+] as const satisfies readonly (keyof SystemService)[];
+
+export type SystemAction = (typeof SYSTEM_ACTIONS)[number];
 
 export const IPC_INVOKE = 'charpentier:invoke';
 export const IPC_MESSAGE = 'charpentier:message';

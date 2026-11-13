@@ -5,6 +5,7 @@ import {
   ipcMain,
   Menu,
   net,
+  powerMonitor,
   safeStorage,
   shell,
   type WebContents,
@@ -28,7 +29,10 @@ import {
   type SyncAccount,
   SpellClient,
   type MirrorStrings,
+  createLinuxSystem,
+  nodeTools,
 } from '@charpentier/platform-desktop/main';
+import { createSimulatedSystem, type SystemService } from '@charpentier/platform';
 import {
   IPC_INVOKE,
   IPC_MESSAGE,
@@ -51,8 +55,28 @@ if (!app.requestSingleInstanceLock()) app.quit();
  * writing device (the X250): full screen, no frame, no menu bar.
  */
 const appliance = process.argv.includes('--appliance');
-/** `--simulate-system`: the X250's system simulated in the interface (phase 5.3, on the Mac). */
+/** `--simulate-system`: the X250's system simulated, to develop it on the Mac (phase 5.3). */
 const simulateSystem = process.argv.includes('--simulate-system');
+
+/**
+ * The device's system (docs/PLAN.md phase 5.4): the X250's on Linux as a
+ * device, a simulated one on request, none otherwise.
+ */
+function deviceSystem(): (SystemService & { dispose?(): void }) | null {
+  if (simulateSystem) return createSimulatedSystem();
+  if (process.platform !== 'linux' || !appliance) return null;
+  const linux = createLinuxSystem({
+    tools: nodeTools(),
+    appVersion: app.getVersion(),
+    hostname: os.hostname(),
+    settingsFile: path.join(app.getPath('userData'), 'system.json'),
+  });
+  void linux.start();
+  // Waking up (lid opened): everything may have changed meanwhile.
+  void app.whenReady().then(() => powerMonitor.on('resume', () => void linux.refresh()));
+  return linux;
+}
+const system = deviceSystem();
 
 const preferences = new PreferencesFile(path.join(app.getPath('userData'), 'preferences.json'));
 const libraryFolder =
@@ -176,6 +200,7 @@ function sessionOf(contents: WebContents): RendererSession {
         agents,
         onLibraryChange: () => void sync.reconcile(),
         sync,
+        system,
       },
       (message) => {
         if (!contents.isDestroyed()) contents.send(IPC_MESSAGE, message);
@@ -259,10 +284,7 @@ function createWindow() {
       : { titleBarStyle: 'hiddenInset' as const }),
     backgroundColor: '#e3e7ed',
     webPreferences: {
-      additionalArguments: [
-        ...(appliance ? ['--charpentier-appliance'] : []),
-        ...(simulateSystem ? ['--charpentier-simulate-system'] : []),
-      ],
+      additionalArguments: [...(appliance ? ['--charpentier-appliance'] : [])],
       preload: path.join(import.meta.dirname, '../preload/index.cjs'),
       contextIsolation: true,
       sandbox: true,
@@ -318,6 +340,7 @@ app.on('window-all-closed', () => {
 // Every document is compacted on the way out (the journal already holds everything).
 app.on('will-quit', () => {
   sync.stop();
+  system?.dispose?.();
   for (const mirror of mirrors.values()) mirror.stop();
   mirrors.clear();
   store.closeAll();

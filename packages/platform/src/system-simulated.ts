@@ -1,9 +1,11 @@
-import type {
-  NightMode,
-  SystemMessage,
-  SystemService,
-  SystemSettings,
-  SystemState,
+import {
+  DEFAULT_SYSTEM_SETTINGS,
+  MESSAGE_LENGTH,
+  messageAbout,
+  type NightMode,
+  type SystemMessage,
+  type SystemService,
+  type SystemState,
 } from './system';
 
 /**
@@ -26,22 +28,6 @@ export interface SimulatedSystem extends SystemService {
     readonly calls: readonly string[];
   };
 }
-
-const DEFAULT_SETTINGS: SystemSettings = {
-  screenOffAfter: 5,
-  sleepAfter: 15,
-  lowBattery: 15,
-  askCode: 'wake',
-  keyboardLayout: 'azerty',
-  touchpad: true,
-  touchpadWhileTyping: false,
-  tapToClick: true,
-  naturalScrolling: false,
-  paperSize: 'a4',
-  autoTime: true,
-  clock24: true,
-  showCpu: true,
-};
 
 let sequence = 0;
 
@@ -105,7 +91,7 @@ export function createSimulatedSystem(
       { name: 'HP LaserJet bureau', isDefault: false },
     ],
     timeZone: 'Europe/Paris',
-    settings: DEFAULT_SETTINGS,
+    settings: DEFAULT_SYSTEM_SETTINGS,
   };
 
   const emit = () => {
@@ -116,7 +102,11 @@ export function createSimulatedSystem(
     emit();
   };
   const post = (text: string) => {
-    journal.push({ id: `m${++sequence}`, text: text.slice(0, 40), at: now().toISOString() });
+    journal.push({
+      id: `m${++sequence}`,
+      text: text.slice(0, MESSAGE_LENGTH),
+      at: now().toISOString(),
+    });
     emit();
   };
   const call = async (name: string) => {
@@ -165,7 +155,11 @@ export function createSimulatedSystem(
           networks: s.wifi.networks.map((n) => (n.ssid === ssid ? { ...n, known: true } : n)),
         },
       }));
-      post(network.portal ? `${ssid} · page de connexion demandée` : `connecté à ${ssid}`);
+      post(
+        messageAbout(ssid, (n) =>
+          network.portal ? `${n} · page de connexion demandée` : `connecté à ${n}`,
+        ),
+      );
       return 'connected';
     },
     forgetWifi: async (ssid) => {
@@ -177,7 +171,7 @@ export function createSimulatedSystem(
           networks: s.wifi.networks.map((n) => (n.ssid === ssid ? { ...n, known: false } : n)),
         },
       }));
-      post(`${ssid} oublié`);
+      post(messageAbout(ssid, (n) => `${n} oublié`));
     },
     setBluetooth: async (enabled) => {
       update((s) => ({ ...s, bluetooth: { ...s.bluetooth, enabled } }));
@@ -204,7 +198,7 @@ export function createSimulatedSystem(
     ejectUsb: async () => {
       const name = state.usb?.name;
       update((s) => ({ ...s, usb: null }));
-      if (name) post(`clé ${name} éjectée`);
+      if (name) post(messageAbout(name, (n) => `clé ${n} éjectée`));
     },
     suspend: () => call('suspend'),
     reboot: () => call('reboot'),
@@ -212,7 +206,7 @@ export function createSimulatedSystem(
     simulate: {
       usb: (name) => {
         update((s) => ({ ...s, usb: name ? { name } : null }));
-        if (name) post(`clé « ${name} » branchée · ⊞U copier`);
+        if (name) post(messageAbout(name, (n) => `clé « ${n} » branchée · ⊞U copier`));
       },
       battery: (level, charging = false) =>
         update((s) => ({

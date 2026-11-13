@@ -16,7 +16,6 @@ const bridge: DesktopBridge = {
   platform: process.platform,
   // Passed by the main process to this window (webPreferences.additionalArguments).
   appliance: process.argv.includes(APPLIANCE_ARG),
-  simulateSystem: process.argv.includes('--charpentier-simulate-system'),
   invoke: (request) => ipcRenderer.invoke(IPC_INVOKE, request),
   send: (message) => ipcRenderer.send(IPC_MESSAGE, message),
   onMessage: (listener) => {

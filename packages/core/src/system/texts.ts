@@ -124,6 +124,7 @@ export const systemTexts: TextTree = {
       night: 'mode nuit {{mode}}',
       lowBattery: 'batterie faible · branchez l’appareil',
       sleeping: 'mise en veille',
+      critical: 'batterie épuisée · mise en veille',
     },
     prefix: 'Système',
     prefixAction: {

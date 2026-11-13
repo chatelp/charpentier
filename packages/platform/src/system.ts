@@ -130,6 +130,38 @@ export interface SystemState {
   readonly settings: SystemSettings;
 }
 
+/** The longest message of the system line (docs/DESIGN.md §4.12). */
+export const MESSAGE_LENGTH = 40;
+
+/**
+ * A message about a name (« connecté à Maison-5G »): the name gives way, with
+ * an ellipsis, so the words around it are always read whole.
+ */
+export function messageAbout(name: string, template: (name: string) => string): string {
+  const room = MESSAGE_LENGTH - template('').length;
+  return template(name.length <= room ? name : `${name.slice(0, Math.max(1, room - 1))}…`);
+}
+
+/** A new device's settings (docs/DESIGN.md §4.12). */
+export const DEFAULT_SYSTEM_SETTINGS: SystemSettings = {
+  screenOffAfter: 5,
+  sleepAfter: 15,
+  lowBattery: 15,
+  askCode: 'wake',
+  keyboardLayout: 'azerty',
+  touchpad: true,
+  touchpadWhileTyping: false,
+  tapToClick: true,
+  naturalScrolling: false,
+  paperSize: 'a4',
+  autoTime: true,
+  clock24: true,
+  showCpu: true,
+};
+
+/** Below this level, on battery, the device saves the scene and sleeps (§4.12). */
+export const CRITICAL_BATTERY = 3;
+
 /** The overall battery level, 0 to 100, over every battery. */
 export const batteryLevel = (state: SystemState): number => {
   const { batteries } = state.power;

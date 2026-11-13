@@ -33,9 +33,12 @@ export type Segment = (typeof SEGMENTS)[number];
 interface UiState {
   readonly open: Segment | null;
   readonly focus: number;
+  /** Lit for a second: its value just changed by a key of the device. */
+  readonly lit: Segment | null;
 }
 
-let ui: UiState = { open: null, focus: 0 };
+let ui: UiState = { open: null, focus: 0, lit: null };
+let unlight: ReturnType<typeof setTimeout> | undefined;
 const listeners = new Set<() => void>();
 const set = (next: UiState) => {
   ui = next;
@@ -52,6 +55,12 @@ export const systemUi = {
   toggle: (segment: Segment) => set({ ...ui, open: ui.open === segment ? null : segment }),
   /** Puts the focus on the line (⊞ alone). */
   focusLine: () => set({ ...ui, focus: ui.focus + 1 }),
+  /** Lights a segment for a second (a key of the ThinkPad moved its gauge). */
+  light: (segment: Segment) => {
+    clearTimeout(unlight);
+    set({ ...ui, lit: segment });
+    unlight = setTimeout(() => set({ ...ui, lit: null }), 1000);
+  },
 };
 
 export const useSystemUi = (): UiState => useSyncExternalStore(systemUi.subscribe, systemUi.get);

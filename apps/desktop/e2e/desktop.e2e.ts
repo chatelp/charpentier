@@ -275,6 +275,19 @@ describe('desktop app', () => {
     await window.getByRole('dialog', { name: 'Ligne de commande' }).waitFor();
   });
 
+  it('shows the system line of the main process with --simulate-system (phase 5.4)', async () => {
+    const { window } = await launch(folders(), {}, ['--simulate-system']);
+    const line = window.getByRole('toolbar', { name: 'ligne système' });
+    await line.waitFor();
+    expect(await line.textContent()).toContain('Maison-5G');
+    // An action goes to the main process and its new state comes back.
+    await window.keyboard.press('ControlOrMeta+K');
+    await window.keyboard.type(':lum 40');
+    await window.getByRole('option', { name: /luminosité 40 %/ }).waitFor();
+    await window.keyboard.press('Enter');
+    await expect.poll(() => line.locator('[data-seg="lum"]').textContent()).toContain('40');
+  });
+
   it("fits the writing screen and an unfolded note in the X250's 1536 × 864", async () => {
     const quote = 'Helene regardait la Loire';
     const anthropic = await fakeAnthropic({

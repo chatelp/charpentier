@@ -1,10 +1,10 @@
 // Renderer side of the desktop platform: everything goes through the preload bridge.
-import {
-  createSimulatedSystem,
-  type KeybindingsService,
-  type LibraryService,
-  type Platform,
-  type PreferencesService,
+import type {
+  KeybindingsService,
+  LibraryService,
+  Platform,
+  PreferencesService,
+  SystemService,
 } from '@charpentier/platform';
 import type { DesktopBridge } from '../shared/ipc';
 import { IpcAgentsService } from './agents';
@@ -12,6 +12,7 @@ import { IpcSyncService } from './sync';
 import { IpcDocumentService } from './documents';
 
 export { IpcDocumentService } from './documents';
+export { connectSystem } from './system';
 export type { DesktopBridge } from '../shared/ipc';
 
 function library(bridge: DesktopBridge): LibraryService {
@@ -62,7 +63,14 @@ export function desktopKeybindings(platform: string, appliance = false): Keybind
   };
 }
 
-export function createDesktopPlatform(bridge: DesktopBridge): Platform {
+/**
+ * `system`: the device's, from `connectSystem` (read once before the
+ * interface starts, since the core asks for it synchronously).
+ */
+export function createDesktopPlatform(
+  bridge: DesktopBridge,
+  options: { readonly system?: SystemService | null } = {},
+): Platform {
   const appliance = bridge.appliance ?? false;
   return {
     host: 'desktop',
@@ -86,8 +94,7 @@ export function createDesktopPlatform(bridge: DesktopBridge): Platform {
       misspelled: (words, language) => bridge.invoke({ type: 'spell.misspelled', words, language }),
       suggest: (word, language) => bridge.invoke({ type: 'spell.suggest', word, language }),
     },
-    // The device's System service comes with phase 5.4; meanwhile it can be simulated.
-    system: bridge.simulateSystem ? createSimulatedSystem() : null,
+    system: options.system ?? null,
     // docs/DESIGN.md §4.1: a 34 px title bar merged with the background (none on a device).
     titleBarHeight: bridge.platform === 'darwin' && !appliance ? 34 : 0,
     // A device has no menu bar: the command zone stands in for it.

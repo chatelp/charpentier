@@ -15,6 +15,7 @@ import { usePlatform } from '../app/platform-context';
 import { featureText } from '../features/feature';
 import type { WorkspaceContext } from '../workspace/workspace-context';
 import { Gauge, Signal, sparkline, Square } from './controls';
+import { useBatteryGuard, useDeviceKeys } from './device-keys';
 import { SystemPanel } from './panels';
 import {
   SEGMENTS,
@@ -66,7 +67,9 @@ export function SystemLine({
   const text = featureText(t);
   const state = useSystemState(system);
   const journal = useJournal(system);
-  const { open, focus } = useSystemUi();
+  const { open, focus, lit } = useSystemUi();
+  useDeviceKeys(system);
+  useBatteryGuard(system, ctx);
   const line = useRef<HTMLDivElement>(null);
   const [current, setCurrent] = useState<Segment>('systeme');
   const now = useMinute();
@@ -167,7 +170,7 @@ export function SystemLine({
       data-seg={id}
       tabIndex={current === id ? 0 : -1}
       aria-expanded={open === id}
-      className={`ch-sys-seg is-${id}${open === id ? ' is-open' : ''}${extra ? ` ${extra}` : ''}`}
+      className={`ch-sys-seg is-${id}${open === id ? ' is-open' : ''}${lit === id ? ' is-lit' : ''}${extra ? ` ${extra}` : ''}`}
       onFocus={() => setCurrent(id)}
       onClick={() => systemUi.toggle(id)}
     >

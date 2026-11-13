@@ -44,8 +44,10 @@
   color: var(--ch-ink);
 }
 
-/* Unfolded, or the keyboard on it: lit, the glow spilling under the line. */
+/* Unfolded, the keyboard on it, or just moved by a key of the device: lit,
+   the glow spilling under the line. */
 .ch-sys-seg.is-open,
+.ch-sys-seg.is-lit,
 .ch-sys-seg:focus-visible {
   color: var(--ch-ink);
   box-shadow: var(--ch-lit);

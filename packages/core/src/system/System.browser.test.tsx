@@ -1,4 +1,5 @@
 import { createSimulatedSystem, type SimulatedSystem } from '@charpentier/platform';
+import { listCheckpoints } from '@charpentier/schema';
 import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import { userEvent } from 'vitest/browser';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -43,7 +44,7 @@ async function start(system: SimulatedSystem | null) {
   );
   const editor = await screen.findByRole('textbox', { name: 'Texte de la scène' });
   await waitFor(() => expect(document.activeElement).toBe(editor));
-  return { editor };
+  return { editor, docs };
 }
 
 const line = () => screen.getByRole('toolbar', { name: 'ligne système' });
@@ -135,6 +136,54 @@ describe('the system line of the X250 (phase 5.3)', () => {
     await userEvent.click(within(page).getByRole('radio', { name: 'non' }));
     await waitFor(() => expect(system.state().settings.showCpu).toBe(false));
     expect(line().querySelector('[data-seg="cpu"]')).toBeNull();
+  });
+
+  it('answers the ThinkPad keys of light and sound: the gauge moves, the segment lights up', async () => {
+    const system = createSimulatedSystem();
+    await start(system);
+    const press = (key: string) =>
+      window.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+    press('BrightnessUp');
+    await waitFor(() => expect(system.state().brightness).toBe(65));
+    expect(line().querySelector('[data-seg="lum"]')?.classList.contains('is-lit')).toBe(true);
+    await waitFor(() => expect(line().textContent).toContain('luminosité 65 %'));
+    press('AudioVolumeDown');
+    press('AudioVolumeDown');
+    await waitFor(() => expect(system.state().volume).toBe(30));
+    press('AudioVolumeMute');
+    await waitFor(() => expect(system.state().muted).toBe(true));
+    await waitFor(() => expect(line().textContent).toContain('son coupé'));
+    // The light goes out after a second.
+    await waitFor(
+      () =>
+        expect(line().querySelector('[data-seg="vol"]')?.classList.contains('is-lit')).toBe(false),
+      { timeout: 2000 },
+    );
+  });
+
+  it('warns once under the threshold, then at 3 % saves and sleeps', async () => {
+    const system = createSimulatedSystem();
+    const { docs } = await start(system);
+    const checkpoints = () =>
+      [...docs.entries()]
+        .filter(([guid]) => guid.endsWith('/history'))
+        .reduce((n, [, doc]) => n + listCheckpoints(doc).length, 0);
+    const before = checkpoints();
+    system.simulate.battery(14);
+    await waitFor(() =>
+      expect(line().textContent).toContain('batterie faible · branchez l’appareil'),
+    );
+    system.simulate.battery(13);
+    expect(system.journal().filter((m) => m.text.startsWith('batterie faible'))).toHaveLength(1);
+    system.simulate.battery(3);
+    await waitFor(() => expect(system.simulate.calls).toContain('suspend'));
+    expect(system.journal().at(-1)?.text).toBe('batterie épuisée · mise en veille');
+    // The scene was saved as a restore point before sleeping.
+    expect(checkpoints()).toBe(before + 1);
+    // Plugged in, then unplugged: it warns again.
+    system.simulate.battery(10, true);
+    system.simulate.battery(10);
+    expect(system.journal().filter((m) => m.text.startsWith('batterie faible'))).toHaveLength(2);
   });
 
   it('is not there without a System service (the Mac, the web)', async () => {

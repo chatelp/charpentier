@@ -3,7 +3,9 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import type { DesktopBridge, Message } from '../shared/ipc';
+import { createSimulatedSystem, type SystemService } from '@charpentier/platform';
 import { IpcDocumentService } from '../renderer/documents';
+import { connectSystem } from '../renderer/system';
 import { DocStore } from './doc-store';
 import { PreferencesFile } from './preferences';
 import { documentLocator, FolderLibrary } from './projects';
@@ -24,7 +26,7 @@ function mainProcess() {
 }
 
 /** A renderer wired to the main process the way the preload bridge does it. */
-function renderer(main: ReturnType<typeof mainProcess>) {
+function renderer(main: ReturnType<typeof mainProcess> & { system?: SystemService | null }) {
   const listeners = new Set<(m: Message) => void>();
   // Asynchronous like IPC, in order.
   const session = new RendererSession(main, (m) =>
@@ -39,7 +41,7 @@ function renderer(main: ReturnType<typeof mainProcess>) {
       return () => listeners.delete(listener);
     },
   };
-  return { session, documents: new IpcDocumentService(bridge) };
+  return { session, bridge, documents: new IpcDocumentService(bridge) };
 }
 
 const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
@@ -110,5 +112,42 @@ describe('documents held by the main process', () => {
     const main = mainProcess();
     main.preferences.set('lastProjectId', 'p1');
     expect(new PreferencesFile(main.preferences.file).get('lastProjectId')).toBe('p1');
+  });
+});
+
+describe('the system of the device, held by the main process (phase 5.4)', () => {
+  it('is null where the main process has none', async () => {
+    expect(await connectSystem(renderer(mainProcess()).bridge)).toBeNull();
+  });
+
+  it('reads the state at once, follows its changes, and calls the actions of the main process', async () => {
+    const system = createSimulatedSystem();
+    const r = renderer({ ...mainProcess(), system });
+    const seen = await connectSystem(r.bridge);
+    if (!seen) throw new Error('no system');
+    expect(seen.state().wifi.connected).toBe('Maison-5G');
+    expect(seen.journal()[0]?.text).toBe('démarrage · charpentier 0.5.0');
+
+    let changes = 0;
+    seen.onChange(() => changes++);
+    await seen.setBrightness(30);
+    expect(system.state().brightness).toBe(30);
+    await tick();
+    expect(seen.state().brightness).toBe(30);
+    expect(changes).toBeGreaterThan(0);
+
+    expect(await seen.connectWifi('Livebox-4A2C', 'faux')).toBe('wrong-password');
+    seen.post('luminosité 30 %');
+    await tick();
+    expect(seen.journal().at(-1)?.text).toBe('luminosité 30 %');
+
+    // Only the service's actions cross the bridge.
+    await expect(
+      r.bridge.invoke({ type: 'system.call', method: 'onChange' as 'suspend', args: [] }),
+    ).rejects.toThrow();
+    r.session.dispose();
+    system.simulate.battery(50);
+    await tick();
+    expect(seen.state().power.batteries[0]?.level).toBe(82);
   });
 });

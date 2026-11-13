@@ -41,6 +41,9 @@ importers:
       '@charpentier/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@charpentier/platform':
+        specifier: workspace:*
+        version: link:../../packages/platform
       '@charpentier/platform-desktop':
         specifier: workspace:*
         version: link:../../packages/platform-desktop
