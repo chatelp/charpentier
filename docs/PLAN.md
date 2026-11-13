@@ -2,7 +2,7 @@
 
 Chaque phase est courte, se termine par un résultat vérifiable dans l'app (ou par des tests quand la phase n'a pas d'interface), puis par un arrêt pour le feu vert. Les tests prioritaires sont écrits dans la phase qui introduit le code concerné.
 
-Statut : étapes 1 à 3 réalisées (12 novembre 2026) ; étape 4a en cours, phases 4.1 à 4.4 réalisées (13 novembre 2026). Reste à éprouver le Compagnon avec la clé de l'auteur (tests adversariaux en direct, réglage des prompts). Avancement visuel : https://claude.ai/artifact/NAAMCGpuXETvPTiDXMzdS4 (régénéré par `node scripts/progress.mjs`).
+Statut : étapes 1 à 3 réalisées (12 novembre 2026) ; étape 4a réalisée (13 novembre 2026), serveur en service sur https://charpentier.chatel.pm. Reste à éprouver le Compagnon avec la clé de l'auteur (tests adversariaux en direct, réglage des prompts). Avancement visuel : https://claude.ai/artifact/NAAMCGpuXETvPTiDXMzdS4 (régénéré par `node scripts/progress.mjs`).
 
 ---
 
@@ -155,6 +155,7 @@ Réalisé : service `Sync` de la plateforme (absent sur le web) ; commandes « S
 ### 4.5 Déploiement
 Image Docker du serveur, `docker-compose.yml` et guide de déploiement sur `prodesk2021.local` derrière le reverse proxy en HTTPS (WebSocket), sauvegarde de Postgres.
 **Vérifiable** : le serveur tourne sur `prodesk2021.local`, l'app s'y connecte par le domaine public.
+Réalisé (13 novembre 2026) : `https://charpentier.chatel.pm`, derrière le Traefik de la machine (réseau `proxy`, certificat Cloudflare), sauvegarde nocturne du volume Postgres ; `scripts/deploy-server.sh` et `infra/README.md`. Compte de l'auteur créé, l'app du Mac connectée et son projet synchronisé. Reste à essayer : la restauration d'une sauvegarde, et une seconde machine réelle.
 
 ## Étape 4b (ensuite) : version web synchronisée et relais IA
 La version web ouvre les projets du compte depuis le serveur, et le Compagnon y passe par un relais IA côté serveur (clé de l'auteur chiffrée sur le serveur). À détailler à la fin de 4a.
