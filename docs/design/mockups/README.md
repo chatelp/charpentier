@@ -3,6 +3,7 @@
 Ouvrir `index.html` dans un navigateur (aucune installation). La barre noire du haut ne fait pas partie du design : elle sert à comparer.
 
 - **Direction** (touche `D`) : Perle, Vélin, Grès.
+- **Caractère** (touches `M` `E` `O`, direction Perle) : leviers combinables pour sortir les outils de la monotonie, la page d'écriture restant telle quelle. `M` alterne Neutre, **Matières** (une matière par lieu : bleu lavé pour le Compagnon, ivoire pour le manuscrit, argile pour l'Atelier) et **Établi sombre** (outils en ardoise, page claire) ; `E` **Encres pleines** (vermillon et bleu remplissent ce qui est actif) ; `O` **Outils gravés** (pictogrammes en médaillon, monogrammes, titres de panneaux, filets gravés). En cours de choix.
 - **Découverte** (touche `G`, direction Perle) : comment un débutant trouve les outils sans raccourci. Actuel ; 1 · Poignées (retenue) ; 2 · Établi ouvert ; 3 · Barre d'outils. **Frappe** (touche `W`) montre ce qui s'efface pendant l'écriture. Inventaire et arguments : [`../decouverte.md`](../decouverte.md).
 - **Écran** (touches `1` à `9`) : écrire ; écrire avec le Compagnon ; manuscrit (bouton « Plan » pour la vue d'ensemble et son bandeau de restauration) ; fiche personnage (Atelier, `⇧X` affiche ou masque les rejets) ; fiche en volet ; points à traiter et conversation ; ligne de commande ; premier lancement ; bibliothèque.
 - Sons : page d'écoute séparée, [`../sons.html`](../sons.html). Icône : [`../icon/`](../icon/README.md).
