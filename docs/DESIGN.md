@@ -1,6 +1,6 @@
 # Charpentier : design language
 
-- **Version** : 1.3 (13 novembre 2026). 1.3 : les outils changent de matière, **ardoise sombre**, et reçoivent des **outils gravés** (§3.1, §4.11), l'auteur trouvant l'ensemble trop neutre hors de la page d'écriture. 1.2 : finitions (sons §3.4, rejets §4.5, restauration dans la vue d'ensemble §4.4, note en fenêtre étroite §4.2, bibliothèque §4.9, icône §4.10). 1.1 : tout devient découvrable sans raccourci (§4.8, §5.1), après essai de l'app par l'auteur ; inventaire et directions comparées dans [design/decouverte.md](design/decouverte.md).
+- **Version** : 1.4 (13 novembre 2026). 1.4 : en thème sombre, l'ardoise reste la même et la page s'assombrit (§3.1). 1.3 : les outils changent de matière, **ardoise sombre**, et reçoivent des **outils gravés** (§3.1, §4.11), l'auteur trouvant l'ensemble trop neutre hors de la page d'écriture. 1.2 : finitions (sons §3.4, rejets §4.5, restauration dans la vue d'ensemble §4.4, note en fenêtre étroite §4.2, bibliothèque §4.9, icône §4.10). 1.1 : tout devient découvrable sans raccourci (§4.8, §5.1), après essai de l'app par l'auteur ; inventaire et directions comparées dans [design/decouverte.md](design/decouverte.md).
 - **Direction retenue** : **Perle** pour la page, **ardoise** pour les outils, avec **Deux encres**, **Signature** et **Outils gravés** ; manuscrit en **tiroir + vue d'ensemble** ; points d'entrée en **poignées** sur les bords et **zone de commande** en pied.
 - **Sources** : brief de l'auteur ([design/brief.md](design/brief.md)), maquettes ([design/mockups/](design/mockups/), ouvrir `index.html`), tokens CSS proposés ([design/tokens.css](design/tokens.css)).
 - Complète la [SPEC](SPEC.md) (§6 mentor, §7.1 statuts, §19 exigences transverses) sans la contredire.
@@ -35,37 +35,37 @@ Valeurs normatives dans [design/tokens.css](design/tokens.css) (préfixe `--ch-`
 
 | Rôle | Token | Clair | Sombre | Contraste sur le fond (clair / sombre) |
 |---|---|---|---|---|
-| Fond, matière unique | `--ch-bg` | `#e3e7ed` | `#262a31` | – |
-| Texte du roman, titres | `--ch-ink` | `#22262d` | `#dfe3ea` | 12,2 / 11,2 |
-| Texte d'interface | `--ch-ink-2` | `#474d57` | `#b9c0ca` | 6,9 / 7,9 |
-| Méta, libellés discrets | `--ch-muted` | `#7a828e` | `#8a929e` | 3,1 / 4,6 |
-| Indications de raccourcis, vides | `--ch-faint` | `#a6adb8` | `#5d6470` | 1,8 / 2,4 (décoratif) |
-| Lumière du relief | `--ch-highlight` | `#ffffff` | `#323740` | – |
-| Ombre du relief | `--ch-shade` | `#b3becc` | `#1a1d22` | – |
-| Encre du Compagnon (bleu de Prusse) | `--ch-mentor` | `#1f4f7c` | `#86aedb` | 6,9 / 6,2 |
+| Fond de la page | `--ch-bg` | `#e3e7ed` | `#1b1e23` | – |
+| Texte du roman, titres | `--ch-ink` | `#22262d` | `#dfe3ea` | 12,2 / 13,0 |
+| Texte d'interface | `--ch-ink-2` | `#474d57` | `#b9c0ca` | 6,9 / 9,1 |
+| Méta, libellés discrets | `--ch-muted` | `#7a828e` | `#8a929e` | 3,1 / 5,3 |
+| Indications de raccourcis, vides | `--ch-faint` | `#a6adb8` | `#5d6470` | 1,8 / 2,8 (décoratif) |
+| Lumière du relief | `--ch-highlight` | `#ffffff` | `#262a31` | – |
+| Ombre du relief | `--ch-shade` | `#b3becc` | `#101215` | – |
+| Encre du Compagnon (bleu de Prusse) | `--ch-mentor` | `#1f4f7c` | `#86aedb` | 6,9 / 7,2 |
 | Lavis du Compagnon (passage ancré) | `--ch-mentor-soft` | 10 % | 13 % | – |
-| Encre de l'auteur (vermillon) | `--ch-author` | `#b2432a` | `#e3876a` | 4,5 / 5,5 |
+| Encre de l'auteur (vermillon) | `--ch-author` | `#b2432a` | `#e3876a` | 4,5 / 6,3 |
 | Sélection | `--ch-author-soft` | 22 % | 24 % | – |
 
-Thème : suit le système par défaut, forçable (`data-theme` sur la racine) et basculable au clavier. Le sombre est un vrai neumorphisme sombre (lumière `#323740`, ombre `#1a1d22`), jamais un noir pur.
+Thème : suit le système par défaut, forçable (`data-theme` sur la racine) et basculable au clavier. Le sombre est un vrai neumorphisme sombre (lumière `#262a31`, ombre `#101215`), jamais un noir pur. Depuis la version 1.4, la page sombre est plus profonde (`#1b1e23` au lieu de `#262a31`) pour que les outils en ardoise s'en détachent.
 
 **Matière des outils (ardoise).** Une surface d'outil redéclare les tokens ci-dessus pour elle-même et tout ce qu'elle contient ; les composants ne changent pas, ils lisent les mêmes tokens. À poser par une classe unique (par exemple `.ch-tool`), qui redéclare aussi `--ch-raise`, `--ch-raise-s` et `--ch-inset` pour que le relief intérieur se calcule avec l'ombre et la lumière de l'ardoise. L'ombre portée de la surface elle-même, sur la page, garde les couleurs de la page.
 
-| Token dans une surface d'outil | Thème clair | Thème sombre | Contraste sur l'ardoise (clair / sombre) |
-|---|---|---|---|
-| `--ch-bg` | `#2b3038` | `#1a1d22` | – |
-| `--ch-highlight` | `#383e48` | `#24282f` | – |
-| `--ch-shade` | `#1b1e24` | `#0f1114` | – |
-| `--ch-ink` | `#dfe3ea` | `#dfe3ea` | 10,3 / 13,1 |
-| `--ch-ink-2` | `#b9c0ca` | `#b9c0ca` | 7,2 / 9,2 |
-| `--ch-muted` | `#8a929e` | `#8a929e` | 4,2 / 5,4 |
-| `--ch-faint` | `#5d6470` | `#5d6470` | 2,2 / 2,8 (décoratif) |
-| `--ch-mentor` | `#86aedb` | `#86aedb` | 5,7 / 7,3 |
-| `--ch-mentor-soft` | 13 % | 13 % | – |
-| `--ch-author` | `#e3876a` | `#e3876a` | 5,0 / 6,4 |
-| `--ch-author-soft` | 24 % | 24 % | – |
+| Token dans une surface d'outil | Valeur, dans les deux thèmes | Contraste sur l'ardoise |
+|---|---|---|
+| `--ch-bg` | `#2b3038` | – |
+| `--ch-highlight` | `#383e48` | – |
+| `--ch-shade` | `#1b1e24` | – |
+| `--ch-ink` | `#dfe3ea` | 10,3 |
+| `--ch-ink-2` | `#b9c0ca` | 7,2 |
+| `--ch-muted` | `#8a929e` | 4,2 |
+| `--ch-faint` | `#5d6470` | 2,2 (décoratif) |
+| `--ch-mentor` | `#86aedb` | 5,7 |
+| `--ch-mentor-soft` | 13 % | – |
+| `--ch-author` | `#e3876a` | 5,0 |
+| `--ch-author-soft` | 24 % | – |
 
-En thème clair, l'ardoise reprend donc les encres du thème sombre ; en thème sombre, elle est plus profonde que la page (`#1a1d22` contre `#262a31`).
+**L'ardoise est la même dans les deux thèmes** (choix de l'auteur, « outils clairs ») : seule la page change. En thème clair, les outils sont sombres sur une page claire ; en thème sombre, ils sont plus clairs que la page (`#2b3038` sur `#1b1e23`), comme des plaques posées dessus. L'ardoise porte toujours les encres du thème sombre.
 
 | Surface d'outil (ardoise) | Reste sur la page (perle) |
 |---|---|

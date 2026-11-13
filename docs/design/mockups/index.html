@@ -2154,6 +2154,30 @@
         box-shadow: var(--praise);
       }
 
+      /* Dark theme, variant « outils clairs »: the same slate as in the light theme, on a deeper page. */
+      .app[data-mat='ardoise'][data-dk='clair'][data-theme='dark'] {
+        --bg: #1b1e23;
+        --hl: #262a31;
+        --sh: #101215;
+      }
+      .app[data-mat='ardoise'][data-dk='clair'][data-theme='dark']
+        :is(
+          .panel,
+          .edge,
+          .atelier .rail,
+          .atelier .list,
+          .board .strip,
+          .cmdres,
+          .cmdbar,
+          .aapop,
+          .cprev,
+          .tip
+        ) {
+        --bg: #2b3038;
+        --hl: #383e48;
+        --sh: #1b1e24;
+      }
+
       /* Panel titles (shown with any lever). */
       .phead {
         flex: none;
@@ -2464,6 +2488,7 @@
         rejects: false,
         cp: 0,
         mat: 'ardoise',
+        dk: 'clair',
         full: false,
         orn: true,
       };
@@ -3388,7 +3413,7 @@
           <span class="grp"><span class="lbl">Direction <kbd>D</kbd></span>${Object.entries(DIRS)
             .map(([k, d]) => b('dir', k, d.name))
             .join('')}</span>
-          <span class="grp"><span class="lbl">Caractère <kbd>M E O</kbd></span>${MATS.map(([k, l]) => b('mat', k, l)).join('')}${b('full', !S.full, 'E · Encres pleines')}${b('orn', !S.orn, 'O · Outils gravés')}</span>
+          <span class="grp"><span class="lbl">Caractère <kbd>M E O</kbd></span>${MATS.map(([k, l]) => b('mat', k, l)).join('')}${b('dk', 'profond', 'Sombre : outils profonds')}${b('dk', 'clair', 'Sombre : outils clairs')}${b('full', !S.full, 'E · Encres pleines')}${b('orn', !S.orn, 'O · Outils gravés')}</span>
           <span class="grp"><span class="lbl">Découverte <kbd>G</kbd></span>${DISC_KEYS.map((k) => b('disc', k, DISC[k][0])).join('')}${b('quiet', !S.quiet, S.quiet ? 'Frappe : en cours' : 'Frappe : à l’arrêt')}</span>
           <span class="grp"><span class="lbl">Écran <kbd>1–9</kbd></span>${SCREENS.map(([k, l]) => b('screen', k, l)).join('')}</span>
           <span class="grp"><span class="lbl">Thème <kbd>T</kbd></span>${b('theme', 'light', 'Clair')}${b('theme', 'dark', 'Sombre')}</span>
@@ -3416,6 +3441,7 @@
         app.dataset.disc = disc;
         app.dataset.mat = S.dir === 'perle' ? S.mat : 'none';
         app.dataset.full = S.dir === 'perle' && S.full;
+        app.dataset.dk = S.dk;
         app.dataset.orn = S.dir === 'perle' && S.orn;
         app.dataset.quiet = S.quiet;
         let body = '';
