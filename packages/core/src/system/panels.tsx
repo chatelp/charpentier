@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { usePlatform } from '../app/platform-context';
 import { featureText } from '../features/feature';
 import type { WorkspaceContext } from '../workspace/workspace-context';
-import { Gauge, Keys, PanelRow, Signal, Slider, sparkline } from './controls';
+import { Gauge, Keys, PanelRow, Signal, Slider } from './controls';
 import { useJournal, useSystemState, type Segment } from './system-store';
 
 const timers = new Map<string, ReturnType<typeof setTimeout>>();
@@ -103,6 +103,10 @@ function useSys() {
   return { system, state, text: featureText(t), language: i18n.language };
 }
 
+/** `5 h 40` */
+const hours = (minutes: number) =>
+  `${Math.floor(minutes / 60)} h ${String(minutes % 60).padStart(2, '0')}`;
+
 const minutesSince = (iso: string) =>
   Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 60_000));
 const duration = (minutes: number) =>
@@ -114,7 +118,13 @@ function MenuPanel({ ctx, onDone }: PanelProps) {
   const { system, state, text } = useSys();
   const [armed, arm] = useArmed();
   const key = (id: string) => ctx?.shortcutLabel(id);
-  const item = (id: string, label: string, act: () => void, disabled = false) => (
+  const item = (
+    id: string,
+    label: string,
+    act: () => void,
+    disabled = false,
+    keyLabel = key(id),
+  ) => (
     <button
       key={id}
       type="button"
@@ -123,19 +133,19 @@ function MenuPanel({ ctx, onDone }: PanelProps) {
       onClick={act}
     >
       <span>{label}</span>
-      {key(id) && <kbd>{key(id)}</kbd>}
+      {keyLabel && <kbd>{keyLabel}</kbd>}
     </button>
   );
   return (
     <>
-      <Head name={text('system.panel.menu')} aside={<kbd>⊞</kbd>} />
-      <p className="ch-sys-note">
-        {text('system.panel.version', {
+      <Head
+        name={text('system.panel.menu')}
+        aside={text('system.panel.version', {
           app: state.device.appVersion,
           os: state.device.osVersion,
           name: state.device.name,
         })}
-      </p>
+      />
       {item('systemSettings', text('system.panel.settings'), () => {
         onDone();
         ctx?.openSettings();
@@ -146,14 +156,21 @@ function MenuPanel({ ctx, onDone }: PanelProps) {
         'systemReboot',
         armed === 'reboot' ? text('system.panel.confirmReboot') : text('system.panel.reboot'),
         () => arm('reboot', () => void system.reboot()),
+        false,
+        armed === 'reboot' ? '⏎' : undefined,
       )}
       {item(
         'systemPowerOff',
         armed === 'off' ? text('system.panel.confirmPowerOff') : text('system.panel.powerOff'),
         () => arm('off', () => void system.powerOff()),
+        false,
+        armed === 'off' ? '⏎' : undefined,
       )}
       <p className="ch-sys-foot">
-        {text('system.panel.uptime', { time: duration(minutesSince(state.device.bootedAt)) })}
+        {text('system.panel.menuFoot', {
+          time: duration(minutesSince(state.device.bootedAt)),
+          key: ctx?.platform.keybindings.primaryModifier === 'Meta' ? '⌃' : '⊞',
+        })}
       </p>
     </>
   );
@@ -201,9 +218,7 @@ function CpuPanel() {
   return (
     <>
       <Head name={text('system.seg.cpu')} aside={state.device.model} />
-      <p className="ch-sys-big" aria-hidden="true">
-        {sparkline(state.cpu.history)}
-      </p>
+      <p className="ch-sys-note">{text('system.panel.cpuSoon')}</p>
       <PanelRow label={text('system.seg.cpu')}>
         <span className="ch-sys-value">
           {text('system.seg.cpuValue', {
@@ -275,7 +290,11 @@ function WifiPanel({ ctx }: PanelProps) {
               <span className="ch-sys-item-aside">
                 {n.ssid === state.wifi.connected && text('system.panel.connected')}
                 <Signal bars={n.signal} />
-                {n.portal ? text('system.panel.portal') : n.secure && !n.known && '🔒'}
+                {n.portal ? (
+                  text('system.panel.portal')
+                ) : n.secure ? (
+                  <span className="ch-sys-faint">{text('system.panel.protected')}</span>
+                ) : null}
               </span>
             </button>
           ))}
@@ -437,7 +456,7 @@ function VolPanel({ ctx }: PanelProps) {
 }
 
 function BatPanel() {
-  const { system, state, text } = useSys();
+  const { system, state, text, language } = useSys();
   const level = batteryLevel(state);
   return (
     <>
@@ -446,7 +465,9 @@ function BatPanel() {
         aside={
           state.power.charging
             ? text('system.panel.charging')
-            : text('system.seg.percent', { value: level })
+            : state.power.remaining !== null
+              ? text('system.panel.batHead', { level, time: hours(state.power.remaining) })
+              : text('system.seg.percent', { value: level })
         }
       />
       {state.power.batteries.map((b) => (
@@ -459,7 +480,11 @@ function BatPanel() {
       ))}
       <PanelRow label={text('system.panel.power')}>
         <span className="ch-sys-value">
-          {text('system.panel.watts', { value: state.power.watts })}
+          {text('system.panel.watts', {
+            value: new Intl.NumberFormat(language, { maximumFractionDigits: 1 }).format(
+              state.power.watts,
+            ),
+          })}
         </span>
       </PanelRow>
       <PanelRow label={text('system.panel.screenOff')}>
@@ -520,7 +545,7 @@ const weekOf = (date: Date) => {
   return Math.ceil(((d.getTime() - year.getTime()) / 86_400_000 + 1) / 7);
 };
 
-function DatePanel() {
+function DatePanel({ ctx }: PanelProps) {
   const { state, text, language } = useSys();
   const now = new Date();
   const zone = state.timeZone;
@@ -540,6 +565,9 @@ function DatePanel() {
         {' · '}
         {text('system.panel.week', { week: weekOf(now) })}
       </p>
+      {ctx && (
+        <p className="ch-sys-foot">{text('system.panel.today', { count: ctx.wordsToday })}</p>
+      )}
     </>
   );
 }
@@ -555,5 +583,5 @@ const PANELS: Record<Segment, (props: PanelProps) => ReactNode> = {
   vol: (p) => <VolPanel {...p} />,
   bat: () => <BatPanel />,
   sync: () => <SyncPanel />,
-  date: () => <DatePanel />,
+  date: (p) => <DatePanel {...p} />,
 };

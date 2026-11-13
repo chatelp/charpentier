@@ -499,6 +499,7 @@ export function ProjectWorkspace({
     sceneTexts,
     shortcutLabel: (id) => registry.shortcutLabel(id),
     notify,
+    wordsToday,
     typing,
     prefs,
     updatePrefs,

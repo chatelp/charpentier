@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePlatform } from '../app/platform-context';
 import { featureText, type SettingsSection, type WorkspaceProps } from '../features/feature';
-import { Keys, Slider } from './controls';
+import { Gauge, Keys, Slider } from './controls';
 import { postSoon } from './panels';
 import { useSystemState } from './system-store';
 
@@ -43,14 +43,17 @@ function Group({ title, children }: { readonly title: string; readonly children:
 function Row({
   label,
   help,
+  chosen = false,
   children,
 }: {
   readonly label: ReactNode;
   readonly help?: ReactNode;
+  /** A choice that stays (the network joined): sunk. */
+  readonly chosen?: boolean;
   readonly children?: ReactNode;
 }) {
   return (
-    <div className="ch-set-row">
+    <div className={`ch-set-row${chosen ? ' is-chosen' : ''}`}>
       <div className="ch-set-text">
         <p className="ch-set-label">{label}</p>
         {help && <p className="ch-set-help">{help}</p>}
@@ -80,6 +83,7 @@ function Network() {
             <Row
               key={n.ssid}
               label={n.ssid}
+              chosen={n.ssid === state.wifi.connected}
               help={[
                 n.ssid === state.wifi.connected && s('rows.connected'),
                 n.secure && s('rows.secure'),
@@ -241,7 +245,10 @@ function Power() {
             key={b.name}
             label={s('rows.battery', { name: b.name })}
             help={s('rows.batteryHelp', { level: b.level, wear: 100 - b.health })}
-          />
+          >
+            <Gauge value={b.level} />
+            <span className="ch-set-value">{b.level} %</span>
+          </Row>
         ))}
       </Group>
       <Group title={s('groups.delays')}>
@@ -471,6 +478,47 @@ function About() {
   );
 }
 
+/** The sentence under a section's title. */
+function intro(key: string) {
+  return function Intro() {
+    return <>{useSettings().s(`intro.${key}`)}</>;
+  };
+}
+
+function PowerIntro() {
+  const { state, s } = useSettings();
+  const level = batteryLevel(state);
+  const { remaining } = state.power;
+  return (
+    <>
+      {state.power.charging || remaining === null
+        ? s('intro.powerCharging', { level })
+        : s('intro.power', {
+            level,
+            time: `${Math.floor(remaining / 60)} h ${String(remaining % 60).padStart(2, '0')}`,
+          })}
+    </>
+  );
+}
+
+function DateIntro() {
+  const { state, language } = useSettings();
+  return (
+    <>
+      {new Intl.DateTimeFormat(language, {
+        dateStyle: 'full',
+        timeStyle: 'short',
+        timeZone: state.timeZone,
+      }).format(new Date())}
+    </>
+  );
+}
+
+function AboutIntro() {
+  const { state, s } = useSettings();
+  return <>{s('intro.about', { model: state.device.model.split(' · ')[0] })}</>;
+}
+
 /** A section's current value, at the right of its line in the rail. */
 function value(read: (state: ReturnType<typeof useSettings>) => string) {
   return function Value() {
@@ -482,52 +530,69 @@ export const systemSettingsSections: readonly SettingsSection[] = [
   {
     id: 'network',
     label: 'system.settings.network',
+    intro: intro('network'),
     value: value(({ state, s }) => (state.wifi.enabled ? (state.wifi.connected ?? '–') : s('off'))),
     component: Network,
   },
   {
     id: 'bluetooth',
     label: 'system.settings.bluetooth',
+    intro: intro('bluetooth'),
     value: value(({ state, s }) => (state.bluetooth.enabled ? s('on') : s('off'))),
     component: Bluetooth,
   },
   {
     id: 'display',
     label: 'system.settings.display',
+    intro: intro('display'),
     value: value(({ state }) => `${state.brightness} %`),
     component: Display,
   },
   {
     id: 'sound',
     label: 'system.settings.sound',
+    intro: intro('sound'),
     value: value(({ state, s }) => (state.muted ? s('rows.mute') : `${state.volume} %`)),
     component: Sound,
   },
   {
     id: 'power',
     label: 'system.settings.power',
+    intro: PowerIntro,
     value: value(({ state }) => `${batteryLevel(state)} %`),
     component: Power,
   },
-  { id: 'lock', label: 'system.settings.lock', component: Lock },
+  { id: 'lock', label: 'system.settings.lock', intro: intro('lock'), component: Lock },
   {
     id: 'keyboard',
     label: 'system.settings.keyboard',
     value: value(({ state }) => state.settings.keyboardLayout.toUpperCase()),
     component: Keyboard,
   },
-  { id: 'printing', label: 'system.settings.printing', component: Printing },
+  {
+    id: 'printing',
+    label: 'system.settings.printing',
+    intro: intro('printing'),
+    component: Printing,
+  },
   {
     id: 'usb',
     label: 'system.settings.usb',
+    intro: intro('usb'),
     value: value(({ state }) => state.usb?.name ?? '–'),
     component: Usb,
   },
-  { id: 'datetime', label: 'system.settings.datetime', component: DateTime },
-  { id: 'systemLine', label: 'system.settings.systemLine', component: SystemLineSettings },
+  { id: 'datetime', label: 'system.settings.datetime', intro: DateIntro, component: DateTime },
+  {
+    id: 'systemLine',
+    label: 'system.settings.systemLine',
+    intro: intro('systemLine'),
+    component: SystemLineSettings,
+  },
   {
     id: 'about',
     label: 'system.settings.about',
+    intro: AboutIntro,
     value: value(({ state }) => state.device.appVersion),
     component: About,
   },

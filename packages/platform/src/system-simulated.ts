@@ -123,6 +123,13 @@ export function createSimulatedSystem(
     calls.push(name);
   };
 
+  // The journal is never empty: the device's start is its first line.
+  journal.push({
+    id: `m${++sequence}`,
+    text: `démarrage · charpentier ${state.device.appVersion}`,
+    at: state.device.bootedAt,
+  });
+
   return {
     state: () => state,
     onChange: (listener) => {

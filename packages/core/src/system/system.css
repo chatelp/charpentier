@@ -78,11 +78,8 @@
 }
 
 .ch-sys-square {
+  flex: none;
   color: var(--ch-ink);
-}
-
-.ch-sys-square-dot {
-  fill: var(--ch-mentor);
 }
 
 .ch-sys-value {
@@ -199,7 +196,9 @@
 
 .ch-sys-item {
   display: flex;
-  width: 100%;
+  /* The text lines up with the head and the foot; the light goes beyond. */
+  width: calc(100% + 16px);
+  margin: 0 -8px;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
@@ -251,6 +250,10 @@
   font: 12px var(--ch-font-sys);
 }
 
+.ch-sys-faint {
+  color: var(--ch-faint);
+}
+
 .ch-sys-note,
 .ch-sys-foot,
 .ch-sys-sub {
@@ -288,14 +291,21 @@
   color: var(--ch-faint);
 }
 
-.ch-sys-keys {
-  gap: 4px;
+.ch-keys.ch-sys-keys {
+  gap: 6px;
 }
 
-.ch-sys-keys button {
-  flex: none;
+/* In a panel: the system's monospace; on the settings page, the app's own font. */
+.ch-sys-panel .ch-keys.ch-sys-keys button {
   padding: 3px 9px;
-  font: 12px var(--ch-font-sys);
+  font: 11.5px var(--ch-font-sys);
+}
+
+/* Keys in the system: Inter draws ⌃ ⊞ ⏎ ⇥ (JetBrains Mono's ⌃ reads as a caret). */
+.ch-sys-seg kbd,
+.ch-sys-panel kbd {
+  font-family: 'Inter', var(--ch-font-sys);
+  font-size: 11px;
 }
 
 /* A slider: a sunk rail of 10 px, the filled part muted, a raised round knob. */

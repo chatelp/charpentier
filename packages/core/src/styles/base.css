@@ -172,8 +172,9 @@ kbd,
 }
 
 .ch-keys button {
-  flex: 1;
-  padding: 7px 0;
+  flex: none;
+  padding: 4px 11px;
+  white-space: nowrap;
   border: 0;
   border-radius: var(--ch-radius-sm);
   background: var(--ch-bg);

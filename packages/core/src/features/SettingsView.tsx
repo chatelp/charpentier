@@ -66,6 +66,7 @@ export function SettingsView({
 
   if (!current) return null;
   const Section = current.component;
+  const Intro = current.intro;
   return (
     <section
       className="ch-settings"
@@ -77,7 +78,10 @@ export function SettingsView({
       }}
     >
       <nav className={`ch-settings-rail ${look?.material === 'system' ? 'ch-system' : 'ch-tool'}`}>
-        <h2 className="ch-settings-title">{look ? text(look.title) : t('settings.title')}</h2>
+        <h2 className={`ch-settings-title${look ? ' is-feature' : ''}`}>
+          {look?.icon && <look.icon />}
+          {look ? text(look.title) : t('settings.title')}
+        </h2>
         <ul
           ref={railRef}
           className="ch-settings-sections"
@@ -107,6 +111,7 @@ export function SettingsView({
             );
           })}
         </ul>
+        {look?.hint && <p className="ch-settings-hint">{text(look.hint)}</p>}
       </nav>
       <div
         ref={pageRef}
@@ -115,6 +120,11 @@ export function SettingsView({
         aria-label={text(current.label)}
       >
         <h3 className="ch-settings-page-title">{text(current.label)}</h3>
+        {Intro && (
+          <p className="ch-settings-intro">
+            <Intro ctx={ctx} />
+          </p>
+        )}
         <Section ctx={ctx} />
       </div>
     </section>

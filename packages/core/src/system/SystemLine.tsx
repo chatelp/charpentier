@@ -354,8 +354,19 @@ function PanelPortal({
       if (line.current?.querySelector(`[data-seg="${segment}"]`)?.contains(target)) return;
       onClose();
     };
+    // Échap closes it wherever the focus is (the text, after a click on the segment).
+    const onKey = (event: globalThis.KeyboardEvent) => {
+      if (event.key !== 'Escape' || panel.current?.contains(event.target as Node)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      onClose();
+    };
     document.addEventListener('mousedown', onDown);
-    return () => document.removeEventListener('mousedown', onDown);
+    window.addEventListener('keydown', onKey, true);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      window.removeEventListener('keydown', onKey, true);
+    };
   }, [line, segment, onClose]);
 
   return createPortal(

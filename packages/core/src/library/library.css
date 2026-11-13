@@ -34,6 +34,11 @@
   flex: 1 1 16rem;
 }
 
+.ch-library-form .ch-keys button {
+  flex: 1;
+  padding: 7px 0;
+}
+
 .ch-library-form .ch-seg {
   flex: 0 0 13rem;
 }

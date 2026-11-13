@@ -2,6 +2,7 @@ import type { SystemService } from '@charpentier/platform';
 import type { Command } from '../commands/registry';
 import type { Feature } from '../features/feature';
 import type { WorkspaceContext } from '../workspace/workspace-context';
+import { Square } from './controls';
 import { systemPrefix } from './prefix';
 import { systemSettingsSections } from './settings';
 import { SystemLine, type SystemModifier } from './SystemLine';
@@ -78,7 +79,12 @@ export function createSystemFeature({ modifier }: { readonly modifier: SystemMod
       component: ({ ctx }) => <SystemLine ctx={ctx} modifier={modifier} />,
     },
     settings: systemSettingsSections,
-    settingsLook: { title: 'system.settings.title', material: 'system' },
+    settingsLook: {
+      title: 'system.settings.title',
+      material: 'system',
+      icon: () => <Square size={14} />,
+      hint: 'system.settings.hint',
+    },
     prefixes: [systemPrefix],
   };
 }

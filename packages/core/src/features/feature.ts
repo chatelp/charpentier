@@ -35,7 +35,14 @@ export interface Feature {
   /** Sections of the settings view. */
   readonly settings?: readonly SettingsSection[];
   /** How the settings view looks when this feature brings them: its title (text key) and the rail's material. */
-  readonly settingsLook?: { readonly title: string; readonly material: 'system' };
+  readonly settingsLook?: {
+    readonly title: string;
+    readonly material: 'system';
+    /** Drawn before the title (the system's square). */
+    readonly icon?: ComponentType;
+    /** Text key of the keys hint at the foot of the rail. */
+    readonly hint?: string;
+  };
   /** Full-frame views, like the Atelier (the X250's monitor). */
   readonly views?: readonly FeatureView[];
   /** Searches of the command line under a prefix of their own (`:` for the system). */
@@ -81,6 +88,8 @@ export interface SettingsSection {
   readonly label: string;
   /** Its current value, at the right of its line in the rail. */
   readonly value?: ComponentType<WorkspaceProps>;
+  /** The sentence under the section's title. */
+  readonly intro?: ComponentType<WorkspaceProps>;
   readonly component: ComponentType<WorkspaceProps>;
 }
 
@@ -148,6 +157,7 @@ export function checkFeatures(features: readonly Feature[], coreTexts: TextTree)
     for (const command of feature.commands ?? []) needText(`commands.${command.id}`);
     for (const menu of feature.menu ?? []) if (menu.label) needText(menu.label);
     if (feature.settingsLook) needText(feature.settingsLook.title);
+    if (feature.settingsLook?.hint) needText(feature.settingsLook.hint);
     for (const section of feature.settings ?? []) {
       claim('Settings section', section.id, id);
       needText(section.label);

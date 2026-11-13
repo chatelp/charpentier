@@ -55,7 +55,7 @@ describe('the system line of the X250 (phase 5.3)', () => {
     const text = line().textContent ?? '';
     for (const part of [
       'système',
-      'journal · 0',
+      'démarrage · charpentier 0.5.0',
       'cpu',
       '12 % 48°',
       'Maison-5G',
