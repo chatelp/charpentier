@@ -3282,6 +3282,312 @@
           0 -1px 0 var(--sh),
           0 1px 0 var(--hl);
       }
+
+      /* ───────────── Atelier: the interview (« Entretien », D-26) ───────────── */
+      .rail .groove {
+        height: 0;
+        margin: 2px 8px 4px;
+        border-top: 1px solid var(--sh);
+        border-bottom: 1px solid var(--hl);
+      }
+      .atelier.iv {
+        grid-template-columns: 13.5rem minmax(0, 1fr);
+      }
+      .atelier.iv.carnet {
+        grid-template-columns: 13.5rem minmax(0, 1fr) 21rem;
+      }
+      .ivc {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        container-type: inline-size;
+      }
+      .ivh {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        max-width: 46rem;
+        width: 100%;
+        margin: 0 auto;
+        padding: 6px 0 14px;
+      }
+      .ivh .pic {
+        display: grid;
+        place-items: center;
+        flex: none;
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        box-shadow: var(--raise-s);
+        color: var(--accent);
+      }
+      .ivh .pic svg {
+        width: 22px;
+        height: 22px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.5;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .ivh h1 {
+        margin: 0;
+        font: 500 26px/1.1 var(--font-text);
+      }
+      .ivh .lead {
+        color: var(--muted);
+        font-size: 12.5px;
+      }
+      .ivh .sp {
+        flex: 1;
+      }
+      .ivh .modes {
+        position: static;
+      }
+      .ivh .modes button kbd,
+      .ivh > kbd {
+        margin-left: 6px;
+      }
+      .ivs {
+        display: flex;
+        flex-direction: column-reverse;
+        flex: 1;
+        overflow: auto;
+        min-height: 0;
+        mask-image: linear-gradient(transparent, #000 40px);
+      }
+      .ivs > div {
+        max-width: 46rem;
+        margin: 0 auto;
+        padding: 30px 4px 10px;
+      }
+      .ivm {
+        margin: 0 0 22px;
+        font-size: 15px;
+        line-height: 1.55;
+        color: var(--ink);
+      }
+      .ivm .who {
+        display: block;
+        margin-bottom: 4px;
+        color: var(--muted);
+        font-size: 10.5px;
+        font-weight: 600;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+      }
+      .ivm.a {
+        margin-left: 4rem;
+        padding: 12px 16px;
+        border-radius: var(--r-md);
+        box-shadow: var(--inset);
+        font-family: var(--font-text);
+        font-size: 16px;
+      }
+      .ivm.c .who {
+        color: var(--accent);
+      }
+      .ivm.c .said {
+        color: var(--ink-2);
+      }
+      /* What an answer filed, under the answer. */
+      .ivg {
+        margin: 10px 0 0;
+      }
+      .ivg .rgh {
+        margin: 0 0 6px;
+        color: var(--accent);
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        font-variant-caps: all-small-caps;
+        font-size: 13px;
+      }
+      .ivr {
+        display: grid;
+        grid-template-columns: 30px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 12px;
+        margin: 0 0 8px;
+        padding: 8px 10px 8px 8px;
+        border-radius: var(--r-md);
+        box-shadow: var(--raise-s);
+      }
+      .ivr .pic {
+        display: grid;
+        place-items: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        box-shadow: var(--raise-s);
+        color: var(--accent);
+      }
+      .ivr .pic svg {
+        width: 15px;
+        height: 15px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.5;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .ivr .pw {
+        display: block;
+        color: var(--muted);
+        font-size: 11.5px;
+      }
+      .ivr .pw a {
+        color: inherit;
+        text-decoration: underline;
+        text-decoration-color: color-mix(in srgb, var(--muted) 45%, transparent);
+        text-underline-offset: 2px;
+      }
+      .ivr .pv {
+        font: italic 15px/1.4 var(--font-text);
+        color: var(--accent);
+      }
+      .ivr .acts {
+        display: flex;
+        gap: 6px;
+      }
+      .ivr.ok {
+        box-shadow: var(--inset);
+      }
+      .ivr.ok .pv {
+        font-style: normal;
+        color: var(--ink);
+      }
+      .ivr.ok .pic {
+        color: var(--ink-2);
+      }
+      .ivr .st {
+        color: var(--muted);
+        font-size: 12px;
+      }
+      /* Directed mode: the question in progress. */
+      .ivq {
+        max-width: 46rem;
+        width: 100%;
+        margin: 6px auto 12px;
+        padding: 16px 18px 14px;
+        border-radius: var(--r-lg, 18px);
+        box-shadow: var(--raise);
+      }
+      .ivq .k {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        color: var(--accent);
+        font-size: 13px;
+        letter-spacing: 0.06em;
+        font-variant-caps: all-small-caps;
+      }
+      .ivq .k .pic {
+        display: grid;
+        place-items: center;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        box-shadow: var(--raise-s);
+      }
+      .ivq .k .pic svg {
+        width: 13px;
+        height: 13px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.6;
+      }
+      .ivq .k .of {
+        margin-left: auto;
+        color: var(--muted);
+      }
+      .ivq .q {
+        margin: 8px 0 4px;
+        font: italic 20px/1.35 var(--font-text);
+        color: var(--accent);
+      }
+      .ivq .why {
+        margin: 0 0 12px;
+        color: var(--muted);
+        font-size: 12.5px;
+      }
+      .ivq .na {
+        display: flex;
+        gap: 8px;
+      }
+      .ivq .na .sp {
+        flex: 1;
+      }
+      .ivp {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 14px;
+        max-width: 46rem;
+        width: 100%;
+        margin: 0 auto 10px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .ivp span b {
+        color: var(--ink-2);
+        font-weight: 500;
+      }
+      .ivp span.cur b {
+        color: var(--accent);
+      }
+      .ivp .dots {
+        letter-spacing: 1px;
+        color: var(--faint);
+      }
+      .ivp .dots i {
+        font-style: normal;
+        color: var(--ink-2);
+      }
+      .ivin {
+        max-width: 46rem;
+        width: 100%;
+        margin: 0 auto;
+      }
+      .ivin .field {
+        margin: 0;
+        padding: 14px 16px;
+        font-size: 15px;
+      }
+      .ivin .pfoot {
+        padding: 8px 2px 0;
+      }
+      /* The notebook: what the interview proposed, by section. */
+      .carnet-l .ph {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        padding: 6px 4px 0;
+      }
+      .carnet-l .ph b {
+        font: 500 16px var(--font-text);
+        font-variant-caps: all-small-caps;
+        letter-spacing: 0.08em;
+        color: var(--ink-2);
+      }
+      .carnet-l .ph span {
+        color: var(--muted);
+        font-size: 11.5px;
+      }
+      .carnet-l .gh {
+        margin: 12px 4px 4px;
+      }
+      .app .atelier .carnet-l .ent {
+        display: block;
+        padding: 9px 12px;
+      }
+      .carnet-l .ent .v {
+        font: italic 14px/1.35 var(--font-text);
+      }
+      .carnet-l .ent.ok {
+        box-shadow: var(--inset);
+      }
+      .carnet-l .ent.ok .v {
+        font-style: normal;
+      }
     </style>
   </head>
   <body>
@@ -3310,6 +3616,7 @@
         ['mentor', 'Écrire + Compagnon'],
         ['manuscrit', 'Manuscrit'],
         ['fiche', 'Fiche (Atelier)'],
+        ['entretien', 'Entretien (Atelier)'],
         ['volet', 'Fiche en volet'],
         ['points', 'Points & conversation'],
         ['palette', 'Ligne de commande'],
@@ -3352,6 +3659,10 @@
         rim: 'garde',
         full: false,
         orn: true,
+        ivmode: 'libre',
+        ivlay: 'seul',
+        ivname: 'entretien',
+        ivkeys: 'zero',
       };
       const [hd, ht, hs, hdisc] = location.hash.slice(1).split('/');
       if (DISC_KEYS.includes(hdisc)) S.disc = hdisc;
@@ -3613,7 +3924,10 @@
           [
             ['Écrire ↔ Atelier', '⌘E'],
             '-',
-            ['Méta', '⌘1'],
+            ['Entretien', '⌘0'],
+            ['Entretien : libre / dirigé', '⌘⇧M'],
+            '-',
+            ['Le projet', '⌘1'],
             ['Personnages', '⌘2'],
             ['Structure', '⌘3'],
             ['Règles du monde', '⌘4'],
@@ -4523,19 +4837,101 @@
           <div class="hint">↑↓ parcourir · ⏎ ouvrir · N nouveau roman · ⇧N nouvelle · R renommer · ⌫ corbeille · Échap revenir</div>${projs}
           <div class="foot"><a>Corbeille (2)</a><span>Dossier : ~/Documents/Charpentier · <a>Changer…</a> · <a>Afficher dans le Finder</a></span></div></div></section>`;
       }
-      function atelier() {
+      // ───────────── Atelier: the interview (« Entretien », D-26) ─────────────
+      const IV_NAMES = { entretien: 'Entretien', parlons: 'Parlons-en', causerie: 'Causerie' };
+      const ivName = () => IV_NAMES[S.ivname] || 'Entretien';
+      PIC.bulle = svg('<path d="M4 5h16v11H10l-4 4v-4H4z"/><path d="M8 9.5h8M8 12.5h5"/>');
+      function atelierRail(active) {
+        const keys = S.ivkeys === 'shift' ? ['⌘1', '⌘2…6'] : ['⌘0', '⌘1…5'];
+        const nav = ([n, c, pic]) =>
+          `<div class="nav${n === active ? ' on' : ''}" data-go="${n === ivName() ? 'entretien' : 'fiche'}">${PIC[pic]}<span>${n}</span><span class="n">${c}</span></div>`;
         const mods = [
-          ['Méta', '', false, 'plan'],
-          ['Personnages', '1', true, 'buste'],
-          ['Structure', '', false, 'ferme'],
-          ['Règles du monde', '2', false, 'plomb'],
-          ['Indices et révélations', '1', false, 'loupe'],
+          ['Le projet', '1', 'plan'],
+          ['Personnages', '3', 'buste'],
+          ['Structure', '', 'ferme'],
+          ['Règles du monde', '3', 'plomb'],
+          ['Indices et révélations', '2', 'loupe'],
+        ];
+        return `${nav([ivName(), '', 'bulle'])}<div class="groove"></div>${mods.map(nav).join('')}`;
+      }
+      const IV_KEYS = () => (S.ivkeys === 'shift' ? ['⌘1', '⌘2…6'] : ['⌘0', '⌘1…5']);
+      function ivRow(pic, where, val, ok) {
+        const acts = ok
+          ? `<span class="st">validée</span>`
+          : `<span class="acts">${btn(['Valider', 'V', true])}${btn(['Rejeter', 'X'])}</span>`;
+        return `<div class="ivr${ok ? ' ok' : ''}">${PIC[pic]}<div><span class="pw">${where}</span><span class="pv">${val}</span></div>${acts}</div>`;
+      }
+      const ivLink = (...p) =>
+        p
+          .slice(0, -1)
+          .map((x) => `<a>${x}</a>`)
+          .join(' › ') +
+        ' › ' +
+        p.at(-1);
+      function ivTalk() {
+        const libre = S.ivmode !== 'dirige';
+        const first = `<div class="ivm a">Hélène a 47 ans. Elle est commissaire de la Brigade des serres depuis l’effondrement.</div>
+          <div class="ivm c"><span class="who">Le Compagnon</span><span class="said">Noté. Son âge et son métier sont dans sa fiche ; vous les avez validés.</span>
+            <div class="ivg">${ivRow('buste', ivLink('Personnages', 'Hélène Varenne', 'Âge'), '47 ans', true)}${ivRow('buste', ivLink('Personnages', 'Hélène Varenne', 'Métier'), 'Commissaire, Brigade des serres', true)}</div></div>`;
+        if (libre)
+          return `${first}
+          <div class="ivm a">Elle a perdu son mari dans l’effondrement du sas nord, il y a six ans. C’est pour ça qu’elle ne supporte pas qu’on lui cache quoi que ce soit.</div>
+          <div class="ivm c"><span class="who">Le Compagnon</span><span class="said">C’est une blessure forte, et elle éclaire sa contradiction : elle exige la vérité de tous, mais elle ment à sa fille. J’ai rangé la blessure dans sa fiche. L’effondrement du sas nord est aussi un fait du monde : je l’ai proposé dans les Règles du monde, pour que la date reste la même d’une scène à l’autre.</span>
+            <div class="ivg"><div class="rgh">2 propositions</div>${ivRow('buste', ivLink('Personnages', 'Hélène Varenne', 'Blessure'), 'Son mari est mort dans l’effondrement du sas nord, six ans avant le récit.')}${ivRow('plomb', ivLink('Règles du monde', 'Histoire'), 'Effondrement du sas nord, six ans avant le récit.')}</div></div>
+          <div class="ivm a">Et le sas nord est ouvert la nuit où Vasseur disparaît. Je veux que le lecteur fasse le lien, mais tard.</div>
+          <div class="ivm c"><span class="who">Le Compagnon</span><span class="said">Alors c’est un indice à doser. Je l’ai noté avec le lien que vous voulez que le lecteur fasse. Où voulez-vous qu’il le comprenne : à la fin du chapitre III, ou plus loin ?</span>
+            <div class="ivg"><div class="rgh">1 proposition</div>${ivRow('loupe', ivLink('Indices et révélations', 'Le sas nord ouvert'), 'Le sas nord est ouvert la nuit de la disparition ; il relie Vasseur à la mort du mari d’Hélène. Révélation : à préciser.')}</div></div>`;
+        return `${first}
+          <div class="ivm c"><span class="who">Le Compagnon</span><span class="said">Dans « Le projet », le genre et le public sont vides. Pour qui écrivez-vous ce roman ?</span></div>
+          <div class="ivm a">Pour des adultes qui aiment les polars, mais pas forcément la science-fiction.</div>
+          <div class="ivm c"><span class="who">Le Compagnon</span><span class="said">Alors le monde doit s’expliquer par l’enquête, jamais par un exposé : je le note, c’est une règle utile pour toutes vos scènes.</span>
+            <div class="ivg"><div class="rgh">2 propositions</div>${ivRow('plan', ivLink('Le projet', 'Public'), 'Adultes lecteurs de polars, pas forcément de science-fiction.')}${ivRow('plan', ivLink('Le projet', 'Promesse au lecteur'), 'Le monde se découvre par l’enquête, jamais par un exposé.')}</div></div>`;
+      }
+      function ivQuestion() {
+        return `<div class="ivp">${[
+          ['Le projet', '●●●●○', 'complet'],
+          ['Personnages', '●●○○○', ''],
+          ['Structure', '●○○○', 'cur'],
+          ['Règles du monde', '●●○', ''],
+          ['Indices', '●○○', ''],
         ]
           .map(
-            ([n, c, on, pic]) =>
-              `<div class="nav${on ? ' on' : ''}">${PIC[pic]}<span>${n}</span><span class="n">${c}</span></div>`,
+            ([n, d, c]) =>
+              `<span class="${c}"><b>${n}</b> <span class="dots">${d.replace(/●/g, '<i>●</i>')}</span></span>`,
           )
-          .join('');
+          .join('')}</div>
+          <div class="ivq"><div class="k">${PIC.ferme}<span>Structure · La fin</span><span class="of">vide · question 2 sur 4 dans cette section</span></div>
+          <div class="q">Comment le roman se termine-t-il pour Hélène : elle trouve ce qu’elle cherche, elle y renonce, ou elle découvre autre chose ?</div>
+          <div class="why">La fin fixe ce vers quoi chaque scène avance. Une réponse en une phrase suffit ; vous pourrez la changer.</div>
+          <div class="na">${btn(['Passer', '⇥'])}${btn(['Plus tard', '⇧⇥'])}<span class="sp"></span>${btn(['Autre section…', '⌘⇧S'])}</div></div>`;
+      }
+      function ivCarnet() {
+        const e = (pic, v, s, ok) =>
+          `<div class="ent ${ok ? 'ok' : 'prop'}"><div class="v">${v}</div><div class="s">${s}</div></div>`;
+        return `<div class="list carnet-l"><div class="ph"><b>Né de l’entretien</b><span>5 en attente · 2 validées</span></div>
+          <div class="gh">Le projet</div>${e('plan', 'Adultes lecteurs de polars', 'Public')}
+          <div class="gh">Personnages</div>${e('buste', '47 ans', 'Hélène Varenne · Âge', true)}${e('buste', 'Commissaire, Brigade des serres', 'Hélène Varenne · Métier', true)}${e('buste', 'Son mari est mort dans l’effondrement du sas nord', 'Hélène Varenne · Blessure')}
+          <div class="gh">Règles du monde</div>${e('plomb', 'Effondrement du sas nord, six ans avant', 'Histoire')}
+          <div class="gh">Indices et révélations</div>${e('loupe', 'Le sas nord ouvert la nuit de la disparition', 'Révélation à préciser')}
+          <div class="pfoot" style="margin-top:auto;padding:0"><span><kbd>V</kbd>valider</span><span><kbd>X</kbd>rejeter</span><span><kbd>⏎</kbd>voir dans la fiche</span></div></div>`;
+      }
+      function entretien() {
+        const libre = S.ivmode !== 'dirige';
+        const [k0, kmods] = IV_KEYS();
+        const modes = `<span class="modes"><button class="${libre ? 'on' : ''}" data-k="ivmode" data-v="libre">Libre</button><button class="${libre ? '' : 'on'}" data-k="ivmode" data-v="dirige">Dirigé</button></span><kbd>⌘⇧M</kbd>`;
+        const lead = libre
+          ? 'Parlez de votre roman ; le Compagnon range ce que vous dites dans l’Atelier.'
+          : 'Il vous pose ses questions une à une, en commençant par ce qui est vide.';
+        const input = `<div class="ivin"><div class="field"><span class="grow">${libre ? 'Parlez de votre roman…' : 'Votre réponse…'}</span><kbd>⏎</kbd></div>
+          <div class="pfoot"><span><kbd>⏎</kbd>envoyer</span><span><kbd>V</kbd><kbd>X</kbd>valider, rejeter la dernière proposition</span><span><kbd>⌘⇧M</kbd>libre / dirigé</span><span><kbd>Échap</kbd>revenir au texte</span></div></div>`;
+        return `<section class="atelier iv${S.ivlay === 'carnet' ? ' carnet' : ''}"><div class="rail"><div class="seg"><button data-go="ecrire">Écrire</button><button class="on">Atelier</button></div>${atelierRail(ivName())}<div class="pfoot" style="margin-top:auto;padding:0"><span><kbd>⌘E</kbd>écrire / atelier</span><span><kbd>${k0}</kbd>${ivName().toLowerCase()}</span><span><kbd>${kmods}</kbd>modules</span></div></div>
+          <div class="ivc"><div class="ivh">${PIC.bulle}<div><h1>${ivName()}</h1><div class="lead">${lead}</div></div><span class="sp"></span>${modes}</div>
+          <div class="ivs"><div>${ivTalk()}</div></div>${libre ? '' : ivQuestion()}${input}</div>
+          ${S.ivlay === 'carnet' ? ivCarnet() : ''}</section>`;
+      }
+
+      function atelier() {
+        const mods = atelierRail('Personnages');
         const ents = [
           ['Hélène Varenne', 'enquêtrice · 1 contradiction', 'on'],
           ['Paul Vasseur', 'agronome · disparu', ''],
@@ -4558,7 +4954,7 @@
           disc === 'actuel'
             ? ''
             : `<button class="btn" title="Nouveau personnage (ligne de commande : « nouveau personnage »)">+ Nouveau personnage</button>`;
-        return `<section class="atelier"><div class="rail"><div class="seg"><button data-go="ecrire">Écrire</button><button class="on">Atelier</button></div>${mods}${cmd}<div class="pfoot" style="${cmd ? 'margin-top:10px' : 'margin-top:auto'};padding:0"><span><kbd>⌘E</kbd>écrire / atelier</span><span><kbd>⌘1…5</kbd>modules</span></div></div>
+        return `<section class="atelier"><div class="rail"><div class="seg"><button data-go="ecrire">Écrire</button><button class="on">Atelier</button></div>${mods}${cmd}<div class="pfoot" style="${cmd ? 'margin-top:10px' : 'margin-top:auto'};padding:0"><span><kbd>⌘E</kbd>écrire / atelier</span><span><kbd>${IV_KEYS()[1]}</kbd>modules</span></div></div>
           <div class="list"><div class="field"><span class="grow">Filtrer les personnages…</span><kbd>/</kbd></div>${add}${ents}<div class="lfoot" data-rejects="1">${S.rejects ? 'Masquer les propositions rejetées' : '1 proposition rejetée · Afficher'} <kbd>⇧X</kbd></div><div class="pfoot" style="margin-top:auto;padding:0"><span><kbd>V</kbd>valider</span><span><kbd>X</kbd>rejeter</span><span><kbd>⏎</kbd>modifier</span></div></div>${ficheBody(false)}</section>`;
       }
 
@@ -4573,6 +4969,7 @@
             .join('')}</span>
           <span class="grp"><span class="lbl">Caractère <kbd>M E O</kbd></span>${MATS.map(([k, l]) => b('mat', k, l)).join('')}${b('dk', 'profond', 'Sombre : outils profonds')}${b('dk', 'clair', 'Sombre : outils clairs')}${b('full', !S.full, 'E · Encres pleines')}</span>
           <span class="grp"><span class="lbl">Lumière <kbd>L</kbd></span>${b('rim', 'non', 'Avant : tout en creux')}${b('rim', 'garde', 'Le creux garde, la lumière suit')}${b('orn', !S.orn, 'O · Outils gravés')}</span>
+          <span class="grp"><span class="lbl">Entretien (écran)</span>${b('ivlay', 'seul', 'Conversation seule')}${b('ivlay', 'carnet', '+ Carnet')}${b('ivname', 'entretien', 'Entretien')}${b('ivname', 'parlons', 'Parlons-en')}${b('ivname', 'causerie', 'Causerie')}${b('ivkeys', 'zero', '⌘0 + ⌘1…5')}${b('ivkeys', 'shift', '⌘1 + ⌘2…6')}</span>
           <span class="grp"><span class="lbl">Découverte <kbd>G</kbd></span>${DISC_KEYS.map((k) => b('disc', k, DISC[k][0])).join('')}${b('quiet', !S.quiet, S.quiet ? 'Frappe : en cours' : 'Frappe : à l’arrêt')}</span>
           <span class="grp"><span class="lbl">Écran <kbd>1–9</kbd></span>${SCREENS.map(([k, l]) => b('screen', k, l)).join('')}</span>
           <span class="grp"><span class="lbl">Thème <kbd>T</kbd></span>${b('theme', 'light', 'Clair')}${b('theme', 'dark', 'Sombre')}</span>
@@ -4663,6 +5060,9 @@
             case 'fiche':
               body = atelier();
               break;
+            case 'entretien':
+              body = entretien();
+              break;
             case 'manuscrit':
               if (S.dir === 'perle') body = S.plan ? board() : scene({ behind: true }) + drawer();
               else if (S.dir === 'velin') body = board();
@@ -4671,7 +5071,9 @@
           }
         if (
           disc === 'rails' &&
-          !['fiche', 'biblio', 'moniteur', 'reglages', 'verrou', 'demarrage'].includes(S.screen) &&
+          !['fiche', 'entretien', 'biblio', 'moniteur', 'reglages', 'verrou', 'demarrage'].includes(
+            S.screen,
+          ) &&
           !(S.screen === 'manuscrit' && S.plan)
         )
           body += edges(S.screen);

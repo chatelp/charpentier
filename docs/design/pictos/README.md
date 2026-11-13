@@ -1,12 +1,13 @@
 # Pictogrammes gravés
 
-Sept pictogrammes au trait, pour les médaillons des panneaux et des modules (DESIGN.md §4.11). Grille 24 × 24, trait 1,5 px, bouts et angles arrondis, `stroke="currentColor"` : la couleur vient du contexte. Dessinés pour ce projet.
+Huit pictogrammes au trait, pour les médaillons des panneaux et des modules (DESIGN.md §4.11). Grille 24 × 24, trait 1,5 px, bouts et angles arrondis, `stroke="currentColor"` : la couleur vient du contexte. Dessinés pour ce projet.
 
 | Fichier | Lieu | Dessin |
 |---|---|---|
 | `compagnon.svg` | panneau du Compagnon | compas |
 | `manuscrit.svg` | tiroir du manuscrit | livre ouvert |
-| `meta.svg` | module Méta | plan |
+| `entretien.svg` | page Entretien (en bleu : c'est le Compagnon qui parle) | bulle |
+| `projet.svg` | module Le projet | plan |
 | `personnages.svg` | module Personnages | buste |
 | `structure.svg` | module Structure | ferme de charpente |
 | `regles.svg` | module Règles du monde | fil à plomb |
