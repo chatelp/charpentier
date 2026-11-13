@@ -352,6 +352,9 @@ export function Atelier({
               {t(`atelier.newEntry.${module}`)}
             </button>
           ))}
+          {entries.length === 0 && (
+            <p className="ch-atl-empty">{t(`atelier.emptyList.${location.rail}`)}</p>
+          )}
           <ul
             className="ch-atl-entries"
             role="listbox"
@@ -381,9 +384,6 @@ export function Atelier({
                 {t('atelier.showRejected')} <kbd>{t('atelier.legend.toggleKey')}</kbd>
               </button>
             </p>
-          )}
-          {entries.length === 0 && (
-            <p className="ch-atl-empty">{t(`atelier.emptyList.${location.rail}`)}</p>
           )}
           <p className="ch-atl-hint">{t('atelier.listHint')}</p>
         </div>

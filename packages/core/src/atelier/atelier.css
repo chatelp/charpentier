@@ -502,3 +502,30 @@
 .ch-section h3.ch-engraved {
   margin-right: 0;
 }
+
+/* The rail's command zone stays on one line; its shortcut goes when there is no room. */
+.ch-atl-rail.ch-tool {
+  container-type: inline-size;
+}
+
+.ch-atl-rail .ch-cmdzone.is-inline {
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+
+.ch-atl-rail .ch-cmdzone.is-inline .ch-cmdzone-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@container (max-width: 13rem) {
+  .ch-atl-rail .ch-cmdzone.is-inline kbd {
+    display: none;
+  }
+}
+
+/* The sheet scrolls clear of the footer's state line. */
+.ch-sheet {
+  padding-bottom: 48px;
+}

@@ -125,13 +125,13 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
-    --ch-bg: #262a31;
+    --ch-bg: #1b1e23;
     --ch-ink: #dfe3ea;
     --ch-ink-2: #b9c0ca;
     --ch-muted: #8a929e;
     --ch-faint: #5d6470;
-    --ch-highlight: #323740;
-    --ch-shade: #1a1d22;
+    --ch-highlight: #262a31;
+    --ch-shade: #101215;
     --ch-mentor: #86aedb;
     --ch-mentor-soft: rgb(134 174 219 / 0.13);
     --ch-author: #e3876a;
@@ -139,13 +139,13 @@
   }
 }
 :root[data-theme='dark'] {
-  --ch-bg: #262a31;
+  --ch-bg: #1b1e23;
   --ch-ink: #dfe3ea;
   --ch-ink-2: #b9c0ca;
   --ch-muted: #8a929e;
   --ch-faint: #5d6470;
-  --ch-highlight: #323740;
-  --ch-shade: #1a1d22;
+  --ch-highlight: #262a31;
+  --ch-shade: #101215;
   --ch-mentor: #86aedb;
   --ch-mentor-soft: rgb(134 174 219 / 0.13);
   --ch-author: #e3876a;
@@ -178,6 +178,7 @@
   --ch-mentor-soft: rgb(134 174 219 / 0.13);
   --ch-author: #e3876a;
   --ch-author-soft: rgb(227 135 106 / 0.24);
+  /* The same in both themes: in the dark one the tools are lighter than the page, plates laid on it. */
   --ch-raise:
     var(--ch-depth) var(--ch-depth) var(--ch-blur) var(--ch-shade),
     calc(var(--ch-depth) * -1) calc(var(--ch-depth) * -1) var(--ch-blur) var(--ch-highlight);
@@ -191,20 +192,6 @@
   color-scheme: dark;
   background-color: var(--ch-bg);
   color: var(--ch-ink);
-}
-
-/* In the dark theme the slate is deeper than the page; the inks stay. */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) .ch-tool {
-    --ch-bg: #1a1d22;
-    --ch-highlight: #24282f;
-    --ch-shade: #0f1114;
-  }
-}
-:root[data-theme='dark'] .ch-tool {
-  --ch-bg: #1a1d22;
-  --ch-highlight: #24282f;
-  --ch-shade: #0f1114;
 }
 
 @media (prefers-reduced-motion: reduce) {
