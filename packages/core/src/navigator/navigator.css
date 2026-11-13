@@ -1,7 +1,7 @@
 /* Manuscript drawer (docs/DESIGN.md §4.4): a raised panel on the left. */
 .ch-navigator {
   position: fixed;
-  top: calc(10px + var(--ch-titlebar-offset));
+  top: calc(10px + var(--ch-top-offset));
   bottom: 12px;
   left: 12px;
   width: min(var(--ch-drawer-w), calc(100vw - 24px));

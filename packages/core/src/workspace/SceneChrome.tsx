@@ -87,6 +87,7 @@ export function WritingFooter({
   onEnterKey,
   commandZone,
   tools,
+  features,
   syncState,
 }: {
   /** Hidden outside the writing surface. */
@@ -102,6 +103,8 @@ export function WritingFooter({
   readonly commandZone?: ReactNode;
   /** Buttons at the far right (« Aa »). */
   readonly tools?: ReactNode;
+  /** The features' states, before the buttons (docs/PLAN.md phase 5.1). */
+  readonly features?: ReactNode;
   /** Where the sync stands (step 4.4); clickable when it waits on the author. */
   readonly syncState?: { readonly text: string; readonly onClick?: () => void } | undefined;
 }) {
@@ -156,6 +159,7 @@ export function WritingFooter({
           ) : (
             <span className="ch-footer-fit ch-footer-sync">{syncState.text}</span>
           ))}
+        {features}
         {tools}
       </span>
     </footer>

@@ -1,5 +1,6 @@
 import type { MenuEntry, MenuModel, MenuRole } from '@charpentier/platform';
 import type { TFunction } from 'i18next';
+import type { Feature } from '../features/feature';
 import type { CommandRegistry } from './registry';
 
 type Item = string | `role:${MenuRole}` | '-';
@@ -10,7 +11,19 @@ type Item = string | `role:${MenuRole}` | '-';
  * system does itself (clipboard, window, application).
  */
 export const MENU_LAYOUT: readonly { readonly menu: string; readonly items: readonly Item[] }[] = [
-  { menu: 'app', items: ['role:about', '-', 'role:hide', 'role:hideOthers', '-', 'role:quit'] },
+  {
+    menu: 'app',
+    items: [
+      'role:about',
+      '-',
+      'openSettings',
+      '-',
+      'role:hide',
+      'role:hideOthers',
+      '-',
+      'role:quit',
+    ],
+  },
   {
     menu: 'file',
     items: [
@@ -154,12 +167,17 @@ export const MENU_LAYOUT: readonly { readonly menu: string; readonly items: read
   { menu: 'help', items: ['openPalette', 'replayTour'] },
 ];
 
-/** The menu model the host draws, labels and shortcuts from the registry. */
+/**
+ * The menu model the host draws, labels and shortcuts from the registry. The
+ * features' commands join the menus they name; a command the registry does
+ * not hold (the settings without a section) is left out.
+ */
 export function buildMenuModel<Ctx>(
   registry: CommandRegistry<Ctx>,
   t: TFunction,
   /** Commands shown as ticked settings (Présentation › sounds…). */
   checked: Readonly<Record<string, boolean>> = {},
+  features: readonly Feature[] = [],
 ): MenuModel {
   const entry = (item: Item): MenuEntry => {
     if (item === '-') return { kind: 'separator' };
@@ -180,10 +198,44 @@ export function buildMenuModel<Ctx>(
       ...(item in checked && { checked: checked[item] ?? false }),
     };
   };
+  const layout: { menu: string; label: string; items: Item[] }[] = MENU_LAYOUT.map((m) => ({
+    menu: m.menu,
+    label: t(`menu.${m.menu}` as 'menu.app'),
+    items: [...m.items],
+  }));
+  for (const contribution of features.flatMap((f) => f.menu ?? [])) {
+    const items = contribution.items as readonly Item[];
+    const existing = layout.find((m) => m.menu === contribution.menu);
+    if (existing) existing.items.push('-', ...items);
+    else
+      layout.splice(
+        layout.findIndex((m) => m.menu === 'window'),
+        0,
+        {
+          menu: contribution.menu,
+          label: contribution.label
+            ? (t as unknown as (key: string) => string)(contribution.label)
+            : contribution.menu,
+          items: [...items],
+        },
+      );
+  }
+  const known = new Set(registry.ids());
   return {
-    menus: MENU_LAYOUT.map(({ menu, items }) => ({
-      label: t(`menu.${menu}` as 'menu.app'),
-      entries: items.map(entry),
+    menus: layout.map(({ label, items }) => ({
+      label,
+      entries: withoutStraySeparators(
+        items.filter((item) => item === '-' || item.startsWith('role:') || known.has(item)),
+      ).map(entry),
     })),
   };
+}
+
+/** No separator first, last, or next to another one. */
+function withoutStraySeparators(items: readonly Item[]): Item[] {
+  const kept: Item[] = [];
+  for (const item of items)
+    if (item !== '-' || (kept.length > 0 && kept.at(-1) !== '-')) kept.push(item);
+  if (kept.at(-1) === '-') kept.pop();
+  return kept;
 }

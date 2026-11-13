@@ -194,7 +194,8 @@
     "toggleRejected": "Afficher les rejets",
     "syncSignIn": "Se connecter à un serveur de synchro…",
     "syncSignOut": "Se déconnecter du serveur",
-    "syncDevices": "Appareils connectés…"
+    "syncDevices": "Appareils connectés…",
+    "openSettings": "Ouvrir les réglages"
   },
   "palette": {
     "label": "Ligne de commande",
@@ -225,6 +226,11 @@
     "recentGroup": "Utilisées récemment",
     "suggestedGroup": "Pour commencer",
     "allCommandsGroup": "Toutes les commandes"
+  },
+  "settings": {
+    "label": "Réglages",
+    "title": "réglages",
+    "sectionsLabel": "Sections des réglages"
   },
   "navigator": {
     "label": "Plan du manuscrit",

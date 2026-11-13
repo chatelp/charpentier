@@ -28,6 +28,7 @@ import { atelierCommands } from './atelier-commands';
 import { languageCommands } from './language-commands';
 import { trashedEntityItems } from '../atelier/atelier-actions';
 import { CommandRegistry, type Command } from './registry';
+import type { Feature } from '../features/feature';
 
 export type { CommandId } from './command-id';
 
@@ -374,7 +375,20 @@ export const workspaceCommands: readonly WorkspaceCommand[] = [
   },
 ];
 
-export function createWorkspaceRegistry(primary: PrimaryModifier, reserved: readonly string[]) {
+/** The settings view: only there when a feature brings a section (docs/PLAN.md phase 5.1). */
+export const openSettingsCommand: WorkspaceCommand = {
+  id: 'openSettings',
+  scope: 'global',
+  keybinding: 'Mod-,',
+  run: (ctx) => (ctx.view === 'settings' ? ctx.openWriting() : ctx.openSettings()),
+};
+
+/** The core's commands, then those of the active features. */
+export function createWorkspaceRegistry(
+  primary: PrimaryModifier,
+  reserved: readonly string[],
+  features: readonly Feature[] = [],
+) {
   const registry = new CommandRegistry<WorkspaceContext>(primary, reserved);
   for (const command of [
     ...workspaceCommands,
@@ -383,6 +397,8 @@ export function createWorkspaceRegistry(primary: PrimaryModifier, reserved: read
     ...atelierCommands,
     ...languageCommands,
     ...syncCommands,
+    ...(features.some((f) => f.settings?.length) ? [openSettingsCommand] : []),
+    ...features.flatMap((f) => f.commands ?? []),
   ])
     registry.register(command);
   return registry;

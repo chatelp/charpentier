@@ -7,18 +7,37 @@ import { TitleBar } from './TitleBar';
 import { initialProjectId, openProject, type ProjectSession } from '../workspace/default-scene';
 import { ProjectWorkspace } from '../workspace/Workspace';
 import { PlatformContext, usePlatform } from './platform-context';
+import {
+  activeFeatures,
+  installFeatureTexts,
+  topZonesHeight,
+  type Feature,
+} from '../features/feature';
+import { FeaturesContext, FeatureTopZones, useFeatures } from '../features/features-context';
+import fr from '../i18n/locales/fr.json';
 
 export interface AppProps {
   readonly platform: Platform;
   readonly i18n: i18n;
+  /** What this host adds to the core (docs/SPEC.md D-24): its system layer on the X250. */
+  readonly features?: readonly Feature[];
 }
 
+const NO_FEATURES: readonly Feature[] = [];
+
 /** Root of the application, identical in every host. */
-export function App({ platform, i18n }: AppProps) {
+export function App({ platform, i18n, features = NO_FEATURES }: AppProps) {
+  const active = useMemo(() => {
+    const running = activeFeatures(features, platform, fr);
+    installFeatureTexts(i18n, running);
+    return running;
+  }, [features, platform, i18n]);
   return (
     <PlatformContext.Provider value={platform}>
       <I18nextProvider i18n={i18n}>
-        <Root />
+        <FeaturesContext.Provider value={active}>
+          <Root />
+        </FeaturesContext.Provider>
       </I18nextProvider>
     </PlatformContext.Provider>
   );
@@ -92,9 +111,13 @@ function Root() {
   const [fullScreen, setFullScreen] = useState(false);
   useEffect(() => platform.onFullScreenChange?.(setFullScreen), [platform]);
   const titleBarHeight = fullScreen ? 0 : (platform.titleBarHeight ?? 0);
+  // The features' bands come below the title bar, the rest below them.
+  const zonesHeight = topZonesHeight(useFeatures());
   useEffect(() => {
-    document.documentElement.style.setProperty('--ch-titlebar-offset', `${titleBarHeight}px`);
-  }, [titleBarHeight]);
+    const style = document.documentElement.style;
+    style.setProperty('--ch-titlebar-offset', `${titleBarHeight}px`);
+    style.setProperty('--ch-top-offset', `${titleBarHeight + zonesHeight}px`);
+  }, [titleBarHeight, zonesHeight]);
 
   const titleBar = titleBarHeight ? (
     <TitleBar root={shown.state === 'ready' ? shown.session.root : undefined} />
@@ -104,6 +127,7 @@ function Root() {
     return (
       <>
         {titleBar}
+        <FeatureTopZones ctx={null} />
         <Library
           currentProjectId={projectId}
           creating={library.creating}

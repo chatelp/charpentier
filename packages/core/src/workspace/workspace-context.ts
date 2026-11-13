@@ -8,6 +8,8 @@ import type { SheetTarget } from '../atelier/atelier-data';
 import type { PaletteRequest } from '../palette/palette-request';
 import type { PrefsUpdate, WritingPrefs } from './writing-prefs';
 
+export type WorkspaceView = 'write' | 'atelier' | 'overview' | 'settings' | `view:${string}`;
+
 /** Everything a command may use. Rebuilt on every render of the workspace. */
 export interface WorkspaceContext {
   readonly t: TFunction;
@@ -47,9 +49,18 @@ export interface WorkspaceContext {
   shortcutLabel(commandId: string): string | undefined;
   /** A short, discreet confirmation (read by screen readers). */
   notify(message: string): void;
-  /** Writing surface, the Atelier (modules), or the overview of the manuscript. */
-  readonly view: 'write' | 'atelier' | 'overview';
+  /**
+   * Writing surface, the Atelier (modules), the overview of the manuscript,
+   * the settings (sections from the features) or a feature's view.
+   */
+  readonly view: WorkspaceView;
   openAtelier(location?: AtelierLocation): void;
+  /** The settings view, on a section; does nothing when no feature brings one. */
+  openSettings(sectionId?: string): void;
+  /** A feature's full-frame view (docs/PLAN.md phase 5.1). */
+  openView(viewId: string): void;
+  /** Runs a command of the registry, a feature's included (false: unknown or disabled). */
+  runCommand(commandId: string): Promise<boolean>;
   openWriting(): void;
   openOverview(): void;
   /** The library of projects; `creating` opens the new project form. */

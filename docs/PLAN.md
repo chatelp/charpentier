@@ -2,7 +2,7 @@
 
 Chaque phase est courte, se termine par un résultat vérifiable dans l'app (ou par des tests quand la phase n'a pas d'interface), puis par un arrêt pour le feu vert. Les tests prioritaires sont écrits dans la phase qui introduit le code concerné.
 
-Statut : étapes 1 à 3 réalisées (12 novembre 2026) ; étape 4a réalisée (13 novembre 2026), serveur en service sur https://charpentier.chatel.pm. Reste à éprouver le Compagnon avec la clé de l'auteur (tests adversariaux en direct, réglage des prompts). Avancement visuel : https://claude.ai/artifact/NAAMCGpuXETvPTiDXMzdS4 (régénéré par `node scripts/progress.mjs`).
+Statut : étapes 1 à 3 réalisées (12 novembre 2026) ; étape 4a réalisée (13 novembre 2026), serveur en service sur https://charpentier.chatel.pm ; étape 5 commencée, phase 5.1 réalisée. Reste à éprouver le Compagnon avec la clé de l'auteur (tests adversariaux en direct, réglage des prompts). Avancement visuel : https://claude.ai/artifact/NAAMCGpuXETvPTiDXMzdS4 (régénéré par `node scripts/progress.mjs`).
 
 ---
 
@@ -171,6 +171,7 @@ Hors périmètre de la v1 de l'appareil : portail captif (seulement détecté), 
 ### 5.1 Points de contribution du cœur [D-24]
 Une « fonctionnalité » est un module compilé avec l'app qui déclare ce qu'elle apporte et sa condition d'activation : commandes (le registre le fait déjà), zone en tête de fenêtre, éléments d'état du pied, sections de réglages, vue plein cadre, préfixe de la ligne de commande, entrées de menu, textes. Le pied, les réglages et le menu, aujourd'hui câblés en dur, lisent ces contributions. Pas d'extensions tierces : rien n'est chargé à l'exécution.
 **Vérifiable** : une fonctionnalité de test ajoute une commande, une zone en tête, un état dans le pied et une section de réglages sans toucher aux composants du cœur ; retirée, il n'en reste rien.
+Réalisé (13 novembre 2026) : type `Feature` du cœur (`packages/core/src/features/`), passé par l'hôte à `App` (`features`) et actif selon `isActive(platform)` ; textes fusionnés dans le catalogue sous `<id>.…` et `commands.<id>`, vérifiés au démarrage (un propriétaire par identifiant, préfixe et texte ; un titre par commande). Commandes au registre, menus (groupe ajouté ou nouveau menu avant « Fenêtre »), bande en tête (le reste de la fenêtre commence dessous, bibliothèque comprise), états du pied, vue des réglages (`Mod-,`, rail des sections et valeur courante, seulement s'il existe une section), vues plein cadre (`ctx.openView`), préfixe de la ligne de commande qui lit son argument. Test avec une fonctionnalité « sonde » qui use de tout, puis sans elle.
 
 ### 5.2 Mode appareil de l'app
 L'app de bureau lancée avec `--appliance` : plein écran, sans barre de titre ni barre de menus (la zone de commande en tient lieu), `Ctrl` à la place de `⌘` dans les raccourcis et leurs libellés, touche Super réservée au système. Cible 1920 × 1080 à 125 % (1 536 × 864 px CSS) : l'écran d'écriture avec une note dépliée tient sans défilement de l'interface.

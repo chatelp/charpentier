@@ -2,10 +2,18 @@ import { describe, expect, it } from 'vitest';
 import { createI18n } from '../i18n/i18n';
 import { buildMenuModel, MENU_LAYOUT } from './menu-model';
 import { createWorkspaceRegistry } from './workspace-commands';
+import type { Feature } from '../features/feature';
+
+/** A feature with a settings section: the settings command joins the registry. */
+const withSettings: Feature = {
+  id: 'withSettings',
+  texts: { fr: { withSettings: { s: 'S' } } },
+  settings: [{ id: 's', label: 'withSettings.s', component: () => null }],
+};
 
 describe('application menu', () => {
   it('holds every command of the registry exactly once', () => {
-    const registry = createWorkspaceRegistry('Meta', []);
+    const registry = createWorkspaceRegistry('Meta', [], [withSettings]);
     const inMenus = MENU_LAYOUT.flatMap((m) => m.items).filter(
       (item) => item !== '-' && !item.startsWith('role:'),
     );

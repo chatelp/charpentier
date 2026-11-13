@@ -53,6 +53,9 @@ import { useTypingFade, useTypewriterScroll, useWordCount } from './use-writing-
 import { useWordsToday } from './use-words-today';
 import type { WorkspaceContext } from './workspace-context';
 import { useWritingPrefs } from './writing-prefs';
+import { featureText } from '../features/feature';
+import { FeatureFooterItems, FeatureTopZones, useFeatures } from '../features/features-context';
+import { SettingsView } from '../features/SettingsView';
 import './workspace.css';
 
 let paletteSequence = 0;
@@ -215,10 +218,19 @@ export function ProjectWorkspace({
   // A remark to show once its scene's editor is ready (going there from the panel).
   const pendingSignal = useRef<string | null>(null);
 
+  // What the features bring (docs/PLAN.md phase 5.1).
+  const features = useFeatures();
+  const settingsSections = useMemo(() => features.flatMap((f) => f.settings ?? []), [features]);
+  const featureViews = useMemo(() => features.flatMap((f) => f.views ?? []), [features]);
+  const [settingsSection, setSettingsSection] = useState<string>();
   const registry = useMemo(
     () =>
-      createWorkspaceRegistry(platform.keybindings.primaryModifier, platform.keybindings.reserved),
-    [platform],
+      createWorkspaceRegistry(
+        platform.keybindings.primaryModifier,
+        platform.keybindings.reserved,
+        features,
+      ),
+    [platform, features],
   );
   const outline = useDocSnapshot(root, readOutline);
   const mentorLevel = useDocSnapshot(root, readMentorLevel);
@@ -443,6 +455,19 @@ export function ProjectWorkspace({
       setAtelierFocus((n) => n + 1);
     },
     openWriting: () => setView('write'),
+    openSettings: (sectionId) => {
+      if (settingsSections.length === 0) return;
+      if (sectionId) setSettingsSection(sectionId);
+      setNavigatorOpen(false);
+      setView('settings');
+      setAtelierFocus((n) => n + 1);
+    },
+    openView: (viewId) => {
+      if (!featureViews.some((v) => v.id === viewId)) return;
+      setNavigatorOpen(false);
+      setView(`view:${viewId}`);
+    },
+    runCommand: (commandId) => registry.execute(commandId, ctx),
     openLibrary: (creating = false) => onLibrary(creating),
     openOverview: () => {
       setNavigatorOpen(false);
@@ -512,13 +537,18 @@ export function ProjectWorkspace({
   const { uiSounds, typingSounds } = prefs;
   useEffect(() => {
     platform.menu?.set(
-      buildMenuModel(registry, t, {
-        toggleUiSounds: uiSounds,
-        toggleTypingSounds: typingSounds,
-        toggleRejected: prefs.showRejected,
-      }),
+      buildMenuModel(
+        registry,
+        t,
+        {
+          toggleUiSounds: uiSounds,
+          toggleTypingSounds: typingSounds,
+          toggleRejected: prefs.showRejected,
+        },
+        features,
+      ),
     );
-  }, [platform, registry, t, uiSounds, typingSounds, prefs.showRejected]);
+  }, [platform, registry, t, uiSounds, typingSounds, prefs.showRejected, features]);
   useEffect(
     () => setSoundSettings({ ui: uiSounds, typing: typingSounds }),
     [uiSounds, typingSounds],
@@ -632,6 +662,20 @@ export function ProjectWorkspace({
           },
         },
         '@': sheetScope(ctx),
+        // A feature's prefix (`:` for the system) searches what follows it itself.
+        ...Object.fromEntries(
+          features.flatMap((f) =>
+            (f.prefixes ?? []).map((p): [string, PaletteScope] => [
+              p.prefix,
+              {
+                label: featureText(t)(p.label),
+                items: [],
+                search: (query) => p.search(ctx, query),
+                onPick: (id, query) => p.onPick(ctx, id, query),
+              },
+            ]),
+          ),
+        ),
       };
 
   const mentorNote = {
@@ -702,6 +746,7 @@ export function ProjectWorkspace({
       data-navigator={navigatorOpen || undefined}
       data-mentor-level={mentorLevel}
     >
+      <FeatureTopZones ctx={ctx} />
       {/* Entry points (docs/DESIGN.md §4.8), in the order of the tab key. */}
       {view === 'write' && !navigatorOpen && (
         <EdgeHandle
@@ -859,6 +904,38 @@ export function ProjectWorkspace({
           }}
         />
       )}
+      {view === 'settings' && (
+        <SettingsView
+          ctx={ctx}
+          sections={settingsSections}
+          section={settingsSection}
+          active={palette === null && !navigatorOpen}
+          focusRequest={atelierFocus}
+          onSection={setSettingsSection}
+          onClose={() => setView('write')}
+        />
+      )}
+      {featureViews.map(
+        ({ id, label, component: View }) =>
+          view === `view:${id}` && (
+            <section
+              key={id}
+              className="ch-feature-view"
+              aria-label={featureText(t)(label)}
+              onKeyDown={(event) => {
+                if (event.key !== 'Escape' || event.defaultPrevented) return;
+                event.preventDefault();
+                setView('write');
+              }}
+            >
+              <View
+                ctx={ctx}
+                active={palette === null && !navigatorOpen}
+                onClose={() => setView('write')}
+              />
+            </section>
+          ),
+      )}
       {view === 'overview' && (
         <Overview
           ctx={ctx}
@@ -882,6 +959,7 @@ export function ProjectWorkspace({
             ? () => void registry.execute('setApiKey', ctx)
             : undefined
         }
+        features={<FeatureFooterItems ctx={ctx} />}
         syncState={
           syncStatus === 'off'
             ? undefined

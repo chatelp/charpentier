@@ -105,8 +105,8 @@ export function CommandPalette({
           key: prefix,
           label: scope.label,
           icon: prefix,
-          items: match(scope.items),
-          pick: (item) => scope.onPick(item.id),
+          items: scope.search ? scope.search(search) : match(scope.items),
+          pick: (item) => scope.onPick(item.id, search),
         },
       ];
     const commandSection: Section = {
@@ -135,13 +135,15 @@ export function CommandPalette({
     }
     return [
       { ...commandSection, items: commandSection.items.slice(0, MIXED_LIMIT) },
-      ...Object.entries(scopes).map(([key, s]) => ({
-        key,
-        label: s.label,
-        icon: key,
-        items: match(s.items).slice(0, MIXED_LIMIT),
-        pick: (item: PickItem) => s.onPick(item.id),
-      })),
+      ...Object.entries(scopes)
+        .filter(([, s]) => !s.search)
+        .map(([key, s]) => ({
+          key,
+          label: s.label,
+          icon: key,
+          items: match(s.items).slice(0, MIXED_LIMIT),
+          pick: (item: PickItem) => s.onPick(item.id, search),
+        })),
     ].filter((section) => section.items.length > 0);
   })();
   const flat = sections.flatMap((section) => section.items.map((item) => ({ item, section })));

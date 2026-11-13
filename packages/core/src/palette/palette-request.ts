@@ -28,9 +28,15 @@ export interface PickItem {
   readonly shortcut?: string;
 }
 
-/** What a prefix of the command line searches (`#` scenes, later `@` sheets). */
+/** What a prefix of the command line searches (`#` scenes, `@` sheets, a feature's `:`). */
 export interface PaletteScope {
   readonly label: string;
   readonly items: readonly PickItem[];
-  onPick(id: string): void;
+  /**
+   * Its own search of what follows the prefix (`lum 40`), instead of filtering
+   * `items`; such a scope only answers under its prefix.
+   */
+  search?(query: string): readonly PickItem[];
+  /** `query`: the text typed after the prefix. */
+  onPick(id: string, query: string): void;
 }

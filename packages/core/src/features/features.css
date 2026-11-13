@@ -1,0 +1,100 @@
+/* Contribution points of the features (docs/PLAN.md phase 5.1). */
+
+/* Bands at the top of the window, under the title bar: the rest starts below them. */
+.ch-top-zones {
+  position: fixed;
+  inset: var(--ch-titlebar-offset) 0 auto;
+  z-index: var(--ch-z-command, 6);
+  display: flex;
+  flex-direction: column;
+}
+
+.ch-top-zone {
+  overflow: hidden;
+}
+
+/* A full-frame view of a feature, where the Atelier would be. */
+.ch-feature-view {
+  position: absolute;
+  inset: 0 0 36px;
+  overflow: auto;
+}
+
+/* The settings view: a rail of sections, the section on the page. */
+.ch-settings {
+  position: absolute;
+  inset: 0 0 36px;
+  display: grid;
+  grid-template-columns: 17rem minmax(0, 1fr);
+  gap: 22px;
+  padding: var(--ch-space-5) 22px 0;
+}
+
+.ch-settings-rail.ch-tool {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ch-space-2);
+  min-height: 0;
+  margin-bottom: var(--ch-space-4);
+  padding: 14px;
+  border-radius: var(--ch-radius-lg);
+}
+
+.ch-settings-title {
+  margin: 0 0 var(--ch-space-2);
+  color: var(--ch-muted);
+  font: 500 13.5px var(--ch-font-text);
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.08em;
+}
+
+.ch-settings-sections {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow: auto;
+}
+
+.ch-settings-section {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: var(--ch-radius-sm);
+  color: var(--ch-ink-2);
+  font: var(--ch-ui-sm) var(--ch-font-ui);
+  cursor: pointer;
+}
+
+.ch-settings-section:hover,
+.ch-settings-section:focus-visible {
+  color: var(--ch-ink);
+  outline: none;
+}
+
+.ch-settings-section[aria-selected='true'] {
+  color: var(--ch-ink);
+  box-shadow: var(--ch-inset), var(--ch-rim);
+}
+
+.ch-settings-section-name {
+  flex: 1;
+}
+
+.ch-settings-section-value {
+  color: var(--ch-muted);
+  font-size: var(--ch-ui-xs);
+}
+
+.ch-settings-page {
+  min-width: 0;
+  max-width: 44rem;
+  overflow: auto;
+  padding: var(--ch-space-3) var(--ch-space-4) 48px;
+}
+
+.ch-settings-page-title {
+  margin: 0 0 var(--ch-space-4);
+  color: var(--ch-ink);
+  font: 400 30px/1.2 var(--ch-font-text);
+}

@@ -161,9 +161,11 @@ kbd,
   font-style: normal;
 }
 
-/* Title bar drawn by the app (macOS desktop): content starts below it. */
+/* Title bar drawn by the app (macOS desktop), then the features' bands at the
+   top (docs/PLAN.md phase 5.1): content starts below them. */
 :root {
   --ch-titlebar-offset: 0px;
+  --ch-top-offset: 0px;
 }
 
 .ch-titlebar {
