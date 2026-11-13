@@ -303,6 +303,17 @@
   right: calc(var(--ch-panel-w) + 24px);
 }
 
+/* A panel never covers the content, in any view (docs/DESIGN.md §4.3): the Atelier and the overview stop before it. */
+.ch-app[data-mentor-panel] .ch-atelier,
+.ch-app[data-mentor-panel] .ch-overview {
+  right: calc(var(--ch-panel-w) + 24px);
+}
+
+.ch-app[data-navigator] .ch-atelier,
+.ch-app[data-navigator] .ch-overview {
+  left: calc(var(--ch-drawer-w) + 24px);
+}
+
 /* ── Conversation ── */
 .ch-conversation {
   flex: 1;

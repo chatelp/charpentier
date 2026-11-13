@@ -692,6 +692,7 @@ export function ProjectWorkspace({
       data-focus={prefs.focusMode || undefined}
       data-typewriter={prefs.typewriter || undefined}
       data-mentor-panel={mentorPanel ?? (sheetPanel ? 'sheet' : undefined)}
+      data-navigator={navigatorOpen || undefined}
       data-mentor-level={mentorLevel}
     >
       {/* Entry points (docs/DESIGN.md §4.8), in the order of the tab key. */}

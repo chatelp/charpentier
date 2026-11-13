@@ -83,6 +83,17 @@ export function Overview({ ctx, active, onOpen, onClose }: OverviewProps) {
     if (preview) previewRef.current?.focus();
   }, [preview]);
 
+  // Two neighbouring points of the same minute get their seconds.
+  const chipDate = (
+    c: CheckpointInfo,
+    before: CheckpointInfo | undefined,
+    after: CheckpointInfo | undefined,
+  ) => {
+    const label = formatCheckpointDate(ctx, c.createdAt);
+    const same = (other: CheckpointInfo | undefined) =>
+      other !== undefined && formatCheckpointDate(ctx, other.createdAt) === label;
+    return same(before) || same(after) ? formatCheckpointDate(ctx, c.createdAt, true) : label;
+  };
   const closePreview = () => {
     setPreviewId(null);
     strip.current?.querySelector<HTMLElement>(`[data-chip="${previewId}"]`)?.focus();
@@ -188,12 +199,11 @@ export function Overview({ ctx, active, onOpen, onClose }: OverviewProps) {
     <section className="ch-overview" aria-label={t('overview.label')} onKeyDown={onKeyDown}>
       <h2 className="ch-overview-title">{project?.title}</h2>
       <p className="ch-overview-sub">
-        {t('overview.summary', {
-          chapters: outline.length,
-          scenes: all.length,
-          words: number.format(total),
-          count: all.length,
-        })}
+        {[
+          t('overview.chapters', { count: outline.length }),
+          t('overview.scenes', { count: all.length }),
+          t('overview.words', { count: total, formatted: number.format(total) }),
+        ].join(' · ')}
       </p>
       <div className="ch-overview-cols">
         {outline.map((chapter) => (
@@ -298,7 +308,7 @@ export function Overview({ ctx, active, onOpen, onClose }: OverviewProps) {
             {checkpoints.length === 0 && (
               <span className="ch-strip-none">{t('overview.noCheckpoint')}</span>
             )}
-            {checkpoints.slice(0, SHOWN_CHECKPOINTS).map((c) => (
+            {checkpoints.slice(0, SHOWN_CHECKPOINTS).map((c, i, shown) => (
               <button
                 key={c.id}
                 type="button"
@@ -307,7 +317,7 @@ export function Overview({ ctx, active, onOpen, onClose }: OverviewProps) {
                 className={`ch-chip ch-strip-chip${c.id === previewId ? ' is-active' : ''}`}
                 onClick={() => setPreviewId(c.id)}
               >
-                {formatCheckpointDate(ctx, c.createdAt)}{' '}
+                {chipDate(c, shown[i - 1], shown[i + 1])}{' '}
                 <span className="ch-strip-reason">
                   {'· '}
                   {c.label ? `« ${c.label} »` : t(`history.reason.${c.reason}`)}

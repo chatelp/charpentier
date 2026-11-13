@@ -26,15 +26,19 @@ export function variantLabel(t: Ctx['t'], scene: SceneInfo, variantId: string): 
   return scene.variants[index]?.name || t('variants.defaultName', { n: index + 1 });
 }
 
-export function formatCheckpointDate(ctx: Ctx, iso: string): string {
+/** « Aujourd’hui, 14:32 », or the date; with the seconds to tell apart two points of the same minute. */
+export function formatCheckpointDate(ctx: Ctx, iso: string, seconds = false): string {
   const date = new Date(iso);
-  const time = new Intl.DateTimeFormat(ctx.language, { hour: '2-digit', minute: '2-digit' }).format(
-    date,
-  );
+  const time = new Intl.DateTimeFormat(ctx.language, {
+    hour: '2-digit',
+    minute: '2-digit',
+    ...(seconds && { second: '2-digit' }),
+  }).format(date);
   if (date.toDateString() === new Date().toDateString()) return ctx.t('history.today', { time });
-  return new Intl.DateTimeFormat(ctx.language, { dateStyle: 'medium', timeStyle: 'short' }).format(
-    date,
-  );
+  return new Intl.DateTimeFormat(ctx.language, {
+    dateStyle: 'medium',
+    timeStyle: seconds ? 'medium' : 'short',
+  }).format(date);
 }
 
 const scene = (ctx: Ctx) => getScene(ctx.root, ctx.sceneId);

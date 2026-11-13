@@ -116,7 +116,7 @@ export function WritingFooter({
       </span>
       <span className="ch-footer-middle">{commandZone}</span>
       <span className="ch-footer-right">
-        <span role="status" aria-live="polite">
+        <span role="status" aria-live="polite" className="ch-footer-fit">
           {status}
         </span>
         {remarks > 0 && (
@@ -134,7 +134,11 @@ export function WritingFooter({
             {t('footer.enterKey')}
           </button>
         ) : (
-          mentorNote && <span>{mentorNote}</span>
+          mentorNote && (
+            <span className="ch-footer-fit" title={mentorNote}>
+              {mentorNote}
+            </span>
+          )
         )}
         <span>{t('footer.saved')}</span>
         {tools}

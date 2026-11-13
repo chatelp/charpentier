@@ -637,22 +637,29 @@ export function Sheet({
           <i className="is-validated" />
           {t('atelier.legend.validated')}
         </span>
-        {/* « Afficher les rejets »: the legend's rejected sample is the switch (⇧X). */}
-        <button
-          type="button"
-          className="ch-legend-toggle"
-          aria-pressed={showRejected}
-          title={t('commands.toggleRejected')}
-          onClick={toggleRejected}
-        >
-          <i className="is-rejected" />
-          {t('atelier.legend.rejected')}
-          {' · '}
-          {showRejected
-            ? t('atelier.legend.hide')
-            : t('atelier.legend.show', { count: rejections })}{' '}
-          <kbd>{t('atelier.legend.toggleKey')}</kbd>
-        </button>
+        {/* « Afficher les rejets »: the legend's rejected sample is the switch (⇧X), when there is any. */}
+        {rejections === 0 && !showRejected ? (
+          <span aria-hidden="true">
+            <i className="is-rejected" />
+            {t('atelier.legend.rejected')}
+          </span>
+        ) : (
+          <button
+            type="button"
+            className="ch-legend-toggle"
+            aria-pressed={showRejected}
+            title={t('commands.toggleRejected')}
+            onClick={toggleRejected}
+          >
+            <i className="is-rejected" />
+            {t('atelier.legend.rejected')}
+            {' · '}
+            {showRejected
+              ? t('atelier.legend.hide')
+              : t('atelier.legend.show', { count: rejections })}{' '}
+            <kbd>{t('atelier.legend.toggleKey')}</kbd>
+          </button>
+        )}
         <span aria-hidden="true">
           <i className="is-contradicted" />
           {t('atelier.legend.contradicted')}

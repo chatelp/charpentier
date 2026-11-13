@@ -149,6 +149,23 @@
   gap: 14px;
 }
 
+/* The right side stops before the command zone: long state texts end with an ellipsis. */
+.ch-app[data-view='write'] .ch-footer-right {
+  min-width: 0;
+  max-width: calc(50% - min(15rem, 19vw) - 16px);
+}
+
+.ch-footer-right > * {
+  flex-shrink: 0;
+}
+
+.ch-footer-right > .ch-footer-fit {
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* The command zone is centred under the text column, whatever is on either side. */
 .ch-footer-middle {
   position: absolute;

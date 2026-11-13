@@ -515,8 +515,6 @@
   },
   "overview": {
     "label": "Vue d’ensemble du manuscrit",
-    "summary_one": "{{chapters}} chapitre(s) · {{scenes}} scène · {{words}} mots",
-    "summary_other": "{{chapters}} chapitre(s) · {{scenes}} scènes · {{words}} mots",
     "variants": "{{count}} variantes",
     "variantsOf": "Variantes de « {{title}} »",
     "hint": "←↑↓→ parcourir · ⌥ + flèches déplacer · V variantes · H restauration · ↵ écrire · Échap revenir",
@@ -535,7 +533,13 @@
     "toVariant": "En faire une variante",
     "toVariantKey": "⇧⏎",
     "close": "Fermer",
-    "closeKey": "Échap"
+    "closeKey": "Échap",
+    "chapters_one": "{{count}} chapitre",
+    "chapters_other": "{{count}} chapitres",
+    "scenes_one": "{{count}} scène",
+    "scenes_other": "{{count}} scènes",
+    "words_one": "{{formatted}} mot",
+    "words_other": "{{formatted}} mots"
   },
   "library": {
     "label": "Bibliothèque",
