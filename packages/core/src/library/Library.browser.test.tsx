@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import { userEvent } from 'vitest/browser';
 import { afterEach, describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
@@ -74,11 +74,36 @@ describe('library', () => {
       expect(document.activeElement).toBe(screen.getByRole('option', { name: /Mon roman/ })),
     );
     await userEvent.keyboard('{ArrowDown}{Backspace}');
+    // The trash is at the foot of the library, shown on request.
+    await userEvent.click(await screen.findByRole('button', { name: 'Corbeille (1)' }));
     await waitFor(() => expect(screen.getByText(/Mis à la corbeille le/)).toBeTruthy());
     expect((await platform.library.list()).map((p) => p.title)).toEqual(['Mon roman']);
+    await userEvent.click(screen.getByRole('option', { name: /La serre/ }));
     await userEvent.keyboard('{Enter}');
     await waitFor(async () => expect(await platform.library.list()).toHaveLength(2));
     await userEvent.keyboard('{Escape}');
     await textFocused();
+  });
+
+  it('creates a novel with N and a short story with ⇧N, and offers both when it is empty', async () => {
+    const platform = await startApp();
+    await textFocused();
+    await userEvent.keyboard(mod('o'));
+    const library = await screen.findByRole('region', { name: 'Bibliothèque' });
+    expect(within(library).getByRole('button', { name: /Nouveau roman/ })).toBeTruthy();
+    // The open project has its words and scenes on its card.
+    await waitFor(() =>
+      expect(screen.getByRole('option', { name: /Mon roman/ }).textContent).toMatch(
+        /Roman · .*1 scène · ouvert /,
+      ),
+    );
+    await userEvent.keyboard('{Shift>}N{/Shift}');
+    expect(screen.getByRole('radio', { name: 'Nouvelle' }).getAttribute('aria-checked')).toBe(
+      'true',
+    );
+    await userEvent.keyboard('{Escape}');
+    await userEvent.keyboard('{Backspace}');
+    await screen.findByText('Aucun projet pour l’instant. Commencez un roman ou une nouvelle.');
+    expect(await platform.library.list()).toHaveLength(0);
   });
 });

@@ -193,7 +193,3 @@
   color: var(--ch-muted);
   font-size: var(--ch-ui-xs);
 }
-
-.ch-btn.is-author {
-  color: var(--ch-author);
-}

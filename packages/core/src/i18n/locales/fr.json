@@ -540,7 +540,7 @@
   "library": {
     "label": "Bibliothèque",
     "projects": "Projets",
-    "hint": "↑↓ parcourir · ↵ ouvrir ou restaurer · N nouveau · R renommer · ⌫ corbeille · Échap revenir",
+    "hint": "↑↓ parcourir · ↵ ouvrir · N nouveau roman · ⇧N nouvelle · R renommer · ⌫ corbeille · Échap revenir",
     "new": "Nouveau projet",
     "titlePlaceholder": "Titre du projet",
     "kind": "Type de projet",
@@ -550,8 +550,33 @@
     "trash": "Corbeille · ↵ restaure",
     "trashedOn": "Mis à la corbeille le {{date}}",
     "folder": "Dossier : {{folder}}",
-    "chooseFolder": "Changer de dossier…",
-    "revealFolder": "Afficher dans le Finder"
+    "chooseFolder": "Changer…",
+    "revealFolder": "Afficher dans le Finder",
+    "newNovel": "+ Nouveau roman",
+    "newNovelKey": "N",
+    "newStory": "+ Nouvelle",
+    "newStoryKey": "⇧N",
+    "open": "Ouvrir",
+    "rename": "Renommer",
+    "renameKey": "R",
+    "toTrash": "Corbeille",
+    "toTrashKey": "⌫",
+    "restore": "Restaurer",
+    "words_one": "{{formatted}} mot",
+    "words_other": "{{formatted}} mots",
+    "scenes_one": "{{count}} scène",
+    "scenes_other": "{{count}} scènes",
+    "openedToday": {
+      "novel": "ouvert aujourd’hui",
+      "short-story": "ouverte aujourd’hui"
+    },
+    "openedOn": {
+      "novel": "ouvert le {{date}}",
+      "short-story": "ouverte le {{date}}"
+    },
+    "showTrash": "Corbeille ({{count}})",
+    "hideTrash": "Masquer la corbeille",
+    "empty": "Aucun projet pour l’instant. Commencez un roman ou une nouvelle."
   },
   "language": {
     "fixWord": "Remplacer « {{word}} » par…",

@@ -44,6 +44,7 @@ import { CommandPalette } from '../palette/CommandPalette';
 import type { PaletteRequest, PaletteScope } from '../palette/palette-request';
 import { lastScenePref, type ProjectSession } from './default-scene';
 import { panelsPref, readPanels, type StoredPanels } from './panels-pref';
+import { projectStatsPref } from '../library/project-stats';
 import { CommandZone, DisplaySheet, EdgeHandle, ModeSwitch } from './EntryPoints';
 import { GuidedTour, WELCOMED_PREF, WelcomeNote } from './Onboarding';
 import { SceneHeader, SceneOpener, WritingFooter } from './SceneChrome';
@@ -261,6 +262,23 @@ export function ProjectWorkspace({
     projectId,
     `${sceneId}/${scene?.activeVariantId ?? ''}`,
     editor ? words : undefined,
+  );
+  // Words and scenes of the project, for the library's cards (kept on the device).
+  const totalWords = [...sceneWords.values()].reduce((a, b) => a + b, 0);
+  const sceneCount = scenes.length;
+  const stats = useRef({ words: totalWords, scenes: sceneCount });
+  useLayoutEffect(() => {
+    stats.current = { words: totalWords, scenes: sceneCount };
+  });
+  useEffect(() => {
+    const save = () => void platform.preferences.set(projectStatsPref(projectId), stats.current);
+    const timer = setTimeout(save, 2000);
+    return () => clearTimeout(timer);
+  }, [platform, projectId, totalWords, sceneCount]);
+  // Leaving the project (to the library, say): saved at once.
+  useEffect(
+    () => () => void platform.preferences.set(projectStatsPref(projectId), stats.current),
+    [platform, projectId],
   );
   const languageCheck = useMemo(
     () =>

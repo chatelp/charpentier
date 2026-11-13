@@ -62,12 +62,6 @@
   box-shadow: var(--ch-inset);
 }
 
-.ch-library-item.is-current {
-  box-shadow:
-    var(--ch-inset),
-    inset 3px 0 0 var(--ch-author);
-}
-
 .ch-library-item.is-trashed {
   box-shadow: none;
   opacity: 0.55;
@@ -98,11 +92,86 @@
 }
 
 .ch-library-folder {
+  color: var(--ch-muted);
+}
+
+/* docs/DESIGN.md §4.9: a header with the two « new » buttons, cards, a footer. */
+.ch-library-top {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 8px 12px;
-  margin: -16px 0 24px;
+  gap: 10px;
+}
+
+.ch-library-top .ch-library-title {
+  flex: 1;
+}
+
+.ch-library-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+}
+
+.ch-library-item .ch-library-group {
+  grid-column: 1 / -1;
+}
+
+.ch-library-name {
+  font: 500 19px var(--ch-font-text);
+}
+
+.ch-library-meta {
+  grid-column: 1;
   color: var(--ch-muted);
   font-size: var(--ch-ui-xs);
+}
+
+.ch-library-actions {
+  grid-row: 1 / 3;
+  grid-column: 2;
+  display: flex;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity var(--ch-dur-press);
+}
+
+.ch-library-item:hover .ch-library-actions,
+.ch-library-item:focus-within .ch-library-actions,
+.ch-library-item[aria-selected='true'] .ch-library-actions {
+  opacity: 1;
+}
+
+.ch-library-item:has(.ch-library-group) .ch-library-actions {
+  grid-row: 2 / 4;
+}
+
+.ch-library-item[aria-selected='true'] {
+  box-shadow:
+    var(--ch-inset),
+    inset 3px 0 0 var(--ch-author);
+}
+
+.ch-library-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin-top: 26px;
+  padding-top: 14px;
+  border-top: 1px solid color-mix(in srgb, var(--ch-ink) 8%, transparent);
+  color: var(--ch-muted);
+  font-size: var(--ch-ui-xs);
+}
+
+.ch-library-foot:empty {
+  display: none;
+}
+
+.ch-library-empty {
+  margin: 24px 0;
+  color: var(--ch-muted);
+}
+
+.ch-library-empty-actions {
+  display: flex;
+  gap: 10px;
 }

@@ -91,6 +91,11 @@ kbd,
   color: var(--ch-mentor);
 }
 
+/* The main action of a group (the author's ink). */
+.ch-btn.is-author {
+  color: var(--ch-author);
+}
+
 .ch-link {
   padding: 0;
   border: 0;
