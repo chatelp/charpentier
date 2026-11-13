@@ -153,7 +153,7 @@ function Bluetooth() {
 }
 
 function Display() {
-  const { system, state, s, text } = useSettings();
+  const { system, state, s, text, set } = useSettings();
   return (
     <>
       <Group title={s('groups.brightness')}>
@@ -186,6 +186,17 @@ function Display() {
       <Group title={s('groups.external')}>
         <Row label={s('rows.external')} help={s('rows.externalHelp')}>
           <span className="ch-set-value">{state.externalScreen ?? s('values.none')}</span>
+        </Row>
+        <Row label={s('rows.externalScale')}>
+          <Keys
+            options={[100, 125, 150].map((v) => ({
+              value: v as 100 | 125 | 150,
+              label: text('system.seg.percent', { value: v }),
+            }))}
+            value={state.settings.externalScale}
+            label={s('rows.externalScale')}
+            onChange={set('externalScale')}
+          />
         </Row>
       </Group>
     </>
@@ -468,6 +479,9 @@ function Usb() {
     <Group title={s('groups.key')}>
       {state.usb ? (
         <Row label={s('rows.usbKey', { name: state.usb.name })}>
+          <button type="button" className="ch-btn" onClick={() => void system.copyToUsb()}>
+            {text('system.panel.copy')}
+          </button>
           <button type="button" className="ch-btn" onClick={() => void system.ejectUsb()}>
             {text('system.panel.eject')}
           </button>

@@ -63,6 +63,7 @@ export async function connectSystem(bridge: DesktopBridge): Promise<SystemServic
     setVolume: call('setVolume'),
     setMuted: call('setMuted'),
     setSetting: call('setSetting') as SystemService['setSetting'],
+    copyToUsb: call('copyToUsb'),
     ejectUsb: call('ejectUsb'),
     lock: call('lock'),
     unlock: call('unlock'),

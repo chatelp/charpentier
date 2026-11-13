@@ -16,6 +16,12 @@ import {
 } from '@charpentier/platform';
 import { writeJsonAtomic } from '../projects';
 import {
+  XKB_LAYOUTS,
+  isNight,
+  parseMounted,
+  parseOutputList,
+  parseUsbKey,
+  type UsbKey,
   bluetoothPowered,
   cpuLoad,
   deviceModel,
@@ -74,6 +80,8 @@ export interface LinuxSystemOptions {
   readonly app?: () => MonitorSample['app'];
   /** Polling periods, in ms (the tests shorten them). */
   readonly periods?: { readonly cpu?: number; readonly power?: number; readonly slow?: number };
+  /** Writes every project in Markdown into `folder` (the USB key's copy). */
+  readonly exportTexts?: (folder: string) => Promise<void>;
   /** PBKDF2 rounds of the code (fewer in the tests). */
   readonly lockIterations?: number;
 }
@@ -109,7 +117,8 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
   const now = options.now ?? (() => new Date());
   const periods = { cpu: 5_000, power: 15_000, slow: 60_000, ...options.periods };
   const listeners = new Set<() => void>();
-  const journal: SystemMessage[] = [];
+  // A new array at each message: the interface sees it changed.
+  let journal: readonly SystemMessage[] = [];
   const timers: ReturnType<typeof setInterval>[] = [];
   const stops: (() => void)[] = [];
   const stored = loadStored(options.settingsFile);
@@ -168,6 +177,8 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
     ...(options.lockIterations !== undefined && { iterations: options.lockIterations }),
   });
   let sleptAt: number | null = null;
+  let usbKey: UsbKey | null = null;
+  let stopNight: (() => void) | null = null;
   const setLocked = (locked: boolean) => {
     const retry = keeper.retryAt();
     const was = state.lock.locked;
@@ -196,11 +207,14 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
     emit();
   };
   const post = (text: string) => {
-    journal.push({
-      id: `s${++sequence}`,
-      text: text.slice(0, MESSAGE_LENGTH),
-      at: now().toISOString(),
-    });
+    journal = [
+      ...journal,
+      {
+        id: `s${++sequence}`,
+        text: text.slice(0, MESSAGE_LENGTH),
+        at: now().toISOString(),
+      },
+    ];
     emit();
   };
   const run = (command: string, ...args: string[]) => tools.run(command, args);
@@ -410,6 +424,74 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
     });
   }
 
+  async function readUsb(announce = true) {
+    const out = await run('lsblk', '-J', '-o', 'NAME,LABEL,MODEL,TRAN,TYPE,FSTYPE,MOUNTPOINT');
+    if (out.code !== 0) return;
+    const key = parseUsbKey(out.stdout);
+    const was = usbKey;
+    usbKey = key;
+    update({ usb: key ? { name: key.name } : null });
+    if (key && announce && was?.partition !== key.partition)
+      post(messageAbout(key.name, (n) => `clé « ${n} » branchée · ⊞U copier`));
+  }
+
+  /**
+   * « Externe seul » (§4.12): a screen plugged in takes the app, the laptop's
+   * own goes dark, and comes back when it is unplugged. Only what differs is
+   * asked of Sway, so its own events settle.
+   */
+  async function applyOutputs() {
+    const out = await run('swaymsg', '-t', 'get_outputs', '-r');
+    if (out.code !== 0) return;
+    const outputs = parseOutputList(out.stdout);
+    const external = outputs.find((o) => !o.internal);
+    const internal = outputs.find((o) => o.internal);
+    const scale = state.settings.externalScale / 100;
+    if (external) {
+      if (!external.active || Math.abs(external.scale - scale) > 0.01)
+        await run('swaymsg', 'output', external.name, 'enable', 'scale', String(scale));
+      if (internal?.active) await run('swaymsg', 'output', internal.name, 'disable');
+    } else if (internal && !internal.active)
+      await run('swaymsg', 'output', internal.name, 'enable');
+    const was = state.externalScreen;
+    update({ externalScreen: external?.label ?? null });
+    if (external && was !== external.label)
+      post(messageAbout(external.label, (n) => `écran ${n} · externe seul`));
+    if (!external && was) post('retour à l’écran du portable');
+  }
+
+  /** The keyboard's layout and the touchpad, given to Sway. */
+  async function applyInput() {
+    const s = state.settings;
+    const { layout, variant } = XKB_LAYOUTS[s.keyboardLayout];
+    const on = (yes: boolean) => (yes ? 'enabled' : 'disabled');
+    const keyboard = ['input', 'type:keyboard'];
+    const touchpad = ['input', 'type:touchpad'];
+    await run('swaymsg', ...keyboard, 'xkb_layout', layout);
+    await run('swaymsg', ...keyboard, 'xkb_variant', variant || '""');
+    await run('swaymsg', ...touchpad, 'events', on(s.touchpad));
+    // « Couper le pavé pendant la frappe »: Sway's disable-while-typing.
+    await run('swaymsg', ...touchpad, 'dwt', on(!s.touchpadWhileTyping));
+    await run('swaymsg', ...touchpad, 'tap', on(s.tapToClick));
+    await run('swaymsg', ...touchpad, 'natural_scroll', on(s.naturalScrolling));
+  }
+
+  /** The warm light (wlsunset): always, or from 21 h to 7 h. */
+  function applyNight() {
+    stopNight?.();
+    stopNight = null;
+    const mode = state.night.mode;
+    if (mode === 'on') stopNight = tools.daemon('wlsunset', ['-T', '4001', '-t', '4000']);
+    if (mode === 'auto')
+      stopNight = tools.daemon('wlsunset', ['-S', '07:00', '-s', '21:00', '-t', '4000']);
+    updateNight();
+  }
+  const updateNight = () => {
+    const mode = state.night.mode;
+    const active = mode === 'on' || (mode === 'auto' && isNight(now()));
+    if (active !== state.night.active) update({ night: { mode, active } });
+  };
+
   const quietly = (read: () => Promise<void>) => () => {
     if (!disposed) void read().catch(() => {});
   };
@@ -424,7 +506,9 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
       readCpu(),
       readTime(),
       readBluetooth(),
+      readUsb(false),
     ]);
+    updateNight();
     emit();
   }
 
@@ -539,9 +623,9 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
       await run('brightnessctl', '-q', 'set', `${value}%`);
     },
     setNightMode: async (mode) => {
-      // The warm light itself comes with phase 5.7.
-      update({ night: { mode, active: mode === 'on' } });
+      update({ night: { mode, active: state.night.active } });
       save();
+      applyNight();
     },
     setVolume: async (percent) => {
       const value = Math.max(0, Math.min(100, Math.round(percent)));
@@ -558,10 +642,59 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
       save();
       if (key === 'screenOffAfter' || key === 'sleepAfter') applyIdle();
       if (key === 'showCpu') monitor.setBackground(value === true);
+      if (key === 'externalScale') await applyOutputs();
+      if (
+        key === 'keyboardLayout' ||
+        key === 'touchpad' ||
+        key === 'touchpadWhileTyping' ||
+        key === 'tapToClick' ||
+        key === 'naturalScrolling'
+      )
+        await applyInput();
       if (key === 'autoTime') await run('timedatectl', 'set-ntp', value ? 'true' : 'false');
     },
+    copyToUsb: async () => {
+      const key = usbKey;
+      if (!key || !options.exportTexts) return 'failed';
+      let mount = key.mountpoint;
+      if (!mount) {
+        const mounted = await run(
+          'udisksctl',
+          'mount',
+          '-b',
+          key.partition,
+          '--no-user-interaction',
+        );
+        mount = mounted.code === 0 ? parseMounted(mounted.stdout) : null;
+      }
+      if (!mount) {
+        post(messageAbout(key.name, (n) => `${n} illisible · rien n’est copié`));
+        return 'failed';
+      }
+      // `Charpentier/<date>/`; a second copy the same day gets the time too.
+      const d = now();
+      const pad = (n: number) => String(n).padStart(2, '0');
+      const day = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+      const base = path.join(mount, 'Charpentier');
+      const taken = new Set(await tools.list(base));
+      const name = taken.has(day) ? `${day} ${pad(d.getHours())}h${pad(d.getMinutes())}` : day;
+      try {
+        await options.exportTexts(path.join(base, name));
+      } catch {
+        post(messageAbout(key.name, (n) => `copie sur ${n} impossible`));
+        return 'failed';
+      }
+      post(messageAbout(key.name, (n) => `textes copiés sur ${n}`));
+      return 'copied';
+    },
     ejectUsb: async () => {
-      // Phase 5.7.
+      const key = usbKey;
+      if (!key) return;
+      await run('udisksctl', 'unmount', '-b', key.partition, '--no-user-interaction');
+      await run('udisksctl', 'power-off', '-b', key.disk, '--no-user-interaction');
+      usbKey = null;
+      update({ usb: null });
+      post(messageAbout(key.name, (n) => `clé ${n} éjectée`));
     },
     lock: async () => setLocked(true),
     unlock: async (code) => {
@@ -607,11 +740,14 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
 
     start: async () => {
       await refresh();
-      journal.unshift({
-        id: `s${++sequence}`,
-        text: `démarrage · charpentier ${options.appVersion}`,
-        at: state.device.bootedAt,
-      });
+      journal = [
+        {
+          id: `s${++sequence}`,
+          text: `démarrage · charpentier ${options.appVersion}`,
+          at: state.device.bootedAt,
+        },
+        ...journal,
+      ];
       emit();
       timers.push(
         setInterval(quietly(readCpu), periods.cpu),
@@ -640,7 +776,27 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
         }),
       );
       applyIdle();
+      applyNight();
+      await Promise.all([applyInput(), applyOutputs()]);
       monitor.setBackground(state.settings.showCpu);
+      // A key plugged in or pulled out; a screen plugged in or unplugged.
+      let usbPending: ReturnType<typeof setTimeout> | null = null;
+      stops.push(
+        tools.daemon('udevadm', ['monitor', '--udev', '--subsystem-match=block'], () => {
+          if (usbPending) clearTimeout(usbPending);
+          usbPending = setTimeout(
+            quietly(() => readUsb()),
+            800,
+          );
+        }),
+      );
+      let outputPending: ReturnType<typeof setTimeout> | null = null;
+      stops.push(
+        tools.daemon('swaymsg', ['-t', 'subscribe', '-m', '["output"]'], () => {
+          if (outputPending) clearTimeout(outputPending);
+          outputPending = setTimeout(quietly(applyOutputs), 500);
+        }),
+      );
     },
     refresh,
     dispose: () => {
@@ -648,6 +804,7 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
       for (const timer of timers) clearInterval(timer);
       for (const stop of stops) stop();
       stopIdle?.();
+      stopNight?.();
       monitor.dispose();
       listeners.clear();
     },

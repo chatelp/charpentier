@@ -272,6 +272,17 @@ describe('the system line of the X250 (phase 5.3)', () => {
     await waitFor(() => expect(document.activeElement).toBe(editor));
   });
 
+  it('copies the texts to a USB key from its panel (phase 5.7)', async () => {
+    const system = createSimulatedSystem();
+    await start(system);
+    system.simulate.usb('KINGSTON');
+    await userEvent.keyboard(sys('u'));
+    const panel = await screen.findByRole('dialog');
+    await userEvent.click(within(panel).getByRole('button', { name: 'Copier mes textes' }));
+    await waitFor(() => expect(system.simulate.calls).toContain('copyToUsb'));
+    await waitFor(() => expect(line().textContent).toContain('textes copiés sur KINGSTON'));
+  });
+
   it('is not there without a System service (the Mac, the web)', async () => {
     await start(null);
     expect(screen.queryByRole('toolbar', { name: 'ligne système' })).toBeNull();

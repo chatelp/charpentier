@@ -187,6 +187,7 @@ export const SYSTEM_ACTIONS = [
   'setVolume',
   'setMuted',
   'setSetting',
+  'copyToUsb',
   'ejectUsb',
   'lock',
   'unlock',

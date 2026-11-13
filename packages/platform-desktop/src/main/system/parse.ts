@@ -342,3 +342,107 @@ export function parseWifiRate(text: string): string | null {
   const line = text.split('\n').find((l) => l.startsWith('*'));
   return line ? (splitTerse(line)[1]?.trim() ?? null) || null : null;
 }
+
+// — Peripherals (phase 5.7) —
+
+interface LsblkDevice {
+  readonly name?: string;
+  readonly label?: string | null;
+  readonly model?: string | null;
+  readonly tran?: string | null;
+  readonly type?: string;
+  readonly fstype?: string | null;
+  readonly mountpoint?: string | null;
+  readonly mountpoints?: readonly (string | null)[];
+  readonly children?: readonly LsblkDevice[];
+}
+
+export interface UsbKey {
+  /** The partition to mount, `/dev/sdb1`. */
+  readonly partition: string;
+  /** Its disk, to power off, `/dev/sdb`. */
+  readonly disk: string;
+  /** What the author calls it: its label, else its model. */
+  readonly name: string;
+  readonly mountpoint: string | null;
+}
+
+/**
+ * `lsblk -J -o NAME,LABEL,MODEL,TRAN,TYPE,FSTYPE,MOUNTPOINT`: the first USB
+ * disk with a file system (on a partition, or the whole disk).
+ */
+export function parseUsbKey(json: string): UsbKey | null {
+  let devices: readonly LsblkDevice[];
+  try {
+    devices = (JSON.parse(json) as { blockdevices?: LsblkDevice[] }).blockdevices ?? [];
+  } catch {
+    return null;
+  }
+  for (const disk of devices) {
+    if (disk.tran !== 'usb' || disk.type !== 'disk' || !disk.name) continue;
+    const volume = [...(disk.children ?? []), disk].find((d) => d.fstype && d.name);
+    if (!volume?.name) continue;
+    const mount = volume.mountpoint ?? volume.mountpoints?.find((m) => m) ?? null;
+    return {
+      partition: `/dev/${volume.name}`,
+      disk: `/dev/${disk.name}`,
+      name: (volume.label ?? disk.model ?? volume.name).trim(),
+      mountpoint: mount,
+    };
+  }
+  return null;
+}
+
+/** `udisksctl mount`: « Mounted /dev/sdb1 at /run/media/auteur/KINGSTON ». */
+export const parseMounted = (text: string): string | null =>
+  /Mounted \S+ at (.+?)\.?\s*$/m.exec(text)?.[1] ?? null;
+
+export interface Output {
+  readonly name: string;
+  readonly active: boolean;
+  /** The laptop's own panel. */
+  readonly internal: boolean;
+  /** « Dell U2419H », or the connector's name. */
+  readonly label: string;
+  readonly scale: number;
+}
+
+/** `swaymsg -t get_outputs -r`: every screen, the laptop's own (eDP, LVDS) told apart. */
+export function parseOutputList(text: string): Output[] {
+  try {
+    return (
+      JSON.parse(text) as {
+        name?: string;
+        active?: boolean;
+        make?: string;
+        model?: string;
+        scale?: number;
+      }[]
+    ).map((o) => {
+      const name = o.name ?? '';
+      const label = [o.make, o.model]
+        .filter((p) => p && p !== 'Unknown')
+        .join(' ')
+        .trim();
+      return {
+        name,
+        active: o.active ?? false,
+        internal: /^(eDP|LVDS|DSI)/.test(name),
+        label: label || name,
+        scale: o.scale ?? 1,
+      };
+    });
+  } catch {
+    return [];
+  }
+}
+
+/** The keyboard layouts of the settings, as xkb knows them. */
+export const XKB_LAYOUTS = {
+  azerty: { layout: 'fr', variant: '' },
+  bepo: { layout: 'fr', variant: 'bepo' },
+  qwerty: { layout: 'us', variant: '' },
+} as const;
+
+/** Night mode « auto »: from 21 h to 7 h (docs/DESIGN.md §4.12). */
+export const isNight = (date: Date): boolean => date.getHours() >= 21 || date.getHours() < 7;

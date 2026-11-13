@@ -66,6 +66,7 @@ export const systemTexts: TextTree = {
       journalNone: 'rien depuis le démarrage',
       usb: 'clé usb',
       copy: 'Copier mes textes',
+      copying: 'copie en cours…',
       copyHelp:
         'tous les projets en markdown, dans Charpentier/<date>/ ; rien n’est effacé sur la clé',
       eject: 'Éjecter',
@@ -368,6 +369,7 @@ export const systemTexts: TextTree = {
         paper: 'Format',
         usbNone: 'Aucune clé branchée.',
         usbKey: 'Clé « {{name}} »',
+        externalScale: 'Échelle de l’écran externe',
         timeZone: 'Fuseau',
         autoTime: 'Heure automatique',
         clock24: 'Format 24 h',

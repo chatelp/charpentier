@@ -30,6 +30,7 @@ import {
   SpellClient,
   type MirrorStrings,
   createLinuxSystem,
+  exportTexts,
   nodeTools,
 } from '@charpentier/platform-desktop/main';
 import {
@@ -80,6 +81,8 @@ function deviceSystem(): (SystemService & { dispose?(): void }) | null {
     appVersion: app.getVersion(),
     hostname: os.hostname(),
     settingsFile: path.join(app.getPath('userData'), 'system.json'),
+    // The USB key's copy: every project, in Markdown.
+    exportTexts: (folder) => exportTexts(store, library, folder, mirrorStrings),
     // The monitor's « charpentier » dial: Electron's processes (the speller is a
     // thread of the main one) and the documents held.
     app: () => ({
@@ -115,7 +118,6 @@ const libraryFolder =
   path.join(app.getPath('documents') || path.join(os.homedir(), 'Documents'), 'Charpentier');
 const library = new FolderLibrary(libraryFolder);
 const store = new DocStore(documentLocator(library));
-const system = deviceSystem();
 const sessions = new Map<WebContents, RendererSession>();
 
 // Hunspell French dictionary (MPL 2.0, resources/dictionaries/fr), loaded in a worker on first use.
@@ -136,6 +138,7 @@ const mirrorStrings: MirrorStrings = {
   externalSignal: (name) =>
     `Le fichier de cette scène a été modifié hors de l’app au même endroit que le texte : sa version est conservée dans la variante « ${name} ».`,
 };
+const system = deviceSystem();
 const mirrors = new Map<string, ProjectMirror>();
 
 // ─── The Compagnon (step 3): the author's key in the keychain, Claude via the official SDK ───

@@ -150,7 +150,15 @@ function MenuPanel({ ctx, onDone }: PanelProps) {
         onDone();
         ctx?.openSettings();
       })}
-      {item('systemUsb', text('system.panel.usbCopy'), () => {}, !state.usb)}
+      {item(
+        'systemUsb',
+        text('system.panel.usbCopy'),
+        () => {
+          onDone();
+          void system.copyToUsb();
+        },
+        !state.usb,
+      )}
       {item(
         'systemLock',
         text('system.panel.lock'),
@@ -205,15 +213,32 @@ function JournalPanel() {
   );
 }
 
+/** « Copier mes textes »: every project in Markdown to the key; the message says how it went. */
+function CopyButton({ system }: { readonly system: SystemService }) {
+  const { text } = useSys();
+  const [busy, setBusy] = useState(false);
+  return (
+    <button
+      type="button"
+      className="ch-sys-item is-item"
+      disabled={busy}
+      onClick={() => {
+        setBusy(true);
+        void system.copyToUsb().finally(() => setBusy(false));
+      }}
+    >
+      <span>{text(busy ? 'system.panel.copying' : 'system.panel.copy')}</span>
+    </button>
+  );
+}
+
 function UsbPanel() {
   const { system, state, text } = useSys();
   if (!state.usb) return <Head name={text('system.panel.usb')} />;
   return (
     <>
       <Head name={text('system.panel.usb')} aside={state.usb.name} />
-      <button type="button" className="ch-sys-item is-item" disabled>
-        <span>{text('system.panel.copy')}</span>
-      </button>
+      <CopyButton system={system} />
       <p className="ch-sys-note">{text('system.panel.copyHelp')}</p>
       <button type="button" className="ch-sys-item is-item" onClick={() => void system.ejectUsb()}>
         <span>{text('system.panel.eject')}</span>

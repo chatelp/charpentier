@@ -44,7 +44,8 @@ export function createSimulatedSystem(
 ): SimulatedSystem {
   const now = options.now ?? (() => new Date());
   const listeners = new Set<() => void>();
-  const journal: SystemMessage[] = [];
+  // A new array at each message: the interface sees it changed.
+  let journal: readonly SystemMessage[] = [];
   const calls: string[] = [];
   const passwords = new Map<string, string>([
     ['Maison-5G', 'secret'],
@@ -131,11 +132,14 @@ export function createSimulatedSystem(
     emit();
   };
   const post = (text: string) => {
-    journal.push({
-      id: `m${++sequence}`,
-      text: text.slice(0, MESSAGE_LENGTH),
-      at: now().toISOString(),
-    });
+    journal = [
+      ...journal,
+      {
+        id: `m${++sequence}`,
+        text: text.slice(0, MESSAGE_LENGTH),
+        at: now().toISOString(),
+      },
+    ];
     emit();
   };
   const call = async (name: string) => {
@@ -143,11 +147,13 @@ export function createSimulatedSystem(
   };
 
   // The journal is never empty: the device's start is its first line.
-  journal.push({
-    id: `m${++sequence}`,
-    text: `démarrage · charpentier ${state.device.appVersion}`,
-    at: state.device.bootedAt,
-  });
+  journal = [
+    {
+      id: `m${++sequence}`,
+      text: `démarrage · charpentier ${state.device.appVersion}`,
+      at: state.device.bootedAt,
+    },
+  ];
 
   return {
     monitor: simulatedMonitor(now),
@@ -225,6 +231,13 @@ export function createSimulatedSystem(
     setMuted: async (muted) => update((s) => ({ ...s, muted })),
     setSetting: async (key, value) =>
       update((s) => ({ ...s, settings: { ...s.settings, [key]: value } })),
+    copyToUsb: async () => {
+      calls.push('copyToUsb');
+      const name = state.usb?.name;
+      if (!name) return 'failed';
+      post(messageAbout(name, (n) => `textes copiés sur ${n}`));
+      return 'copied';
+    },
     ejectUsb: async () => {
       const name = state.usb?.name;
       update((s) => ({ ...s, usb: null }));

@@ -33,6 +33,11 @@ export interface SystemService {
   setMuted(muted: boolean): Promise<void>;
   /** A setting of the device (`screenOffAfter`, `keyboardLayout`…), see `SystemSettings`. */
   setSetting<K extends keyof SystemSettings>(key: K, value: SystemSettings[K]): Promise<void>;
+  /**
+   * Copies every project in Markdown to the key, in `Charpentier/<date>/`;
+   * nothing on the key is erased.
+   */
+  copyToUsb(): Promise<'copied' | 'failed'>;
   ejectUsb(): Promise<void>;
   /** Locks now (⊞L); nothing without a code. */
   lock(): Promise<void>;
@@ -98,6 +103,8 @@ export interface SystemSettings {
   readonly clock24: boolean;
   /** The `cpu` segment of the system line. */
   readonly showCpu: boolean;
+  /** The external screen's scale, in % (« externe seul »). */
+  readonly externalScale: 100 | 125 | 150;
 }
 
 export interface SystemState {
@@ -180,6 +187,7 @@ export const DEFAULT_SYSTEM_SETTINGS: SystemSettings = {
   autoTime: true,
   clock24: true,
   showCpu: true,
+  externalScale: 100,
 };
 
 /** Below this level, on battery, the device saves the scene and sleeps (§4.12). */

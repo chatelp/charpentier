@@ -57,6 +57,8 @@ function fakeX250() {
     portal: false,
   };
   const sound = { volume: 0.4, muted: false };
+  const usb = { plugged: false, mounted: null as string | null };
+  const screens = { external: false, externalActive: false, internalActive: true, scale: 1 };
   const runs: string[][] = [];
   const daemons: {
     command: string;
@@ -142,6 +144,75 @@ function fakeX250() {
           if (args[0] === 'devices')
             return ok(args[1] === 'Paired' ? 'Device 00:1B:66:AA:BB:CC Casque Sennheiser\n' : '');
           return ok();
+        case 'lsblk':
+          return ok(
+            JSON.stringify({
+              blockdevices: [
+                {
+                  name: 'sda',
+                  tran: 'sata',
+                  type: 'disk',
+                  children: [{ name: 'sda1', fstype: 'vfat' }],
+                },
+                ...(usb.plugged
+                  ? [
+                      {
+                        name: 'sdb',
+                        tran: 'usb',
+                        type: 'disk',
+                        model: 'DataTraveler',
+                        children: [
+                          {
+                            name: 'sdb1',
+                            fstype: 'vfat',
+                            label: 'KINGSTON',
+                            mountpoint: usb.mounted,
+                          },
+                        ],
+                      },
+                    ]
+                  : []),
+              ],
+            }),
+          );
+        case 'udisksctl':
+          if (args[0] === 'mount') {
+            usb.mounted = '/run/media/auteur/KINGSTON';
+            return ok(`Mounted /dev/sdb1 at ${usb.mounted}\n`);
+          }
+          if (args[0] === 'power-off') usb.plugged = false;
+          return ok();
+        case 'swaymsg':
+          if (args[1] === 'get_outputs')
+            return ok(
+              JSON.stringify([
+                {
+                  name: 'eDP-1',
+                  active: screens.internalActive,
+                  make: 'Lenovo',
+                  model: 'Unknown',
+                  scale: 1.25,
+                },
+                ...(screens.external
+                  ? [
+                      {
+                        name: 'HDMI-A-1',
+                        active: screens.externalActive,
+                        make: 'Dell',
+                        model: 'U2419H',
+                        scale: screens.scale,
+                      },
+                    ]
+                  : []),
+              ]),
+            );
+          if (args[0] === 'output' && args[1] === 'HDMI-A-1' && args[2] === 'enable') {
+            screens.externalActive = true;
+            screens.scale = Number(args[4]);
+          }
+          if (args[0] === 'output' && args[1] === 'eDP-1')
+            screens.internalActive = args[2] === 'enable';
+          return ok();
         case 'brightnessctl':
         case 'systemctl':
           return ok();
@@ -162,7 +233,7 @@ function fakeX250() {
       };
     },
   };
-  return { tools, files, net, sound, runs, daemons };
+  return { tools, files, net, sound, usb, screens, runs, daemons };
 }
 
 const clock = { now: new Date('2026-11-13T15:00:00Z') };
@@ -174,7 +245,11 @@ afterEach(() => {
   for (const f of folders.splice(0)) fs.rmSync(f, { recursive: true, force: true });
 });
 
-async function start(x250 = fakeX250(), folder?: string) {
+async function start(
+  x250 = fakeX250(),
+  folder?: string,
+  exportTexts?: (folder: string) => Promise<void>,
+) {
   const dir = folder ?? fs.mkdtempSync(path.join(os.tmpdir(), 'charpentier-system-'));
   if (!folder) folders.push(dir);
   const system = createLinuxSystem({
@@ -185,6 +260,7 @@ async function start(x250 = fakeX250(), folder?: string) {
     now: () => clock.now,
     periods: { cpu: 3_600_000, power: 3_600_000, slow: 3_600_000 },
     lockIterations: 1_000,
+    ...(exportTexts && { exportTexts }),
   });
   systems.push(system);
   await system.start();
@@ -416,5 +492,66 @@ describe('the System service of the X250 (phase 5.4)', () => {
     await system.setSetting('askCode', 'never');
     system.sleeping();
     expect(system.state().lock.locked).toBe(false);
+  });
+
+  it('copies the texts to a USB key, then ejects it (phase 5.7)', async () => {
+    const copies: string[] = [];
+    const x250 = fakeX250();
+    const { system } = await start(x250, undefined, async (folder) => void copies.push(folder));
+    expect(system.state().usb).toBeNull();
+    x250.usb.plugged = true;
+    x250.daemons.find((d) => d.command === 'udevadm')?.onLine?.('UDEV add /block/sdb');
+    await new Promise((r) => setTimeout(r, 900));
+    expect(system.state().usb).toEqual({ name: 'KINGSTON' });
+    expect(system.journal().at(-1)?.text).toBe('clé « KINGSTON » branchée · ⊞U copier');
+
+    expect(await system.copyToUsb()).toBe('copied');
+    expect(copies).toEqual(['/run/media/auteur/KINGSTON/Charpentier/2026-11-13']);
+    expect(system.journal().at(-1)?.text).toBe('textes copiés sur KINGSTON');
+    await system.ejectUsb();
+    expect(
+      ran(x250.runs, 'udisksctl', 'power-off', '-b', '/dev/sdb', '--no-user-interaction'),
+    ).toBe(true);
+    expect(system.state().usb).toBeNull();
+    expect(system.journal().at(-1)?.text).toBe('clé KINGSTON éjectée');
+  });
+
+  it('gives a plugged screen the app alone, and the laptop its screen back (phase 5.7)', async () => {
+    const x250 = fakeX250();
+    const { system } = await start(x250);
+    x250.screens.external = true;
+    x250.daemons.find((d) => d.command === 'swaymsg')?.onLine?.('{"change":"added"}');
+    await new Promise((r) => setTimeout(r, 600));
+    expect(x250.screens).toMatchObject({ externalActive: true, internalActive: false, scale: 1 });
+    expect(system.state().externalScreen).toBe('Dell U2419H');
+    await system.setSetting('externalScale', 125);
+    expect(x250.screens.scale).toBe(1.25);
+    x250.screens.external = false;
+    x250.daemons.find((d) => d.command === 'swaymsg')?.onLine?.('{"change":"removed"}');
+    await new Promise((r) => setTimeout(r, 600));
+    expect(x250.screens.internalActive).toBe(true);
+    expect(system.state().externalScreen).toBeNull();
+  });
+
+  it('sets the keyboard, the touchpad and the warm light of the night (phase 5.7)', async () => {
+    const { system, x250 } = await start();
+    expect(ran(x250.runs, 'swaymsg', 'input', 'type:keyboard', 'xkb_layout', 'fr')).toBe(true);
+    expect(ran(x250.runs, 'swaymsg', 'input', 'type:touchpad', 'dwt', 'enabled')).toBe(true);
+    await system.setSetting('keyboardLayout', 'bepo');
+    expect(ran(x250.runs, 'swaymsg', 'input', 'type:keyboard', 'xkb_variant', 'bepo')).toBe(true);
+    await system.setSetting('naturalScrolling', true);
+    expect(ran(x250.runs, 'swaymsg', 'input', 'type:touchpad', 'natural_scroll', 'enabled')).toBe(
+      true,
+    );
+
+    const night = () => x250.daemons.filter((d) => d.command === 'wlsunset');
+    expect(night()[0]?.args).toEqual(['-S', '07:00', '-s', '21:00', '-t', '4000']);
+    await system.setNightMode('on');
+    expect(night()[0]?.stopped).toBe(true);
+    expect(night().at(-1)?.args).toEqual(['-T', '4001', '-t', '4000']);
+    expect(system.state().night).toEqual({ mode: 'on', active: true });
+    await system.setNightMode('off');
+    expect(night().at(-1)?.stopped).toBe(true);
+    expect(system.state().night.active).toBe(false);
   });
 });

@@ -17,3 +17,4 @@ export {
   type LinuxSystemOptions,
 } from './system/linux-system';
 export { nodeTools, type SystemTools, type RunResult } from './system/tools';
+export { exportTexts } from './export-texts';
