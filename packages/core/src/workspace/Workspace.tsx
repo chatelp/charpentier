@@ -12,7 +12,9 @@ import {
   type CSSProperties,
   type SetStateAction,
 } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
+import { useMediaQuery } from '../hooks/use-media-query';
 import { usePlatform } from '../app/platform-context';
 import { Atelier, type AtelierLocation } from '../atelier/Atelier';
 import type { SheetTarget } from '../atelier/atelier-data';
@@ -53,6 +55,9 @@ import { useWritingPrefs } from './writing-prefs';
 import './workspace.css';
 
 let paletteSequence = 0;
+
+/** Under this width the Compagnon's notes unfold under their paragraph (docs/DESIGN.md §4.2). */
+const NARROW_WINDOW = '(max-width: 1180px)';
 
 /** The commands offered when the command line opens empty (docs/DESIGN.md §4.6). */
 const SUGGESTED_COMMANDS = [
@@ -284,6 +289,14 @@ export function ProjectWorkspace({
     editor.commands.refreshLanguageCheck();
   }, [editor, knownNames]);
 
+  // Narrow window (docs/DESIGN.md §4.2): the note unfolds under its paragraph, in this element.
+  const narrow = useMediaQuery(NARROW_WINDOW);
+  const noteSlot = useMemo(() => {
+    const slot = document.createElement('div');
+    slot.className = 'ch-note-slot';
+    slot.contentEditable = 'false';
+    return slot;
+  }, []);
   const marks = useMentorMarks({
     root,
     sceneId,
@@ -292,6 +305,7 @@ export function ProjectWorkspace({
     page,
     // D-19: the pause before a note unfolds by itself, by level.
     pauseMs: mentorLevel === 1 ? null : mentorLevel === 2 ? 3000 : 1500,
+    noteSlot: narrow ? noteSlot : null,
   });
 
   // ─── When the Compagnon reads (D-19) ───
@@ -607,6 +621,50 @@ export function ProjectWorkspace({
     '--ch-measure': `${prefs.measure}rem`,
   } as CSSProperties;
 
+  // The unfolded note: in the margin, or under its paragraph in a narrow window.
+  const noteSignalId = marks.noteSignal?.id;
+  const note = marks.noteSignal && (
+    <SignalNote
+      root={root}
+      signal={marks.noteSignal}
+      style={narrow ? {} : { top: marks.noteTop ?? 0 }}
+      focus={marks.note?.focus ?? false}
+      onFixText={() => {
+        const placed =
+          editor && placedSignals(editor.state).find((p) => p.signal.id === noteSignalId);
+        if (editor && placed)
+          editor.chain().focus().setTextSelection({ from: placed.from, to: placed.to }).run();
+      }}
+      onUpdateSheet={(ref) =>
+        ctx.openAtelier({
+          rail:
+            ref.module === 'acts' || ref.module === 'arcs' || ref.module === 'structure'
+              ? 'structure'
+              : ref.module,
+          target: {
+            module: ref.module,
+            ...('entityId' in ref && { entityId: ref.entityId }),
+          },
+        })
+      }
+      onApplyCorrection={(text) => {
+        const placed =
+          editor && placedSignals(editor.state).find((p) => p.signal.id === noteSignalId);
+        if (editor && placed)
+          editor.chain().focus().insertContentAt({ from: placed.from, to: placed.to }, text).run();
+      }}
+      onInsertExample={(text) => {
+        if (!editor || editor.isDestroyed) return;
+        editor.chain().focus().insertContent(text).run();
+        notify(t('mentor.exampleInserted'));
+      }}
+      onClose={(backToText) => {
+        marks.closeNote();
+        if (backToText) focusTextIfIdle();
+      }}
+    />
+  );
+
   return (
     <div
       className="ch-app"
@@ -688,57 +746,9 @@ export function ProjectWorkspace({
               }}
             />
           )}
-          {marks.noteSignal && marks.noteTop !== null && !mentorPanel && (
-            <SignalNote
-              root={root}
-              signal={marks.noteSignal}
-              style={{ top: marks.noteTop }}
-              focus={marks.note?.focus ?? false}
-              onFixText={() => {
-                const placed =
-                  editor &&
-                  placedSignals(editor.state).find((p) => p.signal.id === marks.noteSignal?.id);
-                if (editor && placed)
-                  editor
-                    .chain()
-                    .focus()
-                    .setTextSelection({ from: placed.from, to: placed.to })
-                    .run();
-              }}
-              onUpdateSheet={(ref) =>
-                ctx.openAtelier({
-                  rail:
-                    ref.module === 'acts' || ref.module === 'arcs' || ref.module === 'structure'
-                      ? 'structure'
-                      : ref.module,
-                  target: {
-                    module: ref.module,
-                    ...('entityId' in ref && { entityId: ref.entityId }),
-                  },
-                })
-              }
-              onApplyCorrection={(text) => {
-                const placed =
-                  editor &&
-                  placedSignals(editor.state).find((p) => p.signal.id === marks.noteSignal?.id);
-                if (editor && placed)
-                  editor
-                    .chain()
-                    .focus()
-                    .insertContentAt({ from: placed.from, to: placed.to }, text)
-                    .run();
-              }}
-              onInsertExample={(text) => {
-                if (!editor || editor.isDestroyed) return;
-                editor.chain().focus().insertContent(text).run();
-                notify(t('mentor.exampleInserted'));
-              }}
-              onClose={(backToText) => {
-                marks.closeNote();
-                if (backToText) focusTextIfIdle();
-              }}
-            />
-          )}
+          {marks.noteSignal &&
+            !mentorPanel &&
+            (narrow ? createPortal(note, noteSlot) : marks.noteTop !== null && note)}
         </main>
       </div>
       {view === 'atelier' && (

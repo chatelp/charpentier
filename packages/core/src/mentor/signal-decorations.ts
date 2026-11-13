@@ -15,6 +15,8 @@ export interface PlacedSignal {
   readonly to: number;
   /** Start of the paragraph holding the passage. */
   readonly blockStart: number;
+  /** Position right after that paragraph. */
+  readonly blockAfter: number;
 }
 
 export interface SignalDecorationsOptions {
@@ -23,6 +25,12 @@ export interface SignalDecorationsOptions {
   /** The signal whose note is unfolded (its passage gets the wash). */
   readonly openSignalId: () => string | undefined;
   readonly onPastille: (signalId: string) => void;
+  /**
+   * In a narrow window, where the unfolded note goes: under its paragraph, in
+   * the flow of the text, which it pushes down (docs/DESIGN.md §4.2). Null in
+   * a wide window (the note is in the margin).
+   */
+  readonly noteSlot?: () => HTMLElement | null;
 }
 
 interface State {
@@ -61,7 +69,13 @@ export function placeSignals(state: EditorState, signals: readonly Signal[]): Pl
       );
       if (from === null || to === null || to <= from || to > state.doc.content.size) continue;
       const $from = state.doc.resolve(from);
-      placed.push({ signal, from, to, blockStart: $from.start($from.depth) });
+      placed.push({
+        signal,
+        from,
+        to,
+        blockStart: $from.start($from.depth),
+        blockAfter: $from.after($from.depth),
+      });
     } catch {
       // A passage that no longer resolves is simply not shown in the text.
     }
@@ -124,12 +138,24 @@ export const SignalDecorations = Extension.create<SignalDecorationsOptions>({
             { side: -1, key: `pastille-${p.signal.id}-${rank}`, ignoreSelection: true },
           ),
         );
-        if (p.signal.id === open)
+        if (p.signal.id === open) {
           decorations.push(
             Decoration.inline(p.from, p.to, {
               class: `ch-anchor${p.signal.kind === 'language' ? ' is-language' : ''}`,
             }),
           );
+          const slot = options.noteSlot?.();
+          if (slot)
+            decorations.push(
+              Decoration.widget(p.blockAfter, () => slot, {
+                side: 1,
+                key: `note-slot-${p.signal.id}`,
+                ignoreSelection: true,
+                // The note handles its own keys and clicks.
+                stopEvent: () => true,
+              }),
+            );
+        }
       }
       return { placed, decorations: DecorationSet.create(state.doc, decorations) };
     };

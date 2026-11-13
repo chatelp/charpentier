@@ -144,13 +144,24 @@
 }
 
 /* Narrow window: the margin is too thin, the note goes under the text column's right edge. */
-@media (max-width: 1180px) {
-  .ch-note {
-    left: auto;
-    right: 0;
-    transform: translateY(2.2em);
-  }
+/* Narrow window: the note unfolds under its paragraph, in the flow of the text, which it pushes down. */
+.ch-note-slot {
+  margin: 10px 0 14px;
+  text-indent: 0;
+  white-space: normal;
+  user-select: none;
+}
 
+.ch-note-slot .ch-note {
+  position: static;
+  width: auto;
+  font-family: var(--ch-font-ui);
+  font-size: initial;
+  line-height: normal;
+  user-select: text;
+}
+
+@media (max-width: 1180px) {
   .ch-pastille {
     left: calc(100% + 0.5rem + var(--ch-pastille-rank, 0) * 18px);
   }

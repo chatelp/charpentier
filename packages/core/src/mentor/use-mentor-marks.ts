@@ -34,8 +34,10 @@ export function useMentorMarks(options: {
   readonly page: RefObject<HTMLElement | null>;
   /** Pause before a note unfolds by itself (docs/DESIGN.md §3.4; the slider sets it). */
   readonly pauseMs: number | null;
+  /** Narrow window: the note unfolds under its paragraph, in this element (docs/DESIGN.md §4.2). */
+  readonly noteSlot: HTMLElement | null;
 }) {
-  const { root, sceneId, variantId, editor, page, pauseMs } = options;
+  const { root, sceneId, variantId, editor, page, pauseMs, noteSlot } = options;
   const openSignals = useDocSnapshot(root, readOpenSignals);
   const sceneSignals = useMemo(
     () =>
@@ -50,15 +52,18 @@ export function useMentorMarks(options: {
   // The editor extension reads the latest values through refs (its options are fixed).
   const signalsRef = useRef<readonly Signal[]>(sceneSignals);
   const noteRef = useRef(note);
+  const slotRef = useRef(noteSlot);
   useLayoutEffect(() => {
     signalsRef.current = sceneSignals;
     noteRef.current = note;
+    slotRef.current = noteSlot;
   });
   const signalOptions: SignalDecorationsOptions = useMemo(
     () => ({
       signals: () => signalsRef.current,
       openSignalId: () => noteRef.current?.id,
       onPastille: (id) => setNote({ id, focus: true }),
+      noteSlot: () => slotRef.current,
     }),
     [],
   );
@@ -66,7 +71,7 @@ export function useMentorMarks(options: {
   // Signals changed (here or on another device), or another note unfolded: redraw.
   useEffect(() => {
     if (editor && !editor.isDestroyed) editor.commands.refreshSignals();
-  }, [editor, sceneSignals, note?.id]);
+  }, [editor, sceneSignals, note?.id, noteSlot]);
 
   // A note whose signal was closed goes away.
   const noteSignal = note ? openSignals.find((s) => s.id === note.id) : undefined;

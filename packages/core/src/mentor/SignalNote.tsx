@@ -43,7 +43,11 @@ export function SignalNote(props: SignalNoteProps) {
   const ref = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    if (focus) ref.current?.focus();
+    if (!focus) return;
+    if (ref.current?.isConnected) return void ref.current.focus();
+    // Under its paragraph (narrow window), the note's place joins the page just after.
+    const frame = requestAnimationFrame(() => ref.current?.focus());
+    return () => cancelAnimationFrame(frame);
   }, [focus, signal.id]);
 
   const done = (state: 'resolved' | 'dismissed') => {
