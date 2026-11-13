@@ -181,7 +181,7 @@ Attaques et chutes en rampes exponentielles depuis et vers 0,0001. Réglages : �
 
 ### 4.5 Atelier (modules) et fiches
 - **Atelier** (`⌘E` bascule Écrire / Atelier) : trois colonnes, rail des modules (13,5 rem), liste des entrées (16,5 rem) avec filtre gravé, fiche.
-- **Rail** : **Entretien** (`⌘0`), puis, après un filet gravé, Le projet, Personnages, Structure, Règles du monde, Indices et révélations (`⌘1…5`) ; module actif allumé avec filet vermillon ; nombre de propositions en bleu.
+- **Rail** : **Entretien** (`⌘0` ; « Taille du texte par défaut » passe donc à `⌥⌘0`), puis, après un filet gravé, Le projet, Personnages, Structure, Règles du monde, Indices et révélations (`⌘1…5`) ; module actif allumé avec filet vermillon ; nombre de propositions en bleu.
 - **Liste** : bouton « + Nouveau personnage » (libellé selon le module) sous le filtre ; entrée active allumée (filet vermillon) ; entrée proposée en relief, texte bleu.
 - **Fiche** : titre Literata 30 px, ligne de contexte, légende des statuts, sections en deux colonnes (une seule en dessous de 46 rem de large), libellés en petites capitales.
 - **Champ à statut** (cœur du système) :
@@ -393,7 +393,7 @@ Registre central dans le cœur, tous modifiables. `⌘` = `Ctrl` sur le X250.
 | Point de restauration | `⌘S` |
 | Avis du Compagnon sur la scène | `⌘⇧A` |
 | Plus d'aide / moins d'aide (réglette) | ligne de commande |
-| Taille du texte / largeur de colonne / mode focus | `⌘+` `⌘−` / `⌘⌥←` `⌘⌥→` / `⌘⇧F` |
+| Taille du texte / taille par défaut / largeur de colonne / mode focus | `⌘+` `⌘−` / `⌥⌘0` / `⌘⌥←` `⌘⌥→` / `⌘⇧F` |
 | Revenir au texte | `Échap` |
 | Système (X250 seulement) | `⊞` et ses lettres, voir §4.12 |
 

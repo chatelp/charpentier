@@ -3965,7 +3965,7 @@
           [
             ['Agrandir le texte', '⌘+'],
             ['Réduire le texte', '⌘−'],
-            ['Taille du texte par défaut', '⌘0'],
+            ['Taille du texte par défaut', '⌥⌘0'],
             '-',
             ['Élargir la colonne', '⌘⌥→'],
             ['Rétrécir la colonne', '⌘⌥←'],
@@ -4008,7 +4008,7 @@
         const seg = (k, v, l) =>
           `<button class="tbtn${S[k] === v ? ' on' : ''}" data-k="${k}" data-v="${v}">${l}</button>`;
         return `<div class="aapop${top ? ' top' : ''}"><div class="ttl">Affichage</div>
-          <div class="ar"><span>Taille du texte</span><button class="btn">−</button><button class="btn">+</button><kbd>⌘− ⌘+</kbd></div>
+          <div class="ar"><span>Taille du texte</span><button class="btn">−</button><button class="btn">+</button><kbd>⌘− ⌘+ ⌥⌘0</kbd></div>
           <div class="ar"><span>Largeur de colonne</span><button class="btn">←</button><button class="btn">→</button><kbd>⌘⌥← →</kbd></div>
           <div class="ar"><span>Mode focus</span>${seg('focus', true, 'Oui')}${seg('focus', false, 'Non')}<kbd>⌘⇧F</kbd></div>
           <div class="ar"><span>Thème</span>${seg('theme', 'light', 'Clair')}${seg('theme', 'dark', 'Sombre')}<kbd>⌘⌥T</kbd></div>
