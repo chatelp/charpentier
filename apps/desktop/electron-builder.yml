@@ -15,6 +15,8 @@ npmRebuild: false
 nodeGypRebuild: false
 mac:
   category: public.app-category.productivity
+  # The Équerre (docs/design/icon), built by scripts/make-icon.sh.
+  icon: resources/icon.icns
   target:
     - target: dir
       arch: [arm64]
