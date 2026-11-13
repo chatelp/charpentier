@@ -1,4 +1,4 @@
-# Plan des étapes 1 à 3
+# Plan des étapes 1 à 4
 
 Chaque phase est courte, se termine par un résultat vérifiable dans l'app (ou par des tests quand la phase n'a pas d'interface), puis par un arrêt pour le feu vert. Les tests prioritaires sont écrits dans la phase qui introduit le code concerné.
 
@@ -125,3 +125,32 @@ Contradictions avec les informations validées, indices non exploités, personna
 Réglette d'intervention à 4 crans [D-19] (cran 3 par défaut) qui règle les remarques pendant l'écriture, le déclenchement de l'analyse complète et la profondeur des explications ; analyse à la demande d'une scène, d'un chapitre ou du manuscrit, grammaire par le LLM.
 **Vérifiable** : je demande l'analyse d'un chapitre entier et je reçois des remarques ancrées dans le texte. (Jalon : **v1 fonctionnelle**.)
 Réalisé : réglette dans le panneau, « Plus / Moins d'aide », lectures automatiques (en quittant une scène, après deux minutes de pause) et à la demande (scène ⌘⇧A, chapitre, manuscrit) ; option Haiku pour les lectures automatiques. Bilan de chapitre : au cran 4 en passant de la dernière scène d'un chapitre au chapitre suivant, à tous les crans par la commande « Bilan du chapitre » ; il arrive dans la conversation. Reporté : grammaire par le LLM pendant l'écriture (elle passe par la lecture de la scène).
+
+---
+
+## Étape 4a : synchro entre applications de bureau [D-21, D-22, D-23]
+
+But : écrire sur le Mac, retrouver son roman sur une autre machine (le X250 plus tard), sans jamais dépendre du réseau pour écrire. Le disque local reste la référence de chaque appareil ; le serveur relaie et garde une copie.
+
+### 4.1 Serveur de synchro
+`apps/server` (Node, TypeScript) : Hocuspocus (MIT) avec persistance Postgres (`pg`, MIT) des états Yjs, un document Hocuspocus par document Yjs du projet (racine, scènes, historique, mentor) et le document `library`. `infra/docker-compose.yml` (serveur + Postgres, volumes, vérification de santé). Tests avec PGlite (Postgres en WASM, Apache 2.0), sans Docker.
+**Vérifiable** : deux clients Yjs branchés sur le serveur convergent ; arrêté puis relancé, le serveur rend les documents.
+
+### 4.2 Comptes et sessions
+Inscription fermée par défaut, premier compte par une commande du serveur (`create-user`), réinitialisation de mot de passe par commande. API HTTP : connexion (e-mail + mot de passe → jeton de session de l'appareil), déconnexion, liste et révocation des appareils. Mots de passe en Argon2id (`@node-rs/argon2`, MIT), jetons opaques stockés hachés, limitation des tentatives. Hocuspocus refuse toute connexion sans jeton valide et n'ouvre que les documents des projets du compte.
+**Vérifiable** : sans jeton, ou avec un jeton révoqué, aucune lecture ni écriture ; un compte ne voit pas les projets d'un autre.
+
+### 4.3 Synchro dans l'app de bureau
+Service `Sync` de la plateforme ; dans le main, un fournisseur Hocuspocus par document des projets synchronisés, branché sur le `DocStore` (le journal local reste la persistance de l'appareil). Projets découverts par le document `library` du compte ; un projet arrivé d'ailleurs est créé dans la bibliothèque locale avec son miroir Markdown. Jeton dans `safeStorage`. Reconnexion automatique, rien ne bloque l'écriture.
+**Vérifiable (test prioritaire)** : deux applications écrivent hors ligne dans la même scène et dans les fiches, se reconnectent, et convergent sans perte ; les statuts des fiches (validée, rejetée) survivent.
+
+### 4.4 Se connecter, voir l'état
+Commandes « Se connecter à un serveur… » (adresse, e-mail, mot de passe), « Se déconnecter », « Appareils connectés » ; état discret dans le pied (« Synchronisé », « Hors ligne », « Synchro en pause »). Points d'entrée selon DESIGN §4.8 (menu, ligne de commande ; design demandé à la session de design si un écran est nécessaire).
+**Vérifiable** : je me connecte depuis le Mac, puis depuis une seconde installation ; mon roman y apparaît, et une phrase écrite d'un côté arrive de l'autre.
+
+### 4.5 Déploiement
+Image Docker du serveur, `docker-compose.yml` et guide de déploiement sur `prodesk2021.local` derrière le reverse proxy en HTTPS (WebSocket), sauvegarde de Postgres.
+**Vérifiable** : le serveur tourne sur `prodesk2021.local`, l'app s'y connecte par le domaine public.
+
+## Étape 4b (ensuite) : version web synchronisée et relais IA
+La version web ouvre les projets du compte depuis le serveur, et le Compagnon y passe par un relais IA côté serveur (clé de l'auteur chiffrée sur le serveur). À détailler à la fin de 4a.

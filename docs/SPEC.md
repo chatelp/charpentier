@@ -29,6 +29,9 @@
 | D-20 | Modèles du Compagnon | **Claude Opus 5.5 partout** (analyses, conversation, remarques). Option dans les réglages, **désactivée par défaut** : confier les remarques légères pendant l'écriture et la grammaire à **Claude Haiku 5.5**, moins cher. Décidé le 12 novembre 2026. |
 | D-19 | Niveau d'intervention du Compagnon | **Une réglette à 4 crans** (Discret, Attentif, Accompagnant, Tuteur), un seul réglage qui fixe à la fois ce que le Compagnon dit pendant l'écriture, ce qui déclenche l'analyse complète d'une scène, le délai avant une pastille et la profondeur des explications (§6.3). Réglage par projet, **cran 3 « Accompagnant » par défaut**. Aucun cran ne fait écrire le Compagnon à la place de l'auteur. Répond aux questions ouvertes n°1 et n°2 ; avance la v2 prévue au §6.3. Décidé le 12 novembre 2026. |
 | D-18 | Raccourcis du tiroir et du panneau droit | **`⌘J` ouvre le tiroir du manuscrit** (au lieu du `⌘\` des maquettes, qui demande quatre touches sur un Mac AZERTY). Les points à traiter et la conversation du Compagnon partagent le panneau droit sur **`⌘L`**, avec un contrôle segmenté pour passer de l'un à l'autre. Décidé le 12 novembre 2026. |
+| D-21 | Authentification du serveur (étape 4) | **Comptes e-mail + mot de passe** sur le serveur auto-hébergé : mots de passe hachés en Argon2id, une session par appareil (jeton opaque, stocké haché, révocable), inscription fermée par défaut (premier compte créé par une commande du serveur). Le jeton de l'appareil est gardé par `safeStorage`. Réinitialisation du mot de passe par une commande du serveur tant qu'aucun envoi d'e-mail n'existe. Répond à la question ouverte n°6. Décidé le 13 novembre 2026. |
+| D-22 | Hébergement du serveur (étape 4) | **Docker sur `prodesk2021.local`** (homelab de l'auteur) : `infra/docker-compose.yml` (serveur Node + Postgres), joint depuis l'extérieur par un **domaine public en HTTPS** derrière le reverse proxy de l'auteur (WebSocket sécurisé). Décidé le 13 novembre 2026. |
+| D-23 | Découpage de l'étape 4 | **4a : synchro entre applications de bureau** (serveur, comptes, synchro des projets, fusion hors ligne testée). **4b ensuite** : version web synchronisée et Compagnon par un relais IA côté serveur. Décidé le 13 novembre 2026. |
 | D-17 | Nom du mentor | **Le Compagnon** (le compagnon charpentier qui transmet le métier) ; vouvoie l'auteur, signe ses notes en bleu de Prusse. Répond à la question ouverte n°4. |
 
 Choix par défaut annoncés et non contestés : i18next pour l'i18n ; Vitest (+ mode navigateur, + Playwright Electron) ; signalements rendus en **décorations** ProseMirror (pas de marques dans le contenu) ; un projet = un dossier dans une bibliothèque locale ; IA désactivée dans `apps/web` jusqu'à l'étape 4 ; prompts système en anglais avec réponse imposée dans la langue du projet.
@@ -500,7 +503,7 @@ Garde-fous, contrôlés mécaniquement :
 
 À trancher plus tard :
 5. Réimport des YAML de modules modifiés hors de l'app.
-6. Authentification auto-hébergée (étape 4) : 2 ou 3 options adaptées à Hocuspocus et Postgres.
+6. ~~Authentification auto-hébergée (étape 4).~~ Tranché : comptes e-mail + mot de passe [D-21].
 7. Migration de l'hébergement au lancement public.
 8. Niveaux supérieurs d'aide rédactionnelle ; détermination du profil débutant / confirmé (v2, version publique). *La réglette [D-19] couvre la fréquence et la profondeur des interventions ; l'aide rédactionnelle reste plafonnée à une phrase d'exemple.*
 9. Interface de validation par lot (avec l'import, après la v1).
