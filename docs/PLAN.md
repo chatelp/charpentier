@@ -177,29 +177,33 @@ L'app de bureau lancée avec `--appliance` : plein écran, sans barre de titre n
 **Vérifiable** : sur Linux, `--appliance` ouvre l'app en plein écran sans chrome ; tout s'atteint par la zone de commande et les raccourcis `Ctrl`.
 
 ### 5.3 Ligne système, journal et réglages
-La fonctionnalité « Système », première cliente des points de contribution, contre un service `System` simulé (elle se développe et se teste sur le Mac) : la ligne système de 30 px en tête, dans sa matière (`.ch-system`) et sa police (JetBrains Mono embarquée, OFL 1.1), ses segments et leurs panneaux, les jauges à dix cellules, l'alerte en segment inversé ; le message, seul canal du système, et son journal ; Super seul et Super + lettre ; le préfixe `:` de la ligne de commande (`:lum 40`, `:wifi <nom>`, `:veille`…) ; la vue des réglages du système (Super + virgule), son rail et ses onze sections.
+La fonctionnalité « Système », première cliente des points de contribution, contre un service `System` simulé (elle se développe et se teste sur le Mac) : la ligne système de 30 px en tête, dans sa matière (`.ch-system`) et sa police (JetBrains Mono embarquée, OFL 1.1), ses segments et leurs panneaux (dont le segment `cpu` : mini-courbe de la dernière minute, pourcentage et température, figé pendant la frappe), les jauges à dix cellules, l'alerte en segment inversé ; le message, seul canal du système, et son journal ; Super seul et Super + lettre ; le préfixe `:` de la ligne de commande (`:lum 40`, `:wifi <nom>`, `:veille`…) ; la vue des réglages du système (Super + virgule), son rail et ses douze sections.
 **Vérifiable** : avec le service simulé, je parcours la ligne au clavier, je déplie le Wi-Fi, je tape `:lum 40`, j'ouvre les réglages ; sur le Mac sans service, rien de tout cela n'apparaît.
 
 ### 5.4 Service `System` : l'essentiel
 Dans le main, l'implémentation Linux (D-Bus et outils du système) de ce qu'il faut pour écrire en déplacement : Wi-Fi (radio, réseaux, connexion, oubli, état, portail détecté) et Ethernet, luminosité et son avec les touches du ThinkPad, les deux batteries (niveau, charge, puissance, autonomie ; à 15 % le segment s'inverse, à 3 % point de restauration puis veille), veille, extinction et redémarrage avec leur confirmation, délais d'écran et de veille, rabat et réveil, date, heure et fuseau, « À propos ».
 **Vérifiable** : sur le X250, je choisis un réseau Wi-Fi, je règle la luminosité et le volume aux touches, je vois la batterie, je mets en veille et j'éteins, sans quitter l'app.
 
-### 5.5 Verrouillage et premier démarrage
+### 5.5 Moniteur
+L'écran plein cadre du moniteur (Super M, `:moniteur`, ou un clic sur le segment `cpu`), entièrement dans la matière du système : en tête la machine et la durée affichée (1 min, 10 min, 1 h), puis une grille de cadrans avec leurs courbes : processeur (total, par fil, fréquence, charge moyenne), températures et ventilateur, mémoire, réseau, batterie (watts, usure), disque, les processus de Charpentier, graphique (charge « non mesurée » tant qu'elle n'est pas fiable). Côté service : un échantillon par seconde lu dans `/proc` et `/sys`, une heure d'historique en mémoire dans le main, pour toutes les séries tant que le segment `cpu` ou l'écran est affiché ; l'interface ne s'abonne aux mesures détaillées que lorsque l'écran est ouvert. X250 seulement ; le segment se retire dans les réglages (« Ligne système »).
+**Vérifiable** : sur le X250, le segment `cpu` suit la charge ; un clic ouvre le moniteur, dont les courbes couvrent la dernière heure ; pendant que je tape, le segment ne bouge pas.
+
+### 5.6 Verrouillage et premier démarrage
 Code de 4 à 8 caractères demandé au réveil (ou après 15 min, ou jamais), empreinte gardée hors du projet, attente croissante après 5 erreurs, écran de verrouillage plein cadre sans contenu de projet ; le terminal de secours est neutralisé tant que l'appareil est verrouillé. Premier démarrage en quatre étapes passables (Wi-Fi, code, synchronisation, Compagnon) avant la note de bienvenue.
 **Vérifiable** : je rabats l'écran, je le rouvre, le code m'est demandé et aucun texte n'est visible avant ; un appareil neuf me guide jusqu'à mon roman synchronisé.
 
-### 5.6 Périphériques et confort
+### 5.7 Périphériques et confort
 Clé USB (détection, copie du miroir Markdown de tous les projets dans `Charpentier/<date>/`, éjection) ; impression (imprimantes du réseau sans pilote, PDF en mise en page de manuscrit : scène, chapitre ou manuscrit) ; Bluetooth (appareils connus, recherche, appairage, oubli) ; écran externe (dupliquer ou externe seul, échelle) ; mode nuit (automatique de 21 h à 7 h, chaleur) ; disposition du clavier (AZERTY, BÉPO, QWERTY) et pavé tactile.
 **Vérifiable** : je copie mon roman sur une clé, j'imprime une scène, j'appaire un casque, je branche un écran, le mode nuit s'active le soir.
 
-### 5.7 Build Linux et empaquetage Nix
+### 5.8 Build Linux et empaquetage Nix
 Build Electron pour Linux x64 (dictionnaire Hunspell compris), puis paquet Nix reproductible de l'app (dépendances npm figées). En attendant, une installation manuelle du build Linux est acceptable.
 **Vérifiable** : `nix build .#charpentier` produit l'app, qui démarre sur une machine NixOS.
 
-### 5.8 Flake NixOS du X250
+### 5.9 Flake NixOS du X250
 `nix/flake.nix` et `nix/hosts/x250/` : `nixos-hardware` pour le X250 ; greetd en ouverture de session automatique, qui lance un Sway minimal (pas de barre ni de bordures, Charpentier en plein écran par `for_window`, raccourcis Sway supprimés, un combo caché pour un terminal de secours) ; Electron en Wayland natif ; les services que demande `System` (NetworkManager, BlueZ, PipeWire, UPower, udisks, CUPS) et les droits pour les piloter sans mot de passe ; keyd ; TLP ; veille au rabat de l'écran avec reprise directe sur le texte ; systemd-boot sans délai, démarrage silencieux, services inutiles désactivés ; un TTY de secours (Ctrl+Alt+F2).
 **Vérifiable** : le X250 démarre en quelques secondes directement sur mon texte ; rabattre l'écran puis le rouvrir me ramène au curseur.
 
-### 5.9 Déploiement à distance
+### 5.10 Déploiement à distance
 Mise à jour du X250 depuis le Mac par `nixos-rebuild switch --flake .#x250 --target-host …` ; connexion au serveur de synchro (étape 4a) pour retrouver les projets.
 **Vérifiable** : je mets à jour le X250 sans le toucher ; une scène écrite sur le Mac s'y retrouve, et inversement.
