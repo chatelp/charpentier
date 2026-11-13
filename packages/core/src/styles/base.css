@@ -185,5 +185,5 @@ kbd,
 /* Quiet scrollbars, in the material's colours. */
 * {
   scrollbar-width: thin;
-  scrollbar-color: color-mix(in srgb, var(--ch-shade) 80%, transparent) transparent;
+  scrollbar-color: color-mix(in srgb, var(--ch-muted) 40%, transparent) transparent;
 }
