@@ -39,6 +39,14 @@ export interface SystemService {
    */
   copyToUsb(): Promise<'copied' | 'failed'>;
   ejectUsb(): Promise<void>;
+  /**
+   * Prints what the interface laid out for print (its `@media print` page)
+   * on a printer of the network: A4, the running title and the folio.
+   */
+  print(job: PrintJob): Promise<'printed' | 'failed'>;
+  /** Looks for Bluetooth devices nearby, not yet paired (a few seconds). */
+  scanBluetooth(): Promise<readonly BluetoothDevice[]>;
+  pairBluetooth(deviceId: string): Promise<'paired' | 'failed'>;
   /** Locks now (⊞L); nothing without a code. */
   lock(): Promise<void>;
   unlock(code: string): Promise<UnlockResult>;
@@ -55,6 +63,13 @@ export interface SystemService {
 }
 
 export type NightMode = 'auto' | 'on' | 'off';
+
+export interface PrintJob {
+  readonly printer: string;
+  readonly copies: number;
+  /** The running title, at the top of each page. */
+  readonly title: string;
+}
 
 export interface SystemMessage {
   readonly id: string;

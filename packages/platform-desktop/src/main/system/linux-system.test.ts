@@ -60,6 +60,7 @@ function fakeX250() {
   const usb = { plugged: false, mounted: null as string | null };
   const screens = { external: false, externalActive: false, internalActive: true, scale: 1 };
   const runs: string[][] = [];
+  const bt = { paired: false };
   const daemons: {
     command: string;
     args: readonly string[];
@@ -142,7 +143,14 @@ function fakeX250() {
         case 'bluetoothctl':
           if (args[0] === 'show') return ok('Controller 00:11 x250\n\tPowered: no\n');
           if (args[0] === 'devices')
-            return ok(args[1] === 'Paired' ? 'Device 00:1B:66:AA:BB:CC Casque Sennheiser\n' : '');
+            return ok(
+              args[1] === 'Paired'
+                ? `Device 00:1B:66:AA:BB:CC Casque Sennheiser\n${bt.paired ? 'Device 34:88:5D:11:22:33 Clavier K380\n' : ''}`
+                : args[1] === 'Connected'
+                  ? ''
+                  : 'Device 00:1B:66:AA:BB:CC Casque Sennheiser\nDevice 34:88:5D:11:22:33 Clavier K380\nDevice 5A:6B:7C:8D:9E:0F 5A-6B-7C-8D-9E-0F\n',
+            );
+          if (args.includes('pair')) bt.paired = true;
           return ok();
         case 'lsblk':
           return ok(
@@ -213,6 +221,12 @@ function fakeX250() {
           if (args[0] === 'output' && args[1] === 'eDP-1')
             screens.internalActive = args[2] === 'enable';
           return ok();
+        case 'lpstat':
+          return args[0] === '-e'
+            ? ok('HP_LaserJet_bureau\nBrother_HL_L2350\n')
+            : ok('system default destination: Brother_HL_L2350\n');
+        case 'lp':
+          return ok('request id is Brother_HL_L2350-12 (1 file(s))\n');
         case 'brightnessctl':
         case 'systemctl':
           return ok();
@@ -553,5 +567,31 @@ describe('the System service of the X250 (phase 5.4)', () => {
     await system.setNightMode('off');
     expect(night().at(-1)?.stopped).toBe(true);
     expect(system.state().night.active).toBe(false);
+  });
+
+  it('prints through CUPS, on the default printer of the network (phase 5.7)', async () => {
+    const { system, x250 } = await start();
+    expect(system.state().printers).toEqual([
+      { name: 'HP_LaserJet_bureau', isDefault: false },
+      { name: 'Brother_HL_L2350', isDefault: true },
+    ]);
+    const job = { printer: 'Brother_HL_L2350', copies: 2, title: 'Mon roman · Il pleut' };
+    expect(await system.printPdf(new Uint8Array([37, 80, 68, 70]), job)).toBe('printed');
+    const lp = x250.runs.find((r) => r[0] === 'lp');
+    expect(lp?.slice(0, 7)).toEqual(['lp', '-d', 'Brother_HL_L2350', '-n', '2', '-t', job.title]);
+    // The PDF is gone once CUPS has it.
+    expect(fs.existsSync(lp?.[7] ?? '')).toBe(false);
+    expect(system.journal().at(-1)?.text).toBe('impression envoyée · Brother_HL_L2350');
+  });
+
+  it('finds Bluetooth devices nearby and pairs one (phase 5.7)', async () => {
+    const { system, x250 } = await start();
+    const found = await system.scanBluetooth();
+    // Known and unnamed devices are left out.
+    expect(found.map((d) => d.name)).toEqual(['Clavier K380']);
+    expect(await system.pairBluetooth('34:88:5D:11:22:33')).toBe('paired');
+    expect(ran(x250.runs, 'bluetoothctl', 'trust', '34:88:5D:11:22:33')).toBe(true);
+    expect(system.state().bluetooth.devices.map((d) => d.name)).toContain('Clavier K380');
+    expect(system.journal().at(-1)?.text).toBe('Clavier K380 appairé');
   });
 });

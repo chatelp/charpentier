@@ -283,6 +283,46 @@ describe('the system line of the X250 (phase 5.3)', () => {
     await waitFor(() => expect(line().textContent).toContain('textes copiés sur KINGSTON'));
   });
 
+  it('prints the manuscript from its sheet (phase 5.7)', async () => {
+    const system = createSimulatedSystem();
+    const { editor } = await start(system);
+    await userEvent.type(editor, 'Il pleuvait sur Nantes.');
+    let printed: string | undefined;
+    let job: unknown;
+    const print = system.print;
+    system.print = async (j) => {
+      printed = document.querySelector('.ch-print')?.textContent ?? '';
+      job = j;
+      return print(j);
+    };
+    await userEvent.keyboard(sys('p'));
+    const sheet = await screen.findByRole('dialog', { name: 'Imprimer' });
+    await userEvent.click(within(sheet).getByRole('radio', { name: 'tout le manuscrit' }));
+    await userEvent.click(within(sheet).getByRole('button', { name: /^Imprimer/ }));
+    await waitFor(() => expect(system.simulate.calls).toContain('print'));
+    expect(printed).toContain('Il pleuvait sur Nantes.');
+    expect(job).toMatchObject({ printer: 'Brother HL-L2350 (réseau)', copies: 1 });
+    // The page for the printer is gone, the sheet too, the cursor is back.
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Imprimer' })).toBeNull());
+    expect(document.querySelector('.ch-print')).toBeNull();
+    await waitFor(() => expect(document.activeElement).toBe(editor));
+  });
+
+  it('pairs a Bluetooth device found nearby (phase 5.7)', async () => {
+    const system = createSimulatedSystem();
+    await start(system);
+    await userEvent.keyboard(sys(','));
+    const rail = await screen.findByRole('listbox', { name: 'Sections des réglages' });
+    await userEvent.click(within(rail).getByRole('option', { name: /Bluetooth/ }));
+    const page = await screen.findByRole('region', { name: 'Bluetooth' });
+    await userEvent.click(within(page).getByRole('button', { name: 'Chercher' }));
+    await userEvent.click(await within(page).findByRole('button', { name: 'Appairer' }));
+    await waitFor(() =>
+      expect(system.state().bluetooth.devices.map((d) => d.name)).toContain('Clavier K380'),
+    );
+    expect(line().textContent).toContain('Clavier K380 appairé');
+  });
+
   it('is not there without a System service (the Mac, the web)', async () => {
     await start(null);
     expect(screen.queryByRole('toolbar', { name: 'ligne système' })).toBeNull();

@@ -71,6 +71,13 @@ export function createSystemFeature({ modifier }: { readonly modifier: SystemMod
     { id: 'systemBattery', scope: 'global', run: panel('bat') },
     { id: 'systemClock', scope: 'global', run: panel('date') },
     {
+      id: 'systemPrint',
+      scope: 'global',
+      keybinding: key('p'),
+      isEnabled: (ctx) => system(ctx).state().printers.length > 0,
+      run: () => systemUi.print('scene'),
+    },
+    {
       id: 'systemLock',
       scope: 'global',
       keybinding: key('l'),

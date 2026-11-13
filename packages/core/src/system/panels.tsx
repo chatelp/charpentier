@@ -10,7 +10,7 @@ import { usePlatform } from '../app/platform-context';
 import { featureText } from '../features/feature';
 import type { WorkspaceContext } from '../workspace/workspace-context';
 import { Gauge, Keys, PanelRow, Signal, Slider } from './controls';
-import { useJournal, useSystemState, type Segment } from './system-store';
+import { systemUi, useJournal, useSystemState, type Segment } from './system-store';
 
 const timers = new Map<string, ReturnType<typeof setTimeout>>();
 /** A message of a gesture, once the gesture settles (not one per step of a slider). */
@@ -150,6 +150,15 @@ function MenuPanel({ ctx, onDone }: PanelProps) {
         onDone();
         ctx?.openSettings();
       })}
+      {item(
+        'systemPrint',
+        text('system.panel.print'),
+        () => {
+          onDone();
+          systemUi.print('scene');
+        },
+        !ctx || state.printers.length === 0,
+      )}
       {item(
         'systemUsb',
         text('system.panel.usbCopy'),

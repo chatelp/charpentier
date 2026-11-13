@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import {
   createLockKeeper,
@@ -8,6 +9,7 @@ import {
   MESSAGE_LENGTH,
   messageAbout,
   type MonitorSample,
+  type PrintJob,
   type NightMode,
   type SystemMessage,
   type SystemService,
@@ -16,6 +18,8 @@ import {
 } from '@charpentier/platform';
 import { writeJsonAtomic } from '../projects';
 import {
+  parseDefaultPrinter,
+  parsePrinterNames,
   XKB_LAYOUTS,
   isNight,
   parseMounted,
@@ -58,6 +62,8 @@ import type { SystemTools } from './tools';
  * minute and on waking.
  */
 export interface LinuxSystem extends SystemService {
+  /** Sends a PDF made by the host (Electron's printToPDF of the print page) to the printer. */
+  printPdf(pdf: Uint8Array, job: PrintJob): Promise<'printed' | 'failed'>;
   /** Reads everything and starts watching. */
   start(): Promise<void>;
   /** Reads everything again. */
@@ -424,6 +430,19 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
     });
   }
 
+  async function readPrinters() {
+    const [all, chosen] = await Promise.all([run('lpstat', '-e'), run('lpstat', '-d')]);
+    if (all.code !== 0) return;
+    const fallback = parseDefaultPrinter(chosen.stdout);
+    const names = parsePrinterNames(all.stdout);
+    update({
+      printers: names.map((name, i) => ({
+        name,
+        isDefault: fallback ? name === fallback : i === 0,
+      })),
+    });
+  }
+
   async function readUsb(announce = true) {
     const out = await run('lsblk', '-J', '-o', 'NAME,LABEL,MODEL,TRAN,TYPE,FSTYPE,MOUNTPOINT');
     if (out.code !== 0) return;
@@ -507,6 +526,7 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
       readTime(),
       readBluetooth(),
       readUsb(false),
+      readPrinters(),
     ]);
     updateNight();
     emit();
@@ -652,6 +672,50 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
       )
         await applyInput();
       if (key === 'autoTime') await run('timedatectl', 'set-ntp', value ? 'true' : 'false');
+    },
+    // Printing needs the host's PDF (see `printPdf`): the service alone cannot lay out a page.
+    print: async () => 'failed',
+    printPdf: async (pdf, job) => {
+      const dir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'charpentier-print-'));
+      const file = path.join(dir, 'impression.pdf');
+      try {
+        await fs.promises.writeFile(file, pdf);
+        const copies = String(Math.max(1, Math.min(99, Math.round(job.copies))));
+        const sent = await run('lp', '-d', job.printer, '-n', copies, '-t', job.title, file);
+        if (sent.code !== 0) {
+          post(messageAbout(job.printer, (n) => `impression impossible · ${n}`));
+          return 'failed';
+        }
+        post(messageAbout(job.printer, (n) => `impression envoyée · ${n}`));
+        return 'printed';
+      } finally {
+        // CUPS has its own copy once `lp` returns.
+        await fs.promises.rm(dir, { recursive: true, force: true });
+      }
+    },
+    scanBluetooth: async () => {
+      await run('bluetoothctl', 'power', 'on');
+      await run('bluetoothctl', '--timeout', '8', 'scan', 'on');
+      const [all, paired] = await Promise.all([
+        run('bluetoothctl', 'devices'),
+        run('bluetoothctl', 'devices', 'Paired'),
+      ]);
+      const known = new Set(parseBluetoothDevices(paired.stdout, new Set()).map((d) => d.id));
+      await readBluetooth();
+      // Unnamed devices show their address as their name: left out.
+      return parseBluetoothDevices(all.stdout, new Set()).filter(
+        (d) => !known.has(d.id) && d.name.replace(/-/g, ':') !== d.id,
+      );
+    },
+    pairBluetooth: async (id) => {
+      const paired = await run('bluetoothctl', '--timeout', '20', 'pair', id);
+      if (paired.code !== 0) return 'failed';
+      await run('bluetoothctl', 'trust', id);
+      await run('bluetoothctl', 'connect', id);
+      await readBluetooth();
+      const name = state.bluetooth.devices.find((d) => d.id === id)?.name ?? id;
+      post(messageAbout(name, (n) => `${n} appairé`));
+      return 'paired';
     },
     copyToUsb: async () => {
       const key = usbKey;

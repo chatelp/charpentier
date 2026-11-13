@@ -38,9 +38,11 @@ interface UiState {
   readonly focus: number;
   /** Lit for a second: its value just changed by a key of the device. */
   readonly lit: Segment | null;
+  /** The print sheet, and what it prints first. */
+  readonly print: 'scene' | 'chapter' | 'manuscript' | null;
 }
 
-let ui: UiState = { open: null, focus: 0, lit: null };
+let ui: UiState = { open: null, focus: 0, lit: null, print: null };
 let unlight: ReturnType<typeof setTimeout> | undefined;
 const listeners = new Set<() => void>();
 const set = (next: UiState) => {
@@ -58,6 +60,7 @@ export const systemUi = {
   toggle: (segment: Segment) => set({ ...ui, open: ui.open === segment ? null : segment }),
   /** Puts the focus on the line (⊞ alone). */
   focusLine: () => set({ ...ui, focus: ui.focus + 1 }),
+  print: (scope: UiState['print']) => set({ ...ui, open: null, print: scope }),
   /** Lights a segment for a second (a key of the ThinkPad moved its gauge). */
   light: (segment: Segment) => {
     clearTimeout(unlight);

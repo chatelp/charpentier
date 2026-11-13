@@ -17,6 +17,7 @@ import type { WorkspaceContext } from '../workspace/workspace-context';
 import { Gauge, Signal, sparkline, Square } from './controls';
 import { useBatteryGuard, useDeviceKeys } from './device-keys';
 import { SystemPanel } from './panels';
+import { PrintSheet } from './PrintSheet';
 import {
   MONITOR_VIEW,
   SEGMENTS,
@@ -68,7 +69,7 @@ export function SystemLine({
   const text = featureText(t);
   const state = useSystemState(system);
   const journal = useJournal(system);
-  const { open, focus, lit } = useSystemUi();
+  const { open, focus, lit, print } = useSystemUi();
   useDeviceKeys(system);
   useBatteryGuard(system, ctx);
   const line = useRef<HTMLDivElement>(null);
@@ -346,6 +347,7 @@ export function SystemLine({
       ) : (
         SEGMENTS.map((id) => shown[id])
       )}
+      {print && ctx && !locked && <PrintSheet ctx={ctx} system={system} scope={print} />}
       {open && !locked && (
         <PanelPortal line={line} segment={open} onClose={() => systemUi.open(null)}>
           <SystemPanel segment={open} ctx={ctx} onDone={backToText} />

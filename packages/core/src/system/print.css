@@ -1,0 +1,59 @@
+/* The page for the printer (docs/DESIGN.md §4.12): never on screen. */
+.ch-print {
+  display: none;
+}
+
+@media print {
+  body > :not(.ch-print) {
+    display: none !important;
+  }
+
+  html,
+  body {
+    background: none;
+  }
+
+  /* The manuscript's layout: Literata 12 pt, double spacing. */
+  .ch-print {
+    display: block;
+    color: #000;
+    font: 12pt/2 var(--ch-font-text);
+    hyphens: auto;
+  }
+
+  .ch-print p {
+    margin: 0;
+    text-indent: 1.27cm;
+  }
+
+  .ch-print h2 {
+    margin: 3cm 0 1.5cm;
+    font: 500 14pt/1.4 var(--ch-font-text);
+    text-align: center;
+    break-before: page;
+    break-after: avoid;
+  }
+
+  .ch-print h2:first-child {
+    break-before: auto;
+  }
+
+  .ch-print p.ch-print-break {
+    margin: 0.5em 0;
+    text-align: center;
+    text-indent: 0;
+  }
+
+  .ch-print blockquote {
+    margin: 0 1.27cm;
+  }
+
+  .ch-print hr.scene-break {
+    border: 0;
+    text-align: center;
+  }
+
+  .ch-print hr.scene-break::after {
+    content: '*';
+  }
+}

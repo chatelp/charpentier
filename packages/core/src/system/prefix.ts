@@ -27,6 +27,7 @@ const WORDS = [
   'reglages',
   'moniteur',
   'verrou',
+  'imprimer',
 ] as const;
 type Word = (typeof WORDS)[number];
 
@@ -63,6 +64,8 @@ function label(ctx: WorkspaceContext, word: Word, arg: string): string {
       return arg ? k(word, { value: arg }) : text(`system.panel.${word}`);
     case 'wifi':
       return arg ? k('wifi', { value: arg }) : k('wifiPanel');
+    case 'imprimer':
+      return arg ? k('imprimer', { value: arg }) : k('imprimerPanel');
     case 'bt':
     case 'nuit':
       return arg ? k(word, { value: arg }) : k(word, { value: '' }).trim();
@@ -84,7 +87,8 @@ export const systemPrefix: CommandPrefix = {
       (w) =>
         w.startsWith(word) &&
         (w !== 'moniteur' || !!system(ctx).monitor) &&
-        (w !== 'verrou' || system(ctx).state().lock.hasCode),
+        (w !== 'verrou' || system(ctx).state().lock.hasCode) &&
+        (w !== 'imprimer' || system(ctx).state().printers.length > 0),
     );
     if (word && matches.length === 0)
       return [{ id: '', label: featureText(ctx.t)('system.prefixAction.unknown', { word }) }];
@@ -136,6 +140,13 @@ export const systemPrefix: CommandPrefix = {
         return ctx.openView(MONITOR_VIEW);
       case 'verrou':
         return void sys.lock();
+      case 'imprimer': {
+        // `:imprimer scène`, `:imprimer chapitre`, `:imprimer manuscrit`.
+        const what = fold(value);
+        return systemUi.print(
+          what.startsWith('chap') ? 'chapter' : what.startsWith('manu') ? 'manuscript' : 'scene',
+        );
+      }
       default:
         break;
     }

@@ -30,12 +30,14 @@ import {
   SpellClient,
   type MirrorStrings,
   createLinuxSystem,
+  type LinuxSystem,
   exportTexts,
   nodeTools,
 } from '@charpentier/platform-desktop/main';
 import {
   createSimulatedSystem,
   type AppProcessKind,
+  type PrintJob,
   type SystemService,
 } from '@charpentier/platform';
 import {
@@ -62,6 +64,24 @@ if (!app.requestSingleInstanceLock()) app.quit();
 const appliance = process.argv.includes('--appliance');
 /** `--simulate-system`: the X250's system simulated, to develop it on the Mac (phase 5.3). */
 const simulateSystem = process.argv.includes('--simulate-system');
+
+const escapeHtml = (text: string) => text.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+
+/**
+ * The manuscript's page (docs/DESIGN.md §4.12): A4, margins of 2.5 cm, the
+ * running title and the folio at the top right.
+ */
+function printOptions(title: string): Electron.PrintToPDFOptions {
+  const cm = 1 / 2.54;
+  return {
+    pageSize: 'A4',
+    printBackground: false,
+    margins: { top: 2.5 * cm, bottom: 2.5 * cm, left: 2.5 * cm, right: 2.5 * cm },
+    displayHeaderFooter: true,
+    headerTemplate: `<div style="width:100%;margin:0 2.5cm;text-align:right;font:9pt Georgia,serif;color:#555">${escapeHtml(title)} · <span class="pageNumber"></span></div>`,
+    footerTemplate: '<div></div>',
+  };
+}
 
 const PROCESS_KINDS: Partial<Record<string, AppProcessKind>> = {
   Browser: 'main',
@@ -277,6 +297,14 @@ ipcMain.handle(IPC_INVOKE, async (event, request: Request) => {
           ),
         );
       return null;
+    case 'system.call':
+      // Printing (phase 5.7): the window's print page as a PDF, then CUPS.
+      if (request.method === 'print' && system && 'printPdf' in system) {
+        const job = request.args[0] as PrintJob;
+        const pdf = await event.sender.printToPDF(printOptions(job.title));
+        return (system as LinuxSystem).printPdf(pdf, job);
+      }
+      return sessionOf(event.sender).handle(request);
     case 'host.revealLibraryFolder':
       await shell.openPath(libraryFolder);
       return null;

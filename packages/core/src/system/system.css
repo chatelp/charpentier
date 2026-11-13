@@ -329,3 +329,72 @@
   box-shadow: var(--ch-raise-s);
   appearance: none;
 }
+
+/* « Imprimer » (§4.12): a slate sheet in the middle of the page. */
+.ch-print-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--ch-z-command) + 1);
+  display: grid;
+  place-items: center;
+}
+
+.ch-print-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: min(34rem, calc(100vw - 32px));
+  padding: 22px 24px;
+  border-radius: 14px;
+  background: var(--ch-bg);
+  color: var(--ch-ink);
+}
+
+.ch-print-title {
+  margin: 0;
+  font: 500 18px var(--ch-font-text);
+}
+
+.ch-print-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ch-print-row .ch-keys {
+  flex-wrap: wrap;
+}
+
+.ch-print-none {
+  color: var(--ch-muted);
+  font: var(--ch-ui-sm) var(--ch-font-ui);
+}
+
+.ch-print-copies {
+  width: 5rem;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: var(--ch-radius-md);
+  background: transparent;
+  box-shadow: var(--ch-inset);
+  color: var(--ch-ink);
+  font: var(--ch-ui-sm) var(--ch-font-ui);
+  outline: none;
+}
+
+.ch-print-copies:focus-visible {
+  box-shadow: var(--ch-inset), var(--ch-lit);
+}
+
+.ch-print-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin: 4px 0 0;
+}
+
+.ch-print-actions kbd {
+  margin-left: 4px;
+  color: var(--ch-faint);
+  font: 400 11px var(--ch-font-ui);
+}

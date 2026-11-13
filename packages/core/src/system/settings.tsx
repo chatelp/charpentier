@@ -1,4 +1,9 @@
-import { batteryLevel, type SystemService, type SystemSettings } from '@charpentier/platform';
+import {
+  batteryLevel,
+  type BluetoothDevice,
+  type SystemService,
+  type SystemSettings,
+} from '@charpentier/platform';
 import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePlatform } from '../app/platform-context';
@@ -127,9 +132,26 @@ function Network() {
 
 function Bluetooth() {
   const { system, state, s, yesNo } = useSettings();
+  // Pairing (phase 5.7): a search of a few seconds, then the devices found.
+  const [found, setFound] = useState<readonly BluetoothDevice[] | null>(null);
+  const [busy, setBusy] = useState<'scan' | string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const scan = async () => {
+    setBusy('scan');
+    setMessage(null);
+    setFound(await system.scanBluetooth());
+    setBusy(null);
+  };
+  const pair = async (id: string) => {
+    setBusy(id);
+    const result = await system.pairBluetooth(id);
+    setBusy(null);
+    if (result === 'paired') setFound((list) => list?.filter((d) => d.id !== id) ?? null);
+    else setMessage(s('rows.pairFailed'));
+  };
   return (
     <Group title={s('groups.devices')}>
-      <Row label={s('rows.bluetooth')} help={s('rows.pairHelp')}>
+      <Row label={s('rows.bluetooth')}>
         <Keys
           options={yesNo}
           value={state.bluetooth.enabled}
@@ -138,7 +160,7 @@ function Bluetooth() {
         />
       </Row>
       {state.bluetooth.devices.map((d) => (
-        <Row key={d.id} label={d.name}>
+        <Row key={d.id} label={d.name} help={d.connected ? s('rows.connected') : undefined}>
           <button
             type="button"
             className="ch-btn"
@@ -148,6 +170,34 @@ function Bluetooth() {
           </button>
         </Row>
       ))}
+      <Row label={s('rows.pair')} help={s('rows.pairHelp')}>
+        <button
+          type="button"
+          className="ch-btn"
+          disabled={busy !== null}
+          onClick={() => void scan()}
+        >
+          {s(busy === 'scan' ? 'rows.searching' : 'rows.search')}
+        </button>
+      </Row>
+      {found?.length === 0 && <p className="ch-set-help">{s('rows.nothingFound')}</p>}
+      {found?.map((d) => (
+        <Row key={d.id} label={d.name}>
+          <button
+            type="button"
+            className="ch-btn"
+            disabled={busy !== null}
+            onClick={() => void pair(d.id)}
+          >
+            {s(busy === d.id ? 'rows.pairing' : 'rows.pairThis')}
+          </button>
+        </Row>
+      ))}
+      {message && (
+        <p className="ch-set-help" role="status">
+          {message}
+        </p>
+      )}
     </Group>
   );
 }

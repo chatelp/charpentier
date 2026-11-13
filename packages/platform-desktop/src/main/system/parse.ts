@@ -446,3 +446,14 @@ export const XKB_LAYOUTS = {
 
 /** Night mode « auto »: from 21 h to 7 h (docs/DESIGN.md §4.12). */
 export const isNight = (date: Date): boolean => date.getHours() >= 21 || date.getHours() < 7;
+
+/** `lpstat -e`: the printers CUPS knows (driverless ones of the network included). */
+export const parsePrinterNames = (text: string): string[] =>
+  text
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean);
+
+/** `lpstat -d`: « system default destination: Brother_HL_L2350 ». */
+export const parseDefaultPrinter = (text: string): string | null =>
+  /destination:\s*(\S+)/.exec(text)?.[1] ?? null;

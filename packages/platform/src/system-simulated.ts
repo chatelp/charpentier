@@ -231,6 +231,28 @@ export function createSimulatedSystem(
     setMuted: async (muted) => update((s) => ({ ...s, muted })),
     setSetting: async (key, value) =>
       update((s) => ({ ...s, settings: { ...s.settings, [key]: value } })),
+    print: async (job) => {
+      calls.push('print');
+      post(messageAbout(job.printer, (n) => `impression envoyée · ${n}`));
+      return 'printed';
+    },
+    scanBluetooth: async () => [{ id: 'bt-2', name: 'Clavier K380', connected: false }],
+    pairBluetooth: async (id) => {
+      calls.push('pairBluetooth');
+      const name = id === 'bt-2' ? 'Clavier K380' : id;
+      update((s) => ({
+        ...s,
+        bluetooth: {
+          ...s.bluetooth,
+          devices: [
+            ...s.bluetooth.devices.filter((d) => d.id !== id),
+            { id, name, connected: true },
+          ],
+        },
+      }));
+      post(messageAbout(name, (n) => `${n} appairé`));
+      return 'paired';
+    },
     copyToUsb: async () => {
       calls.push('copyToUsb');
       const name = state.usb?.name;
