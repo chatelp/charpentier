@@ -10,6 +10,9 @@ export function useJournal(system: SystemService): readonly SystemMessage[] {
   return useSyncExternalStore(system.onChange, system.journal);
 }
 
+/** The monitor's full-frame view (phase 5.5). */
+export const MONITOR_VIEW = 'monitor';
+
 /** The segments of the system line, left to right (docs/DESIGN.md §4.12). */
 export const SEGMENTS = [
   'systeme',

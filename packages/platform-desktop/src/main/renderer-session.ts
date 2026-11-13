@@ -17,6 +17,7 @@ import type { SyncEngine } from './sync-engine';
 export class RendererSession {
   readonly #unsubscribe = new Map<string, () => void>();
   #unwatchSystem: (() => void) | null = null;
+  #monitor: { close(): void } | null = null;
 
   constructor(
     private readonly services: {
@@ -124,13 +125,24 @@ export class RendererSession {
         if (!system) return null;
         if (!this.#unwatchSystem)
           this.#unwatchSystem = system.onChange(() =>
-            this.push({
-              type: 'system.changed',
-              snapshot: { state: system.state(), journal: [...system.journal()] },
-            }),
+            this.push({ type: 'system.changed', snapshot: this.#snapshot(system) }),
           );
-        return { state: system.state(), journal: [...system.journal()] };
+        return this.#snapshot(system);
       }
+      case 'system.monitorOpen': {
+        const monitor = this.services.system?.monitor;
+        if (!monitor) return null;
+        this.#monitor?.close();
+        const session = await monitor.open((sample) =>
+          this.push({ type: 'system.sample', sample }),
+        );
+        this.#monitor = session;
+        return { info: session.info, history: session.history };
+      }
+      case 'system.monitorClose':
+        this.#monitor?.close();
+        this.#monitor = null;
+        return null;
       case 'system.post':
         this.services.system?.post(request.text);
         return null;
@@ -146,6 +158,10 @@ export class RendererSession {
     }
   }
 
+  #snapshot(system: SystemService) {
+    return { state: system.state(), journal: [...system.journal()], monitor: !!system.monitor };
+  }
+
   /** An update typed in the renderer. */
   receive(message: Message): void {
     if (message.type !== 'doc.update' || !this.#unsubscribe.has(message.guid)) return;
@@ -158,6 +174,8 @@ export class RendererSession {
   dispose(): void {
     this.#unwatchSystem?.();
     this.#unwatchSystem = null;
+    this.#monitor?.close();
+    this.#monitor = null;
     for (const unsubscribe of this.#unsubscribe.values()) unsubscribe();
     this.#unsubscribe.clear();
     this.services.store.releaseAll(this);

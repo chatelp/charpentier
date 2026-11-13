@@ -6,7 +6,8 @@ import { Square } from './controls';
 import { systemPrefix } from './prefix';
 import { systemSettingsSections } from './settings';
 import { SystemLine, type SystemModifier } from './SystemLine';
-import { systemUi, type Segment } from './system-store';
+import { Monitor } from './Monitor';
+import { MONITOR_VIEW, systemUi, type Segment } from './system-store';
 import { systemTexts } from './texts';
 
 const system = (ctx: WorkspaceContext) => ctx.platform.system as SystemService;
@@ -68,6 +69,16 @@ export function createSystemFeature({ modifier }: { readonly modifier: SystemMod
     { id: 'systemNight', scope: 'global', run: panel('lum') },
     { id: 'systemBattery', scope: 'global', run: panel('bat') },
     { id: 'systemClock', scope: 'global', run: panel('date') },
+    {
+      id: 'systemMonitor',
+      scope: 'global',
+      keybinding: key('m'),
+      isEnabled: (ctx) => !!system(ctx).monitor,
+      run: (ctx) => {
+        systemUi.open(null);
+        ctx.openView(MONITOR_VIEW);
+      },
+    },
   ];
   return {
     id: 'system',
@@ -86,5 +97,6 @@ export function createSystemFeature({ modifier }: { readonly modifier: SystemMod
       hint: 'system.settings.hint',
     },
     prefixes: [systemPrefix],
+    views: [{ id: MONITOR_VIEW, label: 'system.monitor.name', component: Monitor }],
   };
 }

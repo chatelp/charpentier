@@ -32,7 +32,11 @@ import {
   createLinuxSystem,
   nodeTools,
 } from '@charpentier/platform-desktop/main';
-import { createSimulatedSystem, type SystemService } from '@charpentier/platform';
+import {
+  createSimulatedSystem,
+  type AppProcessKind,
+  type SystemService,
+} from '@charpentier/platform';
 import {
   IPC_INVOKE,
   IPC_MESSAGE,
@@ -58,6 +62,12 @@ const appliance = process.argv.includes('--appliance');
 /** `--simulate-system`: the X250's system simulated, to develop it on the Mac (phase 5.3). */
 const simulateSystem = process.argv.includes('--simulate-system');
 
+const PROCESS_KINDS: Partial<Record<string, AppProcessKind>> = {
+  Browser: 'main',
+  Tab: 'interface',
+  GPU: 'graphics',
+};
+
 /**
  * The device's system (docs/PLAN.md phase 5.4): the X250's on Linux as a
  * device, a simulated one on request, none otherwise.
@@ -70,13 +80,29 @@ function deviceSystem(): (SystemService & { dispose?(): void }) | null {
     appVersion: app.getVersion(),
     hostname: os.hostname(),
     settingsFile: path.join(app.getPath('userData'), 'system.json'),
+    // The monitor's « charpentier » dial: Electron's processes (the speller is a
+    // thread of the main one) and the documents held.
+    app: () => ({
+      processes: app.getAppMetrics().flatMap((p) => {
+        const kind = PROCESS_KINDS[p.type];
+        return kind
+          ? [
+              {
+                kind,
+                cpu: Math.round(p.cpu.percentCPUUsage),
+                memory: p.memory.workingSetSize * 1024,
+              },
+            ]
+          : [];
+      }),
+      documents: store.openGuids().length,
+    }),
   });
   void linux.start();
   // Waking up (lid opened): everything may have changed meanwhile.
   void app.whenReady().then(() => powerMonitor.on('resume', () => void linux.refresh()));
   return linux;
 }
-const system = deviceSystem();
 
 const preferences = new PreferencesFile(path.join(app.getPath('userData'), 'preferences.json'));
 const libraryFolder =
@@ -85,6 +111,7 @@ const libraryFolder =
   path.join(app.getPath('documents') || path.join(os.homedir(), 'Documents'), 'Charpentier');
 const library = new FolderLibrary(libraryFolder);
 const store = new DocStore(documentLocator(library));
+const system = deviceSystem();
 const sessions = new Map<WebContents, RendererSession>();
 
 // Hunspell French dictionary (MPL 2.0, resources/dictionaries/fr), loaded in a worker on first use.

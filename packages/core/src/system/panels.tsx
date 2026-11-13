@@ -104,12 +104,12 @@ function useSys() {
 }
 
 /** `5 h 40` */
-const hours = (minutes: number) =>
+export const hours = (minutes: number) =>
   `${Math.floor(minutes / 60)} h ${String(minutes % 60).padStart(2, '0')}`;
 
-const minutesSince = (iso: string) =>
+export const minutesSince = (iso: string) =>
   Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 60_000));
-const duration = (minutes: number) =>
+export const duration = (minutes: number) =>
   minutes < 60
     ? `${minutes} min`
     : `${Math.floor(minutes / 60)} h ${String(minutes % 60).padStart(2, '0')}`;
@@ -218,7 +218,7 @@ function CpuPanel() {
   return (
     <>
       <Head name={text('system.seg.cpu')} aside={state.device.model} />
-      <p className="ch-sys-note">{text('system.panel.cpuSoon')}</p>
+      <p className="ch-sys-note">{text('system.panel.cpuFromProject')}</p>
       <PanelRow label={text('system.seg.cpu')}>
         <span className="ch-sys-value">
           {text('system.seg.cpuValue', {

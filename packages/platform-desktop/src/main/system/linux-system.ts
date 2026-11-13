@@ -4,6 +4,7 @@ import {
   DEFAULT_SYSTEM_SETTINGS,
   MESSAGE_LENGTH,
   messageAbout,
+  type MonitorSample,
   type NightMode,
   type SystemMessage,
   type SystemService,
@@ -30,6 +31,7 @@ import {
   wrongPassword,
   type BatteryFiles,
 } from './parse';
+import { createLinuxMonitor } from './linux-monitor';
 import type { SystemTools } from './tools';
 
 /**
@@ -61,6 +63,8 @@ export interface LinuxSystemOptions {
   /** Where the device's settings are kept (JSON). */
   readonly settingsFile: string;
   readonly now?: () => Date;
+  /** The app's processes and open documents, for the monitor (Electron knows them). */
+  readonly app?: () => MonitorSample['app'];
   /** Polling periods, in ms (the tests shorten them). */
   readonly periods?: { readonly cpu?: number; readonly power?: number; readonly slow?: number };
 }
@@ -105,6 +109,12 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
   let disposed = false;
   /** Set while the app itself changes the network, so the change is not « réseau perdu ». */
   let networkAction = false;
+
+  const monitor = createLinuxMonitor({
+    tools,
+    app: options.app ?? (() => ({ processes: [], documents: 0 })),
+    now: () => now().getTime(),
+  });
 
   let state: SystemState = {
     device: {
@@ -440,6 +450,7 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
   }
 
   const service: LinuxSystem = {
+    monitor,
     state: () => state,
     onChange: (listener) => {
       listeners.add(listener);
@@ -502,6 +513,7 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
       update({ settings: { ...state.settings, [key]: value } });
       save();
       if (key === 'screenOffAfter' || key === 'sleepAfter') applyIdle();
+      if (key === 'showCpu') monitor.setBackground(value === true);
       if (key === 'autoTime') await run('timedatectl', 'set-ntp', value ? 'true' : 'false');
     },
     ejectUsb: async () => {
@@ -552,6 +564,7 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
         }),
       );
       applyIdle();
+      monitor.setBackground(state.settings.showCpu);
     },
     refresh,
     dispose: () => {
@@ -559,6 +572,7 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
       for (const timer of timers) clearInterval(timer);
       for (const stop of stops) stop();
       stopIdle?.();
+      monitor.dispose();
       listeners.clear();
     },
   };

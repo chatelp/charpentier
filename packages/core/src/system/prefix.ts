@@ -2,7 +2,7 @@ import type { SystemService } from '@charpentier/platform';
 import { featureText, type CommandPrefix } from '../features/feature';
 import type { PickItem } from '../palette/palette-request';
 import type { WorkspaceContext } from '../workspace/workspace-context';
-import { systemUi, type Segment } from './system-store';
+import { MONITOR_VIEW, systemUi, type Segment } from './system-store';
 
 const fold = (s: string) =>
   s
@@ -25,6 +25,7 @@ const WORDS = [
   'usb',
   'journal',
   'reglages',
+  'moniteur',
 ] as const;
 type Word = (typeof WORDS)[number];
 
@@ -78,7 +79,9 @@ export const systemPrefix: CommandPrefix = {
   label: 'system.prefix',
   search(ctx, query): readonly PickItem[] {
     const { word, arg } = parse(query);
-    const matches = WORDS.filter((w) => w.startsWith(word));
+    const matches = WORDS.filter(
+      (w) => w.startsWith(word) && (w !== 'moniteur' || !!system(ctx).monitor),
+    );
     if (word && matches.length === 0)
       return [{ id: '', label: featureText(ctx.t)('system.prefixAction.unknown', { word }) }];
     return matches.map((w) => ({
@@ -125,6 +128,8 @@ export const systemPrefix: CommandPrefix = {
         return void sys.suspend();
       case 'reglages':
         return ctx.openSettings();
+      case 'moniteur':
+        return ctx.openView(MONITOR_VIEW);
       default:
         break;
     }

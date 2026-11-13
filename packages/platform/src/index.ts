@@ -12,4 +12,6 @@ export type * from './spellcheck';
 export type * from './storage';
 export type * from './sync';
 export * from './system';
+export * from './monitor';
+export { simulatedMonitor } from './monitor-simulated';
 export { createSimulatedSystem, type SimulatedSystem } from './system-simulated';

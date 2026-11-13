@@ -1,5 +1,7 @@
-import type { SystemService } from '@charpentier/platform';
+import type { MonitorInfo, SystemMonitor, SystemService } from '@charpentier/platform';
 import type { DesktopBridge, SystemAction, SystemSnapshot } from '../shared/ipc';
+
+const EMPTY_INFO: MonitorInfo = { gpu: null, screen: null, link: null, memoryTotal: 0 };
 
 /**
  * The device's system seen from the interface (docs/PLAN.md phase 5.4): the
@@ -21,7 +23,29 @@ export async function connectSystem(bridge: DesktopBridge): Promise<SystemServic
     (...args: Parameters<SystemService[M]>) =>
       bridge.invoke({ type: 'system.call', method, args }) as ReturnType<SystemService[M]>;
   const current = () => snapshot as SystemSnapshot;
+  const monitor: SystemMonitor | null = snapshot.monitor
+    ? {
+        open: async (onSample) => {
+          const stop = bridge.onMessage((message) => {
+            if (message.type === 'system.sample') onSample(message.sample);
+          });
+          const opened = await bridge.invoke({ type: 'system.monitorOpen' });
+          if (!opened) {
+            stop();
+            return { info: EMPTY_INFO, history: [], close: () => {} };
+          }
+          return {
+            ...opened,
+            close: () => {
+              stop();
+              void bridge.invoke({ type: 'system.monitorClose' });
+            },
+          };
+        },
+      }
+    : null;
   return {
+    monitor,
     state: () => current().state,
     journal: () => current().journal,
     onChange: (listener) => {

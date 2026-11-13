@@ -18,6 +18,7 @@ import { Gauge, Signal, sparkline, Square } from './controls';
 import { useBatteryGuard, useDeviceKeys } from './device-keys';
 import { SystemPanel } from './panels';
 import {
+  MONITOR_VIEW,
   SEGMENTS,
   systemUi,
   useJournal,
@@ -119,6 +120,14 @@ export function SystemLine({
     if (ctx?.editor && !ctx.editor.isDestroyed) ctx.editor.view.focus();
   };
 
+  // The `cpu` segment opens the monitor, full frame, where there is one.
+  const openSegment = (id: Segment) => {
+    if (id === 'cpu' && ctx && system.monitor) {
+      systemUi.open(null);
+      ctx.openView(MONITOR_VIEW);
+    } else systemUi.toggle(id);
+  };
+
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     const segments = [...(line.current?.querySelectorAll<HTMLElement>('[data-seg]') ?? [])];
     const index = segments.findIndex((s) => s === document.activeElement);
@@ -133,7 +142,7 @@ export function SystemLine({
     } else if (event.key === 'Enter' || event.key === 'ArrowDown') {
       event.preventDefault();
       const segment = segments[index]?.dataset['seg'] as Segment | undefined;
-      if (segment) systemUi.open(segment);
+      if (segment) openSegment(segment);
     } else if (event.key === 'Escape') {
       event.preventDefault();
       backToText();
@@ -172,7 +181,7 @@ export function SystemLine({
       aria-expanded={open === id}
       className={`ch-sys-seg is-${id}${open === id ? ' is-open' : ''}${lit === id ? ' is-lit' : ''}${extra ? ` ${extra}` : ''}`}
       onFocus={() => setCurrent(id)}
-      onClick={() => systemUi.toggle(id)}
+      onClick={() => openSegment(id)}
     >
       {content}
     </button>

@@ -7,6 +7,7 @@ import {
   type SystemService,
   type SystemState,
 } from './system';
+import { simulatedMonitor } from './monitor-simulated';
 
 /**
  * A simulated X250 (docs/PLAN.md phase 5.3): the System service that the
@@ -121,6 +122,7 @@ export function createSimulatedSystem(
   });
 
   return {
+    monitor: simulatedMonitor(now),
     state: () => state,
     onChange: (listener) => {
       listeners.add(listener);

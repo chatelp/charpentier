@@ -150,4 +150,37 @@ describe('the system of the device, held by the main process (phase 5.4)', () =>
     await tick();
     expect(seen.state().power.batteries[0]?.level).toBe(82);
   });
+
+  it('opens the monitor: the hour kept, then each second, until it closes', async () => {
+    const samples: ((s: never) => void)[] = [];
+    let closed = 0;
+    const system = {
+      ...createSimulatedSystem(),
+      monitor: {
+        open: async (onSample: (s: never) => void) => {
+          samples.push(onSample);
+          return {
+            info: { gpu: 'HD 5500', screen: null, link: null, memoryTotal: 8e9 },
+            history: [{ at: 1 } as never],
+            close: () => void closed++,
+          };
+        },
+      },
+    };
+    const r = renderer({ ...mainProcess(), system });
+    const seen = await connectSystem(r.bridge);
+    const got: unknown[] = [];
+    const session = await seen?.monitor?.open((sample) => got.push(sample));
+    expect(session?.history).toHaveLength(1);
+    expect(session?.info.gpu).toBe('HD 5500');
+    samples[0]?.({ at: 2 } as never);
+    await tick();
+    expect(got).toEqual([{ at: 2 }]);
+    session?.close();
+    await tick();
+    expect(closed).toBe(1);
+    samples[0]?.({ at: 3 } as never);
+    await tick();
+    expect(got).toHaveLength(1);
+  });
 });

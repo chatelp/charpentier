@@ -186,6 +186,43 @@ describe('the system line of the X250 (phase 5.3)', () => {
     expect(system.journal().filter((m) => m.text.startsWith('batterie faible'))).toHaveLength(2);
   });
 
+  it('opens the monitor full frame with its key, from :moniteur and from the cpu segment', async () => {
+    const { editor } = await start(createSimulatedSystem());
+    await userEvent.keyboard(sys('m'));
+    const monitor = await screen.findByRole('region', { name: 'moniteur' });
+    for (const dial of [
+      'processeur',
+      'températures',
+      'mémoire',
+      'réseau',
+      'batterie',
+      'disque',
+      'charpentier',
+      'graphique',
+    ])
+      within(monitor).getByRole('region', { name: dial });
+    expect(within(monitor).getByRole('region', { name: 'graphique' }).textContent).toContain(
+      'non mesurée',
+    );
+    // The durations, in tabs; the curve follows.
+    await userEvent.click(within(monitor).getByRole('tab', { name: '1 h' }));
+    expect(within(monitor).getByRole('tab', { name: '1 h' }).getAttribute('aria-selected')).toBe(
+      'true',
+    );
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('region', { name: 'moniteur' })).toBeNull());
+    await waitFor(() => expect(document.activeElement).toBe(editor));
+
+    await userEvent.keyboard(mod('k'));
+    await userEvent.keyboard(':moniteur{Enter}');
+    await screen.findByRole('region', { name: 'moniteur' });
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('region', { name: 'moniteur' })).toBeNull());
+
+    await userEvent.click(line().querySelector('[data-seg="cpu"]') as HTMLElement);
+    await screen.findByRole('region', { name: 'moniteur' });
+  });
+
   it('is not there without a System service (the Mac, the web)', async () => {
     await start(null);
     expect(screen.queryByRole('toolbar', { name: 'ligne système' })).toBeNull();

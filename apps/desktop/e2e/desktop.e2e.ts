@@ -286,6 +286,13 @@ describe('desktop app', () => {
     await window.getByRole('option', { name: /luminosité 40 %/ }).waitFor();
     await window.keyboard.press('Enter');
     await expect.poll(() => line.locator('[data-seg="lum"]').textContent()).toContain('40');
+    // The monitor (phase 5.5): its hour of samples comes from the main process.
+    await window.keyboard.press(process.platform === 'darwin' ? 'Control+m' : 'Meta+m');
+    const monitor = window.getByRole('region', { name: 'moniteur' });
+    await monitor.waitFor();
+    expect(await monitor.getByRole('region', { name: 'processeur' }).textContent()).toContain(
+      'GHz',
+    );
   });
 
   it("fits the writing screen and an unfolded note in the X250's 1536 × 864", async () => {

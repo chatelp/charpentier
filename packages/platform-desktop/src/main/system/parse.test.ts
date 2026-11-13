@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
   cpuLoad,
+  parseCpuLines,
+  parseDiskstats,
+  parseGpu,
+  parseLoadAverage,
+  parseMemory,
+  parseNetDev,
+  parseOutputs,
+  parseWifiRate,
   deviceModel,
   generationOf,
   osVersion,
@@ -123,5 +131,42 @@ describe('reading the Linux tools (phase 5.4)', () => {
       { id: '00:1B:66:AA:BB:CC', name: 'Casque Sennheiser', connected: false },
       { id: '11:22:33:44:55:66', name: 'Clavier', connected: true },
     ]);
+  });
+
+  it('reads what the monitor shows (phase 5.5)', () => {
+    const cpu = parseCpuLines(
+      'cpu  100 0 100 700 100 0 0 0 0 0\ncpu0 50 0 50 350 50 0 0 0\ncpu1 50 0 50 350 50 0 0 0\nintr 1',
+    );
+    expect(cpu?.threads).toHaveLength(2);
+    expect(parseLoadAverage('0.42 0.38 0.31 1/234 5678\n')).toEqual([0.42, 0.38, 0.31]);
+    expect(
+      parseMemory(
+        'MemTotal: 8000 kB\nMemAvailable: 5000 kB\nBuffers: 100 kB\nCached: 1700 kB\nSwapTotal: 2000 kB\nSwapFree: 2000 kB\n',
+      ),
+    ).toEqual({ total: 8_192_000, used: 3_072_000, cache: 1_843_200, swap: 0 });
+    expect(
+      parseNetDev(
+        'Inter-|   Receive\n face |bytes packets\n    lo: 999 1 0 0 0 0 0 0 999 1 0 0 0 0 0 0\nwlp3s0: 18000000 10 0 0 0 0 0 0 4000000 9 0 0 0 0 0 0\n',
+      ),
+    ).toEqual({ received: 18_000_000, sent: 4_000_000 });
+    expect(
+      parseDiskstats(
+        '   8       0 sda 100 0 2000 0 50 0 4000 0 0 0 0\n   8       1 sda1 100 0 2000 0 50 0 4000 0 0 0 0\n 253 0 dm-0 1 0 9 0 1 0 9 0\n',
+      ),
+    ).toEqual({ read: 1_024_000, written: 2_048_000 });
+    expect(
+      parseGpu(
+        '00:02.0 VGA compatible controller: Intel Corporation HD Graphics 5500 (rev 09)\n00:03.0 Audio device: Intel\n',
+      ),
+    ).toBe('HD 5500');
+    expect(
+      parseOutputs(
+        JSON.stringify([
+          { active: true, scale: 1.25, current_mode: { width: 1920, height: 1080 } },
+        ]),
+      ),
+    ).toBe('1920 × 1080 · 125 %');
+    expect(parseOutputs('not json')).toBeNull();
+    expect(parseWifiRate(' :130 Mbit/s\n*:72 Mbit/s\n')).toBe('72 Mbit/s');
   });
 });

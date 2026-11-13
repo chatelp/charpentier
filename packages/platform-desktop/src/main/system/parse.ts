@@ -237,3 +237,108 @@ export function parseBluetoothDevices(
 
 /** `/sys/block/dm-*\/dm/uuid`: a LUKS volume is there. */
 export const isLuks = (uuid: string | null): boolean => (uuid ?? '').startsWith('CRYPT-LUKS');
+
+// — The monitor (phase 5.5) —
+
+export interface Ticks {
+  readonly busy: number;
+  readonly total: number;
+}
+
+/** Every line of `/proc/stat` about the processor: the whole, then each thread. */
+export function parseCpuLines(text: string): { total: Ticks; threads: Ticks[] } | null {
+  const total = parseCpuTicks(text);
+  if (!total) return null;
+  const threads = text
+    .split('\n')
+    .filter((l) => /^cpu\d+ /.test(l))
+    .map((l) => parseCpuTicks(l.replace(/^cpu\d+/, 'cpu ')) ?? { busy: 0, total: 0 });
+  return { total, threads };
+}
+
+/** `/proc/loadavg`: the averages at 1, 5 and 15 min. */
+export function parseLoadAverage(text: string | null): [number, number, number] {
+  const [a = 0, b = 0, c = 0] = (text ?? '').split(/\s+/).slice(0, 3).map(Number);
+  return [a, b, c];
+}
+
+/** `/proc/meminfo`, in bytes: total, used (what is not available), cache, swap used. */
+export function parseMemory(text: string | null): {
+  total: number;
+  used: number;
+  cache: number;
+  swap: number;
+} {
+  const kb = (key: string) =>
+    Number(new RegExp(`^${key}:\\s*(\\d+)`, 'm').exec(text ?? '')?.[1] ?? 0) * 1024;
+  const total = kb('MemTotal');
+  return {
+    total,
+    used: total - kb('MemAvailable'),
+    cache: kb('Cached') + kb('Buffers'),
+    swap: kb('SwapTotal') - kb('SwapFree'),
+  };
+}
+
+/** `/proc/net/dev`: bytes received and sent by every interface but the loopback. */
+export function parseNetDev(text: string | null): { received: number; sent: number } {
+  let received = 0;
+  let sent = 0;
+  for (const line of (text ?? '').split('\n')) {
+    const match = /^\s*([^:\s]+):\s*(.*)$/.exec(line);
+    if (!match || match[1] === 'lo') continue;
+    const fields = (match[2] ?? '').trim().split(/\s+/).map(Number);
+    received += fields[0] ?? 0;
+    sent += fields[8] ?? 0;
+  }
+  return { received, sent };
+}
+
+/** `/proc/diskstats`: bytes read and written by the whole disks (not their partitions). */
+export function parseDiskstats(text: string | null): { read: number; written: number } {
+  let read = 0;
+  let written = 0;
+  for (const line of (text ?? '').split('\n')) {
+    const f = line.trim().split(/\s+/);
+    if (!/^(sd[a-z]+|nvme\d+n\d+|mmcblk\d+|vd[a-z]+)$/.test(f[2] ?? '')) continue;
+    read += Number(f[5] ?? 0) * 512;
+    written += Number(f[9] ?? 0) * 512;
+  }
+  return { read, written };
+}
+
+/** `lspci`: « VGA compatible controller: Intel Corporation HD Graphics 5500 (rev 09) » → « HD 5500 ». */
+export function parseGpu(text: string): string | null {
+  const line = text.split('\n').find((l) => /VGA compatible controller|3D controller/.test(l));
+  const name = line
+    ?.split(/: /)
+    .slice(1)
+    .join(': ')
+    .replace(/\s*\(rev [^)]*\)/, '')
+    .replace(/^(Intel Corporation|Advanced Micro Devices, Inc\.|NVIDIA Corporation)\s*/, '')
+    .replace(/\bGraphics\s+/, '')
+    .trim();
+  return name || null;
+}
+
+/** `swaymsg -t get_outputs -r`: the active screen, « 1920 × 1080 · 125 % ». */
+export function parseOutputs(text: string): string | null {
+  try {
+    const outputs = JSON.parse(text) as {
+      active?: boolean;
+      scale?: number;
+      current_mode?: { width?: number; height?: number };
+    }[];
+    const o = outputs.find((x) => x.active) ?? outputs[0];
+    if (!o?.current_mode?.width) return null;
+    return `${o.current_mode.width} × ${o.current_mode.height} · ${Math.round((o.scale ?? 1) * 100)} %`;
+  } catch {
+    return null;
+  }
+}
+
+/** `nmcli -t -f IN-USE,RATE device wifi`: the rate of the network in use. */
+export function parseWifiRate(text: string): string | null {
+  const line = text.split('\n').find((l) => l.startsWith('*'));
+  return line ? (splitTerse(line)[1]?.trim() ?? null) || null : null;
+}

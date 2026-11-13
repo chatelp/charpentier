@@ -7,6 +7,8 @@ import type {
   SyncAccountInfo,
   SyncDevice,
   SyncStatus,
+  MonitorInfo,
+  MonitorSample,
   SystemMessage,
   SystemService,
   SystemState,
@@ -77,6 +79,8 @@ export type Request =
   | { readonly type: 'sync.revokeDevice'; readonly id: string }
   | { readonly type: 'system.snapshot' }
   | { readonly type: 'system.post'; readonly text: string }
+  | { readonly type: 'system.monitorOpen' }
+  | { readonly type: 'system.monitorClose' }
   | {
       readonly type: 'system.call';
       readonly method: SystemAction;
@@ -121,6 +125,11 @@ export interface Responses {
   'agents.setLightModel': null;
   'system.snapshot': SystemSnapshot | null;
   'system.post': null;
+  'system.monitorOpen': {
+    readonly info: MonitorInfo;
+    readonly history: readonly MonitorSample[];
+  } | null;
+  'system.monitorClose': null;
   'system.call': unknown;
   'host.libraryFolder': string;
   'host.chooseLibraryFolder': boolean;
@@ -139,6 +148,8 @@ export type Message =
   | { readonly type: 'sync.status'; readonly status: SyncStatus }
   /** The device's system changed (main → renderer). */
   | { readonly type: 'system.changed'; readonly snapshot: SystemSnapshot }
+  /** A second of the machine, while the monitor's screen is open (main → renderer). */
+  | { readonly type: 'system.sample'; readonly sample: MonitorSample }
   /** A command was chosen in the application menu (main → renderer). */
   | { readonly type: 'host.menuCommand'; readonly id: string };
 
@@ -160,6 +171,8 @@ export interface DesktopBridge {
 export interface SystemSnapshot {
   readonly state: SystemState;
   readonly journal: readonly SystemMessage[];
+  /** The system measures itself: the monitor can open. */
+  readonly monitor: boolean;
 }
 
 /** The actions of the System service the interface may call, nothing else. */

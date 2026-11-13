@@ -1,3 +1,5 @@
+import type { SystemMonitor } from './monitor';
+
 /**
  * The device's system, on the X250 only (docs/SPEC.md D-24, docs/DESIGN.md
  * §4.12): what a window manager would offer, driven from the app. Absent
@@ -10,6 +12,8 @@
  */
 export interface SystemService {
   state(): SystemState;
+  /** The monitor's samples (phase 5.5), when the system can measure itself. */
+  readonly monitor?: SystemMonitor | null;
   onChange(listener: () => void): () => void;
   /** The messages since the device started, oldest first (wiped at power off). */
   journal(): readonly SystemMessage[];
