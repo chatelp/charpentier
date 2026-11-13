@@ -1,6 +1,6 @@
 # Charpentier : design language
 
-- **Version** : 1.5 (13 novembre 2026). 1.5 : la **ligne système** du X250 et tout ce qu'elle ouvre (§4.12), la matière du système (§3.1), la police à chasse fixe (§3.2), le **liseré de lumière** sur ce qu'on presse (§4.7). 1.4 : en thème sombre, l'ardoise reste la même et la page s'assombrit (§3.1). 1.3 : les outils changent de matière, **ardoise sombre**, et reçoivent des **outils gravés** (§3.1, §4.11), l'auteur trouvant l'ensemble trop neutre hors de la page d'écriture. 1.2 : finitions (sons §3.4, rejets §4.5, restauration dans la vue d'ensemble §4.4, note en fenêtre étroite §4.2, bibliothèque §4.9, icône §4.10). 1.1 : tout devient découvrable sans raccourci (§4.8, §5.1), après essai de l'app par l'auteur ; inventaire et directions comparées dans [design/decouverte.md](design/decouverte.md).
+- **Version** : 1.6 (13 novembre 2026). 1.6 : le moniteur du X250 (§4.12). 1.5 : la **ligne système** du X250 et tout ce qu'elle ouvre (§4.12), la matière du système (§3.1), la police à chasse fixe (§3.2), le **liseré de lumière** sur ce qu'on presse (§4.7). 1.4 : en thème sombre, l'ardoise reste la même et la page s'assombrit (§3.1). 1.3 : les outils changent de matière, **ardoise sombre**, et reçoivent des **outils gravés** (§3.1, §4.11), l'auteur trouvant l'ensemble trop neutre hors de la page d'écriture. 1.2 : finitions (sons §3.4, rejets §4.5, restauration dans la vue d'ensemble §4.4, note en fenêtre étroite §4.2, bibliothèque §4.9, icône §4.10). 1.1 : tout devient découvrable sans raccourci (§4.8, §5.1), après essai de l'app par l'auteur ; inventaire et directions comparées dans [design/decouverte.md](design/decouverte.md).
 - **Direction retenue** : **Perle** pour la page, **ardoise** pour les outils, avec **Deux encres**, **Signature** et **Outils gravés** ; manuscrit en **tiroir + vue d'ensemble** ; points d'entrée en **poignées** sur les bords et **zone de commande** en pied.
 - **Sources** : brief de l'auteur ([design/brief.md](design/brief.md)), maquettes ([design/mockups/](design/mockups/), ouvrir `index.html`), tokens CSS proposés ([design/tokens.css](design/tokens.css)).
 - Complète la [SPEC](SPEC.md) (§6 mentor, §7.1 statuts, §19 exigences transverses) sans la contredire.
@@ -256,13 +256,14 @@ Du dessin plutôt que de la couleur : chaque lieu devient reconnaissable. Maquet
 ### 4.12 Système (X250)
 Sur le X250, l'app est la partie visible du système [D-24]. Maquette : cadre « X250 », groupe « X250 · ligne système », écrans « X250 · Réglages », « Verrou », « Démarrage » ; rendus à la taille réelle dans [design/x250/](design/x250/). Rien de tout cela n'apparaît sur le Mac ni sur le web.
 
-**La ligne système.** Toujours affichée, 30 px, tout en haut, pleine largeur, dans la matière du système, en JetBrains Mono 11,5 px. Elle ne s'efface pas pendant la frappe et rien n'y bouge de soi-même, sauf l'heure. De gauche à droite :
+**La ligne système.** Toujours affichée, 30 px, tout en haut, pleine largeur, dans la matière du système, en JetBrains Mono 11,5 px. Elle ne s'efface pas pendant la frappe et rien n'y bouge de soi-même, sauf l'heure et, hors frappe, la mini-courbe du segment `cpu`. De gauche à droite :
 
 | Segment | Affiche | Un clic ou sa touche déplie |
 |---|---|---|
 | `système` `⊞` | l'équerre et le mot | le menu : Réglages du système… `⊞,`, Imprimer… `⊞P`, Copier mes textes sur une clé USB `⊞U`, Verrouiller `⊞L`, Mettre en veille `⊞⏎`, Redémarrer…, Éteindre… ; en tête la version (`0.5.0 · nixos 26.11 · x250`), en pied « allumé depuis 3 h 12 » |
 | message | le dernier message du système, en `--ch-muted` ; vide : `journal · 7` en `--ch-faint` | le **journal** `⊞J` : les messages depuis le démarrage, du plus récent au plus ancien, avec leur heure ; effacé à l'extinction |
 | `usb` | le nom de la clé, seulement si une clé est branchée | Copier mes textes `⊞U`, Éjecter |
+| `cpu` | une mini-courbe de douze colonnes en caractères de bloc (`▁▂▃▅`), le pourcentage et la température (`12 % 48°`) | le **moniteur** `⊞M`, plein cadre (voir plus bas) |
 | `wifi` | le réseau et la force du signal (`▂▄▆█`, barres manquantes en `--ch-faint`) ; `wifi non` si coupé | interrupteur Wi-Fi, réseaux visibles, mot de passe, Oublier, adresse `⊞W` |
 | `bt` | `non` ou le nombre d'appareils connectés | interrupteur, appareils connus, Appairer… `⊞B` |
 | `lum` | jauge et valeur | luminosité, mode nuit (auto, oui, non), écran externe |
@@ -281,8 +282,8 @@ Sur le X250, l'app est la partie visible du système [D-24]. Maquette : cadre «
 - **Portail captif** : un réseau qui demande une page de connexion est marqué `portail` ; l'appareil ne l'ouvre pas (pas de navigateur) et le dit : « Ce réseau demande une page de connexion. Utilisez le partage de connexion de votre téléphone. »
 
 **Clavier.**
-- La touche **Super** (`⊞`) est celle du système. Seule : le focus va à la ligne, `←` `→` parcourent les segments, `⏎` ou `↓` déplie, `Échap` rend le focus au texte. Avec une lettre : `⊞W` Wi-Fi, `⊞B` Bluetooth, `⊞J` journal, `⊞L` verrouiller, `⊞P` imprimer, `⊞U` clé USB, `⊞,` réglages, `⊞⏎` veille.
-- Dans la ligne de commande, le préfixe **`:`** appelle le système, avec un argument éventuel : `:lum 40`, `:vol 20`, `:muet`, `:wifi Maison-5G`, `:wifi non`, `:nuit`, `:veille`, `:verrou`, `:eteindre`, `:redemarrer`, `:imprimer scène`, `:usb`, `:reglages`. Sans argument, la commande ouvre le panneau du segment. Ces commandes figurent aussi, en clair, dans la liste ordinaire (« Mettre en veille », « Régler la luminosité… »).
+- La touche **Super** (`⊞`) est celle du système. Seule : le focus va à la ligne, `←` `→` parcourent les segments, `⏎` ou `↓` déplie, `Échap` rend le focus au texte. Avec une lettre : `⊞W` Wi-Fi, `⊞B` Bluetooth, `⊞J` journal, `⊞M` moniteur, `⊞L` verrouiller, `⊞P` imprimer, `⊞U` clé USB, `⊞,` réglages, `⊞⏎` veille.
+- Dans la ligne de commande, le préfixe **`:`** appelle le système, avec un argument éventuel : `:lum 40`, `:vol 20`, `:muet`, `:wifi Maison-5G`, `:wifi non`, `:nuit`, `:veille`, `:verrou`, `:eteindre`, `:redemarrer`, `:imprimer scène`, `:usb`, `:moniteur`, `:reglages`. Sans argument, la commande ouvre le panneau du segment. Ces commandes figurent aussi, en clair, dans la liste ordinaire (« Mettre en veille », « Régler la luminosité… »).
 
 **Réglages du système** (`⊞,`). Vue plein cadre, comme l'Atelier : à gauche un rail de 17 rem dans la matière du système (titre « réglages du système » avec l'équerre, une ligne par section avec sa valeur courante à droite, section active en creux avec un filet `--ch-ink`) ; à droite la section, **sur la page**, avec les composants ordinaires de l'app (titre Literata 30 px, intertitres en petites capitales, lignes libellé / aide / contrôle). `Échap` revient au texte.
 
@@ -298,7 +299,26 @@ Sur le X250, l'app est la partie visible du système [D-24]. Maquette : cadre «
 | Impression | imprimantes du réseau (sans pilote), par défaut, page de test ; format A4 / Lettre, interligne |
 | Clé USB | état ; Copier mes textes (tous les projets en Markdown dans `Charpentier/<date>/`, rien n'est effacé sur la clé) ; Éjecter |
 | Date et heure | fuseau, heure automatique par le réseau, format 24 h / 12 h |
+| Ligne système | afficher le segment `cpu` (oui par défaut) ; les autres segments sont fixes |
 | À propos | versions de l'app et du système, mise à jour (depuis le Mac), stockage, licences |
+
+**Moniteur** (`⊞M`, ou un clic sur `cpu`). Pour le plaisir de voir tourner la machine : tout ce qu'elle sait mesurer, sans jamais déranger l'écriture.
+- **Segment `cpu`** : une colonne toutes les 5 secondes (la moyenne de ces 5 secondes), douze colonnes, soit la dernière minute ; hauteur sur huit niveaux. **Pendant la frappe, il se fige** : il ne se met plus à jour, puis rattrape à la première pause (même règle que les points d'entrée, §4.8). Présent d'office sur le X250, retirable dans les réglages.
+- **Écran du moniteur** : plein cadre, **entièrement dans la matière du système** et en chasse fixe (c'est le seul écran qui n'a pas de page). En tête : l'équerre, « moniteur », la machine (`x250 · i5-5300U · 8 Go · allumé depuis 3 h 12`), la durée affichée (1 min, 10 min, 1 h) et `Échap`. Dessous, une grille de trois colonnes de **cadrans** en relief léger ; chacun a son nom à gauche, sa valeur du moment à droite, une courbe dans un cadre gravé, puis ses lignes de détail.
+
+| Cadran | Courbe | Détail |
+|---|---|---|
+| processeur (double largeur) | charge totale | chaque fil (jauge en cellules et pourcentage), fréquence, charge moyenne à 1, 5 et 15 min |
+| températures | processeur (trait plein), carte (pointillé) | processeur, carte, ventilateur en tr/min |
+| mémoire | part utilisée | utilisée, cache, swap |
+| réseau | débit descendant (plein), montant (pointillé) | réseau et débit négocié, total reçu et envoyé |
+| batterie | puissance tirée en watts | chaque batterie : niveau et usure ; autonomie |
+| disque | écritures | espace occupé, lecture et écriture |
+| charpentier | – | tableau des processus de l'app (principal, interface, correcteur) : processeur, mémoire ; documents ouverts |
+| graphique | – | modèle, fréquence, écran ; « charge : non mesurée » tant qu'elle n'est pas fiable |
+
+- **Courbes** : trait de 1,4 px en `--ch-ink`, aplat à 8 %, seconde série en pointillé `--ch-muted`, trois lignes de repère en pointillé `--ch-faint` ; un échantillon par seconde ; aucune couleur, aucune animation d'entrée. L'écran ne se met à jour que lorsqu'il est affiché.
+- Sur le Mac et le web : pas de moniteur (choix de l'auteur).
 
 **Imprimer** (`⊞P`) : une feuille en ardoise au centre : quoi (cette scène, ce chapitre, tout le manuscrit), imprimante, copies ; « Imprimer `⏎` ». Mise en page de manuscrit fixe : Literata 12 pt, interligne double, marges de 2,5 cm, titre courant et folio.
 
