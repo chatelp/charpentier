@@ -10,6 +10,7 @@ import {
   shell,
   type WebContents,
 } from 'electron';
+import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {
@@ -89,6 +90,15 @@ const PROCESS_KINDS: Partial<Record<string, AppProcessKind>> = {
   GPU: 'graphics',
 };
 
+function installedKeyboard(): 'azerty' | 'bepo' | 'qwerty' | undefined {
+  try {
+    const value = fs.readFileSync('/etc/charpentier/keyboard', 'utf8').trim();
+    return value === 'azerty' || value === 'bepo' || value === 'qwerty' ? value : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 /**
  * The device's system (docs/PLAN.md phase 5.4): the X250's on Linux as a
  * device, a simulated one on request, none otherwise.
@@ -101,6 +111,8 @@ function deviceSystem(): (SystemService & { dispose?(): void }) | null {
     appVersion: app.getVersion(),
     hostname: os.hostname(),
     settingsFile: path.join(app.getPath('userData'), 'system.json'),
+    // The keyboard chosen at installation (nix/hosts/x250).
+    keyboard: installedKeyboard(),
     // The USB key's copy: every project, in Markdown.
     exportTexts: (folder) => exportTexts(store, library, folder, mirrorStrings),
     // The monitor's « charpentier » dial: Electron's processes (the speller is a

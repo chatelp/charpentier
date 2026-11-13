@@ -86,6 +86,8 @@ export interface LinuxSystemOptions {
   readonly app?: () => MonitorSample['app'];
   /** Polling periods, in ms (the tests shorten them). */
   readonly periods?: { readonly cpu?: number; readonly power?: number; readonly slow?: number };
+  /** The keyboard chosen at installation (`/etc/charpentier/keyboard`): the default layout. */
+  readonly keyboard?: SystemSettings['keyboardLayout'];
   /** Writes every project in Markdown into `folder` (the USB key's copy). */
   readonly exportTexts?: (folder: string) => Promise<void>;
   /** PBKDF2 rounds of the code (fewer in the tests). */
@@ -168,7 +170,11 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
     cpu: { load: 0, temperature: 0, history: [] },
     printers: [],
     timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    settings: { ...DEFAULT_SYSTEM_SETTINGS, ...stored.settings },
+    settings: {
+      ...DEFAULT_SYSTEM_SETTINGS,
+      ...(options.keyboard && { keyboardLayout: options.keyboard }),
+      ...stored.settings,
+    },
     lock: { locked: false, hasCode: !!stored.lock, retryAt: null },
     firstStart: stored.firstStartDone !== true,
   };
