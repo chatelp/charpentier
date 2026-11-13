@@ -1,18 +1,25 @@
-# Charpentier sync server (docs/SPEC.md D-22): Hocuspocus + Postgres.
-# Behind the reverse proxy that serves the public HTTPS domain (WebSocket upgrade).
+# Charpentier sync server (docs/SPEC.md D-22): Hocuspocus + Postgres, behind
+# the Traefik of the host (network `proxy`, HTTPS, WebSocket), with a nightly
+# backup of the database volume. Settings in .env (see .env.example).
 name: charpentier
 
 services:
   server:
-    build: ../apps/server
+    build: ${SERVER_CONTEXT:-../apps/server}
     restart: unless-stopped
     environment:
       DATABASE_URL: postgres://charpentier:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@db:5432/charpentier
-    ports:
-      - '${CHARPENTIER_PORT:-8080}:8080'
     depends_on:
       db:
         condition: service_healthy
+    networks: [default, proxy]
+    labels:
+      traefik.enable: 'true'
+      traefik.docker.network: ${TRAEFIK_NETWORK:-proxy}
+      traefik.http.routers.charpentier.entrypoints: ${TRAEFIK_ENTRYPOINT:-websecure}
+      traefik.http.routers.charpentier.rule: Host(`${CHARPENTIER_HOST:?set CHARPENTIER_HOST in .env}`)
+      traefik.http.routers.charpentier.tls.certresolver: ${TRAEFIK_CERTRESOLVER:-cloudflare}
+      traefik.http.services.charpentier.loadbalancer.server.port: '8080'
 
   db:
     image: postgres:17-alpine
@@ -28,6 +35,26 @@ services:
       interval: 10s
       timeout: 3s
       retries: 5
+    labels:
+      # Stopped during the nightly backup, so that the copy is consistent.
+      docker-volume-backup.stop-during-backup: 'true'
+
+  backup:
+    image: offen/docker-volume-backup:v2
+    restart: unless-stopped
+    environment:
+      BACKUP_CRON_EXPRESSION: ${BACKUP_CRON_EXPRESSION:-30 3 * * *}
+      BACKUP_FILENAME: charpentier-%Y-%m-%dT%H-%M-%S.tar.gz
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-30}
+    volumes:
+      - db:/backup/db:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ${BACKUP_ARCHIVE:?set BACKUP_ARCHIVE in .env}:/archive
 
 volumes:
   db:
+
+networks:
+  proxy:
+    name: ${TRAEFIK_NETWORK:-proxy}
+    external: true

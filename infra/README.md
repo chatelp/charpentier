@@ -1,26 +1,50 @@
 # Serveur de synchro Charpentier
 
-Hocuspocus et Postgres en Docker (docs/SPEC.md, D-22). Le guide complet de déploiement sur `prodesk2021.local` derrière le reverse proxy en HTTPS viendra avec la phase 4.5.
+Hocuspocus et Postgres en Docker (docs/SPEC.md, D-21 et D-22), derrière le Traefik de la machine hôte, avec une sauvegarde nocturne de la base. En service sur `prodesk2021.local`, à l'adresse publique `https://charpentier.chatel.pm`.
 
-En bref, depuis la racine du dépôt :
+## Déployer ou mettre à jour
+
+Depuis la racine du dépôt, sur le Mac :
 
 ```bash
-pnpm install
-pnpm --filter @charpentier/server build
-cp infra/.env.example infra/.env   # puis choisir un mot de passe Postgres
-docker compose -f infra/docker-compose.yml up -d --build
+CHARPENTIER_HOST=charpentier.chatel.pm BACKUP_ARCHIVE=/mnt/WD1000/Backups/Docker_volumes/charpentier \
+  scripts/deploy-server.sh prodesk2021.local /home/pierre/Docker/charpentier
 ```
 
-Le serveur écoute sur le port `CHARPENTIER_PORT` (8080 par défaut) ; le reverse proxy doit transmettre les WebSocket (`Upgrade`).
+Le script construit le serveur (`pnpm --filter @charpentier/server build`), copie `docker-compose.yml`, le `Dockerfile` et le serveur dans `/home/pierre/Docker/charpentier`, puis lance `docker compose up -d --build`. Au premier déploiement, il écrit le `.env` de la machine (mot de passe Postgres tiré au hasard, qui ne quitte pas la machine) ; ensuite, il ne le touche plus et les deux variables ne sont plus nécessaires.
+
+Ce que fait le `docker-compose.yml` :
+
+- `server` : le serveur de synchro sur le port 8080, exposé seulement par Traefik (réseau `proxy`, point d'entrée `websecure`, certificat `cloudflare`), WebSocket compris ;
+- `db` : Postgres 17, volume `charpentier_db`, sans port publié ;
+- `backup` : une archive du volume chaque nuit à 3 h 30 dans `BACKUP_ARCHIVE`, gardée 30 jours ; Postgres est arrêté le temps de la copie.
+
+Vérifier : `curl https://charpentier.chatel.pm/api/health` répond `{"ok":true}`. Un nouveau nom met environ une minute à obtenir son certificat (Cloudflare répond 526 en attendant).
 
 ## Comptes (D-21)
 
-L'inscription est fermée : le premier compte se crée sur le serveur, le mot de passe est saisi sans écho (12 caractères au moins).
+L'inscription est fermée : un compte se crée sur la machine, le mot de passe est saisi sans écho (12 caractères au moins).
 
 ```bash
-docker compose -f infra/docker-compose.yml exec server node main.js create-user adresse@exemple.fr
+ssh -t prodesk2021.local 'cd ~/Docker/charpentier && docker compose exec server node main.js create-user adresse@exemple.fr'
 ```
 
-Mot de passe oublié : `node main.js reset-password adresse@exemple.fr` (tous les appareils sont alors déconnectés).
+Mot de passe oublié : la même commande avec `reset-password` à la place de `create-user` (tous les appareils sont alors déconnectés).
 
-L'API du serveur, à côté de la synchro : `POST /api/login`, `POST /api/logout`, `GET /api/devices`, `DELETE /api/devices/<id>`, `GET /api/health`.
+Dans l'app : ligne de commande (⌘K), « Se connecter à un serveur de synchro… », adresse `https://charpentier.chatel.pm`, puis l'e-mail et le mot de passe.
+
+## API
+
+À côté de la synchro (WebSocket à la racine) : `POST /api/login`, `POST /api/logout`, `GET /api/devices`, `DELETE /api/devices/<id>`, `GET /api/health`.
+
+## Restaurer une sauvegarde
+
+Une archive contient le volume sous `/backup/db` (vérifié le 13 novembre 2026 ; la restauration elle-même n'a pas encore été essayée).
+
+```bash
+ssh prodesk2021.local
+cd ~/Docker/charpentier && docker compose stop server db
+docker run --rm -v charpentier_db:/data -v /mnt/WD1000/Backups/Docker_volumes/charpentier:/archive alpine \
+  sh -c 'rm -rf /data/* && tar -xzf /archive/<fichier>.tar.gz -C /data --strip-components=2'
+docker compose start db server
+```
