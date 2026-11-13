@@ -87,6 +87,13 @@
   font-weight: 500;
 }
 
+/* The focus carries the light in the rail: the module shown keeps its vermilion only. */
+.ch-atl-modules:has(.ch-atl-module:focus-visible:not([aria-selected='true']))
+  .ch-atl-module[aria-selected='true'] {
+  background: transparent;
+  box-shadow: inset 3px 0 0 var(--ch-author);
+}
+
 .ch-atl-module:focus-visible:not([aria-selected='true']) {
   background: var(--ch-lit-bg);
   box-shadow: var(--ch-lit);

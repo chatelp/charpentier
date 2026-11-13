@@ -71,6 +71,15 @@
   color: var(--ch-author);
 }
 
+/*
+ * The focus carries the light in a list (docs/DESIGN.md §4.7): while it is on
+ * another line, the open scene keeps only its vermilion rule and label.
+ */
+.ch-nav-tree:has(.ch-nav-item:focus-visible) .ch-nav-item.is-current:not(:focus-visible) {
+  background: transparent;
+  box-shadow: inset 3px 0 0 var(--ch-author);
+}
+
 .ch-nav-item.is-drop-target {
   box-shadow: inset 0 2px 0 var(--ch-author);
 }
