@@ -1,7 +1,7 @@
 # Charpentier : design language
 
-- **Version** : 1.2 (13 novembre 2026). 1.2 : finitions (sons §3.4, rejets §4.5, restauration dans la vue d'ensemble §4.4, note en fenêtre étroite §4.2, bibliothèque §4.9, icône §4.10). 1.1 : tout devient découvrable sans raccourci (§4.8, §5.1), après essai de l'app par l'auteur ; inventaire et directions comparées dans [design/decouverte.md](design/decouverte.md).
-- **Direction retenue** : **Perle**, avec **Deux encres** et **Signature** ; manuscrit en **tiroir + vue d'ensemble** ; points d'entrée en **poignées** sur les bords et **zone de commande** en pied.
+- **Version** : 1.3 (13 novembre 2026). 1.3 : les outils changent de matière, **ardoise sombre**, et reçoivent des **outils gravés** (§3.1, §4.11), l'auteur trouvant l'ensemble trop neutre hors de la page d'écriture. 1.2 : finitions (sons §3.4, rejets §4.5, restauration dans la vue d'ensemble §4.4, note en fenêtre étroite §4.2, bibliothèque §4.9, icône §4.10). 1.1 : tout devient découvrable sans raccourci (§4.8, §5.1), après essai de l'app par l'auteur ; inventaire et directions comparées dans [design/decouverte.md](design/decouverte.md).
+- **Direction retenue** : **Perle** pour la page, **ardoise** pour les outils, avec **Deux encres**, **Signature** et **Outils gravés** ; manuscrit en **tiroir + vue d'ensemble** ; points d'entrée en **poignées** sur les bords et **zone de commande** en pied.
 - **Sources** : brief de l'auteur ([design/brief.md](design/brief.md)), maquettes ([design/mockups/](design/mockups/), ouvrir `index.html`), tokens CSS proposés ([design/tokens.css](design/tokens.css)).
 - Complète la [SPEC](SPEC.md) (§6 mentor, §7.1 statuts, §19 exigences transverses) sans la contredire.
 
@@ -9,7 +9,7 @@
 
 ## 1. Principes
 
-1. **La page est plate, les outils sont en relief.** Le texte n'est jamais dans une boîte : il est posé sur le fond. Tout ce qui sert à travailler (panneaux, notes, fiches, boutons, ligne de commande) est sculpté dans la même matière, en neumorphisme doux.
+1. **La page est plate et claire, les outils sont en relief et en ardoise.** Le texte n'est jamais dans une boîte : il est posé sur le fond perle. Ce qui sert à travailler autour du texte (panneaux, tiroir, rail et liste de l'Atelier, poignées, ligne de commande) est taillé dans une seconde matière, l'**ardoise sombre**, en neumorphisme doux : on distingue d'un coup d'œil le texte de l'outillage. Ce qui est du contenu reste sur la perle : la page, les fiches, les cartes de scène et de projet, la note en marge.
 2. **Deux voix, deux encres.** Le **vermillon** (crayon de charpentier) marque ce qui est à l'auteur : curseur, sélection, élément actif, décisions validées. Le **bleu de Prusse** marque tout ce qui vient du Compagnon. Aucune autre couleur porteuse de sens.
 3. **Le relief dit le statut.** En relief = proposé, à prendre ; gravé = validé, acquis ; estompé = rejeté ; gravé + médaillon « ! » = contredit. Le statut ne dépend jamais de la seule couleur.
 4. **Le Compagnon respire dans la marge.** Ses remarques apparaissent quand vous marquez une pause, se déplient à côté du passage, se replient quand vous repartez. Rien ne recouvre le texte, rien ne clignote, aucune notification.
@@ -48,6 +48,33 @@ Valeurs normatives dans [design/tokens.css](design/tokens.css) (préfixe `--ch-`
 | Sélection | `--ch-author-soft` | 22 % | 24 % | – |
 
 Thème : suit le système par défaut, forçable (`data-theme` sur la racine) et basculable au clavier. Le sombre est un vrai neumorphisme sombre (lumière `#323740`, ombre `#1a1d22`), jamais un noir pur.
+
+**Matière des outils (ardoise).** Une surface d'outil redéclare les tokens ci-dessus pour elle-même et tout ce qu'elle contient ; les composants ne changent pas, ils lisent les mêmes tokens. À poser par une classe unique (par exemple `.ch-tool`), qui redéclare aussi `--ch-raise`, `--ch-raise-s` et `--ch-inset` pour que le relief intérieur se calcule avec l'ombre et la lumière de l'ardoise. L'ombre portée de la surface elle-même, sur la page, garde les couleurs de la page.
+
+| Token dans une surface d'outil | Thème clair | Thème sombre | Contraste sur l'ardoise (clair / sombre) |
+|---|---|---|---|
+| `--ch-bg` | `#2b3038` | `#1a1d22` | – |
+| `--ch-highlight` | `#383e48` | `#24282f` | – |
+| `--ch-shade` | `#1b1e24` | `#0f1114` | – |
+| `--ch-ink` | `#dfe3ea` | `#dfe3ea` | 10,3 / 13,1 |
+| `--ch-ink-2` | `#b9c0ca` | `#b9c0ca` | 7,2 / 9,2 |
+| `--ch-muted` | `#8a929e` | `#8a929e` | 4,2 / 5,4 |
+| `--ch-faint` | `#5d6470` | `#5d6470` | 2,2 / 2,8 (décoratif) |
+| `--ch-mentor` | `#86aedb` | `#86aedb` | 5,7 / 7,3 |
+| `--ch-mentor-soft` | 13 % | 13 % | – |
+| `--ch-author` | `#e3876a` | `#e3876a` | 5,0 / 6,4 |
+| `--ch-author-soft` | 24 % | 24 % | – |
+
+En thème clair, l'ardoise reprend donc les encres du thème sombre ; en thème sombre, elle est plus profonde que la page (`#1a1d22` contre `#262a31`).
+
+| Surface d'outil (ardoise) | Reste sur la page (perle) |
+|---|---|
+| panneau du Compagnon, fiche en volet, tiroir du manuscrit | page d'écriture, en-tête, ouverture de scène, pied |
+| poignées de bord | « Écrire \| Atelier », zone de commande au repos, bouton `Aa` |
+| rail des modules et liste des entrées de l'Atelier (deux plaques en relief, rayon `--ch-radius-lg`, 14 px de marge intérieure) | fiche de l'Atelier et ses champs |
+| bandeau de la vue d'ensemble et son aperçu de restauration | cartes de scène, titre et colonnes de la vue d'ensemble |
+| ligne de commande ouverte (barre et feuille de résultats), feuille `Aa`, bulle de la visite guidée | note du Compagnon en marge (et sous le paragraphe), note de bienvenue |
+| | bibliothèque et ses cartes |
 
 ### 3.2 Typographie
 
@@ -120,14 +147,14 @@ Attaques et chutes en rampes exponentielles depuis et vers 0,0001. Réglages : �
 - **Comportement** : une seule note dépliée à la fois ; elle se déplie quand le curseur entre dans le passage après une pause, ou au raccourci ; se replie quand le curseur s'éloigne ou à `Échap`. Fenêtre étroite (< 1180 px) : la note se déplie **sous son paragraphe**, en pleine largeur de colonne, et pousse le texte qui suit ; elle ne recouvre jamais le texte (décoration ProseMirror de type widget placée après le paragraphe, pas une couche positionnée). La pastille reste dans ce qui reste de marge, à 0,5 rem du bord de la colonne ; la note garde sa carte en relief, avec 10 px au-dessus et 14 px au-dessous.
 
 ### 4.3 Panneau droit : Points à traiter / Conversation
-- Panneau en relief de 25,5 rem, détaché des bords (10–12 px), ouvert par `⌘L` ou la poignée « Compagnon » (§4.8), sur l'onglet Points ; le contrôle segmenté passe à la conversation [D-18]. Il **remplace la marge** : les pastilles disparaissent et le texte se recentre dans l'espace restant. **Il ne recouvre jamais le contenu**, dans aucune vue : dans l'Atelier, la colonne de la fiche se resserre (une seule colonne de champs sous 46 rem) ; dans la vue d'ensemble, les colonnes et le bandeau s'arrêtent avant lui. Même règle pour le tiroir du manuscrit quand il reste ouvert.
+- Panneau en ardoise, en relief, de 25,5 rem, détaché des bords (10–12 px), ouvert par `⌘L` ou la poignée « Compagnon » (§4.8), sur l'onglet Points ; le contrôle segmenté passe à la conversation [D-18]. Il **remplace la marge** : les pastilles disparaissent et le texte se recentre dans l'espace restant. **Il ne recouvre jamais le contenu**, dans aucune vue : dans l'Atelier, la colonne de la fiche se resserre (une seule colonne de champs sous 46 rem) ; dans la vue d'ensemble, les colonnes et le bandeau s'arrêtent avant lui. Même règle pour le tiroir du manuscrit quand il reste ouvert.
 - **Contrôle segmenté** en tête : rail en creux, onglet actif en relief, libellé vermillon, compteur bleu.
 - **Points** : groupes « Cette scène », « Chapitre », « Fiches proposées » (libellés en petites capitales) ; chaque point est une carte en relief avec sa pastille, son type et sa scène, un titre, une phrase. Le point sélectionné est gravé. Les propositions de fiche portent « Valider `V` » et « Rejeter `X` ». Pied : `J K` parcourir, `⏎` aller au passage, `R` résolu, `I` ignorer.
 - **Réglette d'intervention** [D-19] : en tête du panneau, sous le contrôle segmenté, un rail gravé à 4 crans (Discret, Attentif, Accompagnant, Tuteur), curseur en relief, libellé du cran en petites capitales et une ligne qui dit ce qu'il change. `←` `→` quand elle a le focus.
 - **Conversation** : pas de bulles. Transcription sobre : « Vous » (petites capitales vermillon), « Le Compagnon » (petites capitales bleues), texte en Inter 13,5 px. Champ de saisie gravé en pied.
 
 ### 4.4 Manuscrit : tiroir et vue d'ensemble
-- **Tiroir** (`⌘J` ou la poignée « Manuscrit », [D-18]) : panneau gauche en relief de 22 rem, la scène derrière s'estompe. Contrôle segmenté « Manuscrit | Plan ». Chapitres en Literata, scènes en lignes ; scène active gravée avec un filet vermillon à gauche ; pastilles bleues `•••` et nombre de mots à droite. Sous la scène active : variantes (active en vermillon) et derniers points de restauration. Clavier : `↑↓`, `⏎` ouvrir, `⌥↑↓` déplacer, `V` variantes, `⌘N` nouvelle scène.
+- **Tiroir** (`⌘J` ou la poignée « Manuscrit », [D-18]) : panneau gauche en ardoise, en relief, de 22 rem, la scène derrière s'estompe. Contrôle segmenté « Manuscrit | Plan ». Chapitres en Literata, scènes en lignes ; scène active gravée avec un filet vermillon à gauche ; pastilles bleues `•••` et nombre de mots à droite. Sous la scène active : variantes (active en vermillon) et derniers points de restauration. Clavier : `↑↓`, `⏎` ouvrir, `⌥↑↓` déplacer, `V` variantes, `⌘N` nouvelle scène.
 - **Vue d'ensemble** (`⌘⇧P` ou « Plan ») : plein cadre, titre du roman en Literata, une colonne par chapitre, une carte en relief par scène (numéro, titre en Literata, mots, variantes, pastilles). Scène active gravée et cerclée de vermillon. Clavier : flèches, `⌥` + flèches pour déplacer, `⏎` écrire, `Échap` revenir.
 - **Bandeau en pied de la vue d'ensemble** (scène sélectionnée) : deux groupes, libellés en petites capitales avec leur touche.
   - « Variantes `V` » : une puce par variante, l'active gravée en vermillon ; un clic ou `⏎` la rend active.
@@ -160,7 +187,7 @@ Attaques et chutes en rampes exponentielles depuis et vers 0,0001. Réglages : �
 
 ### 4.6 Ligne de commande
 - **Zone de commande, toujours visible** : au centre du pied, un champ gravé (largeur min(30 rem, 38 %)) avec l'invite bleue `›`, « Que voulez-vous faire ? » en `--ch-faint` et `⌘K` à droite. Un clic ou `⌘K` l'ouvre. Dans l'Atelier, le même champ est au pied du rail des modules.
-- Ouverte : barre pleine largeur en pied, champ gravé, invite bleue `›` ; résultats qui montent dans une feuille en relief de 46 rem alignée à gauche. Champ vide : les commandes les plus utiles et les dernières utilisées, pour qu'un débutant voie ce qui existe sans rien taper.
+- Ouverte : barre pleine largeur en pied, en ardoise et en relief (sans dégradé vers la page), champ gravé, invite bleue `›` ; résultats qui montent dans une feuille en relief de 46 rem alignée à gauche. Champ vide : les commandes les plus utiles et les dernières utilisées, pour qu'un débutant voie ce qui existe sans rien taper.
 - Préfixes : `>` commandes, `@` fiches, `#` scènes (`⌘P` ouvre directement en `#`). Recherche approximative, insensible aux accents ; lettres trouvées en bleu, ligne choisie gravée ; raccourci de chaque commande à droite.
 - Toute action de l'app y figure, avec son raccourci : c'est aussi l'aide-mémoire du clavier.
 
@@ -196,6 +223,19 @@ Maquette : écran 9.
 
 ### 4.10 Icône
 L'**Équerre** : une équerre de charpentier gravée dans une plaque perle, bord intérieur vermillon, graduations, pastille du Compagnon dans l'angle. Sources, rendus et règles des petites tailles (version simplifiée sous 128 px) : [design/icon/](design/icon/README.md).
+
+### 4.11 Outils gravés
+Du dessin plutôt que de la couleur : chaque lieu devient reconnaissable. Maquette : groupe « Caractère », « N · Établi sombre » et « O · Outils gravés » (état par défaut). Pictogrammes : [design/pictos/](design/pictos/README.md).
+
+- **Titre de panneau** : en tête du panneau du Compagnon et du tiroir, au-dessus du contrôle segmenté (14 px 18 px 4 px) : un médaillon, un titre, et à droite une ligne de contexte en Inter 11,5 px `--ch-muted`.
+  - Compagnon : compas, « Le Compagnon » en Literata italique 19 px `--ch-mentor`, contexte « 6 points · cran Accompagnant ».
+  - Manuscrit : livre ouvert, « Manuscrit » en petites capitales Literata 19 px `--ch-ink-2`, contexte : titre du projet et nombre de mots.
+- **Médaillon** : disque en relief léger (`--ch-raise-s`), 34 px dans un titre de panneau, 30 px dans le rail de l'Atelier ; pictogramme au trait de 1,5 px en `--ch-ink-2` (`--ch-mentor` pour le Compagnon). Élément actif : médaillon **gravé**, pictogramme vermillon.
+- **Rail de l'Atelier** : chaque module porte son médaillon à gauche du libellé : plan (Méta), buste (Personnages), ferme de charpente (Structure), fil à plomb (Règles du monde), loupe (Indices et révélations). Le compteur de propositions passe à droite.
+- **Monogramme** : l'initiale de l'entrée (sans l'article : « Le technicien » donne T) en Literata dans un disque en relief : 30 px devant chaque entrée de la liste (gravé et vermillon si l'entrée est active, italique bleu si elle est proposée), 62 px en `--ch-raise` devant le titre de la fiche, initiale vermillon de 34 px.
+- **Filets gravés** : les intertitres de groupe (« Cette scène », « Identité et apparence »…) sont suivis d'un filet qui file jusqu'au bord : deux traits d'1 px, `--ch-shade` puis `--ch-highlight`, comme un trait de trusquin.
+- **Tiroir** : chaque titre de chapitre est en Literata 15 px, précédé du fleuron ⁂ en `--ch-faint`.
+- Un pictogramme n'est jamais seul : toujours à côté de son libellé. Aucune autre illustration, aucune texture.
 
 ## 5. Règles d'UX
 

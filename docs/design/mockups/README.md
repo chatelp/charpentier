@@ -3,7 +3,7 @@
 Ouvrir `index.html` dans un navigateur (aucune installation). La barre noire du haut ne fait pas partie du design : elle sert à comparer.
 
 - **Direction** (touche `D`) : Perle, Vélin, Grès.
-- **Caractère** (touches `M` `E` `O`, direction Perle) : leviers combinables pour sortir les outils de la monotonie, la page d'écriture restant telle quelle. `M` alterne Neutre, **Matières** (une matière par lieu : bleu lavé pour le Compagnon, ivoire pour le manuscrit, argile pour l'Atelier) et **Établi sombre** (outils en ardoise, page claire) ; `E` **Encres pleines** (vermillon et bleu remplissent ce qui est actif) ; `O` **Outils gravés** (pictogrammes en médaillon, monogrammes, titres de panneaux, filets gravés). En cours de choix.
+- **Caractère** (touches `M` `E` `O`, direction Perle) : leviers combinables pour sortir les outils de la monotonie, la page d'écriture restant telle quelle. `M` alterne Neutre, **Matières** (une matière par lieu : bleu lavé pour le Compagnon, ivoire pour le manuscrit, argile pour l'Atelier) et **Établi sombre** (outils en ardoise, page claire) ; `E` **Encres pleines** (vermillon et bleu remplissent ce qui est actif) ; `O` **Outils gravés** (pictogrammes en médaillon, monogrammes, titres de panneaux, filets gravés). **Retenu par l'auteur : Établi sombre + Outils gravés** (état par défaut).
 - **Découverte** (touche `G`, direction Perle) : comment un débutant trouve les outils sans raccourci. Actuel ; 1 · Poignées (retenue) ; 2 · Établi ouvert ; 3 · Barre d'outils. **Frappe** (touche `W`) montre ce qui s'efface pendant l'écriture. Inventaire et arguments : [`../decouverte.md`](../decouverte.md).
 - **Écran** (touches `1` à `9`) : écrire ; écrire avec le Compagnon ; manuscrit (bouton « Plan » pour la vue d'ensemble et son bandeau de restauration) ; fiche personnage (Atelier, `⇧X` affiche ou masque les rejets) ; fiche en volet ; points à traiter et conversation ; ligne de commande ; premier lancement ; bibliothèque.
 - Sons : page d'écoute séparée, [`../sons.html`](../sons.html). Icône : [`../icon/`](../icon/README.md).
@@ -16,7 +16,7 @@ Les polices viennent de Google Fonts **pour les maquettes seulement** ; l'applic
 
 ## Direction retenue
 
-**Perle**, avec les leviers **B · Deux encres** et **C · Signature** (actifs par défaut dans la maquette ; A · Pierre chaude écarté), navigation du manuscrit par **tiroir + vue d'ensemble** (bouton « Plan » du tiroir), points d'entrée en **poignées** sur les bords, **zone de commande** en pied, `Aa`, barre de menus complète et premier lancement guidé (Découverte « 1 · Poignées », version 1.1). Le design language qui en découle est décrit dans [`../../DESIGN.md`](../../DESIGN.md).
+**Perle**, avec les leviers **B · Deux encres** et **C · Signature** (actifs par défaut dans la maquette ; A · Pierre chaude écarté), navigation du manuscrit par **tiroir + vue d'ensemble** (bouton « Plan » du tiroir), points d'entrée en **poignées** sur les bords, **zone de commande** en pied, `Aa`, barre de menus complète et premier lancement guidé (Découverte « 1 · Poignées », version 1.1). Outils en **ardoise sombre** avec **outils gravés** (Caractère « N » et « O », version 1.3). Le design language qui en découle est décrit dans [`../../DESIGN.md`](../../DESIGN.md).
 
 ## Les trois directions
 
