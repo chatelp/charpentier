@@ -87,9 +87,12 @@ describe('the interview with the Compagnon (phase 6.1)', () => {
     );
     const answer = interviewMessages(mentorDoc).at(-1);
     expect(answer).toMatchObject({ role: 'compagnon', mode: 'free' });
+    const rule = listEntities(root, 'worldRules')[0]?.id;
     expect(answer?.placed).toEqual([
       { module: 'characters', entityId: helene?.id },
-      { module: 'worldRules', entityId: listEntities(root, 'worldRules')[0]?.id },
+      { module: 'characters', entityId: helene?.id, field: 'occupation' },
+      { module: 'worldRules', entityId: rule },
+      { module: 'worldRules', entityId: rule, field: 'statement' },
     ]);
   });
 

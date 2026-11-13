@@ -77,7 +77,10 @@ async function start() {
               role: 'compagnon',
               text: 'J’ai noté Hélène dans les personnages.',
               mode: 'free',
-              placed: [{ module: 'characters', entityId }],
+              placed: [
+                { module: 'characters', entityId },
+                { module: 'characters', entityId, field: 'occupation' },
+              ],
             },
             agentOrigin('interview'),
           );
@@ -138,6 +141,8 @@ describe('the interview page of the Atelier (phase 6.2)', () => {
     await waitFor(() => expect(document.activeElement).toBe(field));
     await userEvent.keyboard('v');
     await waitFor(() => expect(occupation().status).toBe('validated'));
+    // It stays under its answer, sunk, « validée ».
+    screen.getByText('validée');
     expect((field as HTMLTextAreaElement).value).toBe('');
     // The sheet itself, with the button: the same field as in the Atelier.
     const line = screen.getByText('Hélène', { selector: '.ch-interview-value' }).closest('div')

@@ -55,31 +55,12 @@ interface Line {
   readonly field?: string;
 }
 
-/** What an answer filed, as lines: a new sheet first, then each of its other proposed fields. */
-function linesOf(root: Y.Doc, message: InterviewMessage): Line[] {
-  return (message.placed ?? []).flatMap((p: InterviewPlacement): Line[] => {
-    if (p.field) return [{ key: `${message.id}|${p.module}|${p.entityId ?? ''}|${p.field}`, ...p }];
-    if (!p.entityId) return [];
-    const module = p.module as EntityModule;
-    const entity = [...listEntities(root, module), ...listTrashedEntities(root, module)].find(
-      (e) => e.id === p.entityId,
-    );
-    const def = moduleDefs[railOf(module)];
-    const title = def.kind === 'entity' ? def.titleField : 'title';
-    const others = Object.entries(entity?.fields ?? {})
-      .filter(([field, state]) => field !== title && state.proposal)
-      .map(([field]) => field);
-    return [
-      { key: `${message.id}|${module}|${p.entityId}`, module, entityId: p.entityId },
-      ...others.map((field) => ({
-        key: `${message.id}|${module}|${p.entityId}|${field}`,
-        module,
-        entityId: p.entityId as string,
-        field,
-      })),
-    ];
-  });
-}
+/** What an answer filed, as lines: a new sheet, then its fields, each decided on its own. */
+const linesOf = (message: InterviewMessage): Line[] =>
+  (message.placed ?? []).map((p: InterviewPlacement) => ({
+    key: `${message.id}|${p.module}|${p.entityId ?? ''}|${p.field ?? ''}`,
+    ...p,
+  }));
 
 const refOf = (line: Line): FieldRef | undefined =>
   !line.field
@@ -199,7 +180,7 @@ export function Interview({
     ask(guided && section ? { section } : {});
   };
 
-  const lines = messages.flatMap((m) => linesOf(root, m));
+  const lines = messages.flatMap(linesOf);
   const pending = lines.filter((l) => stateOf(root, l) === 'pending');
 
   const decide = (line: Line, accept: boolean) => {
@@ -287,6 +268,7 @@ export function Interview({
               key={String(g)}
               type="button"
               tabIndex={-1}
+              disabled={!available}
               aria-pressed={guided === g}
               className={guided === g ? 'is-on' : undefined}
               onClick={() => g !== guided && ctx.updatePrefs({ interviewGuided: g })}
@@ -331,7 +313,7 @@ export function Interview({
                 )}
                 <Proposals
                   ctx={ctx}
-                  lines={linesOf(root, message)}
+                  lines={linesOf(message)}
                   text={text}
                   onDecide={decide}
                   onOpen={onOpen}
@@ -403,7 +385,7 @@ export function Interview({
         aria-label={guided ? t('interview.guidedPlaceholder') : t('interview.freePlaceholder')}
         onChange={(e) => setDraft(e.target.value)}
       />
-      <p className="ch-interview-hint">{t('interview.hint', { mode: modeKey })}</p>
+      {available && <p className="ch-interview-hint">{t('interview.hint', { mode: modeKey })}</p>}
     </div>
   );
 }

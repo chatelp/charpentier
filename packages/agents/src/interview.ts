@@ -460,7 +460,10 @@ export function fileProposals(
   for (const { module, fields, evidence } of created.values()) {
     const unique = [...new Map(evidence.map((e) => [`${e.messageId}|${e.quote}`, e])).values()];
     const entityId = writer.proposeEntity(module, fields, unique);
+    // The sheet, then each of its other fields: each one is decided on its own.
     placed.push({ module, entityId });
+    for (const field of Object.keys(fields))
+      if (field !== titleField(module)) placed.push({ module, entityId, field });
   }
   return { placed, dropped };
 }

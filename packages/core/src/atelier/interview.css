@@ -35,9 +35,14 @@
   align-items: center;
 }
 
-.ch-interview-modes button {
+.ch-seg.ch-interview-modes button {
   flex: none;
   padding: 5px 11px;
+}
+
+.ch-seg.ch-interview-modes button:disabled {
+  color: var(--ch-faint);
+  cursor: default;
 }
 
 .ch-interview-modes kbd {
@@ -232,6 +237,15 @@
 
 .ch-interview-other {
   margin-left: auto;
+}
+
+.ch-interview-field:disabled {
+  color: var(--ch-faint);
+  cursor: default;
+}
+
+.ch-interview-field:disabled::placeholder {
+  color: var(--ch-faint);
 }
 
 .ch-interview-field {
