@@ -3145,12 +3145,36 @@
       /* ───────────── Hollow and light: two signals, two meanings, never on the same element ─────────────
          Hollow = what the author put there and that stays (text, validated value, chosen option).
          Light = where the author is right now (place, selection, open panel, touch, focus).
-         The light is the one of the system line: a glow that rises inside the element from its lower
-         right corner, i.e. the bright half of a hollow without its dark half. No ring, no halo. */
+         The light is the one seen under the system line when a segment opens: a white glow that
+         spills out below the element, as if lit from behind. On the dark materials (system, slate)
+         that is all; on the light page, where white on white would vanish, the element also turns
+         paler than the paper. */
       .app[data-rim='garde'],
       .app[data-rim='garde'] * {
         --rim: 0 0 0 0 transparent;
-        --lit: inset calc(var(--d) * -1) calc(var(--d) * -1) var(--b) var(--hl);
+        --lit: 0 9px 14px -7px rgba(255, 255, 255, 0.75);
+      }
+      .app[data-rim='garde'] {
+        --lit-bg: transparent;
+      }
+      .app[data-rim='garde'][data-theme='light'] {
+        --lit-bg: color-mix(in srgb, #e3e7ed 35%, #fff);
+      }
+      .app[data-rim='garde'][data-mat='ardoise']
+        :is(
+          .panel,
+          .edge,
+          .atelier .rail,
+          .atelier .list,
+          .board .strip,
+          .cmdres,
+          .cmdbar,
+          .aapop,
+          .cprev,
+          .tip
+        ),
+      .app[data-rim='garde'] .sysmat {
+        --lit-bg: transparent;
       }
       /* Light: where you are, what is selected, what is open. */
       .app[data-rim='garde']
@@ -3168,14 +3192,17 @@
           .modes button.on,
           .mh .segs span.on
         ) {
+        background: var(--lit-bg);
         box-shadow: var(--lit);
       }
       .app[data-rim='garde'] :is(.nav.on, .ent.on, .ms .sc.act, .proj.on, .snav.on) {
+        background: var(--lit-bg);
         box-shadow:
           var(--lit),
           inset 3px 0 0 var(--author, var(--ink));
       }
       .app[data-rim='garde'] .srail .snav.on {
+        background: var(--lit-bg);
         box-shadow:
           var(--lit),
           inset 3px 0 0 var(--ink);
@@ -3216,6 +3243,7 @@
           .chip.cp,
           .chip.more
         ):active {
+        background: var(--lit-bg);
         box-shadow: var(--lit);
         transition: none;
       }
