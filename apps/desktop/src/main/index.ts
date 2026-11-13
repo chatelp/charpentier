@@ -115,8 +115,12 @@ const sync = new SyncEngine({
   stateDir: path.join(app.getPath('userData'), 'sync'),
   device: os.hostname(),
 });
-// Projects that came from another device get their Markdown mirror too.
-sync.onStatusChange(() => syncMirrors());
+// Projects that came from another device get their Markdown mirror too; every window hears the status.
+sync.onStatusChange((status) => {
+  syncMirrors();
+  for (const contents of sessions.keys())
+    if (!contents.isDestroyed()) contents.send(IPC_MESSAGE, { type: 'sync.status', status });
+});
 
 llm.onStatusChange((status) => {
   for (const contents of sessions.keys())
@@ -163,6 +167,7 @@ function sessionOf(contents: WebContents): RendererSession {
         spell,
         agents,
         onLibraryChange: () => void sync.reconcile(),
+        sync,
       },
       (message) => {
         if (!contents.isDestroyed()) contents.send(IPC_MESSAGE, message);

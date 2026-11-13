@@ -16,6 +16,8 @@
   "devDependencies": {
     "@charpentier/core": "workspace:*",
     "@charpentier/platform-desktop": "workspace:*",
+    "@charpentier/server": "workspace:*",
+    "@electric-sql/pglite": "^0.5.16",
     "@types/node": "^26.6.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",

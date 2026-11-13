@@ -3,6 +3,10 @@ import type {
   AskResult,
   LlmStatus,
   MenuModel,
+  SignInResult,
+  SyncAccountInfo,
+  SyncDevice,
+  SyncStatus,
   ProjectKind,
   ProjectSummary,
 } from '@charpentier/platform';
@@ -49,6 +53,17 @@ export type Request =
       readonly chapterId: string;
       readonly automatic: boolean;
     }
+  | { readonly type: 'sync.status' }
+  | { readonly type: 'sync.account' }
+  | {
+      readonly type: 'sync.signIn';
+      readonly server: string;
+      readonly email: string;
+      readonly password: string;
+    }
+  | { readonly type: 'sync.signOut' }
+  | { readonly type: 'sync.devices' }
+  | { readonly type: 'sync.revokeDevice'; readonly id: string }
   | { readonly type: 'agents.lightModel' }
   | { readonly type: 'agents.setLightModel'; readonly model: 'opus' | 'haiku' }
   // Handled by the Electron host itself (dialogs, Finder).
@@ -78,6 +93,12 @@ export interface Responses {
   'agents.analyze': AskResult;
   'agents.reviewChapter': AskResult;
   'agents.lightModel': 'opus' | 'haiku';
+  'sync.status': SyncStatus;
+  'sync.account': SyncAccountInfo | null;
+  'sync.signIn': SignInResult;
+  'sync.signOut': null;
+  'sync.devices': readonly SyncDevice[] | null;
+  'sync.revokeDevice': boolean;
   'agents.setLightModel': null;
   'host.libraryFolder': string;
   'host.chooseLibraryFolder': boolean;
@@ -92,6 +113,8 @@ export type Message =
   | { readonly type: 'agents.status'; readonly status: LlmStatus }
   /** The window entered or left full screen (main → renderer). */
   | { readonly type: 'host.fullScreen'; readonly fullScreen: boolean }
+  /** Where the sync stands changed (main → renderer). */
+  | { readonly type: 'sync.status'; readonly status: SyncStatus }
   /** A command was chosen in the application menu (main → renderer). */
   | { readonly type: 'host.menuCommand'; readonly id: string };
 

@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { HocuspocusProvider, HocuspocusProviderWebsocket } from '@hocuspocus/provider';
+import type { SignInResult, SyncDevice, SyncStatus } from '@charpentier/platform';
 import { guids, names } from '@charpentier/schema';
 import * as Y from 'yjs';
 import { DocFile } from './doc-file';
@@ -20,16 +21,6 @@ export interface SyncCredentials {
   load(): SyncAccount | null;
   save(account: SyncAccount | null): void;
 }
-
-/**
- * Where the sync stands: `off` (not signed in), `connecting`, `synced`
- * (everything sent and received), `syncing` (changes on their way),
- * `offline` (the server cannot be reached; writing goes on), `unauthorized`
- * (the device was signed out from elsewhere, or the password changed).
- */
-export type SyncStatus = 'off' | 'connecting' | 'synced' | 'syncing' | 'offline' | 'unauthorized';
-
-export type SignInResult = 'ok' | 'invalid' | 'too-many-attempts' | 'unreachable';
 
 /** The account's library: one entry per project, last change wins. */
 const PROJECTS = 'projects';
@@ -286,6 +277,42 @@ export class SyncEngine {
       if (this.#reconciling === next) this.#reconciling = null;
     });
     return next;
+  }
+
+  /** The devices signed in to the account, or null when the server cannot be reached. */
+  async devices(): Promise<SyncDevice[] | null> {
+    const account = this.deps.credentials.load();
+    if (!account) return [];
+    try {
+      const response = await (this.deps.fetch ?? fetch)(`${account.server}/api/devices`, {
+        headers: { Authorization: `Bearer ${account.token}` },
+      });
+      if (!response.ok) return null;
+      const body = (await response.json()) as { devices?: SyncDevice[] };
+      return (body.devices ?? []).map(({ id, device, lastSeenAt, current }) => ({
+        id,
+        device,
+        lastSeenAt,
+        current,
+      }));
+    } catch {
+      return null;
+    }
+  }
+
+  /** Signs another device of the account out. */
+  async revokeDevice(id: string): Promise<boolean> {
+    const account = this.deps.credentials.load();
+    if (!account) return false;
+    try {
+      const response = await (this.deps.fetch ?? fetch)(
+        `${account.server}/api/devices/${encodeURIComponent(id)}`,
+        { method: 'DELETE', headers: { Authorization: `Bearer ${account.token}` } },
+      );
+      return response.ok;
+    } catch {
+      return false;
+    }
   }
 
   /** Waits until everything is sent and received (tests, quitting). */

@@ -7,6 +7,7 @@ import type {
 } from '@charpentier/platform';
 import type { DesktopBridge } from '../shared/ipc';
 import { IpcAgentsService } from './agents';
+import { IpcSyncService } from './sync';
 import { IpcDocumentService } from './documents';
 
 export { IpcDocumentService } from './documents';
@@ -66,6 +67,7 @@ export function createDesktopPlatform(bridge: DesktopBridge): Platform {
     preferences: preferences(bridge),
     keybindings: desktopKeybindings(bridge.platform),
     agents: new IpcAgentsService(bridge),
+    sync: new IpcSyncService(bridge),
     llm: null,
     fileMirror: null,
     secrets: null,

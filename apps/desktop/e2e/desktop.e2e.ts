@@ -4,7 +4,9 @@ import type { AddressInfo } from 'node:net';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { _electron as electron, type ElectronApplication } from 'playwright';
+import { PGlite } from '@electric-sql/pglite';
+import { createSyncServer, createUser, migrate } from '@charpentier/server';
+import { _electron as electron, type ElectronApplication, type Page } from 'playwright';
 import { afterEach, describe, expect, it } from 'vitest';
 
 const appDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -12,10 +14,12 @@ const temp: string[] = [];
 const apps: ElectronApplication[] = [];
 
 const servers: http.Server[] = [];
+const syncServers: ReturnType<typeof createSyncServer>[] = [];
 
 afterEach(async () => {
   for (const app of apps.splice(0)) await app.close().catch(() => {});
   for (const server of servers.splice(0)) server.close();
+  for (const server of syncServers.splice(0)) await server.destroy();
   for (const dir of temp.splice(0)) fs.rmSync(dir, { recursive: true, force: true });
 });
 
@@ -298,4 +302,63 @@ describe('desktop app', () => {
       await window.getByRole('complementary', { name: 'Plan du manuscrit' }).waitFor();
     },
   );
+
+  it("syncs a novel to a second installation through the author's server", async () => {
+    const db = new PGlite();
+    await migrate(db);
+    await createUser(db, 'pierre@example.org', 'une serre sous la glace');
+    const server = createSyncServer({ db, port: 0, address: '127.0.0.1' });
+    await server.listen();
+    syncServers.push(server);
+    const url = `http://127.0.0.1:${server.address.port}`;
+
+    const signIn = async (window: Page) => {
+      await window.keyboard.press('ControlOrMeta+K');
+      await window.keyboard.type('connecter serveur');
+      await window.keyboard.press('Enter');
+      await window.getByRole('textbox', { name: 'Adresse du serveur (https://…)' }).waitFor();
+      await window.keyboard.press('ControlOrMeta+A');
+      await window.keyboard.type(url);
+      await window.keyboard.press('Enter');
+      await window.getByRole('textbox', { name: 'Adresse e-mail du compte' }).waitFor();
+      await window.keyboard.type('pierre@example.org');
+      await window.keyboard.press('Enter');
+      await window.getByLabel('Mot de passe').waitFor();
+      await window.keyboard.type('une serre sous la glace');
+      await window.keyboard.press('Enter');
+      await window.getByText('Synchronisé').waitFor({ timeout: 15_000 });
+    };
+
+    // The Mac: a first sentence, then signing in.
+    const mac = await launch(folders());
+    await mac.editor.click();
+    await mac.window.keyboard.type('Il pleuvait sur Nantes.');
+    await signIn(mac.window);
+
+    // A second installation signs in to the same account: the novel arrives,
+    // mirrored in Markdown in its library.
+    const secondDirs = folders();
+    const second = await launch(secondDirs);
+    await signIn(second.window);
+    const mirrored = () => {
+      const found: string[] = [];
+      const walk = (dir: string) => {
+        if (!fs.existsSync(dir)) return;
+        for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+          const full = path.join(dir, entry.name);
+          if (entry.isDirectory()) walk(full);
+          else if (entry.name.endsWith('.md')) found.push(fs.readFileSync(full, 'utf8'));
+        }
+      };
+      walk(secondDirs.library);
+      return found.join('\n');
+    };
+    await expect.poll(mirrored, { timeout: 20_000 }).toContain('Il pleuvait sur Nantes.');
+
+    // A sentence written on the Mac reaches the other installation.
+    await mac.editor.click();
+    await mac.window.keyboard.press('End');
+    await mac.window.keyboard.type(' Helene regardait la Loire.');
+    await expect.poll(mirrored, { timeout: 20_000 }).toContain('Helene regardait la Loire.');
+  }, 90_000);
 });

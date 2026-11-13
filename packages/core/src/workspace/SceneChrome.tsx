@@ -87,6 +87,7 @@ export function WritingFooter({
   onEnterKey,
   commandZone,
   tools,
+  syncState,
 }: {
   /** Hidden outside the writing surface. */
   readonly words: number | undefined;
@@ -101,6 +102,8 @@ export function WritingFooter({
   readonly commandZone?: ReactNode;
   /** Buttons at the far right (« Aa »). */
   readonly tools?: ReactNode;
+  /** Where the sync stands (step 4.4); clickable when it waits on the author. */
+  readonly syncState?: { readonly text: string; readonly onClick?: () => void } | undefined;
 }) {
   const { t } = useTranslation();
   return (
@@ -141,6 +144,18 @@ export function WritingFooter({
           )
         )}
         <span>{t('footer.saved')}</span>
+        {syncState &&
+          (syncState.onClick ? (
+            <button
+              type="button"
+              className="ch-footer-button is-mentor ch-footer-fit"
+              onClick={syncState.onClick}
+            >
+              {syncState.text}
+            </button>
+          ) : (
+            <span className="ch-footer-fit ch-footer-sync">{syncState.text}</span>
+          ))}
         {tools}
       </span>
     </footer>

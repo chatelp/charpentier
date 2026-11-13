@@ -191,7 +191,10 @@
     "replayTour": "Revoir la visite guidée",
     "toggleUiSounds": "Sons de l’interface",
     "toggleTypingSounds": "Son de frappe",
-    "toggleRejected": "Afficher les rejets"
+    "toggleRejected": "Afficher les rejets",
+    "syncSignIn": "Se connecter à un serveur de synchro…",
+    "syncSignOut": "Se déconnecter du serveur",
+    "syncDevices": "Appareils connectés…"
   },
   "palette": {
     "label": "Ligne de commande",
@@ -697,6 +700,35 @@
       "zoom": "Zoom",
       "close": "Fermer la fenêtre",
       "togglefullscreen": "Plein écran"
+    }
+  },
+  "sync": {
+    "serverPrompt": "Adresse du serveur (https://…)",
+    "emailPrompt": "Adresse e-mail du compte",
+    "passwordPrompt": "Mot de passe",
+    "badServer": "Cette adresse ne commence pas par https:// ou http://.",
+    "badEmail": "Cette adresse e-mail n’a pas de @.",
+    "signingIn": "Connexion au serveur…",
+    "signIn": {
+      "ok": "Connecté. Vos projets se synchronisent.",
+      "invalid": "E-mail ou mot de passe incorrect.",
+      "too-many-attempts": "Trop de tentatives : réessayez dans un quart d’heure.",
+      "unreachable": "Le serveur ne répond pas. Vérifiez l’adresse et le réseau."
+    },
+    "signedOut": "Déconnecté du serveur. Vos projets restent sur cet appareil.",
+    "unreachable": "Le serveur ne répond pas.",
+    "devicesPrompt": "Choisissez un appareil à déconnecter",
+    "unnamedDevice": "Appareil sans nom",
+    "thisDevice": "cet appareil",
+    "lastSeen": "vu le {{date}}",
+    "useSignOut": "Pour cet appareil, utilisez « Se déconnecter du serveur ».",
+    "deviceRevoked": "Appareil déconnecté.",
+    "status": {
+      "connecting": "Synchronisation…",
+      "syncing": "Synchronisation…",
+      "synced": "Synchronisé",
+      "offline": "Hors ligne",
+      "unauthorized": "Synchro en pause : se reconnecter"
     }
   }
 }

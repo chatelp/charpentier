@@ -10,4 +10,5 @@ export type * from './platform';
 export type * from './secrets';
 export type * from './spellcheck';
 export type * from './storage';
+export type * from './sync';
 export type * from './system';

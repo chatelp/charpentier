@@ -5,6 +5,7 @@ import type { FolderLibrary } from './projects';
 import type { PreferencesFile } from './preferences';
 import type { SpellClient } from './spell-client';
 import type { AgentHost } from './agent-host';
+import type { SyncEngine } from './sync-engine';
 
 /**
  * The main-process side of one renderer: answers its requests, applies the
@@ -24,6 +25,7 @@ export class RendererSession {
       readonly agents?: AgentHost;
       /** The library changed here (the sync tells the account, step 4.3). */
       readonly onLibraryChange?: () => void;
+      readonly sync?: SyncEngine;
     },
     private readonly push: (message: Message) => void,
   ) {}
@@ -96,6 +98,22 @@ export class RendererSession {
       case 'agents.setLightModel':
         if (!this.services.agents) throw new Error('No agents in this host');
         return this.services.agents.handle(request);
+      case 'sync.status':
+        return this.services.sync?.status() ?? 'off';
+      case 'sync.account': {
+        const account = this.services.sync?.account();
+        return account ? { server: account.server, email: account.email } : null;
+      }
+      case 'sync.signIn':
+        if (!this.services.sync) return 'unreachable';
+        return this.services.sync.signIn(request.server, request.email, request.password);
+      case 'sync.signOut':
+        await this.services.sync?.signOut();
+        return null;
+      case 'sync.devices':
+        return (await this.services.sync?.devices()) ?? null;
+      case 'sync.revokeDevice':
+        return (await this.services.sync?.revokeDevice(request.id)) ?? false;
       default:
         throw new Error(`Not handled by the session: ${request.type}`);
     }

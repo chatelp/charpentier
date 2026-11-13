@@ -59,6 +59,7 @@ export function createWebPlatform(): Platform {
     preferences: new LocalStoragePreferences(),
     keybindings: createWebKeybindings(globalThis.navigator?.userAgent ?? ''),
     agents: disabledAgents,
+    sync: null,
     llm: null,
     fileMirror: null,
     secrets: null,

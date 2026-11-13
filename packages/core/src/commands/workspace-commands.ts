@@ -1,3 +1,4 @@
+import { syncCommands } from './sync-commands';
 import {
   createChapter,
   createScene,
@@ -381,6 +382,7 @@ export function createWorkspaceRegistry(primary: PrimaryModifier, reserved: read
     ...writingCommands,
     ...atelierCommands,
     ...languageCommands,
+    ...syncCommands,
   ])
     registry.register(command);
   return registry;

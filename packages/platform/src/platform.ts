@@ -7,6 +7,7 @@ import type { MenuService } from './menu';
 import type { SecretsService } from './secrets';
 import type { SpellcheckService } from './spellcheck';
 import type { LibraryFolderService, LibraryService, PreferencesService } from './storage';
+import type { SyncService } from './sync';
 import type { SystemService } from './system';
 
 export type HostKind = 'web' | 'desktop' | 'appliance';
@@ -27,6 +28,8 @@ export interface Platform {
   readonly preferences: PreferencesService;
   readonly keybindings: KeybindingsService;
   readonly agents: AgentsService;
+  /** Sync with the author's server; `null` where there is none. */
+  readonly sync: SyncService | null;
   /** Used by the `agents` package; `null` in the UI process of hosts that run agents elsewhere. */
   readonly llm: LlmService | null;
   readonly fileMirror: FileMirrorService | null;

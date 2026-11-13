@@ -238,6 +238,13 @@ export function ProjectWorkspace({
     [agents],
   );
   const agentsStatus = useSyncExternalStore(subscribeAgents, () => agents.status());
+  // Sync with the author's server (step 4.4): its state in the footer.
+  const { sync } = platform;
+  const subscribeSync = useCallback(
+    (onChange: () => void) => sync?.onStatusChange(onChange) ?? (() => {}),
+    [sync],
+  );
+  const syncStatus = useSyncExternalStore(subscribeSync, () => sync?.status() ?? 'off');
   const words = useWordCount(editor);
   const storedTexts = useSceneTexts(platform, projectId, outline);
   const storedWords = useWordsOf(storedTexts);
@@ -874,6 +881,16 @@ export function ProjectWorkspace({
           agentsStatus === 'unconfigured'
             ? () => void registry.execute('setApiKey', ctx)
             : undefined
+        }
+        syncState={
+          syncStatus === 'off'
+            ? undefined
+            : {
+                text: t(`sync.status.${syncStatus}`),
+                ...(syncStatus === 'unauthorized' && {
+                  onClick: () => void registry.execute('syncSignIn', ctx),
+                }),
+              }
         }
         commandZone={
           view === 'write' && (

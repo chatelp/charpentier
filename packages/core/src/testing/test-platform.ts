@@ -37,6 +37,7 @@ export function createTestPlatform(overrides: Partial<Platform> = {}): Platform 
       lightModel: async () => 'opus',
       setLightModel: async () => {},
     },
+    sync: null,
     llm: null,
     fileMirror: null,
     secrets: null,
