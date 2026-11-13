@@ -10,6 +10,7 @@ import {
   type FieldState,
   type OutlineChapter,
 } from '@charpentier/schema';
+import { firstEvidenceScene } from './atelier-data';
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import { filterByQuery } from '../commands/registry';
@@ -503,7 +504,7 @@ function useEntries(
       const conflicts = data.conflicts.filter(
         (s) => s.fieldRef && 'entityId' in s.fieldRef && s.fieldRef.entityId === entity.id,
       ).length;
-      const proposedIn = entity.fields[def.titleField]?.proposal?.evidence[0]?.sceneId;
+      const proposedIn = firstEvidenceScene(entity.fields[def.titleField]);
       const details =
         entity.status === 'rejected'
           ? [t('atelier.rejectedEntry')]

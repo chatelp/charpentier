@@ -7,6 +7,7 @@ import {
   entityModules,
   fragmentToSceneDoc,
   getScene,
+  evidenceSceneId,
   guids,
   listEntities,
   MIRROR,
@@ -98,7 +99,8 @@ function fieldForYaml(state: FieldState) {
     ...(state.value !== undefined && { value: state.value }),
     ...(state.proposal && {
       proposal: state.proposal.value,
-      source: state.proposal.evidence.map((e) => e.sceneId),
+      // A scene's id, or `entretien` for what the author said in the interview (D-26).
+      source: state.proposal.evidence.map((e) => evidenceSceneId(e) ?? 'entretien'),
     }),
   };
 }

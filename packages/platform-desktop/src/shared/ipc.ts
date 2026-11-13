@@ -53,6 +53,12 @@ export type Request =
       readonly chapterId: string;
       readonly automatic: boolean;
     }
+  | {
+      readonly type: 'agents.interview';
+      readonly projectId: string;
+      readonly mode: 'free' | 'guided';
+      readonly skip?: readonly string[];
+    }
   | { readonly type: 'sync.status' }
   | { readonly type: 'sync.account' }
   | {
@@ -92,6 +98,7 @@ export interface Responses {
   'agents.ask': AskResult;
   'agents.analyze': AskResult;
   'agents.reviewChapter': AskResult;
+  'agents.interview': AskResult;
   'agents.lightModel': 'opus' | 'haiku';
   'sync.status': SyncStatus;
   'sync.account': SyncAccountInfo | null;

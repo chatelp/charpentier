@@ -54,6 +54,14 @@ export class IpcAgentsService implements AgentsService {
     return this.bridge.invoke({ type: 'agents.reviewChapter', ...input });
   }
 
+  interview(input: {
+    readonly projectId: string;
+    readonly mode: 'free' | 'guided';
+    readonly skip?: readonly string[];
+  }) {
+    return this.bridge.invoke({ type: 'agents.interview', ...input });
+  }
+
   lightModel() {
     return this.bridge.invoke({ type: 'agents.lightModel' });
   }

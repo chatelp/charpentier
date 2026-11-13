@@ -33,6 +33,7 @@ describe('<App>', () => {
         reviewChapter: async () => 'answered',
         lightModel: async () => 'opus',
         setLightModel: async () => {},
+        interview: async () => 'unavailable',
         ask: async () => 'answered',
       },
     });

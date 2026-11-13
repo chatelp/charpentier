@@ -40,6 +40,17 @@ export interface AgentsService {
     readonly chapterId: string;
     readonly automatic: boolean;
   }): Promise<AskResult>;
+  /**
+   * One turn of the interview with the Compagnon (D-26): answers the author's
+   * last message of the interview thread, or (guided) asks the next
+   * question; what belongs to the Atelier is filed there as proposals.
+   * `skip`: sections the author left for later.
+   */
+  interview(input: {
+    readonly projectId: string;
+    readonly mode: 'free' | 'guided';
+    readonly skip?: readonly string[];
+  }): Promise<AskResult>;
   /** D-20: the model of the light, frequent work. */
   lightModel(): Promise<'opus' | 'haiku'>;
   setLightModel(model: 'opus' | 'haiku'): Promise<void>;

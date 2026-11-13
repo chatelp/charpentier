@@ -44,3 +44,63 @@ export function addChatMessage(
   }, origin);
   return id;
 }
+
+/**
+ * The interview with the Compagnon (D-26): its own thread in the mentor
+ * document, apart from the conversation about the text. The Compagnon's
+ * messages say which section they are about and what they proposed.
+ */
+export interface InterviewMessage extends Omit<ChatMessage, 'example' | 'sceneId'> {
+  /** Free conversation, or questions section by section. */
+  readonly mode?: InterviewMode;
+  /** The section the Compagnon's question is about (guided mode). */
+  readonly section?: InterviewSection;
+  /** What this answer proposed in the Atelier (the field, or the new sheet). */
+  readonly placed?: readonly InterviewPlacement[];
+}
+
+export type InterviewMode = 'free' | 'guided';
+
+/** The sections of the Atelier, in the order the guided interview goes through them. */
+export const interviewSections = [
+  'meta',
+  'characters',
+  'structure',
+  'worldRules',
+  'clues',
+] as const;
+export type InterviewSection = (typeof interviewSections)[number];
+
+export interface InterviewPlacement {
+  readonly module: string;
+  readonly entityId?: string;
+  readonly field?: string;
+}
+
+const interview = (mentorDoc: Y.Doc) => mentorDoc.getArray<InterviewMessage>('interview');
+
+export function interviewMessages(mentorDoc: Y.Doc): InterviewMessage[] {
+  return interview(mentorDoc).toArray();
+}
+
+export function addInterviewMessage(
+  mentorDoc: Y.Doc,
+  message: Omit<InterviewMessage, 'id' | 'at'>,
+  origin: Origin,
+): string {
+  const id = newId();
+  mentorDoc.transact(() => {
+    interview(mentorDoc).push([
+      {
+        id,
+        at: nowIso(),
+        role: message.role,
+        text: message.text,
+        ...(message.mode !== undefined && { mode: message.mode }),
+        ...(message.section !== undefined && { section: message.section }),
+        ...(message.placed !== undefined && { placed: message.placed }),
+      },
+    ]);
+  }, origin);
+  return id;
+}

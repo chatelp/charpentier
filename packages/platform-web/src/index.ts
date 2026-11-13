@@ -16,6 +16,7 @@ const disabledAgents: AgentsService = {
   ask: async () => 'unavailable',
   analyze: async () => 'unavailable',
   reviewChapter: async () => 'unavailable',
+  interview: async () => 'unavailable',
   lightModel: async () => 'opus',
   setLightModel: async () => {},
 };

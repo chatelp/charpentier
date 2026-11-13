@@ -374,6 +374,7 @@
     "noScene": "Aucune scène",
     "proposed": "Proposée",
     "proposedFrom": "Proposée · d’après la scène {{scenes}}",
+    "proposedFromInterview": "Proposée · d’après l’entretien",
     "accept": "Valider",
     "reject": "Rejeter",
     "rejectedOn": "Rejetée le {{date}} · conservée pour ne pas être reproposée",

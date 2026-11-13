@@ -1,4 +1,5 @@
 import {
+  evidenceSceneId,
   entityModules,
   listEntities,
   listSignals,
@@ -135,3 +136,9 @@ export function sceneNumbers(outline: readonly OutlineChapter[]): Map<string, st
   );
   return numbers;
 }
+
+/** The scene a proposal was drawn from (none when it came from the interview). */
+export const firstEvidenceScene = (state: FieldState | undefined): string | undefined => {
+  const first = state?.proposal?.evidence[0];
+  return first && evidenceSceneId(first);
+};

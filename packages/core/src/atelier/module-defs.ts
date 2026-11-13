@@ -1,4 +1,9 @@
-import type { EntityModule, ModuleName, SingletonModule } from '@charpentier/schema';
+import {
+  fieldChoices,
+  type EntityModule,
+  type ModuleName,
+  type SingletonModule,
+} from '@charpentier/schema';
 
 /**
  * How the Atelier lays out each module (docs/SPEC.md §5.3–5.6, docs/DESIGN.md
@@ -52,15 +57,9 @@ const text = (key: string): FieldDef => ({ key, kind: 'text' });
 const line = (key: string): FieldDef => ({ key, kind: 'line' });
 const scenes = (key: string): FieldDef => ({ key, kind: 'scenes' });
 
-export const NARRATIVE_MODELS = [
-  'threeActs',
-  'fiveActs',
-  'herosJourney',
-  'saveTheCat',
-  'kishotenketsu',
-] as const;
-export const CLUE_KINDS = ['clue', 'redHerring', 'revelation'] as const;
-export const ARC_KINDS = ['main', 'secondary'] as const;
+export const NARRATIVE_MODELS = fieldChoices.structure.narrativeModel;
+export const CLUE_KINDS = fieldChoices.clues.kind;
+export const ARC_KINDS = fieldChoices.arcs.kind;
 
 export const metaDef: SingletonModuleDef = {
   name: 'meta',

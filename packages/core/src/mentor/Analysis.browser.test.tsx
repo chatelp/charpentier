@@ -57,6 +57,7 @@ describe('the Compagnon reads a scene', () => {
         ask: async () => 'answered',
         lightModel: async () => 'opus',
         setLightModel: async () => {},
+        interview: async () => 'unavailable',
         reviewChapter: async () => 'answered',
         // What the main process's analysis does on this scene.
         analyze: async ({ projectId, sceneIds, automatic }) => {
@@ -163,6 +164,7 @@ describe('the Compagnon reads a scene', () => {
         ask: async () => 'answered',
         lightModel: async () => 'opus',
         setLightModel: async () => {},
+        interview: async () => 'unavailable',
         analyze: async ({ sceneIds, automatic }) => (
           analyses.push({ sceneIds, automatic }),
           'answered'

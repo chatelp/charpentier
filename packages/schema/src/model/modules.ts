@@ -61,6 +61,15 @@ export const knownFields = {
   clues: ['kind', 'title', 'description', 'plantedIn', 'resolvedIn', 'appearsIn'],
 } as const satisfies Record<ModuleName, readonly string[]>;
 
+/** The values a choice field accepts (shown as a list in the Atelier, checked for agents). */
+export const fieldChoices = {
+  structure: {
+    narrativeModel: ['threeActs', 'fiveActs', 'herosJourney', 'saveTheCat', 'kishotenketsu'],
+  },
+  arcs: { kind: ['main', 'secondary'] },
+  clues: { kind: ['clue', 'redHerring', 'revelation'] },
+} as const satisfies Partial<Record<ModuleName, Readonly<Record<string, readonly string[]>>>>;
+
 export const knownByField = (who: string | 'reader') => `knownBy:${who}`;
 
 /** Address of one field: a singleton module's field, or an entity's field. */

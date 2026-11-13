@@ -94,6 +94,7 @@ export class RendererSession {
       case 'agents.ask':
       case 'agents.analyze':
       case 'agents.reviewChapter':
+      case 'agents.interview':
       case 'agents.lightModel':
       case 'agents.setLightModel':
         if (!this.services.agents) throw new Error('No agents in this host');

@@ -1,9 +1,11 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { analyzeScene, answerAuthor, reviewChapter } from '@charpentier/agents';
+import { analyzeScene, answerAuthor, interviewTurn, reviewChapter } from '@charpentier/agents';
 import type { ApiKeyResult, AskResult, LlmStatus } from '@charpentier/platform';
 import {
   agentOrigin,
   fragmentPlainText,
+  interviewSections,
+  type InterviewSection,
   getScene,
   guids,
   hashEvidence,
@@ -161,6 +163,55 @@ export class AgentHost {
     }
   }
 
+  /** One turn of the interview (D-26), queued with the readings: one task at a time per project. */
+  async #interview(
+    projectId: string,
+    mode: 'free' | 'guided',
+    skip: readonly string[],
+  ): Promise<AskResult> {
+    if (this.llm.status() === 'unconfigured') return 'unavailable';
+    const previous = this.#running.get(projectId) ?? Promise.resolve();
+    const run = previous.then(() => this.#interviewNow(projectId, mode, skip));
+    this.#running.set(
+      projectId,
+      run.catch(() => {}),
+    );
+    return run;
+  }
+
+  async #interviewNow(
+    projectId: string,
+    mode: 'free' | 'guided',
+    skip: readonly string[],
+  ): Promise<AskResult> {
+    const rootGuid = guids.project(projectId);
+    const mentorGuid = guids.mentor(projectId);
+    try {
+      return await this.#withDocs([rootGuid, mentorGuid], async (docs) => {
+        const root = docs.get(rootGuid);
+        const mentorDoc = docs.get(mentorGuid);
+        if (!root || !mentorDoc) throw new Error('Documents missing');
+        // Nothing to answer (free mode, the Compagnon spoke last) is not an error.
+        await interviewTurn({
+          llm: this.llm,
+          root,
+          mentorDoc,
+          mode,
+          skip: skip.filter((s): s is InterviewSection =>
+            (interviewSections as readonly string[]).includes(s),
+          ),
+        });
+        return 'answered' as const;
+      });
+    } catch (error) {
+      if (error instanceof LlmUnconfiguredError) return 'unavailable';
+      if (error instanceof LlmRefusalError) return 'refused';
+      if (error instanceof Anthropic.APIConnectionError) return 'offline';
+      console.error('Charpentier: the interview failed', error);
+      return 'failed';
+    }
+  }
+
   /** Holds the documents an agent needs for the time of its work. */
   async #withDocs<T>(
     guidsNeeded: readonly string[],
@@ -230,6 +281,8 @@ export class AgentHost {
         return this.#analyze(request.projectId, request.sceneIds, request.automatic);
       case 'agents.reviewChapter':
         return this.#reviewChapter(request.projectId, request.chapterId, request.automatic);
+      case 'agents.interview':
+        return this.#interview(request.projectId, request.mode, request.skip ?? []);
       case 'agents.lightModel':
         return this.lightModel.get();
       case 'agents.setLightModel':

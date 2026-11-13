@@ -19,13 +19,28 @@ import { nowIso } from './ids';
 export type FieldValue =
   string | number | boolean | null | readonly FieldValue[] | { readonly [key: string]: FieldValue };
 
-/** Where in the text an agent found support for a proposal. */
-export interface Evidence {
+/** Where an agent found support for a proposal: a passage of the text, or the author's words. */
+export type Evidence = SceneEvidence | InterviewEvidence;
+
+/** A passage of a scene. */
+export interface SceneEvidence {
   readonly sceneId: string;
   readonly variantId: string;
   /** Short excerpt of the passage. */
   readonly quote: string;
 }
+
+/** What the author said in the interview with the Compagnon (D-26). */
+export interface InterviewEvidence {
+  /** The author's message, in the mentor document's `interview` thread. */
+  readonly messageId: string;
+  /** Their words, verbatim. */
+  readonly quote: string;
+}
+
+/** The scene a piece of evidence comes from, if it comes from the text. */
+export const evidenceSceneId = (evidence: Evidence): string | undefined =>
+  'sceneId' in evidence ? evidence.sceneId : undefined;
 
 export interface Proposal {
   readonly value: FieldValue;

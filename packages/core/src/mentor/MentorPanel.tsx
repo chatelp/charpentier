@@ -11,6 +11,7 @@ import {
   type OutlineChapter,
   type Signal,
 } from '@charpentier/schema';
+import { firstEvidenceScene } from '../atelier/atelier-data';
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { playSound } from '../sound/sounds';
@@ -95,7 +96,7 @@ export function MentorPanel(props: MentorPanelProps) {
         const name = String(
           shownValue(entity.fields[def.titleField] ?? { status: undefined, rejected: [] }) ?? '',
         );
-        const evidenceOf = (field: string) => entity.fields[field]?.proposal?.evidence[0]?.sceneId;
+        const evidenceOf = (field: string) => firstEvidenceScene(entity.fields[field]);
         if (entity.status === 'proposed') {
           found.push({
             id: `entity:${entity.id}`,

@@ -1,4 +1,5 @@
 import {
+  evidenceSceneId,
   acceptProposal,
   clearField,
   rejectProposal,
@@ -214,7 +215,11 @@ export function FieldRow({
   const sceneIds = def.kind === 'scenes' ? asSceneIds(value) : [];
 
   const evidenceScenes = [
-    ...new Set((state.proposal?.evidence ?? []).map((e) => sceneNumber(e.sceneId)).filter(Boolean)),
+    ...new Set(
+      (state.proposal?.evidence ?? [])
+        .map((e) => sceneNumber(evidenceSceneId(e) ?? ''))
+        .filter(Boolean),
+    ),
   ];
 
   return (
@@ -268,7 +273,9 @@ export function FieldRow({
             <span>
               {evidenceScenes.length
                 ? t('atelier.proposedFrom', { scenes: evidenceScenes.join(', ') })
-                : t('atelier.proposed')}
+                : state.proposal?.evidence.some((e) => 'messageId' in e)
+                  ? t('atelier.proposedFromInterview')
+                  : t('atelier.proposed')}
             </span>
             <button
               type="button"
