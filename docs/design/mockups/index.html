@@ -3182,7 +3182,7 @@
         sec: 'reseau',
         mat: 'ardoise',
         dk: 'clair',
-        rim: 'discret',
+        rim: 'marque',
         full: false,
         orn: true,
       };
@@ -4405,7 +4405,7 @@
             .map(([k, d]) => b('dir', k, d.name))
             .join('')}</span>
           <span class="grp"><span class="lbl">Caractère <kbd>M E O</kbd></span>${MATS.map(([k, l]) => b('mat', k, l)).join('')}${b('dk', 'profond', 'Sombre : outils profonds')}${b('dk', 'clair', 'Sombre : outils clairs')}${b('full', !S.full, 'E · Encres pleines')}</span>
-          <span class="grp"><span class="lbl">Lumière</span>${b('rim', 'non', 'Sans')}${b('rim', 'discret', 'Discrète')}${b('rim', 'marque', 'Marquée')}${b('orn', !S.orn, 'O · Outils gravés')}</span>
+          <span class="grp"><span class="lbl">Lumière <kbd>L</kbd></span>${b('rim', 'non', 'Sans')}${b('rim', 'discret', 'Discrète')}${b('rim', 'marque', 'Marquée')}${b('orn', !S.orn, 'O · Outils gravés')}</span>
           <span class="grp"><span class="lbl">Découverte <kbd>G</kbd></span>${DISC_KEYS.map((k) => b('disc', k, DISC[k][0])).join('')}${b('quiet', !S.quiet, S.quiet ? 'Frappe : en cours' : 'Frappe : à l’arrêt')}</span>
           <span class="grp"><span class="lbl">Écran <kbd>1–9</kbd></span>${SCREENS.map(([k, l]) => b('screen', k, l)).join('')}</span>
           <span class="grp"><span class="lbl">Thème <kbd>T</kbd></span>${b('theme', 'light', 'Clair')}${b('theme', 'dark', 'Sombre')}</span>
@@ -4703,6 +4703,7 @@
         else if (e.key === 'm')
           S.mat = MATS[(MATS.findIndex(([k]) => k === S.mat) + 1) % MATS.length][0];
         else if (e.key === 'e') S.full = !S.full;
+        else if (e.key === 'l') S.rim = { non: 'discret', discret: 'marque', marque: 'non' }[S.rim];
         else if (e.key === 'o') S.orn = !S.orn;
         else if (e.key === 't') S.theme = S.theme === 'light' ? 'dark' : 'light';
         else if (e.key === 'a') S.warm = !S.warm;
