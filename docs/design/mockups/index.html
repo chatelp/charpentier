@@ -3142,53 +3142,62 @@
         text-align: left;
       }
 
-      /* ───────────── « Sens » : hollow = what is written or holds something; lit = where you are ───────────── */
-      .app[data-rim='sens'],
-      .app[data-rim='sens'] * {
+      /* ───────────── Hollow and light: two signals, two meanings, never on the same element ─────────────
+         Hollow = what the author put there and that stays (text, validated value, chosen option).
+         Light = where the author is right now (place, selection, open panel, touch, focus).
+         The light is the one of the system line: a glow that rises inside the element from its lower
+         right corner, i.e. the bright half of a hollow without its dark half. No ring, no halo. */
+      .app[data-rim='garde'],
+      .app[data-rim='garde'] * {
         --rim: 0 0 0 0 transparent;
-        --lit-bg: color-mix(in srgb, var(--bg) 58%, var(--hl));
-        --lit:
-          0 0 0 1px color-mix(in srgb, var(--hl) 82%, #fff),
-          0 0 16px color-mix(in srgb, var(--hl) 70%, transparent);
+        --lit: inset calc(var(--d) * -1) calc(var(--d) * -1) var(--b) var(--hl);
       }
-      .app[data-rim='sens']
+      /* Light: where you are, what is selected, what is open. */
+      .app[data-rim='garde']
         :is(
           .pt.sel,
           .sg.on,
           .smsg.on,
           .tbtn.on,
           .r.pick.sel,
-          .card2.sel,
           .net.sel,
           .ri.sel,
-          .chip.on,
-          .card.act
+          .chip.cp.on,
+          .card.act,
+          .seg button.on,
+          .modes button.on,
+          .mh .segs span.on
         ) {
-        background: var(--lit-bg);
         box-shadow: var(--lit);
       }
-      .app[data-rim='sens'] :is(.nav.on, .ent.on, .ms .sc.act, .proj.on, .snav.on) {
-        background: var(--lit-bg);
+      .app[data-rim='garde'] :is(.nav.on, .ent.on, .ms .sc.act, .proj.on, .snav.on) {
         box-shadow:
           var(--lit),
           inset 3px 0 0 var(--author, var(--ink));
       }
-      .app[data-rim='sens'] .srail .snav.on {
+      .app[data-rim='garde'] .srail .snav.on {
         box-shadow:
           var(--lit),
           inset 3px 0 0 var(--ink);
       }
-      .app[data-rim='sens'] :is(.seg button.on, .segs span.on, .modes button.on) {
-        background: var(--lit-bg);
-        box-shadow:
-          var(--raise-s),
-          0 0 0 1px color-mix(in srgb, var(--hl) 82%, #fff);
-      }
-      .app[data-rim='sens'][data-orn='true'] :is(.nav.on .pic, .ent.on .mono) {
+      .app[data-rim='garde'][data-orn='true'] :is(.nav.on .pic, .ent.on .mono) {
         box-shadow: var(--raise-s);
       }
-      /* The gesture itself: hollow while pressed, nothing else. */
-      .app[data-rim='sens']
+      /* Tabs lie on the surface: no hollow track under a lit tab. */
+      .app[data-rim='garde'] :is(.seg, .modes, .mh .segs) {
+        box-shadow: none;
+        gap: 4px;
+      }
+      /* A counter is not something the author wrote: flat. Hover is not a hollow either. */
+      .app[data-rim='garde'] .edge .n {
+        box-shadow: none;
+      }
+      .app[data-rim='garde'] .syspop .r.pick:hover:not(.sel) {
+        box-shadow: none;
+        color: var(--ink);
+      }
+      /* The touch: light at once, never a hollow that would spring back. */
+      .app[data-rim='garde']
         :is(
           .btn,
           .tbtn,
@@ -3201,14 +3210,49 @@
           .proj,
           .ms .sc,
           .seg button,
+          .modes button,
           .edge,
-          .cmdz,
           .r.pick,
-          .chip
+          .chip.cp,
+          .chip.more
         ):active {
-        background: var(--bg);
-        box-shadow: var(--inset);
+        box-shadow: var(--lit);
         transition: none;
+      }
+
+      /* The chosen option of a setting is a key that stays down; the others stand proud. */
+      .app[data-rim='garde'] .segs:not(.mh .segs) {
+        gap: 6px;
+        padding: 0;
+        box-shadow: none;
+      }
+      .app[data-rim='garde'] .segs:not(.mh .segs) span {
+        box-shadow: var(--raise-s);
+        transition: box-shadow 0.18s var(--ease);
+      }
+      .app[data-rim='garde'] .segs:not(.mh .segs) span:is(.on, :active) {
+        box-shadow: var(--inset);
+        color: var(--ink);
+      }
+      .app[data-rim='garde'] .chip:not(.cp, .more):active {
+        box-shadow: var(--inset);
+      }
+      #app[data-rim='garde'] .aapop .tbtn {
+        box-shadow: var(--raise-s);
+      }
+      #app[data-rim='garde'] .aapop .tbtn:is(.on, :active) {
+        box-shadow: var(--inset);
+      }
+      /* The example sentence is a proposal of the Compagnon: in relief, like every proposal. */
+      .app[data-rim='garde'] .ex {
+        box-shadow: var(--raise-s);
+      }
+      /* Measurements are not something the author wrote: the charts sit flat between two grooves. */
+      .app[data-rim='garde'] .mc svg.ch {
+        border-radius: 0;
+        box-shadow:
+          0 -1px 0 var(--sh),
+          0 1px 0 var(--hl);
       }
     </style>
   </head>
@@ -3277,7 +3321,7 @@
         sec: 'reseau',
         mat: 'ardoise',
         dk: 'clair',
-        rim: 'sens',
+        rim: 'garde',
         full: false,
         orn: true,
       };
@@ -4500,7 +4544,7 @@
             .map(([k, d]) => b('dir', k, d.name))
             .join('')}</span>
           <span class="grp"><span class="lbl">Caractère <kbd>M E O</kbd></span>${MATS.map(([k, l]) => b('mat', k, l)).join('')}${b('dk', 'profond', 'Sombre : outils profonds')}${b('dk', 'clair', 'Sombre : outils clairs')}${b('full', !S.full, 'E · Encres pleines')}</span>
-          <span class="grp"><span class="lbl">Lumière <kbd>L</kbd></span>${b('rim', 'non', 'Avant : tout en creux')}${b('rim', 'sens', 'Creux / allumé')}${b('orn', !S.orn, 'O · Outils gravés')}</span>
+          <span class="grp"><span class="lbl">Lumière <kbd>L</kbd></span>${b('rim', 'non', 'Avant : tout en creux')}${b('rim', 'garde', 'Le creux garde, la lumière suit')}${b('orn', !S.orn, 'O · Outils gravés')}</span>
           <span class="grp"><span class="lbl">Découverte <kbd>G</kbd></span>${DISC_KEYS.map((k) => b('disc', k, DISC[k][0])).join('')}${b('quiet', !S.quiet, S.quiet ? 'Frappe : en cours' : 'Frappe : à l’arrêt')}</span>
           <span class="grp"><span class="lbl">Écran <kbd>1–9</kbd></span>${SCREENS.map(([k, l]) => b('screen', k, l)).join('')}</span>
           <span class="grp"><span class="lbl">Thème <kbd>T</kbd></span>${b('theme', 'light', 'Clair')}${b('theme', 'dark', 'Sombre')}</span>
@@ -4798,7 +4842,7 @@
         else if (e.key === 'm')
           S.mat = MATS[(MATS.findIndex(([k]) => k === S.mat) + 1) % MATS.length][0];
         else if (e.key === 'e') S.full = !S.full;
-        else if (e.key === 'l') S.rim = S.rim === 'sens' ? 'non' : 'sens';
+        else if (e.key === 'l') S.rim = S.rim === 'garde' ? 'non' : 'garde';
         else if (e.key === 'o') S.orn = !S.orn;
         else if (e.key === 't') S.theme = S.theme === 'light' ? 'dark' : 'light';
         else if (e.key === 'a') S.warm = !S.warm;
