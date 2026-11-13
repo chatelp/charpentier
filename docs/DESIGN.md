@@ -169,6 +169,7 @@ Attaques et chutes en rampes exponentielles depuis et vers 0,0001. Réglages : �
 - **Champ** : creux, rayon 14 px, texte d'invite `--ch-faint`.
 - **Contrôle segmenté** : rail creux, segment actif en relief.
 - **Puce** : relief léger, 12 px ; active = creux, vermillon.
+- **Barres de défilement** : fines, **sans fond** (piste transparente, jamais de bande blanche entre le texte et un panneau), curseur en `--ch-muted` à 40 % ; elles prennent donc la teinte de la matière où elles se trouvent, en clair comme en sombre.
 - **Focus clavier** : l'élément focalisé passe en creux ; pour les cartes et lignes, filet vermillon. Jamais d'anneau bleu par défaut du navigateur.
 
 ### 4.8 Points d'entrée et découverte

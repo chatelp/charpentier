@@ -1849,7 +1849,7 @@
       .ent.rej {
         opacity: 0.45;
       }
-      .ent.rej > div:first-child {
+      .ent.rej > div > div:first-child {
         text-decoration: line-through;
       }
       .list .lfoot {
@@ -1992,6 +1992,414 @@
         text-underline-offset: 2px;
         cursor: pointer;
       }
+      /* ───────────── Character levers (« Caractère ») ───────────── */
+      .app {
+        --praise: var(--raise);
+        --praise-s: var(--raise-s);
+        --on-ink: #fff;
+      }
+      .app[data-theme='dark'] {
+        --on-ink: #1e2126;
+      }
+      /* Zones re-resolve the relief with their own material, and sit on the page with the page's shadows. */
+      .app:not([data-mat='none'])
+        :is(
+          .panel,
+          .edge,
+          .atelier .rail,
+          .atelier .list,
+          .board .card,
+          .board .strip,
+          .proj,
+          .cmdres,
+          .cmdbar,
+          .aapop,
+          .cprev,
+          .note,
+          .tip
+        ) {
+        --raise:
+          var(--d) var(--d) var(--b) var(--sh),
+          calc(var(--d) * -1) calc(var(--d) * -1) var(--b) var(--hl);
+        --raise-s:
+          var(--ds) var(--ds) var(--bs) var(--sh),
+          calc(var(--ds) * -1) calc(var(--ds) * -1) var(--bs) var(--hl);
+        --inset:
+          inset var(--ds) var(--ds) var(--bs) var(--sh),
+          inset calc(var(--ds) * -1) calc(var(--ds) * -1) var(--bs) var(--hl);
+        background: var(--bg);
+        color: var(--ink);
+      }
+      .app:not([data-mat='none'])
+        :is(
+          .panel,
+          .atelier .rail,
+          .atelier .list,
+          .board .strip,
+          .cmdres,
+          .aapop,
+          .cprev,
+          .note,
+          .tip
+        ) {
+        box-shadow: var(--praise);
+      }
+      .app:not([data-mat='none']) :is(.edge, .board .card:not(.act), .proj:not(.on)) {
+        box-shadow: var(--praise-s);
+      }
+      .app:not([data-mat='none']) .atelier :is(.rail, .list) {
+        padding: 14px 12px;
+        border-radius: var(--r-lg);
+      }
+      .app:not([data-mat='none']) .atelier {
+        padding-top: 14px;
+      }
+      /* M · Matières: one material per place. */
+      .app[data-mat='teintes'][data-theme='light']
+        :is(.panel:not(.left):not(.volet), .note, .tip, .edge.r) {
+        --bg: #d6e1ee;
+        --hl: #f3f8ff;
+        --sh: #a6b7cb;
+      }
+      .app[data-mat='teintes'][data-theme='light'] :is(.panel.left, .edge.l, .board .card, .proj) {
+        --bg: #eee8db;
+        --hl: #fffdf5;
+        --sh: #c9bfad;
+      }
+      .app[data-mat='teintes'][data-theme='light']
+        :is(.atelier .rail, .atelier .list, .panel.volet) {
+        --bg: #e9dcd3;
+        --hl: #fff7f1;
+        --sh: #c7b6aa;
+      }
+      .app[data-mat='teintes'][data-theme='dark']
+        :is(.panel:not(.left):not(.volet), .note, .tip, .edge.r) {
+        --bg: #212c3a;
+        --hl: #2c394a;
+        --sh: #151c26;
+      }
+      .app[data-mat='teintes'][data-theme='dark'] :is(.panel.left, .edge.l, .board .card, .proj) {
+        --bg: #302d26;
+        --hl: #3c3931;
+        --sh: #1f1d19;
+      }
+      .app[data-mat='teintes'][data-theme='dark']
+        :is(.atelier .rail, .atelier .list, .panel.volet) {
+        --bg: #352b26;
+        --hl: #42362f;
+        --sh: #231c18;
+      }
+      /* N · Établi sombre: the tools are slate, the page stays light. */
+      .app[data-mat='ardoise'][data-theme='light']
+        :is(
+          .panel,
+          .edge,
+          .atelier .rail,
+          .atelier .list,
+          .board .strip,
+          .cmdres,
+          .cmdbar,
+          .aapop,
+          .cprev,
+          .tip
+        ) {
+        --bg: #2b3038;
+        --hl: #383e48;
+        --sh: #1b1e24;
+        --ink: #dfe3ea;
+        --ink-2: #b9c0ca;
+        --muted: #8a929e;
+        --faint: #5d6470;
+        --accent: #86aedb;
+        --accent-soft: rgba(134, 174, 219, 0.13);
+      }
+      .app[data-mat='ardoise'][data-ink='true'][data-theme='light']
+        :is(
+          .panel,
+          .edge,
+          .atelier .rail,
+          .atelier .list,
+          .board .strip,
+          .cmdres,
+          .cmdbar,
+          .aapop,
+          .cprev,
+          .tip
+        ) {
+        --author: #e3876a;
+        --on-ink: #1e2126;
+      }
+      .app[data-mat='ardoise'][data-theme='dark']
+        :is(
+          .panel,
+          .edge,
+          .atelier .rail,
+          .atelier .list,
+          .board .strip,
+          .cmdres,
+          .cmdbar,
+          .aapop,
+          .cprev,
+          .tip
+        ) {
+        --bg: #1a1d22;
+        --hl: #24282f;
+        --sh: #0f1114;
+      }
+
+      /* Panel titles (shown with any lever). */
+      .phead {
+        flex: none;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 14px 18px 4px;
+      }
+      .phead .ph-t {
+        font: 500 19px/1.1 var(--font-text);
+        font-variant-caps: all-small-caps;
+        letter-spacing: 0.08em;
+        color: var(--ink-2);
+      }
+      .phead.c .ph-t {
+        font-style: italic;
+        font-variant-caps: normal;
+        letter-spacing: 0;
+        color: var(--accent);
+      }
+      .phead .ph-s {
+        margin-left: auto;
+        color: var(--muted);
+        font-size: 11.5px;
+        text-align: right;
+      }
+      .pic {
+        display: none;
+      }
+
+      /* E · Encres pleines: the two inks fill what is active. */
+      .app[data-full='true'] :is(.seg button.on, .modes button.on) {
+        background: linear-gradient(
+          145deg,
+          color-mix(in srgb, var(--author) 82%, #fff),
+          var(--author)
+        );
+        color: var(--on-ink);
+        box-shadow:
+          2px 2px 6px var(--sh),
+          -2px -2px 6px var(--hl);
+      }
+      .app[data-full='true'] .seg button.on .n {
+        color: var(--on-ink);
+        opacity: 0.85;
+      }
+      .app[data-full='true'] :is(.note, .tip, .panel:not(.left), .fm, .pt) .btn.pri {
+        background: linear-gradient(
+          145deg,
+          color-mix(in srgb, var(--accent) 80%, #fff),
+          var(--accent)
+        );
+        color: var(--on-ink);
+      }
+      .app[data-full='true'] :is(.lib, .cprev, .proj) .btn.pri {
+        background: linear-gradient(
+          145deg,
+          color-mix(in srgb, var(--author) 82%, #fff),
+          var(--author)
+        );
+        color: var(--on-ink);
+      }
+      .app[data-full='true'] .btn.pri kbd {
+        color: inherit;
+        opacity: 0.7;
+      }
+      .app[data-full='true'] :is(.nav .n:not(:empty), .edge .n, .tbtn .n) {
+        min-width: 18px;
+        padding: 1px 6px;
+        border-radius: 9px;
+        background: var(--accent);
+        box-shadow: none;
+        color: var(--on-ink);
+        font-size: 11px;
+        font-weight: 600;
+        text-align: center;
+      }
+      .app[data-full='true'] :is(.nav.on, .ent.on, .ms .sc.act, .proj.on) {
+        background: color-mix(in srgb, var(--author) 10%, transparent);
+      }
+      .app[data-full='true'] :is(.fld[data-st='proposed'] .fv, .ent.prop) {
+        background: var(--accent-soft);
+      }
+      .app[data-full='true'] .pt {
+        border-left: 3px solid color-mix(in srgb, var(--accent) 45%, transparent);
+      }
+      .app[data-full='true'] .pt:has(.pst[data-l='3']) {
+        border-left-color: var(--accent);
+      }
+      .app[data-full='true'] .phead {
+        margin: 0 0 4px;
+        padding: 13px 18px 12px;
+        border-radius: var(--r-lg) var(--r-lg) 0 0;
+        background: linear-gradient(
+          145deg,
+          color-mix(in srgb, var(--author) 82%, #fff),
+          var(--author)
+        );
+      }
+      .app[data-full='true'] .phead.c {
+        background: linear-gradient(
+          145deg,
+          color-mix(in srgb, var(--accent) 80%, #fff),
+          var(--accent)
+        );
+      }
+      .app[data-full='true'] .phead :is(.ph-t, .ph-s, .pic) {
+        color: var(--on-ink);
+      }
+      .app[data-full='true'] .phead .ph-s {
+        opacity: 0.8;
+      }
+
+      /* O · Outils gravés: engraved tools, monograms, letterpress. */
+      .app[data-orn='true'] .pic {
+        flex: none;
+        display: grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        box-shadow: var(--raise-s);
+        color: var(--ink-2);
+      }
+      .app[data-orn='true'] .pic svg {
+        width: 19px;
+        height: 19px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.5;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .app[data-orn='true'] .phead.c .pic {
+        color: var(--accent);
+      }
+      .app[data-orn='true'][data-full='true'] .phead .pic {
+        box-shadow:
+          inset 2px 2px 5px rgba(0, 0, 0, 0.25),
+          inset -2px -2px 5px rgba(255, 255, 255, 0.2);
+      }
+      .app[data-orn='true'] .nav {
+        justify-content: flex-start;
+        align-items: center;
+        gap: 10px;
+        padding: 6px 10px 6px 6px;
+      }
+      .app[data-orn='true'] .nav .pic {
+        width: 30px;
+        height: 30px;
+      }
+      .app[data-orn='true'] .nav.on .pic {
+        box-shadow: var(--inset);
+        color: var(--author, var(--ink));
+      }
+      .app[data-orn='true'] .nav .n {
+        margin-left: auto;
+      }
+      .mono {
+        display: none;
+      }
+      .app[data-orn='true'] .mono {
+        flex: none;
+        display: grid;
+        place-items: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        box-shadow: var(--raise-s);
+        font: 500 15px var(--font-text);
+        color: var(--ink-2);
+      }
+      .app[data-orn='true'] .ent {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .app[data-orn='true'] .ent.on .mono {
+        box-shadow: var(--inset);
+        color: var(--author, var(--ink));
+      }
+      .app[data-orn='true'] .ent.prop .mono {
+        color: var(--accent);
+        font-style: italic;
+      }
+      .app[data-orn='true'] .fiche h1 {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .app[data-orn='true'] .fiche h1 .mono {
+        width: 62px;
+        height: 62px;
+        box-shadow: var(--raise);
+        font-size: 34px;
+        color: var(--author, var(--ink));
+      }
+      /* Letterpress: titles pressed into the material. */
+      .app[data-orn='true'] :is(.gh, .sec h2, .fiche .sec > h2) {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-shadow: 0 1px 0 var(--hl);
+      }
+      .app[data-orn='true'] :is(.gh, .sec h2)::after {
+        content: '';
+        flex: 1;
+        height: 0;
+        border-top: 1px solid var(--sh);
+        border-bottom: 1px solid var(--hl);
+      }
+      .wm {
+        display: none;
+      }
+      .app[data-orn='true'] .wm {
+        display: block;
+        position: absolute;
+        right: 14px;
+        bottom: 34px;
+        font: 600 150px/1 var(--font-text);
+        color: var(--bg);
+        text-shadow:
+          -1.5px -1.5px 1px var(--sh),
+          1.5px 1.5px 1px var(--hl);
+        pointer-events: none;
+        user-select: none;
+        opacity: 0.9;
+      }
+      .app[data-orn='true'] .ms {
+        position: relative;
+        z-index: 1;
+      }
+      .app[data-orn='true'] .ms .ch::before {
+        content: '⁂';
+        margin-right: 8px;
+        color: var(--faint);
+        font-weight: 400;
+      }
+      .app[data-orn='true'] .ms .ch {
+        justify-content: flex-start;
+        font: 500 15px var(--font-text);
+      }
+      .app[data-orn='true'] .ms .ch span:last-child {
+        margin-left: auto;
+        font: 500 12px var(--font-ui);
+      }
+
+      /* Quiet scrollbars: no track, a thin thumb in the material's own muted tone. */
+      .app,
+      .app * {
+        scrollbar-width: thin;
+        scrollbar-color: color-mix(in srgb, var(--muted) 40%, transparent) transparent;
+      }
     </style>
   </head>
   <body>
@@ -2048,6 +2456,9 @@
         tour: 0,
         rejects: false,
         cp: 0,
+        mat: 'teintes',
+        full: false,
+        orn: true,
       };
       const [hd, ht, hs, hdisc] = location.hash.slice(1).split('/');
       if (DISC_KEYS.includes(hdisc)) S.disc = hdisc;
@@ -2182,6 +2593,32 @@
       const fmt = (n) => n.toLocaleString('fr-FR').replace(/\s/g, F);
 
       // ───────────── Discoverability: entry points (« Découverte ») ─────────────
+      const MATS = [
+        ['none', 'Neutre'],
+        ['teintes', 'M · Matières'],
+        ['ardoise', 'N · Établi sombre'],
+      ];
+      const svg = (d) => `<span class="pic"><svg viewBox="0 0 24 24">${d}</svg></span>`;
+      const PIC = {
+        compas: svg(
+          '<circle cx="12" cy="5" r="1.7"/><path d="M11.3 6.6 6 20M12.7 6.6 18 20M8.3 14.5h7.4"/>',
+        ),
+        livre: svg(
+          '<path d="M4 5.5c3-1 6-.8 8 1 2-1.8 5-2 8-1V18c-3-1-6-.8-8 1-2-1.8-5-2-8-1zM12 6.5V19"/>',
+        ),
+        plan: svg('<path d="M6 3h9l4 4v14H6zM15 3v4h4M9 12h7M9 16h5"/>'),
+        buste: svg('<circle cx="12" cy="8" r="3.5"/><path d="M5 20c1-5 4-7 7-7s6 2 7 7"/>'),
+        ferme: svg('<path d="M3 18h18M4 18 12 6l8 12M12 6v12M8 12l4 6M16 12l-4 6"/>'),
+        plomb: svg('<path d="M7 3h10M12 3v10M9 13h6l-3 7z"/>'),
+        loupe: svg('<circle cx="10.5" cy="10.5" r="5.5"/><path d="m15 15 5 5"/>'),
+      };
+      const anyLever = () => S.dir === 'perle' && (S.mat !== 'none' || S.full || S.orn);
+      const phead = (cls, pic, title, sub) =>
+        anyLever()
+          ? `<div class="phead ${cls}">${pic}<span class="ph-t">${title}</span><span class="ph-s">${sub}</span></div>`
+          : '';
+      const mono = (name) =>
+        `<span class="mono">${name.replace(/^Le /, '')[0].toUpperCase()}</span>`;
       const DISC = {
         actuel: ['Actuel', 'DESIGN.md d’origine : tout s’ouvre au raccourci, rien n’est visible'],
         rails: [
@@ -2642,7 +3079,7 @@
         const foot = pts
           ? `<div class="pfoot"><span><kbd>J K</kbd>parcourir</span><span><kbd>⏎</kbd>aller au passage</span><span><kbd>R</kbd>résolu</span><span><kbd>I</kbd>ignorer</span><span><kbd>⌘J</kbd>fermer</span></div>`
           : `<div class="field"><span class="grow">Écrire au Compagnon…</span><kbd>⏎</kbd></div><div class="pfoot"><span><kbd>⌘L</kbd>conversation</span><span><kbd>Échap</kbd>revenir au texte</span></div>`;
-        return `<aside class="panel"><div class="seg" data-tour="2"><button data-tab="points" class="${pts ? 'on' : ''}">Points à traiter<span class="n">6</span></button><button data-tab="chat" class="${pts ? '' : 'on'}">Conversation</button></div><div class="pscroll">${body}</div>${foot}</aside>`;
+        return `<aside class="panel">${phead('c', PIC.compas, 'Le Compagnon', '6 points · cran Accompagnant')}<div class="seg" data-tour="2"><button data-tab="points" class="${pts ? 'on' : ''}">Points à traiter<span class="n">6</span></button><button data-tab="chat" class="${pts ? '' : 'on'}">Conversation</button></div><div class="pscroll">${body}</div>${foot}</aside>`;
       }
 
       // ───────────── Command line ─────────────
@@ -2741,7 +3178,7 @@
             return `<div class="ch"><span>${c.n} · ${c.t}</span><span>${fmt(total)}</span></div>${sc}`;
           })
           .join('');
-        return `<aside class="panel left${docked ? ' docked' : ''}"><div class="seg" data-tour="${docked ? 1 : ''}"><button class="on">Manuscrit</button><button data-plan="1">Plan <kbd>⌘⇧P</kbd></button></div><div class="ms">${chapters}</div><div class="pfoot"><span><kbd>↑↓</kbd>parcourir</span><span><kbd>⏎</kbd>ouvrir</span><span><kbd>⌥↑↓</kbd>déplacer</span><span><kbd>V</kbd>variantes</span><span><kbd>⌘N</kbd>nouvelle scène</span></div></aside>`;
+        return `<aside class="panel left${docked ? ' docked' : ''}">${phead('m', PIC.livre, 'Manuscrit', empty ? 'Mon roman' : 'Les Serres d’Hespéride<br />13 984 mots')}<div class="seg" data-tour="${docked ? 1 : ''}"><button class="on">Manuscrit</button><button data-plan="1">Plan <kbd>⌘⇧P</kbd></button></div><div class="ms">${chapters}</div><div class="pfoot"><span><kbd>↑↓</kbd>parcourir</span><span><kbd>⏎</kbd>ouvrir</span><span><kbd>⌥↑↓</kbd>déplacer</span><span><kbd>V</kbd>variantes</span><span><kbd>⌘N</kbd>nouvelle scène</span></div></aside>`;
       }
       function board() {
         const cols = MS.map((c) => {
@@ -2879,7 +3316,7 @@
         const apps = ['I.1', 'I.3', 'II.2', 'III.1', 'III.2']
           .map((s) => `<span class="chip">${s}</span>`)
           .join('');
-        return `<div class="fiche"><h1>Hélène Varenne</h1><div class="lead">Personnage principal · enquêtrice · 9 scènes</div>${compact ? '' : legend}<div class="${compact ? '' : 'secs'}">${secs}${compact ? '' : `<div class="sec wide"><h2>Apparitions <span style="text-transform:none;letter-spacing:0;font-weight:400">(remplies automatiquement)</span></h2>${apps}</div>`}</div></div>`;
+        return `<div class="fiche"><h1>${mono('Hélène')}<span>Hélène Varenne</span></h1><div class="lead">Personnage principal · enquêtrice · 9 scènes</div>${compact ? '' : legend}<div class="${compact ? '' : 'secs'}">${secs}${compact ? '' : `<div class="sec wide"><h2>Apparitions <span style="text-transform:none;letter-spacing:0;font-weight:400">(remplies automatiquement)</span></h2>${apps}</div>`}</div></div>`;
       }
       function library() {
         const projs = [
@@ -2898,15 +3335,15 @@
       }
       function atelier() {
         const mods = [
-          ['Méta', ''],
-          ['Personnages', '1', true],
-          ['Structure', ''],
-          ['Règles du monde', '2'],
-          ['Indices et révélations', '1'],
+          ['Méta', '', false, 'plan'],
+          ['Personnages', '1', true, 'buste'],
+          ['Structure', '', false, 'ferme'],
+          ['Règles du monde', '2', false, 'plomb'],
+          ['Indices et révélations', '1', false, 'loupe'],
         ]
           .map(
-            ([n, c, on]) =>
-              `<div class="nav${on ? ' on' : ''}"><span>${n}</span><span class="n">${c}</span></div>`,
+            ([n, c, on, pic]) =>
+              `<div class="nav${on ? ' on' : ''}">${PIC[pic]}<span>${n}</span><span class="n">${c}</span></div>`,
           )
           .join('');
         const ents = [
@@ -2918,7 +3355,8 @@
           ...(S.rejects ? [['Le gardien du sas', 'rejeté le 8 nov. · Reprendre', 'rej']] : []),
         ]
           .map(
-            ([n, s, c]) => `<div class="ent ${c}"><div>${n}</div><div class="s">${s}</div></div>`,
+            ([n, s, c]) =>
+              `<div class="ent ${c}">${mono(n)}<div><div>${n}</div><div class="s">${s}</div></div></div>`,
           )
           .join('');
         const disc = S.dir === 'perle' ? S.disc : 'actuel';
@@ -2943,6 +3381,7 @@
           <span class="grp"><span class="lbl">Direction <kbd>D</kbd></span>${Object.entries(DIRS)
             .map(([k, d]) => b('dir', k, d.name))
             .join('')}</span>
+          <span class="grp"><span class="lbl">Caractère <kbd>M E O</kbd></span>${MATS.map(([k, l]) => b('mat', k, l)).join('')}${b('full', !S.full, 'E · Encres pleines')}${b('orn', !S.orn, 'O · Outils gravés')}</span>
           <span class="grp"><span class="lbl">Découverte <kbd>G</kbd></span>${DISC_KEYS.map((k) => b('disc', k, DISC[k][0])).join('')}${b('quiet', !S.quiet, S.quiet ? 'Frappe : en cours' : 'Frappe : à l’arrêt')}</span>
           <span class="grp"><span class="lbl">Écran <kbd>1–9</kbd></span>${SCREENS.map(([k, l]) => b('screen', k, l)).join('')}</span>
           <span class="grp"><span class="lbl">Thème <kbd>T</kbd></span>${b('theme', 'light', 'Clair')}${b('theme', 'dark', 'Sombre')}</span>
@@ -2952,7 +3391,7 @@
           <span class="info">${S.dir === 'perle' ? DISC[S.disc][1] : DIRS[S.dir].info}</span>`;
         document
           .querySelectorAll(
-            '.mk [data-k="focus"], .mk [data-k="sound"], .mk [data-k="still"], .mk [data-k="warm"], .mk [data-k="ink"], .mk [data-k="sig"], .mk [data-k="quiet"]',
+            '.mk [data-k="focus"], .mk [data-k="sound"], .mk [data-k="still"], .mk [data-k="warm"], .mk [data-k="ink"], .mk [data-k="sig"], .mk [data-k="quiet"], .mk [data-k="full"], .mk [data-k="orn"]',
           )
           .forEach((el) => el.setAttribute('aria-pressed', S[el.dataset.k]));
       }
@@ -2968,6 +3407,9 @@
         app.classList.toggle('still', S.still);
         const disc = S.dir === 'perle' ? S.disc : 'actuel';
         app.dataset.disc = disc;
+        app.dataset.mat = S.dir === 'perle' ? S.mat : 'none';
+        app.dataset.full = S.dir === 'perle' && S.full;
+        app.dataset.orn = S.dir === 'perle' && S.orn;
         app.dataset.quiet = S.quiet;
         let body = '';
         const docked =
@@ -3181,6 +3623,10 @@
           S.disc = DISC_KEYS[(DISC_KEYS.indexOf(S.disc) + 1) % DISC_KEYS.length];
           S.tour = 0;
         } else if (e.key === 'w') S.quiet = !S.quiet;
+        else if (e.key === 'm')
+          S.mat = MATS[(MATS.findIndex(([k]) => k === S.mat) + 1) % MATS.length][0];
+        else if (e.key === 'e') S.full = !S.full;
+        else if (e.key === 'o') S.orn = !S.orn;
         else if (e.key === 't') S.theme = S.theme === 'light' ? 'dark' : 'light';
         else if (e.key === 'a') S.warm = !S.warm;
         else if (e.key === 'b') S.ink = !S.ink;
