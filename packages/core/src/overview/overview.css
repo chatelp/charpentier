@@ -129,6 +129,8 @@
 
 .ch-strip-chip {
   border: 0;
+  /* A button: without it, the browser's own grey. */
+  background: transparent;
   font: inherit;
   font-size: var(--ch-ui-sm);
   cursor: pointer;

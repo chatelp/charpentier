@@ -196,6 +196,10 @@ kbd,
   display: inline-block;
   margin: 2px 4px 2px 0;
   padding: 3px 9px;
+  /* Often a button: no border nor the browser's grey. */
+  border: 0;
+  background: transparent;
+  color: inherit;
   border-radius: var(--ch-radius-sm);
   box-shadow: var(--ch-raise-s);
   font: var(--ch-ui-xs) var(--ch-font-ui);

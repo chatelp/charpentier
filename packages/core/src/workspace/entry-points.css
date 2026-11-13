@@ -214,8 +214,13 @@
   flex: 1;
 }
 
-.ch-display-choice.is-on,
-.ch-display-choice.is-on:active {
+/* Setting keys: the options not chosen in the muted ink, the chosen one sunk, in ink. */
+.ch-btn.ch-display-choice {
+  color: var(--ch-muted);
+}
+
+.ch-btn.ch-display-choice.is-on,
+.ch-btn.ch-display-choice.is-on:active {
   background: var(--ch-bg);
   box-shadow: var(--ch-inset);
   color: var(--ch-ink);
