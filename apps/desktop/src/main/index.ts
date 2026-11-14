@@ -111,7 +111,7 @@ function deviceSystem(): (SystemService & { dispose?(): void }) | null {
     appVersion: app.getVersion(),
     hostname: os.hostname(),
     settingsFile: path.join(app.getPath('userData'), 'system.json'),
-    // The keyboard chosen at installation (nix/hosts/x250).
+    // The keyboard chosen at installation (charpentier-os, hosts/x250).
     keyboard: installedKeyboard(),
     // The USB key's copy: every project, in Markdown.
     exportTexts: (folder) => exportTexts(store, library, folder, mirrorStrings),

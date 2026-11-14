@@ -430,7 +430,7 @@ Sur le X250, l'app est la partie visible du système [D-24]. Maquette : cadre «
   - L'étape et la cause en une ligne (« copie du système : erreur d'écriture sur le disque »).
   - « le disque n'est pas utilisable en l'état, la clé n'a pas bougé ».
   - « ⏎ recommencer depuis le début » (retour à l'étape disque, avec sa confirmation), « d détail » (le journal brut ; `Échap` revient), « échap éteindre ».
-- **Sur le Mac, `scripts/flash-installer.sh`** (rendu 18).
+- **Sur le Mac, `scripts/flash-installer.sh`** (dépôt `charpentier-os` [D-29], rendu 18).
   - **Apparence** :
     - Même voix que l'installateur : minuscules, pas de point final, « · » entre les mentions.
     - Aucune couleur, pour aller avec n'importe quel thème du Terminal. Seulement le gras (titres, numéros), le faible (`\e[2m` : chemins, détails, aides) et l'inversé (`\e[7m` : alertes).
