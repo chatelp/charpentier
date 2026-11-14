@@ -1,4 +1,9 @@
-import { batteryLevel, type SystemService, type SystemState } from '@charpentier/platform';
+import {
+  batteryLevel,
+  hasBattery,
+  type SystemService,
+  type SystemState,
+} from '@charpentier/platform';
 import {
   useCallback,
   useEffect,
@@ -153,7 +158,7 @@ export function SystemLine({
   // Locked (phase 5.6): only `charpentier`, `verrouillé`, the battery and the time.
   const locked = state.lock.locked;
   const level = batteryLevel(state);
-  const low = !state.power.charging && level <= state.settings.lowBattery;
+  const low = hasBattery(state) && !state.power.charging && level <= state.settings.lowBattery;
   const lastMessage = journal.at(-1);
   const time = new Intl.DateTimeFormat(i18n.language, {
     hour: '2-digit',
@@ -289,22 +294,24 @@ export function SystemLine({
         </>
       ),
     ),
-    bat: segment(
-      'bat',
-      <>
-        {label('bat')}
-        <Gauge value={level} />
-        <span className="ch-sys-value">{text('system.seg.percent', { value: level })}</span>
-        {state.power.charging ? (
-          <span className="ch-sys-value">⚡</span>
-        ) : (
-          state.power.remaining !== null && (
-            <span className="ch-sys-remaining">{remainingLabel(state.power.remaining)}</span>
-          )
-        )}
-      </>,
-      low ? 'is-alert' : undefined,
-    ),
+    bat:
+      hasBattery(state) &&
+      segment(
+        'bat',
+        <>
+          {label('bat')}
+          <Gauge value={level} />
+          <span className="ch-sys-value">{text('system.seg.percent', { value: level })}</span>
+          {state.power.charging ? (
+            <span className="ch-sys-value">⚡</span>
+          ) : (
+            state.power.remaining !== null && (
+              <span className="ch-sys-remaining">{remainingLabel(state.power.remaining)}</span>
+            )
+          )}
+        </>,
+        low ? 'is-alert' : undefined,
+      ),
     sync:
       syncLabel &&
       segment(

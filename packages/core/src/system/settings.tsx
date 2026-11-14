@@ -1,5 +1,6 @@
 import {
   batteryLevel,
+  hasBattery,
   type BluetoothDevice,
   type SystemService,
   type SystemSettings,
@@ -300,18 +301,20 @@ function Power() {
   const { state, s, set } = useSettings();
   return (
     <>
-      <Group title={s('groups.batteries')}>
-        {state.power.batteries.map((b) => (
-          <Row
-            key={b.name}
-            label={s('rows.battery', { name: b.name })}
-            help={s('rows.batteryHelp', { wear: 100 - b.health })}
-          >
-            <Gauge value={b.level} />
-            <span className="ch-set-value">{b.level} %</span>
-          </Row>
-        ))}
-      </Group>
+      {hasBattery(state) && (
+        <Group title={s('groups.batteries')}>
+          {state.power.batteries.map((b) => (
+            <Row
+              key={b.name}
+              label={s('rows.battery', { name: b.name })}
+              help={s('rows.batteryHelp', { wear: 100 - b.health })}
+            >
+              <Gauge value={b.level} />
+              <span className="ch-set-value">{b.level} %</span>
+            </Row>
+          ))}
+        </Group>
+      )}
       <Group title={s('groups.delays')}>
         <Row label={s('rows.screenOff')}>
           <Keys
@@ -634,12 +637,14 @@ function PowerIntro() {
   const { remaining } = state.power;
   return (
     <>
-      {state.power.charging || remaining === null
-        ? s('intro.powerCharging', { level })
-        : s('intro.power', {
-            level,
-            time: `${Math.floor(remaining / 60)} h ${String(remaining % 60).padStart(2, '0')}`,
-          })}
+      {!hasBattery(state)
+        ? s('intro.powerMains')
+        : state.power.charging || remaining === null
+          ? s('intro.powerCharging', { level })
+          : s('intro.power', {
+              level,
+              time: `${Math.floor(remaining / 60)} h ${String(remaining % 60).padStart(2, '0')}`,
+            })}
     </>
   );
 }
@@ -702,7 +707,7 @@ export const systemSettingsSections: readonly SettingsSection[] = [
     id: 'power',
     label: 'system.settings.power',
     intro: PowerIntro,
-    value: value(({ state }) => `${batteryLevel(state)} %`),
+    value: value(({ state }) => (hasBattery(state) ? `${batteryLevel(state)} %` : '')),
     component: Power,
   },
   { id: 'lock', label: 'system.settings.lock', intro: intro('lock'), component: Lock },

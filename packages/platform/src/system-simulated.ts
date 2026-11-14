@@ -22,6 +22,8 @@ export interface SimulatedSystem extends SystemService {
     usb(name: string | null): void;
     /** Sets the batteries' level, 0 to 100, and whether it charges. */
     battery(level: number, charging?: boolean): void;
+    /** Takes the batteries out: a machine on mains alone (a virtual machine). */
+    noBattery(): void;
     /** A cpu sample (load in %), as every 5 s on the device. */
     cpu(load: number, temperature?: number): void;
     /** Drops the connection (out of range). */
@@ -301,6 +303,11 @@ export function createSimulatedSystem(
             remaining: charging ? null : Math.round(level * 4.1),
             batteries: s.power.batteries.map((b) => ({ ...b, level })),
           },
+        })),
+      noBattery: () =>
+        update((s) => ({
+          ...s,
+          power: { ...s.power, batteries: [], charging: false, remaining: null },
         })),
       cpu: (load, temperature) =>
         update((s) => ({

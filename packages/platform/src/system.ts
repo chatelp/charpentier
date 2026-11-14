@@ -208,6 +208,12 @@ export const DEFAULT_SYSTEM_SETTINGS: SystemSettings = {
 /** Below this level, on battery, the device saves the scene and sleeps (§4.12). */
 export const CRITICAL_BATTERY = 3;
 
+/**
+ * Whether the device runs on batteries: a machine on mains alone (a desktop, a
+ * virtual machine) has none, and then nothing about a battery is shown.
+ */
+export const hasBattery = (state: SystemState): boolean => state.power.batteries.length > 0;
+
 /** The overall battery level, 0 to 100, over every battery. */
 export const batteryLevel = (state: SystemState): number => {
   const { batteries } = state.power;

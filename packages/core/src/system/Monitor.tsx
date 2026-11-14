@@ -1,8 +1,9 @@
-import type {
-  MonitorInfo,
-  MonitorSample,
-  SystemMonitor,
-  SystemService,
+import {
+  hasBattery,
+  type MonitorInfo,
+  type MonitorSample,
+  type SystemMonitor,
+  type SystemService,
 } from '@charpentier/platform';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -344,21 +345,24 @@ export function Monitor({ active, onClose }: FeatureViewProps) {
           </Row>
         </Dial>
 
-        <Dial
-          name={m('battery')}
-          value={
-            state.power.charging || batteryTime === null
-              ? m('batteryCharging', { watts: decimal(now.power) })
-              : m('batteryValue', { watts: decimal(now.power), time: batteryTime })
-          }
-        >
-          <Curve main={curve((s) => s.power)} max={15} />
-          {state.power.batteries.map((b) => (
-            <Row key={b.name} label={b.name}>
-              <Gauge value={b.level} /> {m('batteryLine', { level: b.level, wear: 100 - b.health })}
-            </Row>
-          ))}
-        </Dial>
+        {hasBattery(state) && (
+          <Dial
+            name={m('battery')}
+            value={
+              state.power.charging || batteryTime === null
+                ? m('batteryCharging', { watts: decimal(now.power) })
+                : m('batteryValue', { watts: decimal(now.power), time: batteryTime })
+            }
+          >
+            <Curve main={curve((s) => s.power)} max={15} />
+            {state.power.batteries.map((b) => (
+              <Row key={b.name} label={b.name}>
+                <Gauge value={b.level} />{' '}
+                {m('batteryLine', { level: b.level, wear: 100 - b.health })}
+              </Row>
+            ))}
+          </Dial>
+        )}
 
         <Dial
           name={m('disk')}

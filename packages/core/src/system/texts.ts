@@ -284,6 +284,7 @@ export const systemTexts: TextTree = {
         sound: 'L’appareil ne joue que les sons de Charpentier.',
         power: '{{level}} % · environ {{time}} sur batterie.',
         powerCharging: '{{level}} % · en charge.',
+        powerMains: 'Sur secteur, sans batterie.',
         lock: 'Un code protège vos textes des regards. Ce n’est pas un chiffrement du disque.',
         printing: 'Les imprimantes du réseau, sans pilote à installer.',
         usb: 'Un filet de sécurité quand la synchronisation n’est pas disponible.',

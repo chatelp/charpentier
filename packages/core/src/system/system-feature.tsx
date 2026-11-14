@@ -1,4 +1,4 @@
-import type { SystemService } from '@charpentier/platform';
+import { hasBattery, type SystemService } from '@charpentier/platform';
 import type { Command } from '../commands/registry';
 import type { Feature } from '../features/feature';
 import type { WorkspaceContext } from '../workspace/workspace-context';
@@ -68,7 +68,12 @@ export function createSystemFeature({ modifier }: { readonly modifier: SystemMod
       run: (ctx) => void system(ctx).setMuted(!system(ctx).state().muted),
     },
     { id: 'systemNight', scope: 'global', run: panel('lum') },
-    { id: 'systemBattery', scope: 'global', run: panel('bat') },
+    {
+      id: 'systemBattery',
+      scope: 'global',
+      isEnabled: (ctx) => hasBattery(system(ctx).state()),
+      run: panel('bat'),
+    },
     { id: 'systemClock', scope: 'global', run: panel('date') },
     {
       id: 'systemPrint',

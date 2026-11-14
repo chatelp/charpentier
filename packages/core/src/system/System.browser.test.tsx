@@ -138,6 +138,20 @@ describe('the system line of the X250 (phase 5.3)', () => {
     expect(line().querySelector('[data-seg="cpu"]')).toBeNull();
   });
 
+  it('shows nothing about a battery on a machine on mains alone (a virtual machine)', async () => {
+    const system = createSimulatedSystem();
+    system.simulate.noBattery();
+    await start(system);
+    expect(line().querySelector('[data-seg="bat"]')).toBeNull();
+    expect(line().querySelector('.is-alert')).toBeNull();
+    await userEvent.keyboard(sys(','));
+    const rail = await screen.findByRole('listbox', { name: 'Sections des réglages' });
+    await userEvent.click(within(rail).getByRole('option', { name: /Batterie et veille/ }));
+    const page = await screen.findByRole('region', { name: 'Batterie et veille' });
+    expect(page.textContent).toContain('Sur secteur, sans batterie.');
+    expect(within(page).queryByText('Batteries')).toBeNull();
+  });
+
   it('answers the ThinkPad keys of light and sound: the gauge moves, the segment lights up', async () => {
     const system = createSimulatedSystem();
     await start(system);
