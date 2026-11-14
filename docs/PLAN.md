@@ -157,8 +157,15 @@ Image Docker du serveur, `docker-compose.yml` et guide de déploiement sur `prod
 **Vérifiable** : le serveur tourne sur `prodesk2021.local`, l'app s'y connecte par le domaine public.
 Réalisé (13 novembre 2026) : `https://charpentier.chatel.pm`, derrière le Traefik de la machine (réseau `proxy`, certificat Cloudflare), sauvegarde nocturne du volume Postgres ; `scripts/deploy-server.sh` et `infra/README.md`. Compte de l'auteur créé, l'app du Mac connectée et son projet synchronisé. Reste à essayer : la restauration d'une sauvegarde, et une seconde machine réelle.
 
-## Étape 4b (ensuite) : version web synchronisée et relais IA
-La version web ouvre les projets du compte depuis le serveur, et le Compagnon y passe par un relais IA côté serveur (clé de l'auteur chiffrée sur le serveur). À détailler à la fin de 4a.
+## Étape 4b (ensuite) : gestion du serveur, version web synchronisée et relais IA [D-30]
+Le serveur se gère depuis un navigateur ; la version web ouvre les projets du compte depuis le serveur, et le Compagnon y passe par un relais IA côté serveur (clé de l'auteur chiffrée sur le serveur).
+
+### 4.6 Page d'administration du serveur
+`/admin`, servie par `apps/server` lui-même, en français (textes dans un catalogue, comme l'app), apparence demandée à la session de design. Réservée aux comptes administrateurs (le premier compte l'est ; `create-user --admin`). Comptes : créer, réinitialiser le mot de passe, désactiver (jamais supprimer : ses projets restent), donner ou retirer le rôle. Appareils de chaque compte, avec leur dernière connexion, révocables. Projets : propriétaire, titre, taille, dernière écriture, mis à la corbeille ou non ; export d'un projet en Markdown (archive `.zip` tirée du sérialiseur de `schema`, le même que le miroir). Sauvegardes : date et taille de la dernière, alerte si elle date de plus de 48 h ; la restauration reste une commande documentée. Sécurité : session par cookie `HttpOnly`, `Secure`, `SameSite=Strict`, jeton anti-CSRF sur chaque action, limitation des tentatives déjà en place, journal des actions d'administration. Question ouverte, à trancher au début de la phase : accès réservé au réseau local et à Tailscale (filtre d'adresses dans Traefik), ou ouvert sur le domaine public avec un second facteur.
+**Vérifiable** : depuis le navigateur, je crée un compte, qui se connecte ensuite depuis l'app ; je révoque un appareil, il perd la synchro ; j'exporte mon roman en Markdown et l'archive s'ouvre ; un compte qui n'est pas administrateur n'y a pas accès, et une action envoyée depuis un autre site est refusée.
+
+### 4.7 Version web synchronisée et relais IA
+La version web ouvre les projets du compte depuis le serveur, et le Compagnon y passe par un relais IA côté serveur (clé de l'auteur chiffrée sur le serveur). À détailler au début de 4b.
 
 ---
 
