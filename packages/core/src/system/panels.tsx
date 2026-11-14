@@ -154,7 +154,7 @@ function MenuPanel({ ctx, onDone }: PanelProps) {
       <Head
         name={text('system.panel.menu')}
         aside={text('system.panel.version', {
-          app: state.device.appVersion,
+          app: deviceVersion(state),
           os: state.device.osVersion,
           name: state.device.name,
         })}
