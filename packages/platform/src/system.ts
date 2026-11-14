@@ -57,13 +57,15 @@ export interface SystemService {
   setLockCode(code: string | null, current?: string): Promise<'ok' | 'wrong' | 'invalid'>;
   /** The four steps of the first start are done or put off (§4.12). */
   finishFirstStart(): Promise<void>;
+  /** Whether the device can open a network for the phone (a Wi-Fi card that can). */
+  phoneSetupAvailable(): Promise<boolean>;
   /**
    * The first start from the phone (phase 5.13, D-33): the device opens a
    * temporary network and, once a phone joined it, serves a page with a
-   * one-time token, where the author fills in the settings. `unavailable`:
-   * no Wi-Fi card that can do it.
+   * one-time token, where the author fills in the settings. `retryWifi`: the
+   * home Wi-Fi was refused; a new network, and a page for the Wi-Fi alone.
    */
-  startPhoneSetup(): Promise<'ok' | 'unavailable'>;
+  startPhoneSetup(retryWifi?: boolean): Promise<'ok' | 'unavailable'>;
   /** Closes the temporary network and the page (« Au clavier », Échap). */
   stopPhoneSetup(): Promise<void>;
   /** « Vérifier maintenant » (phase 5.12): the result comes as usual, in the state and the line. */
@@ -129,30 +131,48 @@ export interface SystemUpdate {
 export type UpdateFailure = 'signature' | 'unreadable' | 'disk-full' | 'interrupted';
 
 /**
- * The first start from the phone, as the device shows it (phase 5.13). The
- * settings themselves (passwords, key) never reach the interface: the main
- * process applies them and says only how it went.
+ * The first start from the phone, as the device shows it (phase 5.13,
+ * docs/DESIGN.md §4.12). The settings themselves (passwords, key) never
+ * reach the interface: the main process applies them and says how it went.
  */
 export interface PhoneSetup {
   /** The temporary network, shown in clear beside its code. */
   readonly network: { readonly ssid: string; readonly password: string };
-  /** The page's address with its token, once a phone joined the network. */
-  readonly page: string | null;
-  readonly stage: 'waiting' | 'joined' | 'applying' | 'done';
-  /** What became of each setting received; null until they arrive. */
-  readonly steps: {
-    readonly wifi: PhoneStep;
-    readonly sync: PhoneStep;
-    readonly mentor: PhoneStep;
+  /** The temporary network is open (the `wifi` segment says « temporaire »). */
+  readonly open: boolean;
+  /** `1 rejoindre`, `2 remplir`, `3 appliquer`, then done. */
+  readonly stage: 'join' | 'fill' | 'apply' | 'done';
+  /** The page, once a phone joined: its address with the token, and the six digits. */
+  readonly page: {
+    readonly url: string;
+    readonly address: string;
+    readonly code: string;
   } | null;
-  /** The page's token is no longer valid (15 min, or already used): a new one is needed. */
-  readonly expired: boolean;
+  /** The page is open on the phone. */
+  readonly opened: boolean;
+  /** What just happened: the phone left before sending, or a new code replaced the old. */
+  readonly note: 'left' | 'renewed' | null;
+  /** A second round for the home Wi-Fi alone, the rest kept on the device. */
+  readonly wifiOnly: boolean;
+  /** One line per setting received; a setting left empty has none. */
+  readonly steps: {
+    readonly wifi?: PhoneStep;
+    readonly sync?: PhoneStep;
+    readonly mentor?: PhoneStep;
+  } | null;
 }
 
-/** `reason`: the result of the action (`wrong-password`, `invalid`, `unreachable`…). */
-export type PhoneStep =
-  | { readonly status: 'pending' | 'ok' | 'skipped' }
-  | { readonly status: 'failed'; readonly reason: string };
+/**
+ * A setting received from the phone. `value`: what it is, never a secret
+ * (the network, the server, `sk-ant-…4f2a`); `reason`: the action's result
+ * when it failed (`wrong-password`, `invalid`, `unreachable`…).
+ */
+export interface PhoneStep {
+  /** `waiting`: it waits for the home Wi-Fi, refused. */
+  readonly status: 'todo' | 'running' | 'ok' | 'failed' | 'waiting';
+  readonly value: string;
+  readonly reason?: string;
+}
 
 /** What the phone sent, as the page posts it (empty fields left out). */
 export interface PhoneSettings {

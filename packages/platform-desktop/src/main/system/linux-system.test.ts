@@ -240,11 +240,11 @@ function fakeX250() {
             : ok('system default destination: Brother_HL_L2350\n');
         case 'lp':
           return ok('request id is Brother_HL_L2350-12 (1 file(s))\n');
-        case 'ip':
+        case 'iw':
+          if (args[0] === 'list')
+            return ok('Wiphy phy0\n\tSupported interface modes:\n\t\t * managed\n\t\t * AP\n');
           return ok(
-            hotspot.phone
-              ? '10.42.0.23 lladdr 5e:aa:bb:cc:dd:ee REACHABLE\n'
-              : '10.42.0.99 FAILED\n',
+            hotspot.phone ? 'Station 5e:aa:bb:cc:dd:ee (on wlp3s0)\n\tinactive time:\t20 ms\n' : '',
           );
         case 'brightnessctl':
         case 'systemctl':
@@ -770,42 +770,58 @@ describe('the first start from the phone (phase 5.13)', () => {
     for (let i = 0; i < 100 && !check(); i++) await new Promise((r) => setTimeout(r, 20));
     expect(check()).toBe(true);
   };
+  const send = async (system: LinuxSystem, fields: Record<string, string>) => {
+    const url = new URL(system.state().phoneSetup?.page?.url ?? '');
+    return fetch(`${url.origin}/reglages`, {
+      method: 'POST',
+      body: new URLSearchParams({ t: url.searchParams.get('t') ?? '', ...fields }),
+    });
+  };
+  const ACCOUNT = {
+    server: 'https://charpentier.chatel.pm',
+    email: 'auteur@exemple.fr',
+    password: 'secret',
+    'anthropic-key': 'sk-ant-essai-4f2a',
+  };
+  const lines = (system: LinuxSystem) =>
+    system
+      .journal()
+      .filter((m) => !m.quiet)
+      .map((m) => m.text);
 
   it('opens a temporary network, shows the page once a phone joined, applies what it sent', async () => {
     const { system, x250, given } = await phoneStart();
+    expect(await system.phoneSetupAvailable()).toBe(true);
     expect(await system.startPhoneSetup()).toBe('ok');
     const setup = system.state().phoneSetup;
-    expect(setup).toMatchObject({ stage: 'waiting', page: null, steps: null, expired: false });
+    expect(setup).toMatchObject({ stage: 'join', open: true, page: null, steps: null });
     expect(setup?.network.ssid).toMatch(/^charpentier-[a-z2-9]{4}$/);
-    expect(setup?.network.password).toMatch(/^[a-z2-9]{10}$/);
+    expect(setup?.network.password).toMatch(/^[a-z]+-[a-z]+-[1-9]\d$/);
     expect(x250.hotspot).toMatchObject({ up: true, ssid: setup?.network.ssid });
+    expect(lines(system).at(-1)).toBe(`réseau temporaire · ${setup?.network.ssid}`);
 
-    // A phone joins: the page's address appears (checked every 2 s).
+    // A phone joins: the page's address and its six digits appear.
     x250.hotspot.phone = true;
-    await until(() => system.state().phoneSetup?.stage === 'joined');
-    const page = system.state().phoneSetup?.page ?? '';
-    const url = new URL(page);
-    const sent = await fetch(`${url.origin}/envoyer`, {
-      method: 'POST',
-      body: new URLSearchParams({
-        t: url.searchParams.get('t') ?? '',
-        ssid: 'Livebox-4A2C',
-        wifiPassword: 'bonjour1',
-        server: 'https://charpentier.chatel.pm',
-        email: 'auteur@exemple.fr',
-        password: 'secret',
-        apiKey: 'sk-ant-essai',
-      }),
+    await until(() => system.state().phoneSetup?.stage === 'fill');
+    expect(system.state().phoneSetup?.page?.code).toMatch(/^\d{6}$/);
+    await fetch(system.state().phoneSetup?.page?.url ?? '');
+    await until(() => system.state().phoneSetup?.opened === true);
+    expect(lines(system)).toContain('page ouverte sur le téléphone');
+
+    const sent = await send(system, {
+      ssid: 'Maison-5G',
+      'wifi-password': 'le-bon-mot',
+      ...ACCOUNT,
     });
     expect(sent.status).toBe(200);
     await until(() => system.state().phoneSetup?.stage === 'done');
     // The temporary network went down before the home one was joined.
     expect(x250.hotspot.up).toBe(false);
-    expect(ran(x250.runs, 'nmcli', 'connection', 'delete', 'id', 'charpentier-setup')).toBe(true);
+    expect(system.state().phoneSetup?.open).toBe(false);
     expect(system.state().phoneSetup?.steps).toEqual({
-      wifi: { status: 'failed', reason: 'wrong-password' },
-      sync: { status: 'ok' },
-      mentor: { status: 'ok' },
+      wifi: { status: 'ok', value: 'Maison-5G' },
+      sync: { status: 'ok', value: 'charpentier.chatel.pm' },
+      mentor: { status: 'ok', value: 'clé sk-ant-…4f2a' },
     });
     // The secrets reached the main process only, never the state.
     expect(given).toEqual([
@@ -815,52 +831,84 @@ describe('the first start from the phone (phase 5.13)', () => {
           email: 'auteur@exemple.fr',
           password: 'secret',
         },
-        apiKey: 'sk-ant-essai',
       },
+      { apiKey: 'sk-ant-essai-4f2a' },
     ]);
     expect(JSON.stringify(system.state())).not.toContain('secret');
+    expect(JSON.stringify(system.state())).not.toContain('sk-ant-essai');
     await system.stopPhoneSetup();
     expect(system.state().phoneSetup).toBeNull();
   });
 
-  it('joins the home network, and says a refused account or key', async () => {
+  it('goes back to the first code when the phone leaves, renews an expired code', async () => {
+    const { system, x250 } = await phoneStart();
+    await system.startPhoneSetup();
+    x250.hotspot.phone = true;
+    await until(() => system.state().phoneSetup?.stage === 'fill');
+    x250.hotspot.phone = false;
+    await until(() => system.state().phoneSetup?.stage === 'join');
+    expect(system.state().phoneSetup).toMatchObject({ note: 'left', page: null });
+
+    x250.hotspot.phone = true;
+    await until(() => system.state().phoneSetup?.stage === 'fill');
+    const first = system.state().phoneSetup?.page?.url;
+    clock.now = new Date(clock.now.getTime() + 11 * 60_000);
+    await until(() => system.state().phoneSetup?.note === 'renewed');
+    expect(system.state().phoneSetup?.page?.url).not.toBe(first);
+    expect(lines(system).at(-1)).toBe('nouveau code · le précédent a expiré');
+  });
+
+  it('keeps the rest when the home Wi-Fi is refused; a second round brings the Wi-Fi alone', async () => {
+    const { system, x250, given } = await phoneStart();
+    await system.startPhoneSetup();
+    x250.hotspot.phone = true;
+    await until(() => system.state().phoneSetup?.stage === 'fill');
+    await send(system, { ssid: 'Livebox-4A2C', 'wifi-password': 'mauvais1', ...ACCOUNT });
+    await until(() => system.state().phoneSetup?.stage === 'done');
+    expect(system.state().phoneSetup?.steps).toEqual({
+      wifi: { status: 'failed', value: 'Livebox-4A2C', reason: 'wrong-password' },
+      sync: { status: 'waiting', value: 'charpentier.chatel.pm' },
+      mentor: { status: 'waiting', value: 'clé sk-ant-…4f2a' },
+    });
+    expect(lines(system).at(-1)).toBe('Livebox-4A2C refuse le mot de passe');
+    expect(given).toEqual([]);
+
+    // « Corriger depuis le téléphone »: a new network, a page for the Wi-Fi alone.
+    expect(await system.startPhoneSetup(true)).toBe('ok');
+    expect(system.state().phoneSetup?.wifiOnly).toBe(true);
+    await until(() => system.state().phoneSetup?.stage === 'fill');
+    const html = await (await fetch(system.state().phoneSetup?.page?.url ?? '')).text();
+    expect(html).toContain('Livebox-4A2C a refusé ce mot de passe.');
+    expect(html).not.toContain('E-mail du compte');
+    await send(system, { ssid: 'Livebox-4A2C', 'wifi-password': 'bonjour1' });
+    await until(() => system.state().phoneSetup?.stage === 'done');
+    // The fake Livebox wants « bonjour »: refused again, the rest still kept.
+    expect(system.state().phoneSetup?.steps?.sync?.status).toBe('waiting');
+
+    // « Taper le mot de passe ici »: the keyboard joins it, the rest follows.
+    expect(await system.connectWifi('Livebox-4A2C', 'bonjour')).toBe('connected');
+    await until(() => system.state().phoneSetup?.stage === 'done');
+    expect(system.state().phoneSetup?.steps).toMatchObject({
+      wifi: { status: 'ok' },
+      sync: { status: 'ok' },
+      mentor: { status: 'ok' },
+    });
+    expect(given).toHaveLength(2);
+  });
+
+  it('says a refused account or key, and is unavailable without a card that can', async () => {
     const { system, x250 } = await phoneStart({ sync: 'invalid', mentor: 'invalid' });
     await system.startPhoneSetup();
     x250.hotspot.phone = true;
-    await until(() => !!system.state().phoneSetup?.page);
-    const url = new URL(system.state().phoneSetup?.page ?? '');
-    await fetch(`${url.origin}/envoyer`, {
-      method: 'POST',
-      body: new URLSearchParams({
-        t: url.searchParams.get('t') ?? '',
-        ssid: 'Maison-5G',
-        wifiPassword: 'le-bon-mot',
-        server: 'https://charpentier.chatel.pm',
-        email: 'auteur@exemple.fr',
-        password: 'faux',
-        apiKey: 'sk-faux',
-      }),
-    });
+    await until(() => system.state().phoneSetup?.stage === 'fill');
+    await send(system, { ssid: 'Maison-5G', 'wifi-password': 'le-bon-mot', ...ACCOUNT });
     await until(() => system.state().phoneSetup?.stage === 'done');
-    expect(system.state().wifi.connected).toBe('Maison-5G');
-    expect(system.state().phoneSetup?.steps).toEqual({
+    expect(system.state().phoneSetup?.steps).toMatchObject({
       wifi: { status: 'ok' },
       sync: { status: 'failed', reason: 'invalid' },
       mentor: { status: 'failed', reason: 'invalid' },
     });
-  });
-
-  it('closes everything on « Au clavier », and is unavailable without a Wi-Fi card', async () => {
-    const { system, x250 } = await phoneStart();
-    await system.startPhoneSetup();
-    x250.hotspot.phone = true;
-    await until(() => !!system.state().phoneSetup?.page);
-    const page = system.state().phoneSetup?.page ?? '';
     await system.stopPhoneSetup();
-    expect(x250.hotspot.up).toBe(false);
-    expect(system.state().phoneSetup).toBeNull();
-    // The page is gone with the network.
-    expect(await fetch(page).catch(() => 'closed')).toBe('closed');
 
     x250.hotspot.fails = true;
     expect(await system.startPhoneSetup()).toBe('unavailable');

@@ -253,7 +253,13 @@ export function SystemLine({
       ),
     wifi: segment(
       'wifi',
-      !state.wifi.enabled ? (
+      // The first start's network for the phone (phase 5.13), while it is open.
+      state.phoneSetup?.open ? (
+        <>
+          {label('wifi')}
+          <span className="ch-sys-value">{text('system.seg.wifiTemporary')}</span>
+        </>
+      ) : !state.wifi.enabled ? (
         <span className="ch-sys-label">{text('system.seg.wifiOff')}</span>
       ) : (
         <>

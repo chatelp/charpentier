@@ -15,6 +15,7 @@ import {
   type PrintJob,
   type NightMode,
   type PhoneSettings,
+  type PhoneSetup,
   type PhoneStep,
   type SystemMessage,
   type SystemService,
@@ -655,23 +656,26 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
     }
   }
 
-  // — The first start from the phone (phase 5.13) —
+  // — The first start from the phone (phase 5.13, docs/DESIGN.md §4.12) —
 
   const HOTSPOT = 'charpentier-setup';
-  /** Letters and digits one cannot mistake for one another, read off the screen. */
-  const CLEAR = 'abcdefghjkmnpqrstuvwxyz23456789';
-  const pick = (length: number) =>
-    Array.from(crypto.getRandomValues(new Uint8Array(length)), (b) => CLEAR[b % CLEAR.length]).join(
-      '',
-    );
   let phone: {
     device: string;
     page: PhonePage;
     timer: ReturnType<typeof setInterval>;
+    /** A phone is on the temporary network (`iw … station dump`). */
+    joined: boolean;
   } | null = null;
+  /** What the phone sent beyond the Wi-Fi, kept while the home Wi-Fi is to be redone. */
+  let kept: Omit<PhoneSettings, 'wifi'> | null = null;
 
-  const setPhone = (change: Partial<NonNullable<SystemState['phoneSetup']>>) => {
+  const setPhone = (change: Partial<PhoneSetup>) => {
     if (state.phoneSetup) update({ phoneSetup: { ...state.phoneSetup, ...change } });
+  };
+  const setStep = (key: 'wifi' | 'sync' | 'mentor', change: Partial<PhoneStep>) => {
+    const steps = state.phoneSetup?.steps;
+    const step = steps?.[key];
+    if (steps && step) setPhone({ steps: { ...steps, [key]: { ...step, ...change } } });
   };
 
   /** The temporary network and its page, gone. */
@@ -688,69 +692,203 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
     } finally {
       networkAction = false;
     }
+    setPhone({ open: false });
   }
 
-  /** A phone on the temporary network: `ip neigh` knows its address. */
+  /** Every 2 s: a phone on the network, gone from it, a code to renew. */
   async function watchPhone() {
-    if (!phone || !state.phoneSetup) return;
-    if (phone.page.expired() && !state.phoneSetup.expired) setPhone({ expired: true });
-    if (state.phoneSetup.stage !== 'waiting') return;
-    const neighbours = await run('ip', 'neigh', 'show', 'dev', phone.device);
-    if (/lladdr\s+\S+.*\b(REACHABLE|STALE|DELAY|PROBE)\b/.test(neighbours.stdout))
-      setPhone({ stage: 'joined', page: phone.page.url });
+    const current = phone;
+    const setup = state.phoneSetup;
+    if (!current || !setup || setup.stage === 'apply' || setup.stage === 'done') return;
+    if (current.page.expired()) {
+      current.page.renew();
+      setPhone({ page: pageOf(current.page), opened: false, note: 'renewed' });
+      post('nouveau code · le précédent a expiré');
+    }
+    const stations = await run('iw', 'dev', current.device, 'station', 'dump');
+    const there = /^Station /m.test(stations.stdout);
+    if (there && !current.joined) {
+      current.joined = true;
+      setPhone({ stage: 'fill', page: pageOf(current.page), note: null });
+      post('un téléphone a rejoint le réseau');
+    } else if (!there && current.joined && phone === current) {
+      // Gone before sending: back to the first code.
+      current.joined = false;
+      setPhone({ stage: 'join', page: null, opened: false, note: 'left' });
+      post('le téléphone a quitté le réseau');
+    }
+  }
+
+  const pageOf = (page: PhonePage) => ({
+    url: page.url(),
+    address: page.address,
+    code: page.code(),
+  });
+
+  /** `sk-ant-…4f2a`: enough to recognise the key, never the key. */
+  const shortKey = (key: string) => `${key.slice(0, 7)}…${key.slice(-4)}`;
+  const hostOf = (server: string) => {
+    try {
+      return new URL(server).host;
+    } catch {
+      return server;
+    }
+  };
+
+  /** The sync and the Compagnon, once the network is there. */
+  async function applyKept() {
+    const rest = kept;
+    kept = null;
+    if (!rest || !options.phoneSettings) return;
+    if (rest.sync) {
+      setStep('sync', { status: 'running' });
+      post(messageAbout(hostOf(rest.sync.server), (n) => `synchronisation · connexion à ${n}`));
+      const { sync: result } = await options
+        .phoneSettings({ sync: rest.sync })
+        .catch(() => ({ sync: 'failed' }));
+      setStep(
+        'sync',
+        result === 'ok' ? { status: 'ok' } : { status: 'failed', reason: result ?? 'failed' },
+      );
+      post(result === 'ok' ? 'synchronisation · connectée' : 'synchronisation · refusée');
+    }
+    if (rest.apiKey) {
+      setStep('mentor', { status: 'running' });
+      post('compagnon · vérification de la clé');
+      const { mentor: result } = await options
+        .phoneSettings({ apiKey: rest.apiKey })
+        .catch(() => ({ mentor: 'failed' }));
+      setStep(
+        'mentor',
+        result === 'saved' ? { status: 'ok' } : { status: 'failed', reason: result ?? 'failed' },
+      );
+      post(result === 'saved' ? 'compagnon · clé vérifiée' : 'compagnon · clé refusée');
+    }
   }
 
   async function received(settings: PhoneSettings) {
-    const pending: PhoneStep = { status: 'pending' };
-    const skipped: PhoneStep = { status: 'skipped' };
+    const before = state.phoneSetup?.steps ?? null;
+    const step = (value: string): PhoneStep => ({ status: 'todo', value });
+    const wifi = settings.wifi ? step(settings.wifi.ssid) : undefined;
+    // A second round brings the Wi-Fi alone: the rest is the one kept.
+    const rest: Omit<PhoneSettings, 'wifi'> = state.phoneSetup?.wifiOnly
+      ? (kept ?? {})
+      : {
+          ...(settings.sync && { sync: settings.sync }),
+          ...(settings.apiKey && { apiKey: settings.apiKey }),
+        };
+    kept = rest;
     setPhone({
-      stage: 'applying',
+      stage: 'apply',
       steps: {
-        wifi: settings.wifi ? pending : skipped,
-        sync: settings.sync ? pending : skipped,
-        mentor: settings.apiKey ? pending : skipped,
+        ...(wifi && { wifi }),
+        ...(rest.sync && { sync: before?.sync ?? step(hostOf(rest.sync.server)) }),
+        ...(rest.apiKey && { mentor: before?.mentor ?? step(`clé ${shortKey(rest.apiKey)}`) }),
       },
     });
-    const steps = () => state.phoneSetup?.steps ?? null;
-    const step = (key: 'wifi' | 'sync' | 'mentor', result: PhoneStep) => {
-      const current = steps();
-      if (current) setPhone({ steps: { ...current, [key]: result } });
-    };
-    const outcome = (result: string | null, ok: readonly string[]): PhoneStep =>
-      result === null
-        ? skipped
-        : ok.includes(result)
-          ? { status: 'ok' }
-          : { status: 'failed', reason: result };
+    for (const key of ['sync', 'mentor'] as const) setStep(key, { status: 'todo' });
     // One radio: the temporary network goes before the home one is joined.
     await closeHotspot();
     if (settings.wifi) {
+      setStep('wifi', { status: 'running' });
       const result = await connectWifi(settings.wifi.ssid, settings.wifi.password || undefined);
-      step('wifi', outcome(result, ['connected']));
+      if (result !== 'connected') {
+        setStep('wifi', { status: 'failed', reason: result });
+        for (const key of ['sync', 'mentor'] as const) setStep(key, { status: 'waiting' });
+        post(
+          messageAbout(settings.wifi.ssid, (n) =>
+            result === 'wrong-password' ? `${n} refuse le mot de passe` : `${n} introuvable`,
+          ),
+        );
+        setPhone({ stage: 'done' });
+        return;
+      }
+      setStep('wifi', { status: 'ok' });
     }
-    const rest = {
-      ...(settings.sync && { sync: settings.sync }),
-      ...(settings.apiKey && { apiKey: settings.apiKey }),
-    };
-    if ((rest.sync || rest.apiKey) && options.phoneSettings) {
-      const results = await options.phoneSettings(rest).catch(() => ({
-        sync: rest.sync ? 'failed' : null,
-        mentor: rest.apiKey ? 'failed' : null,
-      }));
-      step('sync', outcome(results.sync, ['ok']));
-      step('mentor', outcome(results.mentor, ['saved']));
-    }
+    await applyKept();
     setPhone({ stage: 'done' });
   }
 
-  async function startPhoneSetup(): Promise<'ok' | 'unavailable'> {
-    await closeHotspot();
+  /** Two French words one cannot mistake, and two digits: `tilleul-cadran-47`. */
+  const WORDS = [
+    'tilleul',
+    'cadran',
+    'ardoise',
+    'bouleau',
+    'castor',
+    'falaise',
+    'hamac',
+    'jardin',
+    'lanterne',
+    'marron',
+    'noisette',
+    'olivier',
+    'papyrus',
+    'rivage',
+    'sapin',
+    'tambour',
+    'velours',
+    'violon',
+    'abricot',
+    'boussole',
+    'cerise',
+    'dauphin',
+    'escargot',
+    'flocon',
+    'gazelle',
+    'horizon',
+    'lavande',
+    'mouette',
+    'navire',
+    'orange',
+    'pinceau',
+    'rocher',
+    'sablier',
+    'tortue',
+    'voilier',
+    'citron',
+    'fusain',
+    'grenier',
+    'mimosa',
+    'ruisseau',
+  ];
+  const pickInt = (n: number) => (crypto.getRandomValues(new Uint32Array(1))[0] ?? 0) % n;
+  const temporaryPassword = () => {
+    const first = WORDS[pickInt(WORDS.length)] ?? 'tilleul';
+    let second = first;
+    while (second === first) second = WORDS[pickInt(WORDS.length)] ?? 'cadran';
+    return `${first}-${second}-${10 + pickInt(90)}`;
+  };
+  const CLEAR = 'abcdefghjkmnpqrstuvwxyz23456789';
+  const ssidSuffix = () => Array.from({ length: 4 }, () => CLEAR[pickInt(CLEAR.length)]).join('');
+
+  async function wifiCard(): Promise<string | null> {
     const devices = parseDevices(
       (await run('nmcli', '-t', '-f', 'DEVICE,TYPE,STATE,CONNECTION', 'device')).stdout,
     );
-    const device = devices.find((d) => d.type === 'wifi')?.device;
+    return devices.find((d) => d.type === 'wifi')?.device ?? null;
+  }
+
+  async function phoneSetupAvailable(): Promise<boolean> {
+    if (!(await wifiCard())) return false;
+    // `iw list`: the card can be an access point (« * AP » among its modes).
+    const list = await run('iw', 'list');
+    return list.code !== 0 || /^\s+\* AP$/m.test(list.stdout);
+  }
+
+  async function startPhoneSetup(retryWifi = false): Promise<'ok' | 'unavailable'> {
+    const refused = retryWifi ? state.phoneSetup?.steps?.wifi : undefined;
+    await closeHotspot();
+    if (!retryWifi) kept = null;
+    const device = await wifiCard();
     if (!device) return 'unavailable';
-    const network = { ssid: `charpentier-${pick(4)}`, password: pick(10) };
+    // The networks seen before the card becomes an access point, strongest first.
+    await readNetwork(true).catch(() => {});
+    const networks = [...state.wifi.networks]
+      .sort((a, b) => b.signal - a.signal)
+      .map((n) => n.ssid)
+      .filter((n) => n.length > 0);
+    const network = { ssid: `charpentier-${ssidSuffix()}`, password: temporaryPassword() };
     networkAction = true;
     let opened;
     try {
@@ -781,6 +919,21 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
       page = await servePhonePage({
         host,
         port: options.phonePage?.port ?? 8080,
+        networks,
+        wifiOnly:
+          refused && refused.status === 'failed'
+            ? {
+                ssid: refused.value,
+                why:
+                  refused.reason === 'wrong-password'
+                    ? `${refused.value} a refusé ce mot de passe.`
+                    : `${refused.value} n’a pas répondu.`,
+              }
+            : null,
+        onOpened: () => {
+          if (!state.phoneSetup?.opened) post('page ouverte sur le téléphone');
+          setPhone({ opened: true, note: null });
+        },
         onSettings: (settings) => void received(settings),
         now: () => now().getTime(),
       });
@@ -788,10 +941,20 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
       await run('nmcli', 'connection', 'delete', 'id', HOTSPOT);
       return 'unavailable';
     }
-    phone = { device, page, timer: setInterval(quietly(watchPhone), periods.phone) };
+    phone = { device, page, joined: false, timer: setInterval(quietly(watchPhone), periods.phone) };
     update({
-      phoneSetup: { network, page: null, stage: 'waiting', steps: null, expired: false },
+      phoneSetup: {
+        network,
+        open: true,
+        stage: 'join',
+        page: null,
+        opened: false,
+        note: null,
+        wifiOnly: !!refused,
+        steps: null,
+      },
     });
+    post(messageAbout(network.ssid, (n) => `réseau temporaire · ${n}`));
     return 'ok';
   }
 
@@ -815,7 +978,20 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
       }
       post(enabled ? 'wifi oui' : 'wifi non');
     },
-    connectWifi,
+    connectWifi: async (ssid, password) => {
+      const result = await connectWifi(ssid, password);
+      // The home Wi-Fi typed here after the phone's was refused: the rest it sent follows.
+      if (result === 'connected' && kept && state.phoneSetup?.steps?.wifi) {
+        setPhone({
+          stage: 'apply',
+          steps: { ...state.phoneSetup.steps, wifi: { status: 'ok', value: ssid } },
+        });
+        for (const key of ['sync', 'mentor'] as const) setStep(key, { status: 'todo' });
+        await applyKept();
+        setPhone({ stage: 'done' });
+      }
+      return result;
+    },
     forgetWifi: async (ssid) => {
       networkAction = true;
       try {
@@ -975,9 +1151,11 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
       setLocked(false);
       return 'ok';
     },
+    phoneSetupAvailable,
     startPhoneSetup,
     stopPhoneSetup: async () => {
       await closeHotspot();
+      kept = null;
       update({ phoneSetup: null });
     },
     finishFirstStart: async () => {

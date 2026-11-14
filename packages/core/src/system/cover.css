@@ -229,60 +229,248 @@
   font: 400 11px var(--ch-font-ui);
 }
 
-/* The first start from the phone (phase 5.13): the code in the page's ink, on paper. */
-.ch-first-phone {
+/* The first start from the phone (phase 5.13, docs/design/premier-demarrage.html). */
+
+/* The choice: two raised cards, the one under the keyboard lit. */
+.ph-choice {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  width: min(40rem, 100%);
+  margin: 6px 0 0;
+}
+.ph-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 20px 16px;
+  border-radius: var(--ch-radius-md);
+  background: var(--ch-bg);
+  box-shadow: var(--ch-raise-s);
+  color: var(--ch-ink);
+  text-align: left;
+}
+.ph-card.is-lit {
+  background: var(--ch-lit-bg);
+  box-shadow: var(--ch-raise-s), var(--ch-lit);
+}
+.ph-card.is-off {
+  box-shadow: none;
+  color: var(--ch-faint);
+}
+.ph-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font: 500 16px var(--ch-font-ui);
+}
+.ph-card-tag {
+  color: var(--ch-mentor);
+  font: 400 11px var(--ch-font-sys);
+}
+.ph-card-text {
+  margin: 0;
+  color: var(--ch-ink-2);
+  font: 400 13.5px/1.5 var(--ch-font-ui);
+}
+.ph-card.is-off .ph-card-text {
+  color: var(--ch-faint);
+}
+.ph-card kbd {
+  align-self: flex-end;
+  margin-top: 4px;
+}
+.ph-hint {
+  margin: 18px 0 0;
+  color: var(--ch-faint);
+  font: 400 12px var(--ch-font-sys);
+}
+
+/* The code to scan, and its words for a phone without a camera. */
+.ph-scan {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: var(--ch-space-5);
+  gap: 34px;
   align-items: center;
+  width: min(44rem, 100%);
+  margin: 4px 0 0;
 }
-
-.ch-qr {
-  display: block;
-  width: 200px;
-  height: 200px;
+/* The code always dark on a pale square with its margin, in both themes: every camera reads it. */
+.ph-qr {
+  padding: 14px;
   border-radius: var(--ch-radius-md);
-  box-shadow: var(--ch-raise);
+  background: var(--ch-bg);
+  box-shadow: var(--ch-raise-s);
+}
+.ph-qr svg {
+  display: block;
+  width: 196px;
+  height: 196px;
+  border-radius: 6px;
+  background: var(--ch-qr-ground);
+}
+.ph-qr.is-faded svg {
+  opacity: 0.18;
+}
+.ph-say {
+  margin: 0 0 14px;
+  color: var(--ch-ink);
+  font: 400 16px/1.5 var(--ch-font-ui);
+}
+.ph-say em {
+  color: var(--ch-ink-2);
+}
+.ph-plain {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: var(--ch-radius-md);
+  box-shadow: var(--ch-inset);
+  font: 400 13px/1.9 var(--ch-font-sys);
+}
+.ph-plain-head {
+  display: block;
+  color: var(--ch-muted);
+  font: 400 11.5px var(--ch-font-sys);
+}
+.ph-plain dt {
+  display: inline-block;
+  width: 8.5em;
+  color: var(--ch-muted);
+}
+.ph-plain dd {
+  display: inline;
+  margin: 0;
+  color: var(--ch-ink);
+  font-weight: 500;
+}
+.ph-plain dd::after {
+  content: '\a';
+  white-space: pre;
+}
+.ph-wait {
+  margin: 12px 0 0;
+  color: var(--ch-muted);
+  font: 400 12px var(--ch-font-sys);
+}
+.ph-wait.is-news {
+  color: var(--ch-ink);
+}
+.ph-wait.is-news::before {
+  content: '→ ';
+  color: var(--ch-faint);
+}
+.ph-tip {
+  margin: 10px 0 0;
+  color: var(--ch-muted);
+  font: 400 12.5px/1.5 var(--ch-font-ui);
 }
 
-.ch-qr-ground {
+/* The settings received: one line each, its state on the right. */
+.ph-apply {
+  width: min(38rem, 100%);
+  margin: 4px 0 0;
+  padding: 6px 0;
+  border-radius: var(--ch-radius-md);
+  box-shadow: var(--ch-inset);
+  list-style: none;
+}
+.ph-apply li {
+  display: grid;
+  grid-template-columns: 11.5em 1fr auto;
+  align-items: baseline;
+  gap: 12px;
+  margin: 0 6px;
+  padding: 9px 12px;
+  border-radius: calc(var(--ch-radius-md) - 4px);
+  font: 400 13px var(--ch-font-sys);
+}
+.ph-apply .what {
+  color: var(--ch-muted);
+}
+.ph-apply .value {
+  overflow: hidden;
+  color: var(--ch-ink-2);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ph-apply .state {
+  color: var(--ch-ink);
+}
+.ph-apply li.is-todo .state,
+.ph-apply li.is-todo .value {
+  color: var(--ch-faint);
+}
+/* Where the device is now: lit (§4.7). */
+.ph-apply li.is-now {
+  background: var(--ch-lit-bg);
+  box-shadow: var(--ch-lit);
+}
+/* A failure: the state inverted, as an alert of the system line; never red. */
+.ph-apply li.is-failed .state {
+  padding: 0 6px;
+  background: var(--ch-ink);
+  color: var(--ch-bg);
+}
+.ph-apply .why {
+  grid-column: 2 / 4;
+  margin-top: -4px;
+  color: var(--ch-ink);
+  font: 400 13px/1.45 var(--ch-font-ui);
+}
+
+.ph-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 18px 0 0;
+}
+.ph-actions .ch-btn {
+  padding: 6px 12px;
+  font-size: 13px;
+}
+.ph-actions kbd {
+  margin-left: 4px;
+  color: var(--ch-faint);
+  font: 400 11px var(--ch-font-ui);
+}
+/* The cards are buttons: no border, the page's font, their own focus (the light). */
+.ph-card {
+  border: 0;
+  font: inherit;
+  cursor: default;
+}
+.ph-choose:focus {
+  outline: none;
+}
+.ph-qr .ch-qr {
+  display: block;
+  width: 196px;
+  height: 196px;
+  border-radius: 6px;
+}
+.ph-qr.is-faded .ch-qr {
+  opacity: 0.18;
+}
+.ph-qr .ch-qr-ground {
   fill: var(--ch-qr-ground);
 }
-
-.ch-qr-ink {
+.ph-qr .ch-qr-ink {
   fill: var(--ch-qr-ink);
 }
 
-.ch-first-phone-text p {
-  margin: 0 0 var(--ch-space-2);
-}
-
-.ch-first-clear {
-  color: var(--ch-ink-2);
-  font: 13px / 1.6 var(--ch-font-sys);
-  overflow-wrap: anywhere;
-}
-
-.ch-first-results {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.ch-first-results li {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--ch-space-4);
-  padding: 6px 0;
-}
-
-.ch-first-results .is-failed {
-  color: var(--ch-author);
-}
-
-@media (max-width: 640px) {
-  .ch-first-phone {
+@media (max-width: 720px) {
+  .ph-choice,
+  .ph-scan {
     grid-template-columns: 1fr;
     justify-items: center;
   }
+}
+
+/* The phone's frames are wider than a keyboard step: the cards, the code and its words. */
+.ch-first-step.ph-wide {
+  width: min(44rem, 100%);
+  align-items: center;
+}
+.ch-first-step.ph-wide:focus {
+  outline: none;
 }

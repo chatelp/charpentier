@@ -4,6 +4,7 @@ import {
   messageAbout,
   type NightMode,
   type PhoneSetup,
+  type PhoneStep,
   type SystemMessage,
   type SystemService,
   type SystemState,
@@ -41,11 +42,17 @@ export interface SimulatedSystem extends SystemService {
     updateFailed(reason: UpdateFailure, version?: string): void;
     /** No update service (a development system). */
     noUpdates(): void;
+    /** No Wi-Fi card that can open a network for the phone. */
+    noHotspot(): void;
     /** A phone joined the temporary network of the first start (phase 5.13). */
     phoneJoined(): void;
-    /** The phone sent the settings; how each went (all fine by default). */
-    phoneSent(steps?: Partial<NonNullable<PhoneSetup['steps']>>): void;
-    /** The page's token ran out. */
+    /** The page opened on the phone. */
+    phoneOpened(): void;
+    /** The phone left the network before sending. */
+    phoneLeft(): void;
+    /** The phone sent the settings; each line's end (all fine by default; none: not given). */
+    phoneSent(steps?: Partial<Record<'wifi' | 'sync' | 'mentor', PhoneStep | null>>): void;
+    /** The page's token ran out: a new one. */
     phoneExpired(): void;
     /** The actions called, for the tests (`suspend`, `reboot`…). */
     readonly calls: readonly string[];
@@ -185,6 +192,10 @@ export function createSimulatedSystem(
     update((s) => ({ ...s, update: change(before) }));
     for (const m of updateMessages(before, state.update)) post(m.text, m.quiet);
   };
+  let hotspot = true;
+  const PAGE = 'http://10.42.0.1:8080/?t=essai';
+  const phone = (change: Partial<PhoneSetup>) =>
+    update((s) => ({ ...s, phoneSetup: s.phoneSetup && { ...s.phoneSetup, ...change } }));
   const call = async (name: string) => {
     calls.push(name);
   };
@@ -327,18 +338,24 @@ export function createSimulatedSystem(
       return 'ok';
     },
     finishFirstStart: async () => update((s) => ({ ...s, firstStart: false })),
-    startPhoneSetup: async () => {
-      calls.push('startPhoneSetup');
+    phoneSetupAvailable: async () => hotspot,
+    startPhoneSetup: async (retryWifi = false) => {
+      calls.push(retryWifi ? 'startPhoneSetup retryWifi' : 'startPhoneSetup');
+      if (!hotspot) return 'unavailable';
       update((s) => ({
         ...s,
         phoneSetup: {
-          network: { ssid: 'charpentier-k7m2', password: 'p4rk8wq2zn' },
+          network: { ssid: 'charpentier-7f3k', password: 'tilleul-cadran-47' },
+          open: true,
+          stage: 'join',
           page: null,
-          stage: 'waiting',
-          steps: null,
-          expired: false,
+          opened: false,
+          note: null,
+          wifiOnly: retryWifi,
+          steps: retryWifi ? (s.phoneSetup?.steps ?? null) : null,
         },
       }));
+      post('réseau temporaire · charpentier-7f3k');
       return 'ok';
     },
     stopPhoneSetup: async () => {
@@ -414,31 +431,48 @@ export function createSimulatedSystem(
       updateFailed: (reason, version = '0.6.0') =>
         changeUpdate((u) => ({ ...u, failure: { version, at: now().toISOString(), reason } })),
       noUpdates: () => update((s) => ({ ...s, update: null })),
-      phoneJoined: () =>
-        update((s) => ({
-          ...s,
-          phoneSetup: s.phoneSetup && {
-            ...s.phoneSetup,
-            stage: 'joined',
-            page: 'http://10.42.0.1:8080/?t=essai',
+      noHotspot: () => {
+        hotspot = false;
+      },
+      phoneJoined: () => {
+        phone({
+          stage: 'fill',
+          page: { url: PAGE, address: '10.42.0.1:8080', code: '482913' },
+          note: null,
+        });
+        post('un téléphone a rejoint le réseau');
+      },
+      phoneOpened: () => {
+        phone({ opened: true });
+        post('page ouverte sur le téléphone');
+      },
+      phoneLeft: () => {
+        phone({ stage: 'join', page: null, opened: false, note: 'left' });
+        post('le téléphone a quitté le réseau');
+      },
+      phoneSent: (steps = {}) => {
+        const line = (key: 'wifi' | 'sync' | 'mentor', value: string) => {
+          const given = steps[key];
+          return given === null ? {} : { [key]: given ?? { status: 'ok' as const, value } };
+        };
+        phone({
+          stage: 'done',
+          open: false,
+          steps: {
+            ...line('wifi', 'Maison-5G'),
+            ...line('sync', 'charpentier.chatel.pm'),
+            ...line('mentor', 'clé sk-ant-…4f2a'),
           },
-        })),
-      phoneSent: (steps = {}) =>
-        update((s) => ({
-          ...s,
-          phoneSetup: s.phoneSetup && {
-            ...s.phoneSetup,
-            stage: 'done',
-            steps: {
-              wifi: { status: 'ok' },
-              sync: { status: 'ok' },
-              mentor: { status: 'ok' },
-              ...steps,
-            },
-          },
-        })),
-      phoneExpired: () =>
-        update((s) => ({ ...s, phoneSetup: s.phoneSetup && { ...s.phoneSetup, expired: true } })),
+        });
+      },
+      phoneExpired: () => {
+        phone({
+          page: { url: `${PAGE}2`, address: '10.42.0.1:8080', code: '517204' },
+          opened: false,
+          note: 'renewed',
+        });
+        post('nouveau code · le précédent a expiré');
+      },
       wifiLost: () => {
         update((s) => ({ ...s, wifi: { ...s.wifi, connected: null, address: null } }));
         post('réseau perdu');

@@ -1,5 +1,12 @@
-import type { PhoneSetup, PhoneStep, SystemService, WifiNetwork } from '@charpentier/platform';
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import type { PhoneSetup, SystemService, WifiNetwork } from '@charpentier/platform';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type KeyboardEvent,
+  type ReactNode,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePlatform } from '../app/platform-context';
 import { featureText } from '../features/feature';
@@ -121,9 +128,18 @@ function LockScreen({ system }: { readonly system: SystemService }) {
 type Step = 'wifi' | 'code' | 'sync' | 'mentor';
 
 /**
+ * Where the first start is: the choice, the keyboard's four steps, or the
+ * phone's path (docs/DESIGN.md §4.12 « Premier démarrage de l'appareil »):
+ * its three steps, the home Wi-Fi typed here when the phone's was refused,
+ * the lock's code on this keyboard, the end.
+ */
+type Mode = 'choice' | 'keyboard' | 'phone' | 'phone-wifi' | 'phone-code' | 'end';
+
+/**
  * The device's first start (§4.12): before the welcome note, a centred page,
- * « Bienvenue », the fleuron, the Compagnon's sentence, then four steps, each
- * with « Continuer ⏎ » and « Plus tard Échap ». What is put off stays in the
+ * « Bienvenue », the fleuron, the Compagnon's sentence, then the choice
+ * between the phone (phase 5.13) and the keyboard's four steps, each with
+ * « Continuer ⏎ » and « Plus tard Échap ». What is put off stays in the
  * system line and the settings.
  */
 function FirstStart({ system }: { readonly system: SystemService }) {
@@ -132,31 +148,54 @@ function FirstStart({ system }: { readonly system: SystemService }) {
   const f = (key: string, options?: Readonly<Record<string, unknown>>) =>
     text(`system.firstStart.${key}`, options);
   const platform = usePlatform();
+  const setup = useSystemState(system).phoneSetup;
   const steps: Step[] = [
     'wifi',
     'code',
     ...(platform.sync ? (['sync'] as const) : []),
     ...(platform.agents ? (['mentor'] as const) : []),
   ];
-  // From the phone first (phase 5.13); the keyboard when it is not possible or not wanted.
-  const [phone, setPhone] = useState(true);
-  const [done, setDone] = useState<readonly Step[]>([]);
-  const remaining = steps.filter((s) => !done.includes(s));
+  const [mode, setMode] = useState<Mode>('choice');
+  const [available, setAvailable] = useState<boolean | null>(null);
+  useEffect(() => {
+    void system.phoneSetupAvailable().then(setAvailable);
+  }, [system]);
   const [step, setStep] = useState<Step>('wifi');
   const next = () => {
-    const i = remaining.indexOf(step);
-    const following = remaining[i + 1];
+    const following = steps[steps.indexOf(step) + 1];
     if (following) setStep(following);
     else void system.finishFirstStart();
   };
-  /** Back to the keyboard, without what the phone already set. */
-  const toKeyboard = (set: readonly Step[]) => {
-    setPhone(false);
-    setDone(set);
-    const first = steps.find((s) => !set.includes(s));
-    if (first) setStep(first);
-    else void system.finishFirstStart();
+  const toKeyboard = () => {
+    void system.stopPhoneSetup();
+    setMode('keyboard');
   };
+  const failed = (['wifi', 'sync', 'mentor'] as const).some(
+    (k) => setup?.steps?.[k]?.status === 'failed',
+  );
+  const sentence =
+    mode === 'choice'
+      ? f('choice.mentor')
+      : mode === 'keyboard'
+        ? f('mentor')
+        : mode === 'phone-code'
+          ? f('phone.codeMentor')
+          : mode === 'end'
+            ? f(failed ? 'phone.almost' : 'phone.ready')
+            : setup?.stage === 'done' && setup.steps?.wifi?.status === 'failed'
+              ? f('phone.notPassed')
+              : setup?.stage === 'apply' || setup?.stage === 'done'
+                ? f('phone.received')
+                : f('phone.mentor');
+  const phoneStep =
+    mode === 'phone-code' ||
+    mode === 'phone-wifi' ||
+    setup?.stage === 'apply' ||
+    setup?.stage === 'done'
+      ? 2
+      : setup?.stage === 'fill'
+        ? 1
+        : 0;
 
   return (
     <div className="ch-first">
@@ -164,149 +203,406 @@ function FirstStart({ system }: { readonly system: SystemService }) {
       <div className="ch-first-fleuron" aria-hidden="true">
         ⁂
       </div>
-      <p className="ch-first-mentor">{f('mentor')}</p>
-      {phone && <PhoneStepView system={system} f={f} onDone={toKeyboard} />}
-      {!phone && (
-        <ol className="ch-seg ch-first-steps" aria-label={f('steps')}>
-          {remaining.map((s) => (
-            <li
-              key={s}
-              className={s === step ? 'is-on' : undefined}
-              aria-current={s === step || undefined}
-            >
-              {f(`step.${s}`)}
-            </li>
-          ))}
-        </ol>
+      <p className="ch-first-mentor">{sentence}</p>
+      {mode === 'keyboard' && (
+        <StepsRow
+          label={f('steps')}
+          items={steps.map((s) => f(`step.${s}`))}
+          on={steps.indexOf(step)}
+        />
       )}
-      {!phone && step === 'wifi' && <WifiStep system={system} f={f} onDone={next} />}
-      {!phone && step === 'code' && <CodeStep system={system} f={f} onDone={next} />}
-      {!phone && step === 'sync' && <SyncStep f={f} onDone={next} />}
-      {!phone && step === 'mentor' && <MentorStep f={f} onDone={next} />}
+      {(mode === 'phone' || mode === 'phone-wifi' || mode === 'phone-code') && (
+        <StepsRow
+          label={f('phone.steps')}
+          items={(['join', 'fill', 'apply'] as const).map((s) => f(`phone.step.${s}`))}
+          on={phoneStep}
+        />
+      )}
+      {mode === 'choice' && (
+        <Choice
+          f={f}
+          available={available}
+          onPhone={() => setMode('phone')}
+          onKeyboard={() => setMode('keyboard')}
+        />
+      )}
+      {mode === 'keyboard' && step === 'wifi' && <WifiStep system={system} f={f} onDone={next} />}
+      {mode === 'keyboard' && step === 'code' && <CodeStep system={system} f={f} onDone={next} />}
+      {mode === 'keyboard' && step === 'sync' && <SyncStep f={f} onDone={next} />}
+      {mode === 'keyboard' && step === 'mentor' && <MentorStep f={f} onDone={next} />}
+      {mode === 'phone' && (
+        <PhoneFlow
+          system={system}
+          f={f}
+          onKeyboard={toKeyboard}
+          onWifiHere={() => setMode('phone-wifi')}
+          onApplied={() => setMode('phone-code')}
+          onUnavailable={() => {
+            setAvailable(false);
+            setMode('choice');
+          }}
+        />
+      )}
+      {mode === 'phone-wifi' && (
+        <WifiStep
+          system={system}
+          f={f}
+          initial={setup?.steps?.wifi?.value}
+          onDone={() => setMode('phone')}
+        />
+      )}
+      {mode === 'phone-code' && (
+        <CodeStep
+          system={system}
+          f={f}
+          intro={f('phone.codeIntro')}
+          onDone={() => setMode('end')}
+        />
+      )}
+      {mode === 'end' && (
+        <End
+          system={system}
+          f={f}
+          onWrite={() => {
+            void system.stopPhoneSetup();
+            void system.finishFirstStart();
+          }}
+        />
+      )}
     </div>
+  );
+}
+
+function StepsRow({
+  label,
+  items,
+  on,
+}: {
+  readonly label: string;
+  readonly items: readonly string[];
+  readonly on: number;
+}) {
+  return (
+    <ol className="ch-seg ch-first-steps" aria-label={label}>
+      {items.map((item, i) => (
+        <li
+          key={item}
+          className={i === on ? 'is-on' : undefined}
+          aria-current={i === on || undefined}
+        >
+          {item}
+        </li>
+      ))}
+    </ol>
   );
 }
 
 type F = (key: string, options?: Readonly<Record<string, unknown>>) => string;
 
-/**
- * The first start from the phone (phase 5.13, D-33): a code to join the
- * device's temporary network, then, once the phone is on it, a code to open
- * its page; the settings arrive, the device applies them and says how each
- * went. « Au clavier » (Échap) leaves for the four steps; what the phone set
- * is not asked again, the lock's code always is (it is the device's).
- */
-function PhoneStepView({
-  system,
+/** The choice: from the phone (lit, ⏎) or at the keyboard (Échap); ← → go from one to the other. */
+function Choice({
   f,
-  onDone,
+  available,
+  onPhone,
+  onKeyboard,
 }: {
-  readonly system: SystemService;
   readonly f: F;
-  onDone(set: readonly Step[]): void;
+  /** Null while it is being checked. */
+  readonly available: boolean | null;
+  onPhone(): void;
+  onKeyboard(): void;
 }) {
-  const setup = useSystemState(system).phoneSetup;
-  const [starting, setStarting] = useState(true);
-  const open = () =>
-    system.startPhoneSetup().then((result) => {
-      setStarting(false);
-      if (result === 'unavailable') onDone([]);
-    });
-  // A new code after an expired one.
-  const start = () => {
-    setStarting(true);
-    void open();
+  const [lit, setLit] = useState<'phone' | 'keyboard'>('phone');
+  const chosen = available === false ? 'keyboard' : lit;
+  const root = useRef<HTMLDivElement>(null);
+  useEffect(() => root.current?.focus({ preventScroll: true }), []);
+  const choose = (which: 'phone' | 'keyboard') => {
+    if (which === 'phone' && available) onPhone();
+    if (which === 'keyboard') onKeyboard();
   };
-  useEffect(() => {
-    void open();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- once, at the start
-  }, []);
-
-  const leave = (set: readonly Step[]) => {
-    void system.stopPhoneSetup();
-    onDone(set);
-  };
-  const applied = (steps: NonNullable<PhoneSetup['steps']>): Step[] => [
-    ...(steps.wifi.status === 'ok' ? (['wifi'] as const) : []),
-    ...(steps.sync.status === 'ok' ? (['sync'] as const) : []),
-    ...(steps.mentor.status === 'ok' ? (['mentor'] as const) : []),
-  ];
-  const finished = setup?.stage === 'done' && setup.steps;
-
   return (
-    <StepForm
-      f={f}
-      busy={starting || setup?.stage === 'applying'}
-      message={null}
-      onSubmit={() =>
-        finished ? leave(applied(setup.steps ?? noSteps)) : setup?.expired ? start() : undefined
-      }
-      onLater={() => leave(finished && setup.steps ? applied(setup.steps) : [])}
-      laterLabel={finished ? undefined : f('phone.keyboard')}
-      hideSubmit={!finished && !setup?.expired}
+    <div
+      ref={root}
+      tabIndex={-1}
+      className="ch-first-step ph-wide ph-choose"
+      onKeyDown={(e) => {
+        if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && available) {
+          e.preventDefault();
+          setLit((l) => (l === 'phone' ? 'keyboard' : 'phone'));
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          choose(chosen);
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          onKeyboard();
+        }
+      }}
     >
-      {setup && !setup.steps && (
-        <div className="ch-first-phone">
-          {setup.expired ? (
-            <p className="ch-first-phone-text">{f('phone.expired')}</p>
-          ) : setup.page ? (
-            <>
-              <QrCode value={setup.page} label={f('phone.pageCode')} />
-              <div className="ch-first-phone-text">
-                <p>{f('phone.open')}</p>
-                <p className="ch-first-clear">{setup.page}</p>
-              </div>
-            </>
-          ) : (
-            <>
-              <QrCode
-                value={wifiCode(setup.network.ssid, setup.network.password)}
-                label={f('phone.networkCode')}
-              />
-              <div className="ch-first-phone-text">
-                <p>{f('phone.join')}</p>
-                <p className="ch-first-clear">{f('phone.network', setup.network)}</p>
-              </div>
-            </>
-          )}
-        </div>
-      )}
-      {setup?.steps && (
-        <ul className="ch-first-results" aria-label={f('phone.results')}>
-          {(['wifi', 'sync', 'mentor'] as const).map((key) => (
-            <PhoneResult key={key} name={f(`phone.step.${key}`)} step={setup.steps?.[key]} f={f} />
-          ))}
-        </ul>
-      )}
-    </StepForm>
+      <div className="ph-choice" role="group" aria-label={f('choice.label')}>
+        <button
+          type="button"
+          className={`ph-card${available === false ? ' is-off' : chosen === 'phone' ? ' is-lit' : ''}`}
+          disabled={available === false}
+          aria-pressed={chosen === 'phone'}
+          onClick={() => choose('phone')}
+          onMouseEnter={() => available && setLit('phone')}
+        >
+          <span className="ph-card-head">
+            {f('choice.phone')}
+            <span className="ph-card-tag">
+              {f(available === false ? 'choice.unavailable' : 'choice.recommended')}
+            </span>
+          </span>
+          <span className="ph-card-text">
+            {f(available === false ? 'choice.phoneOff' : 'choice.phoneText')}
+          </span>
+          {available !== false && <kbd>{f('enterKey')}</kbd>}
+        </button>
+        <button
+          type="button"
+          className={`ph-card${chosen === 'keyboard' ? ' is-lit' : ''}`}
+          aria-pressed={chosen === 'keyboard'}
+          onClick={() => choose('keyboard')}
+          onMouseEnter={() => setLit('keyboard')}
+        >
+          <span className="ph-card-head">{f('choice.keyboard')}</span>
+          <span className="ph-card-text">{f('choice.keyboardText')}</span>
+          <kbd>{available === false ? f('enterKey') : f('escapeKey')}</kbd>
+        </button>
+      </div>
+      <p className="ph-hint">{f(available === false ? 'choice.hintOff' : 'choice.hint')}</p>
+    </div>
   );
 }
 
-const noSteps: NonNullable<PhoneSetup['steps']> = {
-  wifi: { status: 'skipped' },
-  sync: { status: 'skipped' },
-  mentor: { status: 'skipped' },
-};
-
-function PhoneResult({
-  name,
-  step,
+/**
+ * The phone's path (phase 5.13): `1 rejoindre` (the code of the temporary
+ * network), `2 remplir` (the code of the page, its six digits), `3 appliquer`
+ * (one line per setting, each in its turn). « Au clavier » (Échap) leaves at
+ * any time and closes the network.
+ */
+function PhoneFlow({
+  system,
   f,
+  onKeyboard,
+  onWifiHere,
+  onApplied,
+  onUnavailable,
 }: {
-  readonly name: string;
-  readonly step: PhoneStep | undefined;
+  readonly system: SystemService;
   readonly f: F;
+  onKeyboard(): void;
+  onWifiHere(): void;
+  onApplied(): void;
+  onUnavailable(): void;
 }) {
-  if (!step) return null;
-  const said =
-    step.status === 'failed'
-      ? f(`phone.reason.${step.reason}`, { defaultValue: f('phone.reason.failed') })
-      : f(`phone.status.${step.status}`);
+  const setup = useSystemState(system).phoneSetup;
+  const root = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    root.current?.focus({ preventScroll: true });
+    // Back from the Wi-Fi typed here, the path goes on where it was.
+    if (system.state().phoneSetup) return;
+    void system.startPhoneSetup().then((result) => {
+      if (result === 'unavailable') onUnavailable();
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once, at the start
+  }, []);
+  const wifiRefused = setup?.stage === 'done' && setup.steps?.wifi?.status === 'failed';
+  const applied = setup?.stage === 'done' && !wifiRefused;
+  // All applied: a moment to read the list, then the lock's code.
+  useEffect(() => {
+    if (!applied) return;
+    const timer = setTimeout(onApplied, 1200);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- when it is applied
+  }, [applied]);
+  const retry = () => void system.startPhoneSetup(true);
+
+  const keys = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      if (wifiRefused) onWifiHere();
+      else if (setup?.stage === 'join' || setup?.stage === 'fill' || !setup) onKeyboard();
+    } else if (e.key === 'Enter' && wifiRefused) {
+      e.preventDefault();
+      retry();
+    }
+  };
+
   return (
-    <li className={step.status === 'failed' ? 'is-failed' : undefined}>
-      <span>{name}</span>
-      <span>{said}</span>
-    </li>
+    <div ref={root} tabIndex={-1} className="ch-first-step ph-wide" onKeyDown={keys}>
+      {!setup && <p className="ph-wait">{f('busy')}</p>}
+      {setup && (setup.stage === 'join' || setup.stage === 'fill') && <Scan setup={setup} f={f} />}
+      {setup && (setup.stage === 'apply' || setup.stage === 'done') && (
+        <>
+          <ApplyList setup={setup} f={f} />
+          {!wifiRefused && <p className="ph-wait">{f('phone.nothingToDo')}</p>}
+        </>
+      )}
+      <p className="ph-actions">
+        {wifiRefused ? (
+          <>
+            <button type="button" className="ch-btn is-mentor" onClick={retry}>
+              {f('phone.fixFromPhone')} <kbd>{f('enterKey')}</kbd>
+            </button>
+            <button type="button" className="ch-btn" onClick={onWifiHere}>
+              {f('phone.typeHere')} <kbd>{f('escapeKey')}</kbd>
+            </button>
+          </>
+        ) : (
+          (!setup || setup.stage === 'join' || setup.stage === 'fill') && (
+            <button type="button" className="ch-btn" onClick={onKeyboard}>
+              {f('phone.keyboard')} <kbd>{f('escapeKey')}</kbd>
+            </button>
+          )
+        )}
+      </p>
+    </div>
+  );
+}
+
+/** The code to scan, and the same in clear for a phone without a camera. */
+function Scan({ setup, f }: { readonly setup: PhoneSetup; readonly f: F }) {
+  const page = setup.stage === 'fill' ? setup.page : null;
+  const code = page?.code ?? '';
+  const wait = page
+    ? setup.note === 'renewed'
+      ? { text: f('phone.renewed'), news: true }
+      : { text: f(setup.opened ? 'phone.pageWait' : 'phone.openWait'), news: false }
+    : setup.note === 'left'
+      ? { text: f('phone.left'), news: true }
+      : { text: f('phone.joinWait'), news: false };
+  return (
+    <div className="ph-scan">
+      <div className={`ph-qr${page && setup.opened ? ' is-faded' : ''}`}>
+        {page ? (
+          <QrCode value={page.url} label={f('phone.pageCode')} />
+        ) : (
+          <QrCode
+            value={wifiCode(setup.network.ssid, setup.network.password)}
+            label={f('phone.networkCode')}
+          />
+        )}
+      </div>
+      <div>
+        <p className="ph-say">
+          {f(page ? (setup.opened ? 'phone.opened' : 'phone.open') : 'phone.join')}
+        </p>
+        <dl className="ph-plain">
+          <span className="ph-plain-head">{f('phone.noCamera')}</span>
+          {page ? (
+            <>
+              <dt>{f('phone.address')}</dt>
+              <dd>{page.address}</dd>
+              <dt>{f('phone.code')}</dt>
+              <dd>{`${code.slice(0, 3)} ${code.slice(3)}`}</dd>
+            </>
+          ) : (
+            <>
+              <dt>{f('phone.network')}</dt>
+              <dd>{setup.network.ssid}</dd>
+              <dt>{f('phone.password')}</dt>
+              <dd>{setup.network.password}</dd>
+            </>
+          )}
+        </dl>
+        {page && !setup.opened && <p className="ph-tip">{f('phone.tip')}</p>}
+        <p className={`ph-wait${wait.news ? ' is-news' : ''}`} role="status">
+          {wait.text}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/** One line per setting received, in a hollow: its name, its value, its state. */
+function ApplyList({
+  setup,
+  f,
+  end = false,
+  lock,
+}: {
+  readonly setup: PhoneSetup;
+  readonly f: F;
+  /** At the end: a failure says it can wait for the settings. */
+  readonly end?: boolean;
+  /** The lock's line, at the end. */
+  readonly lock?: { readonly hasCode: boolean };
+}) {
+  const row = (key: 'wifi' | 'sync' | 'mentor') => {
+    const step = setup.steps?.[key];
+    if (!step) return null;
+    const cls =
+      step.status === 'failed'
+        ? 'is-failed'
+        : step.status === 'running'
+          ? 'is-now'
+          : step.status === 'todo' || step.status === 'waiting'
+            ? 'is-todo'
+            : '';
+    const why =
+      step.status === 'failed'
+        ? `${f(`phone.why.${key}.${step.reason ?? 'failed'}`, {
+            value: step.value,
+            defaultValue: f(`phone.why.${key}.failed`, { value: step.value }),
+          })}${end ? ` ${f('phone.later')}` : ''}`
+        : null;
+    return (
+      <li key={key} className={cls}>
+        <span className="what">{f(`phone.line.${key}`)}</span>
+        <span className="value">{step.value}</span>
+        <span className="state">{f(`phone.state.${key}.${step.status}`)}</span>
+        {why && <span className="why">{why}</span>}
+      </li>
+    );
+  };
+  return (
+    <ul className="ph-apply" aria-label={f('phone.results')}>
+      <li>
+        <span className="what">{f('phone.line.temporary')}</span>
+        <span className="value">{setup.network.ssid}</span>
+        <span className="state">{f(setup.open ? 'phone.state.open' : 'phone.state.closed')}</span>
+      </li>
+      {row('wifi')}
+      {row('sync')}
+      {row('mentor')}
+      {lock && (
+        <li>
+          <span className="what">{f('phone.line.lock')}</span>
+          <span className="value">{f(lock.hasCode ? 'phone.lockCode' : 'phone.lockNone')}</span>
+          <span className="state">
+            {f(lock.hasCode ? 'phone.state.lockSet' : 'phone.state.lockLater')}
+          </span>
+        </li>
+      )}
+    </ul>
+  );
+}
+
+/** The end: the whole list, then « Écrire ⏎ ». */
+function End({
+  system,
+  f,
+  onWrite,
+}: {
+  readonly system: SystemService;
+  readonly f: F;
+  onWrite(): void;
+}) {
+  const state = useSystemState(system);
+  const button = useRef<HTMLButtonElement>(null);
+  useEffect(() => button.current?.focus(), []);
+  return (
+    <div className="ch-first-step ph-wide">
+      {state.phoneSetup && (
+        <ApplyList setup={state.phoneSetup} f={f} end lock={{ hasCode: state.lock.hasCode }} />
+      )}
+      <p className="ph-actions">
+        <button ref={button} type="button" className="ch-btn is-author" onClick={onWrite}>
+          {f('phone.write')} <kbd>{f('enterKey')}</kbd>
+        </button>
+      </p>
+    </div>
   );
 }
 
@@ -387,16 +683,19 @@ function StepForm({
 function WifiStep({
   system,
   f,
+  initial,
   onDone,
 }: {
   readonly system: SystemService;
   readonly f: F;
+  /** The network already chosen (the one the phone gave, refused). */
+  readonly initial?: string | undefined;
   onDone(): void;
 }) {
   const state = useSystemState(system);
   const networks = state.wifi.networks;
   // The network chosen, else the joined one, else the first in range (a scan may come late).
-  const [picked, setChosen] = useState<string | null>(() => state.wifi.connected);
+  const [picked, setChosen] = useState<string | null>(() => initial ?? state.wifi.connected);
   const chosen = picked ?? networks[0]?.ssid ?? null;
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
@@ -485,10 +784,13 @@ function WifiStep({
 function CodeStep({
   system,
   f,
+  intro,
   onDone,
 }: {
   readonly system: SystemService;
   readonly f: F;
+  /** Its sentence, when it comes after the phone. */
+  readonly intro?: string;
   onDone(): void;
 }) {
   const [code, setCode] = useState('');
@@ -518,7 +820,7 @@ function CodeStep({
         </button>
       }
     >
-      <p className="ch-first-intro">{f('codeIntro')}</p>
+      <p className="ch-first-intro">{intro ?? f('codeIntro')}</p>
       <input
         ref={first}
         type="password"
