@@ -44,7 +44,7 @@ async function server() {
 }
 
 /** A device: its own library folder, documents and sync engine. */
-function device(name: string) {
+function device(name: string, { keychain = true } = {}) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), `charpentier-sync-${name}-`));
   const library = new FolderLibrary(path.join(dir, 'Bibliothèque'));
   const store = new DocStore(documentLocator(library));
@@ -52,7 +52,15 @@ function device(name: string) {
   const engine = new SyncEngine({
     store,
     library,
-    credentials: { load: () => saved, save: (account) => void (saved = account) },
+    credentials: {
+      load: () => saved,
+      save: (account) => {
+        // Without a keychain (Linux without one), nothing can be kept.
+        if (account && !keychain) return false;
+        saved = account;
+        return true;
+      },
+    },
     stateDir: path.join(dir, 'sync'),
     device: name,
     WebSocket,
@@ -167,6 +175,13 @@ describe('sync between two desktop apps (step 4.3)', () => {
     await mac.library.trash(id);
     await mac.engine.reconcile();
     await until(async () => (await x250.library.listTrashed()).some((p) => p.id === id));
+  });
+
+  it('says so when the system has no keychain to keep the connection in', async () => {
+    const url = await server();
+    const linux = device('Linux', { keychain: false });
+    expect(await linux.engine.signIn(url, EMAIL, PASSWORD)).toBe('no-keychain');
+    expect(linux.engine.status()).toBe('off');
   });
 
   it('says when the device was signed out from elsewhere, and signs out cleanly', async () => {

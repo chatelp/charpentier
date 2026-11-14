@@ -19,7 +19,8 @@ export interface SyncAccount {
 
 export interface SyncCredentials {
   load(): SyncAccount | null;
-  save(account: SyncAccount | null): void;
+  /** False when it could not be kept (no keychain): the device stays signed out. */
+  save(account: SyncAccount | null): boolean;
 }
 
 /** The account's library: one entry per project, last change wins. */
@@ -111,14 +112,15 @@ export class SyncEngine {
     const body = (await response.json()) as { token?: unknown; userId?: unknown };
     if (typeof body.token !== 'string' || typeof body.userId !== 'string') return 'unreachable';
     this.stop();
-    this.deps.credentials.save({
+    const kept = this.deps.credentials.save({
       server: httpUrl(server),
       email: email.trim(),
       userId: body.userId,
       token: body.token,
     });
     this.start();
-    return 'ok';
+    // Said, not hidden: without a keychain the sync would stay off in silence.
+    return kept ? 'ok' : 'no-keychain';
   }
 
   /** Signs this device out: the sync stops, the projects stay on the device. */

@@ -206,8 +206,9 @@ const sync = new SyncEngine({
       }
     },
     save: (account) => {
-      if (account) secrets.set(SYNC_ACCOUNT_SECRET, JSON.stringify(account));
-      else secrets.delete(SYNC_ACCOUNT_SECRET);
+      if (account) return secrets.set(SYNC_ACCOUNT_SECRET, JSON.stringify(account));
+      secrets.delete(SYNC_ACCOUNT_SECRET);
+      return true;
     },
   },
   stateDir: path.join(app.getPath('userData'), 'sync'),
@@ -397,7 +398,21 @@ app.on('second-instance', () => {
   }
 });
 
+/**
+ * Secrets without a keychain (D-25): the X250 has none (its session opens
+ * by itself, a keychain there would be open all the time), so its secrets
+ * are kept like its texts, on the disk LUKS encrypts. Elsewhere on Linux
+ * without a keychain, nothing is kept (the app says so), but for the
+ * end-to-end tests (CHARPENTIER_TEST_PLAIN_SECRETS).
+ */
+function secretsWithoutKeychain() {
+  if (process.platform !== 'linux' || safeStorage.isEncryptionAvailable()) return;
+  if (appliance || process.env['CHARPENTIER_TEST_PLAIN_SECRETS'] === '1')
+    safeStorage.setUsePlainTextEncryption(true);
+}
+
 void app.whenReady().then(() => {
+  secretsWithoutKeychain();
   // A device has no menu bar (on the Mac, the hidden one keeps ⌘Q for development).
   Menu.setApplicationMenu(appliance && process.platform !== 'darwin' ? null : appMenu());
   sync.start();

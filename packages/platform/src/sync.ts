@@ -11,7 +11,8 @@
  */
 export type SyncStatus = 'off' | 'connecting' | 'synced' | 'syncing' | 'offline' | 'unauthorized';
 
-export type SignInResult = 'ok' | 'invalid' | 'too-many-attempts' | 'unreachable';
+/** `no-keychain`: signed in, but this system has nowhere to keep the connection safely. */
+export type SignInResult = 'ok' | 'invalid' | 'too-many-attempts' | 'unreachable' | 'no-keychain';
 
 export interface SyncAccountInfo {
   readonly server: string;

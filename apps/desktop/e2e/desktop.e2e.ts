@@ -40,6 +40,8 @@ async function launch(
       ...process.env,
       CHARPENTIER_LIBRARY: dirs.library,
       CHARPENTIER_USER_DATA: dirs.userData,
+      // Linux CI has no keychain: the sync's token is kept anyway (never on a real system).
+      CHARPENTIER_TEST_PLAIN_SECRETS: '1',
       ...env,
     },
   });
@@ -259,7 +261,15 @@ describe('desktop app', () => {
   });
 
   it('runs as a writing device with --appliance (phase 5.2)', async () => {
-    const { app, window } = await launch(folders(), {}, ['--appliance']);
+    const dirs = folders();
+    // On Linux, the device's own system runs: a device whose first start is behind it,
+    // or its cover (phase 5.6) would stand over everything.
+    fs.mkdirSync(dirs.userData, { recursive: true });
+    fs.writeFileSync(
+      path.join(dirs.userData, 'system.json'),
+      JSON.stringify({ firstStartDone: true }),
+    );
+    const { app, window } = await launch(dirs, {}, ['--appliance']);
     const host = await app.evaluate(({ BrowserWindow, Menu }) => ({
       kiosk: BrowserWindow.getAllWindows()[0]?.isKiosk(),
       menu: Menu.getApplicationMenu() !== null,

@@ -724,7 +724,8 @@
       "ok": "Connecté. Vos projets se synchronisent.",
       "invalid": "E-mail ou mot de passe incorrect.",
       "too-many-attempts": "Trop de tentatives : réessayez dans un quart d’heure.",
-      "unreachable": "Le serveur ne répond pas. Vérifiez l’adresse et le réseau."
+      "unreachable": "Le serveur ne répond pas. Vérifiez l’adresse et le réseau.",
+      "no-keychain": "Connecté, mais ce système n’a pas de trousseau où garder la connexion : la synchronisation reste éteinte."
     },
     "signedOut": "Déconnecté du serveur. Vos projets restent sur cet appareil.",
     "unreachable": "Le serveur ne répond pas.",
