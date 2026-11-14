@@ -465,6 +465,10 @@ describe('desktop app', () => {
     const secondDirs = folders();
     const second = await launch(secondDirs);
     await signIn(second.window);
+    // It opens on the novel, not on the blank project it started with (phase 5.6).
+    await expect
+      .poll(() => second.editor.textContent(), { timeout: 20_000 })
+      .toContain('Il pleuvait sur Nantes.');
     const mirrored = () => {
       const found: string[] = [];
       const walk = (dir: string) => {

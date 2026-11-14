@@ -1,6 +1,8 @@
 import {
   createChapter,
   createScene,
+  fragmentToSceneDoc,
+  getScene,
   guids,
   initProject,
   listAllScenes,
@@ -8,6 +10,7 @@ import {
   readProjectMeta,
   renameProject,
   SYSTEM,
+  variantFragment,
 } from '@charpentier/schema';
 import type { DocumentHandle, Platform } from '@charpentier/platform';
 import type * as Y from 'yjs';
@@ -142,4 +145,47 @@ export async function renameProjectEverywhere(
     }
   }
   await platform.library.rename(projectId, title);
+}
+
+/**
+ * A project nobody has written in yet: the default title, a single scene,
+ * no text. The one a new device opens before its novel comes from the sync.
+ */
+export async function isBlankProject(
+  platform: Platform,
+  session: ProjectSession,
+  titles: DefaultTitles,
+): Promise<boolean> {
+  const { root, projectId } = session;
+  if (readProjectMeta(root)?.title !== titles.project) return false;
+  const scenes = listAllScenes(root);
+  if (scenes.length !== 1 || listChapters(root).length > 1) return false;
+  const scene = scenes[0] && getScene(root, scenes[0].id);
+  if (!scene) return false;
+  const handle = await platform.documents.open(guids.scene(projectId, scene.id));
+  try {
+    await handle.whenLoaded;
+    return (
+      fragmentToSceneDoc(variantFragment(handle.doc, scene.activeVariantId)).textContent.trim() ===
+      ''
+    );
+  } finally {
+    await handle.close();
+  }
+}
+
+/**
+ * Just signed in, the device's novel has come from the sync: when the project
+ * open is still blank, it goes to the trash (never deleted) and the novel
+ * that came, the most recent, opens instead. Null otherwise.
+ */
+export async function projectFromSync(
+  platform: Platform,
+  session: ProjectSession,
+  titles: DefaultTitles,
+): Promise<string | null> {
+  const other = (await platform.library.list()).find((p) => p.id !== session.projectId);
+  if (!other || !(await isBlankProject(platform, session, titles))) return null;
+  await platform.library.trash(session.projectId);
+  return other.id;
 }

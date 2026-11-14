@@ -1,10 +1,15 @@
 import type { Platform } from '@charpentier/platform';
 import type { i18n } from 'i18next';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { I18nextProvider, useTranslation } from 'react-i18next';
 import { Library } from '../library/Library';
 import { TitleBar } from './TitleBar';
-import { initialProjectId, openProject, type ProjectSession } from '../workspace/default-scene';
+import {
+  initialProjectId,
+  openProject,
+  projectFromSync,
+  type ProjectSession,
+} from '../workspace/default-scene';
 import { ProjectWorkspace } from '../workspace/Workspace';
 import { PlatformContext, usePlatform } from './platform-context';
 import {
@@ -101,6 +106,30 @@ function Root() {
       void opened?.close();
     };
   }, [platform, projectId, titles]);
+
+  // Signed in on a new device: once the novel has come from the sync, it opens
+  // in place of the blank project the device started with (phase 5.6).
+  const current = useRef<ProjectSession | null>(null);
+  useEffect(() => {
+    current.current = opening.state === 'ready' ? opening.session : null;
+  }, [opening]);
+  useEffect(() => {
+    const sync = platform.sync;
+    if (!sync) return;
+    let signingIn = false;
+    let previous = sync.status();
+    return sync.onStatusChange((status) => {
+      if (previous === 'off' && status !== 'off') signingIn = true;
+      previous = status;
+      const session = current.current;
+      if (!signingIn || status !== 'synced' || !session) return;
+      signingIn = false;
+      projectFromSync(platform, session, titles).then(
+        (id) => id && setProjectId(id),
+        (error: unknown) => console.error(error),
+      );
+    });
+  }, [platform, titles]);
 
   // While another project opens, the previous session is no longer shown.
   const shown =
