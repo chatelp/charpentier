@@ -7,6 +7,7 @@ import {
   net,
   powerMonitor,
   safeStorage,
+  screen,
   shell,
   type WebContents,
 } from 'electron';
@@ -348,11 +349,13 @@ ipcMain.handle(IPC_INVOKE, async (event, request: Request) => {
 ipcMain.on(IPC_MESSAGE, (event, message: Message) => sessionOf(event.sender).receive(message));
 
 function createWindow() {
+  // The device: the screen's own size, whatever it is (an X250 in HD, a VM), and
+  // no minimum, which could make the window wider than the screen and cut the right.
+  const size = appliance
+    ? screen.getPrimaryDisplay().size
+    : { width: 1440, height: 900, minWidth: 960, minHeight: 600 };
   const window = new BrowserWindow({
-    width: 1440,
-    height: 900,
-    minWidth: 960,
-    minHeight: 600,
+    ...size,
     show: false,
     ...(appliance
       ? { kiosk: true, fullscreen: true, frame: false, autoHideMenuBar: true }
