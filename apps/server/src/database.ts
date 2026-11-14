@@ -64,6 +64,15 @@ export async function migrate(db: Database): Promise<void> {
       published_at timestamptz not null default now()
     )
   `);
+  // The install key's image of each version (the last two kept).
+  await db.query(`
+    create table if not exists installers (
+      version text primary key,
+      size bigint not null,
+      sha256 text not null,
+      published_at timestamptz not null default now()
+    )
+  `);
 }
 
 /** A document's whole Yjs state, as stored by the last save, or null if it is new. */

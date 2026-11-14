@@ -16,7 +16,7 @@ import { accessFor, credential, hasStorePath, STORE_PATH } from './nix-cache';
 export const UPDATES_PATH = '/api/updates/latest';
 
 /** The app's version, with a suffix when only the system changed (`0.6.0-2`). */
-const VERSION = /^\d{1,4}\.\d{1,4}\.\d{1,4}(?:-\d{1,4})?$/;
+export const VERSION = /^\d{1,4}\.\d{1,4}\.\d{1,4}(?:-\d{1,4})?$/;
 /** A keyboard layout naming a system. */
 const LAYOUT = /^[a-z]{2,12}$/;
 const MAX_NOTES = 20_000;

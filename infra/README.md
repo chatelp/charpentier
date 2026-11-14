@@ -44,6 +44,9 @@ Le serveur garde aussi le cache binaire Nix des versions du X250 et le pointeur 
 - `https://charpentier.chatel.pm/nix-cache/` : cache HTTP de Nix, fichiers dans le volume `charpentier_cache` (non sauvegardé : la CI le reconstruit). Lecture (GET, HEAD) par la CI ou un appareil du compte, écriture (PUT) par la CI seulement. Le jeton s'envoie en mot de passe HTTP Basic (login libre, ce que fait Nix avec un fichier netrc) ou en Bearer.
 - `GET /api/updates/latest` (appareil ou CI) et `PUT /api/updates/latest` (CI) : `{ version, notes, systems: { azerty, bepo, qwerty }, publishedAt }`. Le serveur refuse une version dont un système n'est pas déjà dans le cache.
 
+- `PUT /api/installer/<version>` (CI) : l'image de la clé d'installation de la version publiée (pas d'autre) ; `GET /api/installer/latest` (`{ version, size, sha256, publishedAt }`) et `GET /api/installer/<version>.iso` (reprise par `Range`), pour la CI ou un appareil. Les deux dernières images sont gardées, dans le même volume.
+- **Envoi en morceaux** : Cloudflare refuse tout corps de requête de plus de 100 Mo (vérifié : 413). Un fichier plus gros s'envoie en morceaux de 95 Mo au plus, sur le même chemin, avec `X-Part: <n>/<total>` et `X-Checksum-SHA256` du fichier entier ; le serveur répond 202 jusqu'au dernier morceau, assemble, vérifie la somme (409 si elle est fausse) et range le fichier (201). Un morceau peut être renvoyé ; des morceaux orphelins sont effacés au bout d'un jour.
+
 Le jeton de la CI se crée sur la machine et ne s'affiche qu'une fois ; il va dans les secrets GitHub de `chatelp/charpentier-os` (`CHARPENTIER_CACHE_TOKEN`). Recréer un jeton du même nom révoque l'ancien.
 
 ```bash
@@ -51,7 +54,7 @@ ssh -t prodesk2021.local 'cd ~/Docker/charpentier && docker compose exec server 
 ssh -t prodesk2021.local 'cd ~/Docker/charpentier && docker compose exec server node main.js revoke-ci-token github-actions'
 ```
 
-À surveiller au premier envoi : un fichier du cache peut peser plusieurs centaines de Mo. Si Traefik coupe les envois longs (délai de lecture du point d'entrée, 60 s par défaut en v3), allonger `respondingTimeouts.readTimeout` de `websecure`. Le nettoyage des anciennes versions n'est pas encore fait : surveiller la place du volume.
+Avec des morceaux de 95 Mo au plus, ni Cloudflare ni le délai de Traefik (60 s par défaut en v3) ne devraient couper un envoi. Le nettoyage des anciennes versions n'est pas encore fait : surveiller la place du volume.
 
 ## Restaurer une sauvegarde
 

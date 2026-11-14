@@ -1,17 +1,18 @@
-import { randomUUID } from 'node:crypto';
-import { createReadStream, createWriteStream } from 'node:fs';
-import { mkdir, rename, rm, stat } from 'node:fs/promises';
+import { createReadStream } from 'node:fs';
+import { stat } from 'node:fs/promises';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { join } from 'node:path';
 import { pipeline } from 'node:stream/promises';
 import { sessionFor } from './accounts';
 import { isCiToken } from './ci-tokens';
 import type { Database } from './database';
+import { receiveUpload } from './uploads';
 
 /**
  * The X250's binary cache (D-31, phase 5.11): a standard Nix HTTP binary
  * cache under /nix-cache, its files on the server's disk. The CI writes
- * (PUT) the signed systems; the account's devices read (GET, HEAD) them, and
+ * (PUT) the signed systems, a large file in parts (uploads.ts: Cloudflare caps
+ * a request at 100 MB); the account's devices read (GET, HEAD) them, and
  * nothing else does: the cache is not public.
  *
  * Nix authenticates with a netrc file, so a token is accepted as the password
@@ -22,9 +23,6 @@ export const CACHE_PREFIX = '/nix-cache/';
 
 /** What a Nix client reads first. */
 const CACHE_INFO = 'StoreDir: /nix/store\nWantMassQuery: 1\nPriority: 40\n';
-
-/** The largest file the CI may write (a NAR: linux-firmware, Electron…). */
-const MAX_FILE = 8 * 1024 ** 3;
 
 /**
  * The files of a cache: `<hash>.narinfo`, `<hash>.ls`, and the files under
@@ -145,29 +143,9 @@ export async function handleCache(
       plain(response, 403);
       return true;
     }
-    const length = Number(request.headers['content-length'] ?? 0);
-    if (length > MAX_FILE) {
-      plain(response, 413);
-      return true;
-    }
-    const dir = file.includes('/') ? join(cacheDir, file.slice(0, file.indexOf('/'))) : cacheDir;
-    await mkdir(dir, { recursive: true });
-    // Written beside, then renamed: a reader never sees half a file.
-    const temporary = join(cacheDir, `.upload-${randomUUID()}`);
-    let written = 0;
-    request.on('data', (chunk: Buffer) => {
-      written += chunk.length;
-      if (written > MAX_FILE) request.destroy(new Error('too large'));
-    });
-    try {
-      await pipeline(request, createWriteStream(temporary));
-      await rename(temporary, path);
-    } catch {
-      await rm(temporary, { force: true });
-      if (!response.headersSent) plain(response, written > MAX_FILE ? 413 : 400);
-      return true;
-    }
-    plain(response, 201);
+    // Whole, or in parts under Cloudflare's limit (uploads.ts).
+    const upload = await receiveUpload(request, cacheDir, path);
+    plain(response, upload.status);
     return true;
   }
 

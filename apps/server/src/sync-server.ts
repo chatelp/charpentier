@@ -4,6 +4,7 @@ import { claimProject, sessionFor } from './accounts';
 import { loadDocument, storeDocument, type Database } from './database';
 import { documentOwner } from './document-names';
 import { handleApi, LoginLimiter } from './http-api';
+import { handleInstaller } from './installer';
 import { handleCache } from './nix-cache';
 import { handleUpdates } from './updates';
 
@@ -62,6 +63,7 @@ export function createSyncServer(options: SyncServerOptions): Server<ConnectionC
       if (
         (await handleCache(db, cacheDir, request, response)) ||
         (await handleUpdates(db, cacheDir, request, response)) ||
+        (await handleInstaller(db, cacheDir, request, response)) ||
         (await handleApi(db, limiter, request, response))
       )
         return Promise.reject();
