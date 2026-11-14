@@ -42,12 +42,13 @@
       "unconfigured": "Le Compagnon attend votre clé d’API (ligne de commande : « clé »).",
       "offline": "Compagnon hors ligne"
     },
-    "apiKeyPlaceholder": "Clé d’API Anthropic (sk-ant-…), gardée dans le trousseau du Mac",
+    "apiKeyPlaceholder": "Clé d’API Anthropic (sk-ant-…), gardée chiffrée sur cet appareil",
     "apiKeyChecking": "Vérification de la clé auprès d’Anthropic…",
     "apiKey": {
-      "saved": "Clé enregistrée dans le trousseau. Le Compagnon est prêt.",
+      "saved": "Clé enregistrée. Le Compagnon est prêt.",
       "invalid": "Anthropic refuse cette clé. Vérifiez-la dans votre console Anthropic.",
-      "offline": "Pas de réseau : la clé n’a pas pu être vérifiée."
+      "offline": "Pas de réseau : la clé n’a pas pu être vérifiée.",
+      "no-keychain": "Clé valable, mais ce système n’a pas de trousseau où la garder : elle n’est pas enregistrée."
     },
     "apiKeyForgotten": "Clé oubliée. Le Compagnon attend une nouvelle clé.",
     "you": "Vous",

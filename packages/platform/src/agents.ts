@@ -1,7 +1,8 @@
 import type { LlmStatus } from './llm';
 
 /** Outcome of saving an API key: checked against the provider first. */
-export type ApiKeyResult = 'saved' | 'invalid' | 'offline';
+/** `no-keychain`: a good key, but this system has nowhere to keep it safely. */
+export type ApiKeyResult = 'saved' | 'invalid' | 'offline' | 'no-keychain';
 
 /** Outcome of asking the Compagnon to answer (its answer lands in the mentor document). */
 export type AskResult = 'answered' | 'unavailable' | 'offline' | 'refused' | 'failed';

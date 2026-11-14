@@ -136,6 +136,13 @@ describe('API key', () => {
     expect(await host.handle({ type: 'agents.status' })).toBe('available');
     await host.handle({ type: 'agents.forgetKey' });
     expect(await host.handle({ type: 'agents.status' })).toBe('unconfigured');
+    // A system without a keychain (Linux without one): a good key, said not kept.
+    const nowhere = new SecretStore(path.join(dir, 'none.json'), {
+      ...encryption,
+      isEncryptionAvailable: () => false,
+    });
+    const bare = new AgentHost(llm, nowhere, new DocStore(() => undefined));
+    expect(await bare.handle({ type: 'agents.setKey', key: 'sk-right' })).toBe('no-keychain');
     fs.rmSync(dir, { recursive: true, force: true });
   });
 });

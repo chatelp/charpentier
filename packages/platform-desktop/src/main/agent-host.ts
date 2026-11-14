@@ -271,7 +271,8 @@ export class AgentHost {
         const check = await this.llm.checkKey(key);
         if (check === 'invalid') return 'invalid';
         if (check === 'offline') return 'offline';
-        if (!this.secrets.set(API_KEY_SECRET, key)) return 'invalid';
+        // Said, not mistaken for a bad key: the system cannot keep it (Linux without keychain).
+        if (!this.secrets.set(API_KEY_SECRET, key)) return 'no-keychain';
         this.llm.keyChanged();
         return 'saved';
       }
