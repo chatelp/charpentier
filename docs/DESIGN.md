@@ -491,20 +491,20 @@ Sur le X250, l'app est la partie visible du système [D-24]. Maquette : cadre «
   - **`3 appliquer`** : dès l'envoi, le X250 ferme son réseau temporaire.
     - Phrase : « Réglages reçus. Le X250 s'en occupe. »
     - Une liste en creux, en chasse fixe, une ligne par réglage : son nom en gris, sa valeur, son état à droite. La valeur est le réseau, le serveur ou la clé abrégée `sk-ant-…4f2a`, jamais un mot de passe.
-    - Les lignes, dans l'ordre : `réseau temporaire` (`fermé`), `wifi de la maison` (`connecté`), `synchronisation` (`3 romans`), `compagnon` (`vérifiée`). Un réglage laissé vide sur le téléphone n'a pas de ligne : il est remis à plus tard.
+    - Les lignes, dans l'ordre : `réseau temporaire` (`fermé`), `wifi de la maison` (`connecté`), `synchronisation` (`connectée` : le nombre de romans n'est pas encore connu), `compagnon` (`vérifiée`). Un réglage laissé vide sur le téléphone n'a pas de ligne : il est remis à plus tard.
     - États :
       - `à venir` en pâle ;
       - la ligne en cours allumée, `en cours…` ;
       - fait, en encre ;
       - échec **inversé**, comme une alerte de la ligne système (`refusé`), sa raison en une phrase dessous.
     - Sous la liste : « Rien à faire : chaque ligne s'applique à son tour. »
-  - **Code de verrouillage**, choix de l'auteur : jamais sur le téléphone. Ensuite sur le X250, l'étape `code` du clavier, avec la phrase « Un dernier réglage, sur ce clavier : le code qui le verrouille. » et « Vous le taperez ici chaque jour ; choisissez-le avec ces touches. ». Restent « Sans code » et « Plus tard ».
+  - **Code de verrouillage**, choix de l'auteur : jamais sur le téléphone. Ensuite sur le X250, l'étape `code` du clavier, avec la phrase « Un dernier réglage, sur ce clavier : le code qui le verrouille. » et « Vous le taperez ici chaque jour ; choisissez-le avec ces touches. ». Restent « Sans code » et « Plus tard ». On y passe seul, 1,2 s après la dernière ligne de la liste, sans « Continuer » : la liste a promis « Rien à faire ». Un refus qui ne bloque pas (synchronisation, clé) n'arrête pas ce passage ; la fin le montre de nouveau, avec sa raison.
   - **Fin** :
     - « Tout est prêt. », ou « Presque tout est prêt. » s'il reste un échec ;
     - la liste entière, avec la ligne `verrouillage` ;
     - un seul bouton, « Écrire `⏎` », à l'encre de l'auteur. Il ouvre le roman venu de la synchronisation, ou un nouveau roman (§4.8) ;
     - un échec reste inversé, avec sa raison et « Vous la changerez dans les réglages, quand vous voudrez. ».
-  - **Ligne système pendant le parcours** : segment `wifi` à `temporaire` tant que le réseau du X250 est ouvert. Messages dans la voix du système : « réseau temporaire ouvert · charpentier-7f3k », « un téléphone a rejoint le réseau », « page ouverte sur le téléphone », puis l'étape en cours (« synchronisation · connexion à charpentier.chatel.pm »).
+  - **Ligne système pendant le parcours** : segment `wifi` à `temporaire` tant que le réseau du X250 est ouvert. Messages dans la voix du système, 40 signes au plus (`MESSAGE_LENGTH`), un nom trop long raccourci d'abord : « réseau temporaire · charpentier-7f3k », « un téléphone a rejoint le réseau », « page ouverte sur le téléphone », puis l'étape en cours (« synchronisation · connexion à … », « synchronisation · connectée », « Maison-5G refuse le mot de passe », « nouveau code · le précédent a expiré »).
 - **Cas** :
   - **Wi-Fi de la maison refusé ou introuvable** :
     - phrase « Un réglage n'est pas passé. » ;
