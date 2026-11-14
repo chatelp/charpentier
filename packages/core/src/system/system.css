@@ -53,9 +53,11 @@
   box-shadow: var(--ch-lit);
 }
 
+/* The message takes what is left, and shortens first (ellipsis): the line never
+   overflows, the time and the battery are never cut. */
 .ch-sys-seg.is-message {
-  flex: 1 1 auto;
-  min-width: 19rem;
+  flex: 1 1 0;
+  min-width: 0;
   overflow: hidden;
 }
 
@@ -135,8 +137,8 @@
   color: var(--ch-faint);
 }
 
-/* Short of room, the gauges, the time left and the day go first, then the labels;
-   the message keeps its 19 rem. */
+/* Short of room, the message shortens; the gauges, the time left and the day go,
+   then the labels, then long names (network, key) shorten in turn. Values stay. */
 @container (max-width: 1400px) {
   .ch-sys-gauge {
     display: none;
@@ -156,6 +158,15 @@
   .ch-sys-word,
   .ch-sys-seg kbd {
     display: none;
+  }
+}
+
+@container (max-width: 960px) {
+  .ch-sys-seg.is-wifi .ch-sys-value,
+  .ch-sys-seg.is-usb .ch-sys-value {
+    max-width: 9ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 

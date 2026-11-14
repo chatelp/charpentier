@@ -140,6 +140,10 @@
 
 .ch-cmdzone-text {
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .ch-cmdzone.is-inline {
@@ -227,6 +231,22 @@
 }
 
 /* First launch: the welcome note and the guided tour. */
+/* Narrow window: no margin for it; the welcome sits in the column, between the opener and the text. */
+.ch-app[data-narrow] .ch-page:has(> .ch-welcome) {
+  display: flex;
+  flex-direction: column;
+}
+
+.ch-app[data-narrow] .ch-page:has(> .ch-welcome) > .ch-editor {
+  order: 1;
+}
+
+.ch-app[data-narrow] .ch-welcome {
+  position: static;
+  width: auto;
+  margin-bottom: var(--ch-space-7);
+}
+
 .ch-welcome-places {
   margin: 8px 0 4px;
   padding-left: 18px;
