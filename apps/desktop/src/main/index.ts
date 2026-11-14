@@ -60,6 +60,18 @@ if (process.env['CHARPENTIER_USER_DATA'])
 if (!app.requestSingleInstanceLock()) app.quit();
 
 /**
+ * The test mode (docs/PLAN.md phase 5.10 bis): with CHARPENTIER_TEST_PORT, the
+ * app opens Chromium's debugging port on this machine only (127.0.0.1), for
+ * the end-to-end tests run on the real X250 through SSH. Only the X250's
+ * development system sets it; the writing system never does.
+ */
+const testPort = process.env['CHARPENTIER_TEST_PORT'];
+if (testPort && /^\d{4,5}$/.test(testPort)) {
+  app.commandLine.appendSwitch('remote-debugging-port', testPort);
+  app.commandLine.appendSwitch('remote-debugging-address', '127.0.0.1');
+}
+
+/**
  * `--appliance` (docs/PLAN.md phase 5.2): the app is the whole screen of a
  * writing device (the X250): full screen, no frame, no menu bar.
  */

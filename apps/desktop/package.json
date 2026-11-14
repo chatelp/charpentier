@@ -11,6 +11,7 @@
     "build": "electron-vite build",
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.node.json",
     "test:e2e": "electron-vite build && vitest run --config e2e/vitest.config.ts",
+    "test:device": "vitest run --config e2e/device.config.ts",
     "package": "electron-vite build && electron-builder --mac --dir",
     "package:linux": "electron-vite build && electron-builder --linux tar.gz --x64"
   },
