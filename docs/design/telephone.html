@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Régler le X250 · Charpentier</title>
+    <style>
+      /*
+       * The page the X250 serves to the phone at its first start (PLAN 5.13, D-33, DESIGN §4.12).
+       * One self-contained file: no external resource, the phone's own fonts, its theme.
+       * In the mock, ?etat=formulaire|envoi|envoye|expire|erreur and ?theme=light|dark
+       * show each state; the app serves only the form and answers with the others.
+       */
+      :root {
+        color-scheme: light dark;
+        --bg: #e3e7ed;
+        --ink: #22262d;
+        --ink-2: #474d57;
+        --muted: #7a828e;
+        --faint: #a6adb8;
+        --hl: #ffffff;
+        --sh: #b3becc;
+        --mentor: #1f4f7c;
+        --author: #b2432a;
+        --lit: 0 9px 14px -7px rgb(255 255 255 / 0.75);
+        --lit-bg: color-mix(in srgb, var(--bg) 35%, #fff);
+        --raise-s: 3px 3px 7px var(--sh), -3px -3px 7px var(--hl);
+        --inset: inset 3px 3px 6px var(--sh), inset -3px -3px 6px var(--hl);
+        --serif: ui-serif, 'New York', 'Iowan Old Style', 'Noto Serif', Georgia, serif;
+        --sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        --mono: ui-monospace, 'SF Mono', Menlo, 'Roboto Mono', monospace;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme='light']) {
+          --bg: #1b1e23;
+          --ink: #dfe3ea;
+          --ink-2: #b9c0ca;
+          --muted: #8a929e;
+          --faint: #5d6470;
+          --hl: #262a31;
+          --sh: #101215;
+          --mentor: #86aedb;
+          --author: #e3876a;
+          --lit-bg: transparent;
+        }
+      }
+      :root[data-theme='dark'] {
+        color-scheme: dark;
+        --bg: #1b1e23;
+        --ink: #dfe3ea;
+        --ink-2: #b9c0ca;
+        --muted: #8a929e;
+        --faint: #5d6470;
+        --hl: #262a31;
+        --sh: #101215;
+        --mentor: #86aedb;
+        --author: #e3876a;
+        --lit-bg: transparent;
+      }
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+      html {
+        -webkit-text-size-adjust: 100%;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font: 400 16px/1.45 var(--sans);
+        -webkit-font-smoothing: antialiased;
+      }
+      main {
+        width: min(30rem, 100%);
+        margin: 0 auto;
+        padding: max(28px, env(safe-area-inset-top)) 18px max(32px, env(safe-area-inset-bottom));
+      }
+      .brand {
+        margin: 0;
+        color: var(--muted);
+        font: 500 12px var(--mono);
+        letter-spacing: 0.04em;
+      }
+      h1 {
+        margin: 6px 0 4px;
+        font: 500 30px/1.15 var(--serif);
+      }
+      .mentor {
+        margin: 0 0 22px;
+        color: var(--mentor);
+        font: italic 400 17px/1.45 var(--serif);
+      }
+      fieldset {
+        margin: 0 0 22px;
+        padding: 0;
+        border: 0;
+      }
+      legend {
+        display: flex;
+        width: 100%;
+        justify-content: space-between;
+        align-items: baseline;
+        margin: 0 0 8px;
+        padding: 0;
+        color: var(--ink);
+        font: 600 15px var(--sans);
+      }
+      legend small {
+        color: var(--muted);
+        font: 400 13px var(--sans);
+      }
+      label {
+        display: block;
+        margin: 10px 0 5px 4px;
+        color: var(--ink-2);
+        font-size: 14px;
+      }
+      /* What the author fills: sunk, like every field of the app. 16 px so that iOS does not zoom. */
+      input,
+      select {
+        width: 100%;
+        min-height: 48px;
+        padding: 12px 14px;
+        border: 0;
+        border-radius: 14px;
+        background: var(--bg);
+        box-shadow: var(--inset);
+        color: var(--ink);
+        font: 400 16px var(--sans);
+        outline: none;
+        appearance: none;
+      }
+      select {
+        background-image:
+          linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+          linear-gradient(-45deg, transparent 50%, var(--muted) 50%);
+        background-position:
+          calc(100% - 22px) 52%,
+          calc(100% - 16px) 52%;
+        background-size: 6px 6px;
+        background-repeat: no-repeat;
+      }
+      input:focus-visible,
+      select:focus-visible {
+        box-shadow: var(--inset), var(--lit);
+      }
+      input::placeholder {
+        color: var(--faint);
+      }
+      .pair {
+        position: relative;
+      }
+      .pair input {
+        padding-right: 92px;
+      }
+      .show {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        bottom: 6px;
+        padding: 0 12px;
+        border: 0;
+        border-radius: 10px;
+        background: var(--bg);
+        box-shadow: var(--raise-s);
+        color: var(--ink-2);
+        font: 500 13px var(--sans);
+      }
+      .help {
+        margin: 6px 4px 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.45;
+      }
+      .help b {
+        color: var(--ink-2);
+        font-weight: 600;
+      }
+      .wrong {
+        margin: 6px 4px 0;
+        color: var(--ink);
+        font-size: 13.5px;
+      }
+      .wrong::before {
+        content: 'à revoir';
+        margin-right: 8px;
+        padding: 1px 6px;
+        border-radius: 4px;
+        background: var(--ink);
+        color: var(--bg);
+        font: 500 11.5px var(--mono);
+      }
+      /* The author's action: raised, in the author's ink. */
+      .send {
+        display: block;
+        width: 100%;
+        min-height: 54px;
+        margin: 8px 0 0;
+        border: 0;
+        border-radius: 16px;
+        background: var(--bg);
+        box-shadow: var(--raise-s);
+        color: var(--author);
+        font: 600 17px var(--sans);
+      }
+      .send:active,
+      .send[aria-busy='true'] {
+        background: var(--lit-bg);
+        box-shadow: var(--lit);
+      }
+      .send[aria-busy='true'] {
+        color: var(--muted);
+      }
+      .foot {
+        margin: 16px 4px 0;
+        color: var(--muted);
+        font-size: 12.5px;
+        line-height: 1.5;
+        text-align: center;
+      }
+      /* After sending, or when the link has expired: one message, nothing else. */
+      .done {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        min-height: 70vh;
+      }
+      .done .mark {
+        width: 56px;
+        height: 56px;
+        margin: 0 0 18px;
+        border-radius: 50%;
+        box-shadow: var(--inset);
+        color: var(--author);
+        font: 400 28px/56px var(--sans);
+        text-align: center;
+      }
+      .done p {
+        margin: 0 0 12px;
+        color: var(--ink-2);
+        font-size: 16px;
+      }
+      .done .big {
+        color: var(--ink);
+        font: 500 26px/1.2 var(--serif);
+      }
+      [hidden] {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section id="form-view">
+        <p class="brand">CHARPENTIER · X250</p>
+        <h1>Régler le X250</h1>
+        <p class="mentor" id="mentor">
+          Remplissez ce qui est prêt ; laissez vide ce qui peut attendre.
+        </p>
+
+        <form id="form" method="post" action="/reglages" autocomplete="on">
+          <input type="hidden" name="t" value="" />
+          <fieldset>
+            <legend>Wi-Fi de la maison</legend>
+            <label for="ssid">Réseau</label>
+            <select id="ssid" name="ssid">
+              <option>Maison-5G</option>
+              <option>Maison-2G</option>
+              <option>Livebox-4A2C</option>
+              <option value="">Autre réseau…</option>
+            </select>
+            <p class="help">Les réseaux que le X250 voit, du plus fort au plus faible.</p>
+            <label for="wifi-pass">Mot de passe du Wi-Fi</label>
+            <div class="pair">
+              <input
+                id="wifi-pass"
+                name="wifi-password"
+                type="password"
+                autocomplete="off"
+                autocapitalize="off"
+                spellcheck="false"
+              />
+              <button type="button" class="show">Afficher</button>
+            </div>
+            <p class="wrong" id="wifi-wrong" hidden>Maison-5G a refusé ce mot de passe.</p>
+          </fieldset>
+
+          <fieldset id="sync-set">
+            <legend>Synchronisation</legend>
+            <label for="server">Adresse du serveur</label>
+            <input
+              id="server"
+              name="server"
+              type="url"
+              inputmode="url"
+              autocomplete="url"
+              value="https://charpentier.chatel.pm"
+              autocapitalize="off"
+              spellcheck="false"
+            />
+            <label for="email">E-mail du compte</label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              autocomplete="username"
+              autocapitalize="off"
+              spellcheck="false"
+            />
+            <label for="password">Mot de passe du compte</label>
+            <div class="pair">
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autocomplete="current-password"
+              />
+              <button type="button" class="show">Afficher</button>
+            </div>
+            <p class="help">
+              Ce réseau est celui du X250 : votre gestionnaire ne proposera peut-être pas le compte
+              de lui-même. Touchez la
+              <b>clé</b> au-dessus du clavier et cherchez « charpentier ».
+            </p>
+          </fieldset>
+
+          <fieldset id="mentor-set">
+            <legend>Le Compagnon <small>facultatif</small></legend>
+            <label for="key">Clé d’API Anthropic</label>
+            <div class="pair">
+              <input
+                id="key"
+                name="anthropic-key"
+                type="password"
+                autocomplete="off"
+                autocapitalize="off"
+                spellcheck="false"
+                placeholder="sk-ant-…"
+              />
+              <button type="button" class="show">Afficher</button>
+            </div>
+            <p class="help">
+              Sans clé, vous écrivez ; le Compagnon attendra qu’elle soit dans les réglages.
+            </p>
+          </fieldset>
+
+          <button class="send" id="send" type="submit">Envoyer au X250</button>
+          <p class="foot">
+            Cette page n’existe que sur le réseau du X250 et ne sert qu’une fois. Rien ne passe par
+            internet.
+          </p>
+        </form>
+      </section>
+
+      <section id="sent-view" class="done" hidden>
+        <div class="mark" aria-hidden="true">✓</div>
+        <p class="big">Le X250 a vos réglages.</p>
+        <p>Il ferme son réseau et rejoint le vôtre ; la suite se passe sur son écran.</p>
+        <p>Vous pouvez fermer cette page.</p>
+      </section>
+
+      <section id="expired-view" class="done" hidden>
+        <div class="mark" aria-hidden="true">↺</div>
+        <p class="big">Cette page a expiré.</p>
+        <p>
+          Elle ne sert qu’une fois, et quelques minutes. Visez le code affiché sur l’écran du X250 :
+          il en ouvre une nouvelle.
+        </p>
+      </section>
+    </main>
+    <script>
+      // The mock's states; the page served by the app needs none of this but « Afficher ».
+      const q = new URLSearchParams(location.search);
+      if (q.get('theme')) document.documentElement.dataset.theme = q.get('theme');
+      const etat = q.get('etat') || 'formulaire';
+      const $ = (id) => document.getElementById(id);
+      if (etat === 'envoye') (($('form-view').hidden = true), ($('sent-view').hidden = false));
+      if (etat === 'expire') (($('form-view').hidden = true), ($('expired-view').hidden = false));
+      if (etat === 'envoi' || etat === 'erreur') {
+        $('wifi-pass').value = 'motdepasse';
+        $('email').value = 'auteur@exemple.fr';
+        $('password').value = 'motdepasse';
+      }
+      if (etat === 'envoi')
+        (($('send').textContent = 'Envoi au X250…'), $('send').setAttribute('aria-busy', 'true'));
+      // Back from a refused Wi-Fi: only what failed comes back; the rest stays on the X250.
+      if (etat === 'erreur') {
+        $('wifi-wrong').hidden = false;
+        $('sync-set').hidden = $('mentor-set').hidden = true;
+        $('mentor').textContent = 'Seul le Wi-Fi est à revoir ; le X250 garde le reste.';
+        $('wifi-pass').value = '';
+      }
+      for (const b of document.querySelectorAll('.show'))
+        b.addEventListener('click', () => {
+          const input = b.previousElementSibling;
+          const shown = input.type === 'text';
+          input.type = shown ? 'password' : 'text';
+          b.textContent = shown ? 'Afficher' : 'Masquer';
+        });
+    </script>
+  </body>
+</html>

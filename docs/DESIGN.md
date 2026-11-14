@@ -1,6 +1,6 @@
 # Charpentier : design language
 
-- **Version** : 1.11 (13 novembre 2026). 1.11 : l'**installation du X250** depuis la clé USB et `scripts/flash-installer.sh` sur le Mac (§4.12 « Installation »). 1.10 : les **mises à jour du X250**, tirées du serveur [D-28] : segment `maj`, `⊞R`, « À propos », retour à la version précédente (§4.12). 1.9 : l'**Entretien** avec le Compagnon en tête du rail de l'Atelier [D-26] (§4.5) ; « Méta » devient « Le projet ». 1.8 : **le creux garde, la lumière suit** : deux signes, deux sens, jamais sur le même élément (§1 principe 3, §4.7) ; la lumière devient la lueur blanche qui déborde sous la ligne système quand un segment s'ouvre (sur la page claire, l'élément pâlit en plus), les onglets perdent leur rail, une option choisie est une touche restée enfoncée, l'appui allume. Remplace le « relief, creux, allumé » de la 1.7 (cerne et halo de lumière, creux le temps de l'appui, « relief allumé »), où l'auteur ne voyait pas de vraie logique de séparation ; le « liseré de lumière » de la 1.5 reste abandonné. 1.6 : le moniteur du X250 (§4.12). 1.5 : la **ligne système** du X250 et tout ce qu'elle ouvre (§4.12), la matière du système (§3.1), la police à chasse fixe (§3.2), le **liseré de lumière** sur ce qu'on presse (§4.7). 1.4 : en thème sombre, l'ardoise reste la même et la page s'assombrit (§3.1). 1.3 : les outils changent de matière, **ardoise sombre**, et reçoivent des **outils gravés** (§3.1, §4.11), l'auteur trouvant l'ensemble trop neutre hors de la page d'écriture. 1.2 : finitions (sons §3.4, rejets §4.5, restauration dans la vue d'ensemble §4.4, note en fenêtre étroite §4.2, bibliothèque §4.9, icône §4.10). 1.1 : tout devient découvrable sans raccourci (§4.8, §5.1), après essai de l'app par l'auteur ; inventaire et directions comparées dans [design/decouverte.md](design/decouverte.md).
+- **Version** : 1.12 (14 novembre 2026). 1.12 : le **premier démarrage du X250 depuis le téléphone** [D-33] : choix téléphone ou clavier, deux codes QR, réglages appliqués ligne à ligne, page du téléphone (§4.12 « Premier démarrage de l'appareil ») ; les petits écrans, jusqu'à 880 px sans défilement de côté (§4.2, §4.12 « Largeur », §5.4). 1.11 : l'**installation du X250** depuis la clé USB et `scripts/flash-installer.sh` sur le Mac (§4.12 « Installation »). 1.10 : les **mises à jour du X250**, tirées du serveur [D-28] : segment `maj`, `⊞R`, « À propos », retour à la version précédente (§4.12). 1.9 : l'**Entretien** avec le Compagnon en tête du rail de l'Atelier [D-26] (§4.5) ; « Méta » devient « Le projet ». 1.8 : **le creux garde, la lumière suit** : deux signes, deux sens, jamais sur le même élément (§1 principe 3, §4.7) ; la lumière devient la lueur blanche qui déborde sous la ligne système quand un segment s'ouvre (sur la page claire, l'élément pâlit en plus), les onglets perdent leur rail, une option choisie est une touche restée enfoncée, l'appui allume. Remplace le « relief, creux, allumé » de la 1.7 (cerne et halo de lumière, creux le temps de l'appui, « relief allumé »), où l'auteur ne voyait pas de vraie logique de séparation ; le « liseré de lumière » de la 1.5 reste abandonné. 1.6 : le moniteur du X250 (§4.12). 1.5 : la **ligne système** du X250 et tout ce qu'elle ouvre (§4.12), la matière du système (§3.1), la police à chasse fixe (§3.2), le **liseré de lumière** sur ce qu'on presse (§4.7). 1.4 : en thème sombre, l'ardoise reste la même et la page s'assombrit (§3.1). 1.3 : les outils changent de matière, **ardoise sombre**, et reçoivent des **outils gravés** (§3.1, §4.11), l'auteur trouvant l'ensemble trop neutre hors de la page d'écriture. 1.2 : finitions (sons §3.4, rejets §4.5, restauration dans la vue d'ensemble §4.4, note en fenêtre étroite §4.2, bibliothèque §4.9, icône §4.10). 1.1 : tout devient découvrable sans raccourci (§4.8, §5.1), après essai de l'app par l'auteur ; inventaire et directions comparées dans [design/decouverte.md](design/decouverte.md).
 - **Direction retenue** : **Perle** pour la page, **ardoise** pour les outils, avec **Deux encres**, **Signature** et **Outils gravés** ; manuscrit en **tiroir + vue d'ensemble** ; points d'entrée en **poignées** sur les bords et **zone de commande** en pied.
 - **Sources** : brief de l'auteur ([design/brief.md](design/brief.md)), maquettes ([design/mockups/](design/mockups/), ouvrir `index.html`), tokens CSS proposés ([design/tokens.css](design/tokens.css)).
 - Complète la [SPEC](SPEC.md) (§6 mentor, §7.1 statuts, §19 exigences transverses) sans la contredire.
@@ -286,7 +286,7 @@ Du dessin plutôt que de la couleur : chaque lieu devient reconnaissable. Maquet
 - Un pictogramme n'est jamais seul : toujours à côté de son libellé. Aucune autre illustration, aucune texture.
 
 ### 4.12 Système (X250)
-Sur le X250, l'app est la partie visible du système [D-24]. Maquette : cadre « X250 », groupes « X250 · ligne système » et « X250 · mise à jour », écrans « X250 · Réglages », « Verrou », « Démarrage » ; l'installation a sa propre maquette, [design/installation.html](design/installation.html) ; rendus à la taille réelle dans [design/x250/](design/x250/). Rien de tout cela n'apparaît sur le Mac ni sur le web.
+Sur le X250, l'app est la partie visible du système [D-24]. Maquette : cadre « X250 », groupes « X250 · ligne système » et « X250 · mise à jour », écrans « X250 · Réglages », « Verrou », « Démarrage » ; l'installation et le premier démarrage ont leurs propres maquettes, [design/installation.html](design/installation.html) et [design/premier-demarrage.html](design/premier-demarrage.html) ; rendus à la taille réelle dans [design/x250/](design/x250/). Rien de tout cela n'apparaît sur le Mac ni sur le web.
 
 **La ligne système.** Toujours affichée, 30 px, tout en haut, pleine largeur, dans la matière du système, en JetBrains Mono 11,5 px. Elle ne s'efface pas pendant la frappe et rien n'y bouge de soi-même, sauf l'heure et, hors frappe, la mini-courbe du segment `cpu`. De gauche à droite :
 
@@ -461,9 +461,89 @@ Sur le X250, l'app est la partie visible du système [D-24]. Maquette : cadre «
     - **Pas d'image** : « pas d'image d'installation · construisez-la d'abord : », suivi de la commande.
     - **Clé retirée pendant l'écriture** : inversé « la clé a été retirée pendant l'écriture », puis « rebranchez-la et relancez : elle sera réécrite en entier ».
 
-**Premier démarrage de l'appareil.** Avant la note de bienvenue (§4.8), une page centrée : « Bienvenue », le fleuron, la phrase du Compagnon en italique bleu (« Avant d'écrire, quatre réglages. Chacun peut attendre. »), puis quatre étapes, chacune avec « Continuer `⏎` » et « Plus tard `Échap` » : `1 wifi` (réseaux, mot de passe), `2 code` (choisir le code de verrouillage, ou « Sans code »), `3 synchronisation` (adresse du serveur, identifiant), `4 compagnon` (clé d'API). Ce qui est remis à plus tard reste accessible par la ligne système et les réglages.
+**Premier démarrage de l'appareil.** Avant la note de bienvenue (§4.8), une page centrée sur la perle : « Bienvenue », le fleuron, une phrase du Compagnon en italique bleu, puis le choix entre le téléphone et le clavier [5.13, D-33]. Maquette : [design/premier-demarrage.html](design/premier-demarrage.html), dessinée avec les vraies feuilles de style de l'app ; page du téléphone : [design/telephone.html](design/telephone.html). Rendus : [design/x250/](design/x250/), 19 à 25 pour le X250 et 26 pour le téléphone.
+- **Le choix.** Phrase : « Avant d'écrire, quelques réglages. Le plus simple : depuis votre téléphone. »
+  - Deux cartes en relief côte à côte, 40 rem en tout :
+    - « Depuis votre téléphone », étiquette « recommandé » en bleu, allumée d'office, `⏎` ;
+    - « Au clavier », « Quatre étapes ici, l'une après l'autre : Wi-Fi, code, synchronisation, Compagnon. », `Échap`.
+  - `←` `→` changent de carte et `⏎` choisit. Dessous, en chasse fixe pâle : « ← → choisir · ⏎ continuer ».
+  - **Aucun Wi-Fi possible** (carte absente ou bloquée, point d'accès refusé) : la première carte est éteinte, sans relief, étiquetée « indisponible », sa raison en une phrase (« Ce X250 ne peut pas ouvrir de réseau pour le téléphone : sa carte Wi-Fi ne répond pas. »). La seconde carte est allumée.
+- **Au clavier** : les quatre étapes d'origine, inchangées. Phrase : « Avant d'écrire, quatre réglages. Chacun peut attendre. » Puis `1 wifi` (réseaux, mot de passe), `2 code` (choisir le code de verrouillage, ou « Sans code »), `3 synchronisation` (adresse du serveur, identifiant), `4 compagnon` (clé d'API). Chaque étape a « Continuer `⏎` » et « Plus tard `Échap` ». Ce qui est remis à plus tard reste accessible par la ligne système et les réglages. Pendant le parcours du téléphone, « Au clavier `Échap` » y ramène à tout moment et ferme le réseau temporaire.
+- **Depuis le téléphone** : trois étapes dans la même rangée d'étiquettes que celles du clavier, `1 rejoindre`, `2 remplir`, `3 appliquer`, celle en cours allumée.
+  - Phrase : « Tout se règle depuis votre téléphone. »
+  - Sous la rangée, 44 rem :
+    - à gauche, le code QR dans une carte en relief ;
+    - à droite, ce qu'il faut faire en une phrase ;
+    - puis, en creux et en chasse fixe, « sans appareil photo » et les mêmes informations en clair ;
+    - puis une ligne d'état en gris (« en attente d'un téléphone… ») ;
+    - un seul bouton : « Au clavier `Échap` ».
+  - **Code QR** : 196 px, toujours encre `#14161a` sur un carré `#f4f6f9` avec sa marge, dans les deux thèmes, parce qu'un appareil photo lit mal un code inversé.
+  - **`1 rejoindre`** :
+    - QR `WIFI:T:WPA;S:charpentier-xxxx;P:…;;` ;
+    - phrase : « Ouvrez l'appareil photo du téléphone et visez ce code : il rejoint le réseau du X250. » ;
+    - en clair : `réseau charpentier-7f3k` (quatre caractères au hasard) et `mot de passe tilleul-cadran-47`. Le mot de passe est formé de **deux mots lisibles et deux chiffres**, choix de l'auteur : des mots d'une liste française courte, sans accent ni mot qu'on confond, tirés à nouveau à chaque ouverture du réseau. Il se recopie sans peine sur un téléphone et suffit pour un réseau qui ne vit que quelques minutes.
+  - **`2 remplir`** :
+    - dès qu'un téléphone a rejoint le réseau, le code devient le QR `http://10.42.0.1:8080/?t=<jeton>` ;
+    - phrase : « Le téléphone a rejoint le réseau. Visez ce second code : il ouvre la page des réglages. » ;
+    - en clair : `adresse 10.42.0.1:8080` et `code 482 913`. Ces six chiffres sont ce que la page demande quand on l'ouvre sans le jeton ;
+    - conseil, sous le cadre : « Si le téléphone propose de quitter ce réseau « sans internet », restez-y : la page est ici. » ;
+    - une fois la page ouverte sur le téléphone : le code pâlit (18 %), la phrase devient « La page est ouverte sur le téléphone. Remplissez-la, puis touchez « Envoyer au X250 ». », l'état « page ouverte · en attente des réglages… ».
+  - **`3 appliquer`** : dès l'envoi, le X250 ferme son réseau temporaire.
+    - Phrase : « Réglages reçus. Le X250 s'en occupe. »
+    - Une liste en creux, en chasse fixe, une ligne par réglage : son nom en gris, sa valeur, son état à droite. La valeur est le réseau, le serveur ou la clé abrégée `sk-ant-…4f2a`, jamais un mot de passe.
+    - Les lignes, dans l'ordre : `réseau temporaire` (`fermé`), `wifi de la maison` (`connecté`), `synchronisation` (`3 romans`), `compagnon` (`vérifiée`). Un réglage laissé vide sur le téléphone n'a pas de ligne : il est remis à plus tard.
+    - États :
+      - `à venir` en pâle ;
+      - la ligne en cours allumée, `en cours…` ;
+      - fait, en encre ;
+      - échec **inversé**, comme une alerte de la ligne système (`refusé`), sa raison en une phrase dessous.
+    - Sous la liste : « Rien à faire : chaque ligne s'applique à son tour. »
+  - **Code de verrouillage**, choix de l'auteur : jamais sur le téléphone. Ensuite sur le X250, l'étape `code` du clavier, avec la phrase « Un dernier réglage, sur ce clavier : le code qui le verrouille. » et « Vous le taperez ici chaque jour ; choisissez-le avec ces touches. ». Restent « Sans code » et « Plus tard ».
+  - **Fin** :
+    - « Tout est prêt. », ou « Presque tout est prêt. » s'il reste un échec ;
+    - la liste entière, avec la ligne `verrouillage` ;
+    - un seul bouton, « Écrire `⏎` », à l'encre de l'auteur. Il ouvre le roman venu de la synchronisation, ou un nouveau roman (§4.8) ;
+    - un échec reste inversé, avec sa raison et « Vous la changerez dans les réglages, quand vous voudrez. ».
+  - **Ligne système pendant le parcours** : segment `wifi` à `temporaire` tant que le réseau du X250 est ouvert. Messages dans la voix du système : « réseau temporaire ouvert · charpentier-7f3k », « un téléphone a rejoint le réseau », « page ouverte sur le téléphone », puis l'étape en cours (« synchronisation · connexion à charpentier.chatel.pm »).
+- **Cas** :
+  - **Wi-Fi de la maison refusé ou introuvable** :
+    - phrase « Un réglage n'est pas passé. » ;
+    - `synchronisation` et `compagnon` passent à `attend le wifi` ;
+    - « Corriger depuis le téléphone `⏎` » rouvre le réseau temporaire, avec un nouveau mot de passe, et revient à `1 rejoindre`. La nouvelle page ne montre que le Wi-Fi, marqué « à revoir » ; le X250 garde le reste ;
+    - « Taper le mot de passe ici `Échap` » mène à l'étape `1 wifi` du clavier, réseau déjà choisi.
+  - **Synchronisation ou clé refusée** : rien ne s'arrête ; la fin le montre.
+  - **Téléphone parti avant d'envoyer** (il a quitté le réseau temporaire) : retour à `1 rejoindre` et au premier code. L'état devient une phrase en encre : « Le téléphone a quitté le réseau avant d'envoyer. Visez à nouveau ce code. »
+  - **Jeton expiré** (10 minutes sans envoi) **ou déjà servi** : le X250 tire sans rien demander un nouveau jeton, un nouveau code QR et de nouveaux six chiffres. L'état : « Le code précédent a expiré : en voici un nouveau. La page déjà ouverte ne peut plus envoyer. » La page ouverte sur le téléphone répond « Cette page a expiré. » quand on envoie.
+- **La page du téléphone** :
+  - **Fichier** : un seul fichier HTML autonome, sans ressource externe ni police embarquée. Le titre et la phrase du Compagnon sont dans le serif du téléphone (`ui-serif`), le reste dans `system-ui`.
+  - **Matière** : la perle, valeurs de §3.1, claire ou sombre selon le téléphone (`prefers-color-scheme`).
+  - **Champs** : en creux, 48 px de haut, texte de 16 px (iOS ne zoome pas).
+  - **Bouton d'envoi** : en relief, à l'encre de l'auteur, sur toute la largeur.
+  - **Mise en page** : colonne de 30 rem au plus, marges de 18 px et zones sûres.
+  - **En tête**, de haut en bas : « CHARPENTIER · X250 » en chasse fixe grise, le titre « Régler le X250 », la phrase du Compagnon « Remplissez ce qui est prêt ; laissez vide ce qui peut attendre. ».
+  - **Wi-Fi de la maison** :
+    - « Réseau » : la liste des réseaux que le X250 a vus avant d'ouvrir le sien, du plus fort au plus faible. « Autre réseau… » ouvre un champ texte ;
+    - « Mot de passe du Wi-Fi » : `type=password`, `autocomplete="off"`, bouton « Afficher ».
+  - **Synchronisation** :
+    - « Adresse du serveur » : `type=url`, `autocomplete="url"`, préremplie `https://charpentier.chatel.pm` ;
+    - « E-mail du compte » : `type=email`, `autocomplete="username"` ;
+    - « Mot de passe du compte » : `autocomplete="current-password"`, « Afficher » ;
+    - aide sous le groupe : la page est servie par 10.42.0.1, le gestionnaire de mots de passe ne propose donc pas de lui-même le compte enregistré pour le serveur. « Touchez la **clé** au-dessus du clavier et cherchez « charpentier ». »
+  - **Le Compagnon**, « facultatif » à droite du titre du groupe :
+    - « Clé d'API Anthropic » : `type=password`, `autocomplete="off"`, « sk-ant-… » ;
+    - aide : « Sans clé, vous écrivez ; le Compagnon attendra qu'elle soit dans les réglages. »
+  - **Jamais `autocomplete="new-password"`** : le téléphone proposerait d'inventer un mot de passe.
+  - **Envoi** :
+    - le bouton « Envoyer au X250 » ; pendant l'envoi, « Envoi au X250… », allumé et gris ;
+    - pied : « Cette page n'existe que sur le réseau du X250 et ne sert qu'une fois. Rien ne passe par internet. »
+  - **Réponses** :
+    - envoyé : « ✓ » en creux à l'encre de l'auteur, « Le X250 a vos réglages. », « Il ferme son réseau et rejoint le vôtre ; la suite se passe sur son écran. », « Vous pouvez fermer cette page. » ;
+    - expiré : « ↺ », « Cette page a expiré. », « Elle ne sert qu'une fois, et quelques minutes. Visez le code affiché sur l'écran du X250 : il en ouvre une nouvelle. » ;
+    - retour après un Wi-Fi refusé : seul le groupe Wi-Fi, la phrase « Seul le Wi-Fi est à revoir ; le X250 garde le reste. », et sous le mot de passe la marque inversée « à revoir » suivie de « Maison-5G a refusé ce mot de passe. » ;
+    - saisie mal formée (une adresse de serveur, par exemple) : la même marque sous le champ, rien n'est envoyé ;
+    - page ouverte sans jeton (adresse tapée à la main) : avant le formulaire, un seul champ, « Code affiché sur le X250 » (six chiffres, `inputmode=numeric`).
 
-**Hors périmètre** : portail captif (v1), duplication d'écran et bureau étendu, imprimantes USB anciennes (seules les imprimantes du réseau sans pilote sont prises en charge), toute mise à jour décidée ou construite sur l'appareil (il reçoit, annonce et installe au redémarrage ce que le Mac a publié, rien de plus), choix d'une version autre que l'installée et la précédente, installation à côté d'un autre système (double démarrage), choix des partitions, installation par le réseau. Le terminal de secours reste une combinaison de touches sans interface.
+**Hors périmètre** : portail captif (v1), y compris pour le premier démarrage (deux codes à viser plutôt qu'un), duplication d'écran et bureau étendu, imprimantes USB anciennes (seules les imprimantes du réseau sans pilote sont prises en charge), toute mise à jour décidée ou construite sur l'appareil (il reçoit, annonce et installe au redémarrage ce que le Mac a publié, rien de plus), choix d'une version autre que l'installée et la précédente, installation à côté d'un autre système (double démarrage), choix des partitions, installation par le réseau. Le terminal de secours reste une combinaison de touches sans interface.
 
 ## 5. Règles d'UX
 
