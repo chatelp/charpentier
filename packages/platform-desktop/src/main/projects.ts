@@ -33,15 +33,17 @@ export function folderName(title: string): string {
 }
 
 /** Atomic JSON write: temporary file, fsync, rename. */
-export function writeJsonAtomic(file: string, value: unknown): void {
+export function writeJsonAtomic(file: string, value: unknown, mode?: number): void {
   const temporary = `${file}.tmp`;
-  const fd = fs.openSync(temporary, 'w');
+  const fd = fs.openSync(temporary, 'w', mode);
   try {
     fs.writeSync(fd, `${JSON.stringify(value, null, 2)}\n`);
     fs.fsyncSync(fd);
   } finally {
     fs.closeSync(fd);
   }
+  // The mode of a new file goes through the umask: set it for sure.
+  if (mode !== undefined) fs.chmodSync(temporary, mode);
   fs.renameSync(temporary, file);
 }
 

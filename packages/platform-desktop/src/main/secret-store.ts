@@ -9,6 +9,9 @@ export interface Encryption {
   decryptString(encrypted: Buffer): string;
 }
 
+/** Readable by its owner only: on the X250 the secrets are encrypted by the disk alone (D-25). */
+const OWNER_ONLY = 0o600;
+
 /**
  * Secrets (the BYOK API key) encrypted with the OS keychain's key
  * (safeStorage: Keychain on macOS) in a file of the app's data folder.
@@ -43,7 +46,7 @@ export class SecretStore {
     const all = this.#read();
     all[key] = this.encryption.encryptString(value).toString('base64');
     fs.mkdirSync(path.dirname(this.file), { recursive: true });
-    writeJsonAtomic(this.file, all);
+    writeJsonAtomic(this.file, all, OWNER_ONLY);
     return true;
   }
 
@@ -51,6 +54,6 @@ export class SecretStore {
     const all = this.#read();
     if (!(key in all)) return;
     const rest = Object.fromEntries(Object.entries(all).filter(([k]) => k !== key));
-    writeJsonAtomic(this.file, rest);
+    writeJsonAtomic(this.file, rest, OWNER_ONLY);
   }
 }
