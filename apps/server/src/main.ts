@@ -5,7 +5,8 @@ import { createSyncServer } from './sync-server';
 
 /**
  * Entry point of the server's Docker image: Postgres from DATABASE_URL, port
- * from PORT. With a command (`create-user`, `reset-password`), runs it and exits.
+ * from PORT, the X250's binary cache in CACHE_DIR. With a command
+ * (`create-user`, `reset-password`, `create-ci-token`, `revoke-ci-token`), runs it and exits.
  */
 const databaseUrl = process.env['DATABASE_URL'];
 if (!databaseUrl) {
@@ -27,6 +28,7 @@ if (command) {
 }
 
 const port = Number(process.env['PORT'] ?? 8080);
-const server = createSyncServer({ db, port, address: '0.0.0.0' });
+const cacheDir = process.env['CACHE_DIR'] ?? '/data/nix-cache';
+const server = createSyncServer({ db, port, address: '0.0.0.0', cacheDir });
 await server.listen();
 console.log(`Charpentier sync server listening on port ${port}.`);

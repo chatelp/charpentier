@@ -37,6 +37,22 @@ Dans l'app : ligne de commande (⌘K), « Se connecter à un serveur de synchro�
 
 À côté de la synchro (WebSocket à la racine) : `POST /api/login`, `POST /api/logout`, `GET /api/devices`, `DELETE /api/devices/<id>`, `GET /api/health`.
 
+## Versions du X250 (D-31, phase 5.11)
+
+Le serveur garde aussi le cache binaire Nix des versions du X250 et le pointeur « dernière version » :
+
+- `https://charpentier.chatel.pm/nix-cache/` : cache HTTP de Nix, fichiers dans le volume `charpentier_cache` (non sauvegardé : la CI le reconstruit). Lecture (GET, HEAD) par la CI ou un appareil du compte, écriture (PUT) par la CI seulement. Le jeton s'envoie en mot de passe HTTP Basic (login libre, ce que fait Nix avec un fichier netrc) ou en Bearer.
+- `GET /api/updates/latest` (appareil ou CI) et `PUT /api/updates/latest` (CI) : `{ version, notes, systems: { azerty, bepo, qwerty }, publishedAt }`. Le serveur refuse une version dont un système n'est pas déjà dans le cache.
+
+Le jeton de la CI se crée sur la machine et ne s'affiche qu'une fois ; il va dans les secrets GitHub de `chatelp/charpentier-os` (`CHARPENTIER_CACHE_TOKEN`). Recréer un jeton du même nom révoque l'ancien.
+
+```bash
+ssh -t prodesk2021.local 'cd ~/Docker/charpentier && docker compose exec server node main.js create-ci-token github-actions'
+ssh -t prodesk2021.local 'cd ~/Docker/charpentier && docker compose exec server node main.js revoke-ci-token github-actions'
+```
+
+À surveiller au premier envoi : un fichier du cache peut peser plusieurs centaines de Mo. Si Traefik coupe les envois longs (délai de lecture du point d'entrée, 60 s par défaut en v3), allonger `respondingTimeouts.readTimeout` de `websecure`. Le nettoyage des anciennes versions n'est pas encore fait : surveiller la place du volume.
+
 ## Restaurer une sauvegarde
 
 Une archive contient le volume sous `/backup/db` (vérifié le 13 novembre 2026 ; la restauration elle-même n'a pas encore été essayée).

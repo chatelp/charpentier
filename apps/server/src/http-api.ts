@@ -42,7 +42,7 @@ export class LoginLimiter {
   }
 }
 
-function send(response: ServerResponse, status: number, body?: unknown) {
+export function send(response: ServerResponse, status: number, body?: unknown) {
   response.writeHead(status, {
     'Content-Type': 'application/json; charset=utf-8',
     'Cache-Control': 'no-store',
@@ -50,13 +50,16 @@ function send(response: ServerResponse, status: number, body?: unknown) {
   response.end(body === undefined ? '' : JSON.stringify(body));
 }
 
-function readJson(request: IncomingMessage): Promise<Record<string, unknown> | null> {
+export function readJson(
+  request: IncomingMessage,
+  max = MAX_BODY,
+): Promise<Record<string, unknown> | null> {
   return new Promise((resolve) => {
     let size = 0;
     const chunks: Buffer[] = [];
     request.on('data', (chunk: Buffer) => {
       size += chunk.length;
-      if (size > MAX_BODY) request.destroy();
+      if (size > max) request.destroy();
       else chunks.push(chunk);
     });
     request.on('end', () => {
@@ -70,10 +73,12 @@ function readJson(request: IncomingMessage): Promise<Record<string, unknown> | n
       }
     });
     request.on('error', () => resolve(null));
+    // Destroyed for its size: no `end`, only `close`.
+    request.on('close', () => resolve(null));
   });
 }
 
-const bearer = (request: IncomingMessage) =>
+export const bearer = (request: IncomingMessage) =>
   /^Bearer (\S+)$/.exec(request.headers.authorization ?? '')?.[1] ?? '';
 
 /**

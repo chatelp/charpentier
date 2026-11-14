@@ -9,6 +9,9 @@ services:
     restart: unless-stopped
     environment:
       DATABASE_URL: postgres://charpentier:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@db:5432/charpentier
+    # The X250's binary cache (D-31): rebuilt by the CI if lost, so not backed up.
+    volumes:
+      - cache:/data/nix-cache
     depends_on:
       db:
         condition: service_healthy
@@ -53,6 +56,7 @@ services:
 
 volumes:
   db:
+  cache:
 
 networks:
   proxy:

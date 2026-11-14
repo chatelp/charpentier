@@ -1,4 +1,5 @@
 import { createUser, MIN_PASSWORD_LENGTH, resetPassword } from './accounts';
+import { createCiToken, isCiTokenName, revokeCiToken } from './ci-tokens';
 import type { Database } from './database';
 
 /**
@@ -6,10 +7,17 @@ import type { Database } from './database';
  *
  *   node main.js create-user <email>
  *   node main.js reset-password <email>
+ *   node main.js create-ci-token <name>    the CI's token for the X250's versions (D-31), shown once
+ *   node main.js revoke-ci-token <name>
  *
  * The password is typed without echo (or read from standard input when piped).
  */
-export const COMMANDS = ['create-user', 'reset-password'] as const;
+export const COMMANDS = [
+  'create-user',
+  'reset-password',
+  'create-ci-token',
+  'revoke-ci-token',
+] as const;
 
 function readPassword(prompt: string): Promise<string> {
   const input = process.stdin;
@@ -52,6 +60,21 @@ export async function runCommand(
   command: (typeof COMMANDS)[number],
   email: string | undefined,
 ): Promise<number> {
+  if (command === 'create-ci-token' || command === 'revoke-ci-token') {
+    const name = email ?? '';
+    if (!isCiTokenName(name)) {
+      console.error(`Usage: node main.js ${command} <name>   (letters, digits, - and _)`);
+      return 2;
+    }
+    if (command === 'create-ci-token') {
+      const token = await createCiToken(db, name);
+      console.log(`CI token « ${name} » (shown once, any earlier one revoked):\n${token}`);
+      return 0;
+    }
+    const revoked = await revokeCiToken(db, name);
+    console.log(revoked ? `CI token « ${name} » revoked.` : `No live CI token « ${name} ».`);
+    return revoked ? 0 : 1;
+  }
   if (!email || !email.includes('@')) {
     console.error(`Usage: node main.js ${command} <email>`);
     return 2;

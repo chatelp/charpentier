@@ -44,6 +44,26 @@ export async function migrate(db: Database): Promise<void> {
       created_at timestamptz not null default now()
     )
   `);
+  // The X250's versions (D-31): the CI's tokens, and every version published.
+  await db.query(`
+    create table if not exists ci_tokens (
+      id uuid primary key,
+      name text not null,
+      token_hash text not null unique,
+      created_at timestamptz not null default now(),
+      last_used_at timestamptz,
+      revoked_at timestamptz
+    )
+  `);
+  await db.query(`
+    create table if not exists updates (
+      id bigserial primary key,
+      version text not null,
+      notes text not null default '',
+      systems jsonb not null,
+      published_at timestamptz not null default now()
+    )
+  `);
 }
 
 /** A document's whole Yjs state, as stored by the last save, or null if it is new. */

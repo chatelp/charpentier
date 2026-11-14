@@ -4,11 +4,15 @@ import { claimProject, sessionFor } from './accounts';
 import { loadDocument, storeDocument, type Database } from './database';
 import { documentOwner } from './document-names';
 import { handleApi, LoginLimiter } from './http-api';
+import { handleCache } from './nix-cache';
+import { handleUpdates } from './updates';
 
 export interface SyncServerOptions {
   readonly db: Database;
   readonly port?: number;
   readonly address?: string;
+  /** Where the X250's binary cache keeps its files (D-31); without it, no cache. */
+  readonly cacheDir?: string | null;
 }
 
 /** What a connection is, once its token has been checked. */
@@ -26,6 +30,7 @@ export interface ConnectionContext {
  */
 export function createSyncServer(options: SyncServerOptions): Server<ConnectionContext> {
   const { db } = options;
+  const cacheDir = options.cacheDir ?? null;
   const limiter = new LoginLimiter();
   return new Server<ConnectionContext>({
     ...(options.port !== undefined && { port: options.port }),
@@ -54,7 +59,12 @@ export function createSyncServer(options: SyncServerOptions): Server<ConnectionC
     },
     async onRequest({ request, response }) {
       // The API answers, then the rejection (without an error) stops Hocuspocus's own answer.
-      if (await handleApi(db, limiter, request, response)) return Promise.reject();
+      if (
+        (await handleCache(db, cacheDir, request, response)) ||
+        (await handleUpdates(db, cacheDir, request, response)) ||
+        (await handleApi(db, limiter, request, response))
+      )
+        return Promise.reject();
     },
   });
 }
