@@ -160,7 +160,7 @@ Attaques et chutes en rampes exponentielles depuis et vers 0,0001. Réglages : �
 - **Pastille** : cercle de 14 px en relief (`--ch-raise-s`) au cœur bleu de Prusse de 6 px, à 1,5 rem du texte, alignée sur la première ligne du paragraphe. Opacité selon l'importance : 0,42 (langue, encouragement), 0,72 (métier, indice), 1 (conflit avec une information validée).
 - **Note** : carte en relief de 18,5 rem à droite de la pastille. Contenu : type en petites capitales bleues + « Le Compagnon » en italique ; titre (Literata 16 px) ; message (Inter 13 px) ; « pourquoi » en italique `--ch-muted` sous un filet ; actions en boutons avec leur touche (`1`, `2`, `3` ou `⏎`, `I`, `Échap`).
 - **Ancrage** : le passage visé reçoit un lavis `--ch-mentor-soft` et un soulignement bleu 1,5 px, seulement quand la note est dépliée (décoration ProseMirror, aucune marque dans le contenu). Typographie et orthographe : soulignement ondulé fin.
-- **Comportement** : une seule note dépliée à la fois ; elle se déplie quand le curseur entre dans le passage après une pause, ou au raccourci ; se replie quand le curseur s'éloigne ou à `Échap`. Fenêtre étroite (< 1180 px) : la note se déplie **sous son paragraphe**, en pleine largeur de colonne, et pousse le texte qui suit ; elle ne recouvre jamais le texte (décoration ProseMirror de type widget placée après le paragraphe, pas une couche positionnée). La pastille reste dans ce qui reste de marge, à 0,5 rem du bord de la colonne ; la note garde sa carte en relief, avec 10 px au-dessus et 14 px au-dessous.
+- **Comportement** : une seule note dépliée à la fois ; elle se déplie quand le curseur entre dans le passage après une pause, ou au raccourci ; se replie quand le curseur s'éloigne ou à `Échap`. Fenêtre étroite (la marge ne tient pas la note : colonne + 2 × 23,5 rem, soit 1360 px à la mesure par défaut) : la note se déplie **sous son paragraphe**, en pleine largeur de colonne, et pousse le texte qui suit ; elle ne recouvre jamais le texte (décoration ProseMirror de type widget placée après le paragraphe, pas une couche positionnée). La pastille reste dans ce qui reste de marge, à 0,5 rem du bord de la colonne ; la note garde sa carte en relief, avec 10 px au-dessus et 14 px au-dessous.
 
 ### 4.3 Panneau droit : Points à traiter / Conversation
 - Panneau en ardoise, en relief, de 25,5 rem, détaché des bords (10–12 px), ouvert par `⌘L` ou la poignée « Compagnon » (§4.8), sur l'onglet Points ; l'onglet « Conversation » passe à la conversation [D-18]. Il **remplace la marge** : les pastilles disparaissent et le texte se recentre dans l'espace restant. **Il ne recouvre jamais le contenu**, dans aucune vue : dans l'Atelier, la colonne de la fiche se resserre (une seule colonne de champs sous 46 rem) ; dans la vue d'ensemble, les colonnes et le bandeau s'arrêtent avant lui. Même règle pour le tiroir du manuscrit quand il reste ouvert.
@@ -310,7 +310,13 @@ Sur le X250, l'app est la partie visible du système [D-24]. Maquette : cadre «
 - **Panneau déroulant** : sous son segment, aligné sur lui, 21 rem, rayon 12 px, matière du système, ombre de la page. En-tête : nom en minuscules à gauche, touche ou état à droite. Lignes libellé / contrôle ; ligne choisie allumée ; aides de touches en pied. `Échap` ou un clic ailleurs le ferme. Un seul ouvert à la fois.
 - **Contrôles du système** : interrupteur à deux ou trois touches de réglage (§4.7 : l'option choisie reste enfoncée), curseur (rail en creux de 10 px, remplissage `--ch-muted`, bouton rond de 18 px en relief), boutons de l'app.
 - **Touches du ThinkPad** (luminosité, volume, muet) : la jauge du segment bouge, le segment s'allume une seconde et le message dit « luminosité 70 % ». Aucune fenêtre par-dessus le texte.
-- **Largeur** : la ligne est dessinée pour 1536 px. Le message garde toujours au moins 19 rem ; si la place manque (fenêtre plus étroite, écran externe à forte échelle), ce sont les jauges, l'autonomie et le jour qui s'effacent d'abord, puis les libellés des segments. Le message n'est jamais coupé à mi-hauteur ni recouvert.
+- **Largeur** : la ligne est dessinée pour 1536 px. Si la place manque (X250 à écran HD, machine virtuelle, fenêtre plus étroite, écran externe à forte échelle), l'ordre est le suivant :
+  - d'abord, le message, au milieu, se raccourcit (ellipse) ;
+  - puis les jauges, l'autonomie et le jour s'effacent ;
+  - puis les libellés des segments ;
+  - enfin, sous 960 px, les noms longs (réseau, clé USB) se raccourcissent à 9 caractères.
+  
+  Les valeurs restent. Rien ne coupe jamais l'heure ni la batterie, et la ligne ne déborde jamais. Le message n'est jamais coupé à mi-hauteur ni recouvert.
 - **Messages** : quarante signes au plus, sans majuscule ni point (« clé branchée · ⊞U copier mes textes »). C'est le seul canal du système, à la place de toute notification. Un message naît d'un geste de l'auteur ou d'un changement d'état (clé branchée, réseau perdu, synchronisation faite, batterie faible) ; il reste jusqu'au suivant, sans animation ni son. Jamais de message du Compagnon ici.
 - **Batterie faible** : à 15 %, le segment `bat` s'inverse et le message dit « batterie faible · branchez l'appareil, tout est enregistré ». À 3 % : point de restauration de la scène, message, puis veille. Rien n'interrompt la frappe.
 - **Portail captif** : un réseau qui demande une page de connexion est marqué `portail` ; l'appareil ne l'ouvre pas (pas de navigateur) et le dit : « Ce réseau demande une page de connexion. Utilisez le partage de connexion de votre téléphone. »
@@ -497,7 +503,12 @@ Registre central dans le cœur, tous modifiables. `⌘` = `Ctrl` sur le X250.
 ### 5.4 Appareils
 - **X250** (cible 1920×1080, mise à l'échelle Sway 125 % → 1536×864 px CSS) : plein écran, pas de barre de titre ni de barre de menus ; la **ligne système** (§4.12) occupe les 30 px du haut, la page et son pied sont ceux du Mac. Tout l'écran d'écriture avec une note dépliée tient sans défilement de l'interface.
 - **Mac** : barre de titre intégrée discrète ; plein écran macOS conseillé pour écrire.
-- Largeur minimale prise en charge : 960 px. Sous 1180 px : notes sous le paragraphe ; sous 1100 px : l'Atelier masque la colonne de liste (accessible par la ligne de commande `@`).
+- **Largeur minimale prise en charge** : 880 px, **sans aucun défilement horizontal**. Repères vérifiés : 1536 (cible), 1093 × 614 (X250 à écran HD), 1024 × 640 (machine virtuelle de l'installateur), 880.
+- **Notes** : sous le paragraphe dès que la marge ne les tient pas (§4.2). La note de bienvenue se place alors dans la colonne, entre l'ouverture et le texte.
+- **Atelier** : sous 1100 px, il masque la colonne de liste (accessible par la ligne de commande `@`).
+- **Texte** : il garde au moins 3,5 rem de chaque côté, pour ne jamais passer sous les poignées « Manuscrit » et « Compagnon ».
+- **Fil d'Ariane** : 10 rem de chaque côté, pour « Écrire | Atelier » ; trop long, il se termine par une ellipse.
+- **Pied** : trois colonnes, la zone de commande au milieu (de 10 rem à 30 rem). Elle rétrécit avant les côtés. Les côtés raccourcissent ensuite leurs textes (ellipse), et « Enregistré », toujours vrai, disparaît le premier.
 
 ### 5.5 Accessibilité et confort (v1)
 - Taille du texte et largeur de colonne réglables au clavier, indépendamment de l'interface.
