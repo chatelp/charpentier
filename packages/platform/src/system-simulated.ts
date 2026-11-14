@@ -6,7 +6,10 @@ import {
   type SystemMessage,
   type SystemService,
   type SystemState,
+  type SystemUpdate,
+  type UpdateFailure,
   type WifiNetwork,
+  updateMessages,
 } from './system';
 import { createLockKeeper, isValidCode, type LockRecord } from './lock-keeper';
 import { simulatedMonitor } from './monitor-simulated';
@@ -31,6 +34,12 @@ export interface SimulatedSystem extends SystemService {
     cpu(load: number, temperature?: number): void;
     /** Drops the connection (out of range). */
     wifiLost(): void;
+    /** A version received, verified and set for the next start (phase 5.12). */
+    updateReady(version?: string): void;
+    /** A version received and discarded. */
+    updateFailed(reason: UpdateFailure, version?: string): void;
+    /** No update service (a development system). */
+    noUpdates(): void;
     /** The actions called, for the tests (`suspend`, `reboot`…). */
     readonly calls: readonly string[];
   };
@@ -108,6 +117,19 @@ export function createSimulatedSystem(
     settings: DEFAULT_SYSTEM_SETTINGS,
     lock: { locked: false, hasCode: false, retryAt: null },
     firstStart: options.firstStart ?? false,
+    update: {
+      installed: {
+        version: '0.5.0',
+        installedAt: '2026-11-12T10:20:00Z',
+        notes: ['Le moniteur du système (⊞M).', 'La chaleur du mode nuit se règle.'],
+      },
+      ready: null,
+      previous: { version: '0.4.2', readable: true },
+      setAside: null,
+      lastCheck: new Date(now().getTime() - 27 * 60_000).toISOString(),
+      checking: false,
+      failure: null,
+    },
   };
   let record: LockRecord | null = null;
   const keeper = createLockKeeper({
@@ -136,16 +158,24 @@ export function createSimulatedSystem(
     state = change(state);
     emit();
   };
-  const post = (text: string) => {
+  const post = (text: string, quiet = false) => {
     journal = [
       ...journal,
       {
         id: `m${++sequence}`,
         text: text.slice(0, MESSAGE_LENGTH),
         at: now().toISOString(),
+        ...(quiet && { quiet }),
       },
     ];
     emit();
+  };
+  /** A change of the updates, with the messages it brings. */
+  const changeUpdate = (change: (u: SystemUpdate) => SystemUpdate) => {
+    const before = state.update;
+    if (!before) return;
+    update((s) => ({ ...s, update: change(before) }));
+    for (const m of updateMessages(before, state.update)) post(m.text, m.quiet);
   };
   const call = async (name: string) => {
     calls.push(name);
@@ -289,6 +319,17 @@ export function createSimulatedSystem(
       return 'ok';
     },
     finishFirstStart: async () => update((s) => ({ ...s, firstStart: false })),
+    checkUpdate: async () => {
+      calls.push('checkUpdate');
+      changeUpdate((u) => ({ ...u, lastCheck: now().toISOString() }));
+    },
+    bootVersion: async (version) => {
+      const u = state.update;
+      const target = [u?.previous, u?.setAside].find((v) => v?.version === version);
+      if (!target?.readable) return 'failed';
+      calls.push(`bootVersion ${version}`);
+      return 'ok';
+    },
     suspend: () => call('suspend'),
     reboot: () => call('reboot'),
     powerOff: () => call('powerOff'),
@@ -330,6 +371,23 @@ export function createSimulatedSystem(
             history: [...s.cpu.history.slice(1), load],
           },
         })),
+      updateReady: (version = '0.6.0') =>
+        changeUpdate((u) => ({
+          ...u,
+          ready: {
+            version,
+            publishedAt: '2026-11-13T08:00:00Z',
+            notes: [
+              'L’entretien avec le Compagnon, en tête de l’Atelier (⌘0).',
+              'Les mises à jour arrivent d’elles-mêmes par le serveur.',
+              'La lumière suit le clavier dans les listes.',
+            ],
+          },
+          failure: null,
+        })),
+      updateFailed: (reason, version = '0.6.0') =>
+        changeUpdate((u) => ({ ...u, failure: { version, at: now().toISOString(), reason } })),
+      noUpdates: () => update((s) => ({ ...s, update: null })),
       wifiLost: () => {
         update((s) => ({ ...s, wifi: { ...s.wifi, connected: null, address: null } }));
         post('réseau perdu');

@@ -1,5 +1,6 @@
 import {
   batteryLevel,
+  deviceVersion,
   type SyncAccountInfo,
   type SystemService,
   type WifiNetwork,
@@ -10,6 +11,7 @@ import { usePlatform } from '../app/platform-context';
 import { featureText } from '../features/feature';
 import type { WorkspaceContext } from '../workspace/workspace-context';
 import { Gauge, Keys, PanelRow, Signal, Slider } from './controls';
+import { beforeRestart } from './restart';
 import { systemUi, useJournal, useSystemState, type Segment } from './system-store';
 
 const timers = new Map<string, ReturnType<typeof setTimeout>>();
@@ -53,19 +55,25 @@ export function SystemPanel({
   readonly onDone: () => void;
 }) {
   const body = useRef<HTMLDivElement>(null);
-  // Opened from the keyboard or a click: the first control takes the focus.
-  useEffect(() => {
-    body.current
-      ?.querySelector<HTMLElement>(
-        'input:not([type=range]), button.is-item, [role=radio][aria-checked=true], input, button',
-      )
-      ?.focus();
-  }, [segment]);
+  // Another segment's panel in the same place: its first control takes the focus.
+  useEffect(() => focusFirstControl(body.current), [segment]);
   return (
     <div ref={body} className="ch-sys-panel-body" onKeyDown={(e) => moveInPanel(e, body.current)}>
       {PANELS[segment]({ ctx, onDone })}
     </div>
   );
+}
+
+/**
+ * Opened from the keyboard or a click: the first control takes the focus. Also
+ * called once the panel is placed, a hidden element taking no focus.
+ */
+export function focusFirstControl(root: HTMLElement | null) {
+  root
+    ?.querySelector<HTMLElement>(
+      'input:not([type=range]), button.is-item, [role=radio][aria-checked=true], input, button',
+    )
+    ?.focus();
 }
 
 /** ↑ ↓ go from one line to the next in a panel. */
@@ -100,8 +108,12 @@ function useSys() {
   const system = platform.system as SystemService;
   const state = useSystemState(system);
   const { t, i18n } = useTranslation();
-  return { system, state, text: featureText(t), language: i18n.language };
+  return { platform, system, state, text: featureText(t), language: i18n.language };
 }
+
+/** `13 nov.` */
+export const shortDate = (iso: string, language: string) =>
+  new Intl.DateTimeFormat(language, { day: 'numeric', month: 'short' }).format(new Date(iso));
 
 /** `5 h 40` */
 export const hours = (minutes: number) =>
@@ -115,7 +127,8 @@ export const duration = (minutes: number) =>
     : `${Math.floor(minutes / 60)} h ${String(minutes % 60).padStart(2, '0')}`;
 
 function MenuPanel({ ctx, onDone }: PanelProps) {
-  const { system, state, text } = useSys();
+  const { platform, system, state, text } = useSys();
+  const ready = state.update?.ready;
   const [armed, arm] = useArmed();
   const key = (id: string) => ctx?.shortcutLabel(id);
   const item = (
@@ -181,16 +194,22 @@ function MenuPanel({ ctx, onDone }: PanelProps) {
       {item(
         'systemReboot',
         armed === 'reboot' ? text('system.panel.confirmReboot') : text('system.panel.reboot'),
-        () => arm('reboot', () => void system.reboot()),
+        () => arm('reboot', () => void beforeRestart(platform).then(() => system.reboot())),
         false,
         armed === 'reboot' ? '⏎' : undefined,
       )}
       {item(
         'systemPowerOff',
         armed === 'off' ? text('system.panel.confirmPowerOff') : text('system.panel.powerOff'),
-        () => arm('off', () => void system.powerOff()),
+        () => arm('off', () => void beforeRestart(platform).then(() => system.powerOff())),
         false,
         armed === 'off' ? '⏎' : undefined,
+      )}
+      {/* Any start installs the version ready: said here, never hidden. */}
+      {ready && (
+        <p className="ch-sys-note">
+          {text('system.panel.updateAnyStart', { version: ready.version })}
+        </p>
       )}
       <p className="ch-sys-foot">
         {text('system.panel.menuFoot', {
@@ -198,6 +217,61 @@ function MenuPanel({ ctx, onDone }: PanelProps) {
           key: ctx?.platform.keybindings.primaryModifier === 'Meta' ? '⌃' : '⊞',
         })}
       </p>
+    </>
+  );
+}
+
+/** The update ready (⊞R): its notes, « Redémarrer maintenant », « Plus tard ». */
+function UpdatePanel({ ctx, onDone }: PanelProps) {
+  const { platform, system, state, text, language } = useSys();
+  const [armed, arm] = useArmed();
+  const ready = state.update?.ready;
+  if (!ready)
+    return (
+      <>
+        <Head name={text('system.panel.update')} />
+        <p className="ch-sys-note">
+          {text('system.panel.updateNone', { version: deviceVersion(state) })}
+        </p>
+      </>
+    );
+  return (
+    <>
+      <Head name={text('system.panel.update')} aside={ctx?.shortcutLabel('systemUpdate')} />
+      <p className="ch-sys-update-head">
+        <span>{text('system.panel.updateReady', { version: ready.version })}</span>
+        {ready.publishedAt && (
+          <span className="ch-sys-faint">
+            {text('system.panel.updatePublished', {
+              date: shortDate(ready.publishedAt, language),
+            })}
+          </span>
+        )}
+      </p>
+      {ready.notes.length > 0 && (
+        <ul className="ch-sys-notes">
+          {ready.notes.map((note) => (
+            <li key={note}>{note}</li>
+          ))}
+        </ul>
+      )}
+      <div className="ch-sys-list">
+        <button
+          type="button"
+          className="ch-sys-item is-item"
+          onClick={() =>
+            arm('restart', () => void beforeRestart(platform).then(() => system.reboot()))
+          }
+        >
+          <span>{text(armed ? 'system.panel.confirmReboot' : 'system.panel.updateRestart')}</span>
+          <kbd>⏎</kbd>
+        </button>
+        <button type="button" className="ch-sys-item is-item" onClick={onDone}>
+          <span>{text('system.panel.updateLater')}</span>
+          <kbd>{text('system.panel.escapeKey')}</kbd>
+        </button>
+      </div>
+      <p className="ch-sys-foot">{text('system.panel.updateFoot')}</p>
     </>
   );
 }
@@ -618,6 +692,7 @@ function DatePanel({ ctx }: PanelProps) {
 const PANELS: Record<Segment, (props: PanelProps) => ReactNode> = {
   systeme: (p) => <MenuPanel {...p} />,
   message: () => <JournalPanel />,
+  maj: (p) => <UpdatePanel {...p} />,
   usb: () => <UsbPanel />,
   cpu: () => <CpuPanel />,
   wifi: (p) => <WifiPanel {...p} />,

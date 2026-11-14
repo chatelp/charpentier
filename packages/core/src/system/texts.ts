@@ -24,12 +24,14 @@ export const systemTexts: TextTree = {
     systemMonitor: 'Moniteur',
     systemLock: 'Verrouiller',
     systemPrint: 'Imprimer…',
+    systemUpdate: 'Mise à jour…',
   },
   system: {
     line: 'ligne système',
     word: 'système',
     journalEmpty: 'journal · {{count}}',
     seg: {
+      maj: 'maj',
       usb: 'usb',
       cpu: 'cpu',
       wifi: 'wifi',
@@ -62,6 +64,16 @@ export const systemTexts: TextTree = {
       reboot: 'Redémarrer…',
       powerOff: 'Éteindre…',
       confirmReboot: 'Confirmer le redémarrage',
+      update: 'mise à jour',
+      updateReady: '{{version}} · prête',
+      updatePublished: 'publiée le {{date}}',
+      updateRestart: 'Redémarrer maintenant',
+      updateLater: 'Plus tard',
+      updateNone: 'à jour · {{version}}',
+      escapeKey: 'Échap',
+      updateFoot:
+        'vos textes sont enregistrés et envoyés au serveur avant · sinon, elle s’installe au prochain démarrage',
+      updateAnyStart: 'la {{version}} s’installe au prochain démarrage, quel qu’il soit',
       confirmPowerOff: 'Confirmer l’extinction',
       journal: 'journal',
       journalSince: 'depuis le démarrage',
@@ -145,6 +157,7 @@ export const systemTexts: TextTree = {
       eteindre: 'éteindre…',
       redemarrer: 'redémarrer…',
       usb: 'clé usb',
+      maj: 'mise à jour',
       journal: 'journal',
       reglages: 'réglages du système',
       moniteur: 'ouvrir le moniteur',
@@ -328,6 +341,7 @@ export const systemTexts: TextTree = {
         charpentier: 'Charpentier',
         os: 'Système',
         device: 'Appareil',
+        update: 'Mise à jour',
       },
       rows: {
         wifi: 'Wi-Fi',
@@ -405,10 +419,52 @@ export const systemTexts: TextTree = {
         clock24: 'Format 24 h',
         showCpu: 'Segment cpu',
         showCpuHelp: 'Les autres segments sont fixes.',
-        appVersion: 'Version',
+        appVersion: 'Charpentier',
         installedAt: 'Installée le {{date}}',
-        osVersion: 'NixOS',
+        versionValue: '{{version}} · installée {{day}}',
+        today: 'aujourd’hui',
+        on: 'le',
+        osVersion: 'Système',
+        osValue: '{{os}} · génération {{generation}}',
         generation: 'Génération {{value}}',
+        readyShort: '{{version}} prête',
+        updateReady: 'Version {{version}} prête',
+        updateReadyHelp:
+          'Publiée le {{date}} depuis le Mac, vérifiée et préparée. Elle s’installe au prochain démarrage, quel qu’il soit ; rien ne change pendant que vous écrivez.',
+        restart: 'Redémarrer',
+        confirmRestart: 'Confirmer le redémarrage',
+        updateNews: 'Nouveautés de {{version}}',
+        updateInstalled: 'Installée {{day}} à {{time}}.',
+        check: 'Vérification',
+        checkHelp: 'Toutes les heures, quand le réseau est là. Dernière : {{last}}.',
+        never: 'jamais',
+        checking: 'Vérification en cours…',
+        checkNow: 'Vérifier maintenant',
+        failure: {
+          signature:
+            'La version {{version}} reçue à {{time}} n’avait pas la bonne signature : elle a été écartée, rien n’a changé.',
+          unreadable:
+            'La version {{version}} reçue à {{time}} était illisible : elle a été écartée, rien n’a changé.',
+          'disk-full':
+            'La version {{version}} reçue à {{time}} ne tenait pas sur le disque : elle a été écartée, rien n’a changé.',
+          interrupted:
+            'Le téléchargement de {{version}} s’est interrompu à {{time}} : il reprendra à la prochaine vérification.',
+        },
+        back: 'Revenir à la version précédente',
+        backHelp:
+          '{{version}} reste au menu de démarrage. Si l’appareil ne démarre plus, maintenez Espace à l’allumage et choisissez-la.',
+        backArmed:
+          'L’appareil redémarre sur {{version}}. Vos textes ne bougent pas : ils sont dans vos projets, pas dans la version. La {{installed}} restera ici pour y repasser.',
+        backUnreadable:
+          '{{version}} ne sait pas relire vos projets tels que la version installée les a enregistrés : y revenir n’est plus possible.',
+        backFailed: 'Le retour à {{version}} n’a pas pu se préparer : rien n’a changé.',
+        forward: 'Repasser à la version mise de côté',
+        forwardHelp:
+          '{{version}} a été mise de côté en revenant en arrière ; elle reste au menu de démarrage.',
+        forwardArmed:
+          'L’appareil redémarre sur {{version}}. Vos textes ne bougent pas : ils sont dans vos projets, pas dans la version.',
+        switchTo: 'Revenir à {{version}}…',
+        confirmSwitch: 'Confirmer : redémarrer sur {{version}}',
         storage: 'Stockage',
         storageValue: '{{used}} Go sur {{total}} Go',
         licenses: 'Licences',

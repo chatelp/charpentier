@@ -17,6 +17,7 @@ export const MONITOR_VIEW = 'monitor';
 export const SEGMENTS = [
   'systeme',
   'message',
+  'maj',
   'usb',
   'cpu',
   'wifi',

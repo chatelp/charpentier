@@ -223,3 +223,30 @@
 .ch-set-code {
   gap: 10px;
 }
+
+/* The update ready, or the news of the version installed (« À propos », phase 5.12). */
+.ch-set-card {
+  margin: var(--ch-space-2) 0;
+  padding: 14px 16px;
+  border-radius: var(--ch-radius-md);
+  box-shadow: var(--ch-raise);
+}
+
+.ch-set-card .ch-set-row {
+  padding-top: 0;
+  border-bottom: 0;
+}
+
+.ch-set-notes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--ch-ink-2);
+  font: var(--ch-ui-sm) / 1.6 var(--ch-font-ui);
+}
+
+.ch-set-notes li::before {
+  margin-right: 6px;
+  color: var(--ch-faint);
+  content: '·';
+}

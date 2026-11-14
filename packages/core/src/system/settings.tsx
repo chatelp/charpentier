@@ -1,16 +1,18 @@
 import {
   batteryLevel,
+  deviceVersion,
   hasBattery,
   type BluetoothDevice,
   type SystemService,
   type SystemSettings,
 } from '@charpentier/platform';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePlatform } from '../app/platform-context';
 import { featureText, type SettingsSection, type WorkspaceProps } from '../features/feature';
 import { Gauge, Keys, Slider } from './controls';
-import { postSoon } from './panels';
+import { postSoon, shortDate } from './panels';
+import { beforeRestart } from './restart';
 import { useSystemState } from './system-store';
 
 /**
@@ -34,7 +36,7 @@ function useSettings() {
     { value: true, label: s('on') },
     { value: false, label: s('off') },
   ];
-  return { system, state, s, text, set, yesNo, language: i18n.language };
+  return { platform, system, state, s, text, set, yesNo, language: i18n.language };
 }
 
 function Group({ title, children }: { readonly title: string; readonly children: ReactNode }) {
@@ -601,26 +603,169 @@ function SystemLineSettings() {
   );
 }
 
+/** A light confirmation (« Revenir à 0.5.0… »): a first press arms it for 3 s, a second acts. */
+function useArmed(): [boolean, (act: () => void) => void] {
+  const [armed, setArmed] = useState(false);
+  useEffect(() => {
+    if (!armed) return;
+    const timer = setTimeout(() => setArmed(false), 3000);
+    return () => clearTimeout(timer);
+  }, [armed]);
+  return [
+    armed,
+    (act) => {
+      if (armed) {
+        setArmed(false);
+        act();
+      } else setArmed(true);
+    },
+  ];
+}
+
+/** The update ready, or what the version installed brought (docs/DESIGN.md §4.12). */
+function UpdateCard() {
+  const { platform, system, state, s, language } = useSettings();
+  const [armed, arm] = useArmed();
+  const update = state.update;
+  if (!update) return null;
+  const { ready, installed } = update;
+  const notes = ready?.notes ?? installed.notes;
+  if (!ready && notes.length === 0) return null;
+  const time = new Intl.DateTimeFormat(language, { hour: '2-digit', minute: '2-digit' });
+  return (
+    <div className="ch-set-card">
+      {ready ? (
+        <Row
+          label={s('rows.updateReady', { version: ready.version })}
+          help={s('rows.updateReadyHelp', { date: shortDate(ready.publishedAt, language) })}
+        >
+          <button
+            type="button"
+            className="ch-btn"
+            onClick={() => arm(() => void beforeRestart(platform).then(() => system.reboot()))}
+          >
+            {armed ? s('rows.confirmRestart') : s('rows.restart')}
+            <kbd>{armed ? '⏎' : '⊞R'}</kbd>
+          </button>
+        </Row>
+      ) : (
+        <Row
+          label={s('rows.updateNews', { version: installed.version })}
+          help={s('rows.updateInstalled', {
+            day: dayLabel(installed.installedAt, language, s),
+            time: time.format(new Date(installed.installedAt)),
+          })}
+        />
+      )}
+      <ul className="ch-set-notes">
+        {notes.map((note) => (
+          <li key={note}>{note}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/** « aujourd’hui » or « le 12 nov. » */
+function dayLabel(iso: string, language: string, s: (key: string) => string) {
+  const date = new Date(iso);
+  return date.toDateString() === new Date().toDateString()
+    ? s('rows.today')
+    : `${s('rows.on')} ${shortDate(iso, language)}`;
+}
+
+/** The check: when it was, « Vérifier maintenant », and the last failure said plainly. */
+function UpdateCheck() {
+  const { system, state, s, language } = useSettings();
+  const update = state.update;
+  if (!update) return null;
+  const time = (iso: string) =>
+    new Intl.DateTimeFormat(language, { hour: '2-digit', minute: '2-digit' }).format(new Date(iso));
+  const { failure } = update;
+  const help = update.checking
+    ? s('rows.checking')
+    : failure
+      ? s(`rows.failure.${failure.reason}`, { version: failure.version, time: time(failure.at) })
+      : s('rows.checkHelp', {
+          last: update.lastCheck ? time(update.lastCheck) : s('rows.never'),
+        });
+  return (
+    <Row label={s('rows.check')} help={help}>
+      <button
+        type="button"
+        className="ch-btn"
+        disabled={update.checking}
+        onClick={() => void system.checkUpdate()}
+      >
+        {s('rows.checkNow')}
+      </button>
+    </Row>
+  );
+}
+
+/** Back to the previous version, or forward again to the one set aside. */
+function UpdateSwitch() {
+  const { platform, system, state, s } = useSettings();
+  const [armed, arm] = useArmed();
+  const [failed, setFailed] = useState(false);
+  const update = state.update;
+  const forward = update?.setAside;
+  const target = forward ?? update?.previous;
+  if (!update || !target) return null;
+  const version = target.version;
+  const installed = update.installed.version;
+  const help = !target.readable
+    ? s('rows.backUnreadable', { version })
+    : failed
+      ? s('rows.backFailed', { version })
+      : armed
+        ? s(forward ? 'rows.forwardArmed' : 'rows.backArmed', { version, installed })
+        : s(forward ? 'rows.forwardHelp' : 'rows.backHelp', { version });
+  return (
+    <Row label={s(forward ? 'rows.forward' : 'rows.back')} help={help}>
+      <button
+        type="button"
+        className="ch-btn"
+        disabled={!target.readable}
+        onClick={() =>
+          arm(async () => {
+            await beforeRestart(platform);
+            setFailed((await system.bootVersion(version)) === 'failed');
+          })
+        }
+      >
+        {armed ? s('rows.confirmSwitch', { version }) : s('rows.switchTo', { version })}
+        {armed && <kbd>⏎</kbd>}
+      </button>
+    </Row>
+  );
+}
+
 function About() {
   const { state, s, language } = useSettings();
-  const date = new Intl.DateTimeFormat(language, { dateStyle: 'long' }).format(
-    new Date(state.device.installedAt),
-  );
+  const installedAt = state.update?.installed.installedAt ?? state.device.installedAt;
   return (
     <>
-      <Group title={s('groups.charpentier')}>
-        <Row label={s('rows.appVersion')} help={s('rows.installedAt', { date })}>
-          <span className="ch-set-value">{state.device.appVersion}</span>
-        </Row>
-      </Group>
-      <Group title={s('groups.os')}>
-        <Row
-          label={s('rows.osVersion')}
-          help={s('rows.generation', { value: state.device.generation })}
-        >
-          <span className="ch-set-value">{state.device.osVersion}</span>
-        </Row>
-      </Group>
+      <Row label={s('rows.appVersion')}>
+        <span className="ch-set-value">
+          {s('rows.versionValue', {
+            version: deviceVersion(state),
+            day: dayLabel(installedAt, language, s),
+          })}
+        </span>
+      </Row>
+      <Row label={s('rows.osVersion')}>
+        <span className="ch-set-value">
+          {s('rows.osValue', { os: state.device.osVersion, generation: state.device.generation })}
+        </span>
+      </Row>
+      {state.update && (
+        <Group title={s('groups.update')}>
+          <UpdateCard />
+          <UpdateCheck />
+          <UpdateSwitch />
+        </Group>
+      )}
       <Group title={s('groups.device')}>
         <Row label={s('rows.storage')}>
           <span className="ch-set-value">
@@ -753,7 +898,11 @@ export const systemSettingsSections: readonly SettingsSection[] = [
     id: 'about',
     label: 'system.settings.about',
     intro: AboutIntro,
-    value: value(({ state }) => state.device.appVersion),
+    value: value(({ state, s }) =>
+      state.update?.ready
+        ? s('rows.readyShort', { version: state.update.ready.version })
+        : deviceVersion(state),
+    ),
     component: About,
   },
 ];

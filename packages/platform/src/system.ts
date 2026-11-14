@@ -57,6 +57,13 @@ export interface SystemService {
   setLockCode(code: string | null, current?: string): Promise<'ok' | 'wrong' | 'invalid'>;
   /** The four steps of the first start are done or put off (§4.12). */
   finishFirstStart(): Promise<void>;
+  /** « Vérifier maintenant » (phase 5.12): the result comes as usual, in the state and the line. */
+  checkUpdate(): Promise<void>;
+  /**
+   * Restarts on another version still in the boot menu: the previous one, or
+   * the one set aside by going back. The device restarts when it is `ok`.
+   */
+  bootVersion(version: string): Promise<'ok' | 'failed'>;
   suspend(): Promise<void>;
   reboot(): Promise<void>;
   powerOff(): Promise<void>;
@@ -75,7 +82,42 @@ export interface SystemMessage {
   readonly id: string;
   readonly text: string;
   readonly at: string;
+  /** Only in the journal, never shown on the line (« 0.6.0 : téléchargement interrompu »). */
+  readonly quiet?: boolean;
 }
+
+/**
+ * The X250's updates (docs/PLAN.md phase 5.12, docs/x250-update-contract.md):
+ * received from the author's server by the system, announced by the app,
+ * applied at the next start, whatever it is.
+ */
+export interface SystemUpdate {
+  /** The version running: the system's, `X.Y.Z` or `X.Y.Z-N` (D-31). */
+  readonly installed: {
+    readonly version: string;
+    readonly installedAt: string;
+    readonly notes: readonly string[];
+  };
+  /** Verified and set for the next start. */
+  readonly ready: {
+    readonly version: string;
+    readonly publishedAt: string;
+    readonly notes: readonly string[];
+  } | null;
+  /** Still in the boot menu; `readable`: it can still read the projects. */
+  readonly previous: { readonly version: string; readonly readable: boolean } | null;
+  /** A newer version left by going back: no longer announced, one can return to it. */
+  readonly setAside: { readonly version: string; readonly readable: boolean } | null;
+  readonly lastCheck: string | null;
+  readonly checking: boolean;
+  readonly failure: {
+    readonly version: string;
+    readonly at: string;
+    readonly reason: UpdateFailure;
+  } | null;
+}
+
+export type UpdateFailure = 'signature' | 'unreadable' | 'disk-full' | 'interrupted';
 
 export interface WifiNetwork {
   readonly ssid: string;
@@ -177,7 +219,13 @@ export interface SystemState {
   };
   /** A device just installed: its first start's four steps come before anything else. */
   readonly firstStart: boolean;
+  /** Null without an update service (a development system, a machine of its own). */
+  readonly update: SystemUpdate | null;
 }
+
+/** The version shown everywhere: the system's when it has updates, else the app's. */
+export const deviceVersion = (state: SystemState): string =>
+  state.update?.installed.version ?? state.device.appVersion;
 
 /** The longest message of the system line (docs/DESIGN.md §4.12). */
 export const MESSAGE_LENGTH = 40;
@@ -226,3 +274,59 @@ export const batteryLevel = (state: SystemState): number => {
     ? Math.round(batteries.reduce((sum, b) => sum + b.level, 0) / batteries.length)
     : 0;
 };
+
+const FAILURE_WORDS: Record<Exclude<UpdateFailure, 'interrupted'>, string> = {
+  signature: 'signature invalide',
+  unreadable: 'version illisible',
+  'disk-full': 'disque plein',
+};
+
+/**
+ * The messages born of a change of the updates (docs/DESIGN.md §4.12): a
+ * version ready, a version discarded (once per failure), a download cut short
+ * (in the journal only).
+ */
+export function updateMessages(
+  before: SystemUpdate | null,
+  after: SystemUpdate | null,
+): readonly { readonly text: string; readonly quiet?: boolean }[] {
+  if (!after) return [];
+  const messages: { text: string; quiet?: boolean }[] = [];
+  const failure = after.failure;
+  const old = before?.failure;
+  if (
+    failure &&
+    (failure.version !== old?.version || failure.reason !== old.reason || failure.at !== old.at)
+  )
+    messages.push(
+      failure.reason === 'interrupted'
+        ? { text: `${failure.version} : téléchargement interrompu`, quiet: true }
+        : // The same failure again (the next check) is not repeated on the line.
+          {
+            text: `mise à jour écartée · ${FAILURE_WORDS[failure.reason]}`,
+            ...(failure.version === old?.version &&
+              failure.reason === old.reason && { quiet: true }),
+          },
+    );
+  if (after.ready && after.ready.version !== before?.ready?.version)
+    messages.push({ text: 'mise à jour prête · ⊞R redémarrer' });
+  return messages;
+}
+
+/**
+ * The messages of a start (docs/DESIGN.md §4.12), from the version the app saw
+ * last: back on an older one (the newer set aside), or on the one made ready.
+ */
+export function startMessages(
+  lastSeen: string | null,
+  update: SystemUpdate | null,
+): readonly { readonly text: string; readonly quiet?: boolean }[] {
+  const version = update?.installed.version;
+  if (!version || !lastSeen || lastSeen === version) return [];
+  if (update.setAside?.version === lastSeen)
+    return [{ text: `revenu à ${version} · ${lastSeen} mise de côté` }];
+  return [
+    { text: 'redémarrage pour la mise à jour', quiet: true },
+    { text: `à jour · ${version}` },
+  ];
+}

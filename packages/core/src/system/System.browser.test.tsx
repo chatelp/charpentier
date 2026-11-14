@@ -369,3 +369,81 @@ describe('the system line of the X250 (phase 5.3)', () => {
     await screen.findByText('Aucun résultat');
   });
 });
+
+describe('the updates of the X250 (phase 5.12)', () => {
+  it('announces the version ready, opens its panel with ⊞R, and restarts on a second ⏎', async () => {
+    const system = createSimulatedSystem();
+    await start(system);
+    expect(line().querySelector('[data-seg="maj"]')).toBeNull();
+
+    system.simulate.updateReady('0.6.0');
+    await waitFor(() => expect(line().textContent).toContain('mise à jour prête · ⊞R redémarrer'));
+    expect(line().querySelector('[data-seg="maj"]')?.textContent).toBe('maj0.6.0');
+    // Another message does not take the segment away.
+    system.simulate.usb('KINGSTON');
+    await waitFor(() => expect(line().textContent).toContain('clé « KINGSTON » branchée'));
+    expect(line().querySelector('[data-seg="maj"]')).not.toBeNull();
+
+    await userEvent.keyboard(sys('r'));
+    const panel = await screen.findByRole('dialog');
+    expect(panel.textContent).toContain('0.6.0 · prête');
+    expect(panel.textContent).toContain('publiée le 13 nov.');
+    expect(panel.textContent).toContain('L’entretien avec le Compagnon');
+    const restart = within(panel).getByRole('button', { name: /Redémarrer maintenant/ });
+    await waitFor(() => expect(document.activeElement).toBe(restart));
+    await userEvent.keyboard('{Enter}');
+    expect(restart.textContent).toContain('Confirmer le redémarrage');
+    expect(system.simulate.calls).not.toContain('reboot');
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(system.simulate.calls).toContain('reboot'));
+  });
+
+  it('keeps a download cut short in the journal only, and says a discarded version', async () => {
+    const system = createSimulatedSystem();
+    await start(system);
+    system.simulate.updateFailed('interrupted');
+    await waitFor(() =>
+      expect(system.journal().at(-1)?.text).toBe('0.6.0 : téléchargement interrompu'),
+    );
+    expect(line().textContent).not.toContain('téléchargement interrompu');
+    system.simulate.updateFailed('signature');
+    await waitFor(() =>
+      expect(line().textContent).toContain('mise à jour écartée · signature invalide'),
+    );
+  });
+
+  it('tells in « À propos » the version, the check, and goes back after a confirmation', async () => {
+    const system = createSimulatedSystem();
+    await start(system);
+    system.simulate.updateReady('0.6.0');
+    await userEvent.keyboard(sys(','));
+    const rail = await screen.findByRole('listbox', { name: 'Sections des réglages' });
+    const about = within(rail).getByRole('option', { name: /À propos/ });
+    expect(about.textContent).toContain('0.6.0 prête');
+    await userEvent.click(about);
+    await screen.findByText('Version 0.6.0 prête');
+    expect(screen.getByText(/0\.5\.0 · installée le 12 nov\./)).toBeTruthy();
+    expect(screen.getByText('La lumière suit le clavier dans les listes.')).toBeTruthy();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Vérifier maintenant' }));
+    expect(system.simulate.calls).toContain('checkUpdate');
+
+    const back = screen.getByRole('button', { name: 'Revenir à 0.4.2…' });
+    await userEvent.click(back);
+    expect(back.textContent).toContain('Confirmer : redémarrer sur 0.4.2');
+    expect(screen.getByText(/Vos textes ne bougent pas/)).toBeTruthy();
+    await userEvent.click(back);
+    await waitFor(() => expect(system.simulate.calls).toContain('bootVersion 0.4.2'));
+  });
+
+  it('shows nothing of the updates without the service', async () => {
+    const system = createSimulatedSystem();
+    system.simulate.noUpdates();
+    await start(system);
+    await userEvent.keyboard(sys(','));
+    const rail = await screen.findByRole('listbox', { name: 'Sections des réglages' });
+    await userEvent.click(within(rail).getByRole('option', { name: /À propos/ }));
+    await screen.findByText(/0\.5\.0 · installée/);
+    expect(screen.queryByText('Vérifier maintenant')).toBeNull();
+  });
+});

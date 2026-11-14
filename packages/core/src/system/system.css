@@ -409,3 +409,31 @@
   color: var(--ch-faint);
   font: 400 11px var(--ch-font-ui);
 }
+
+/* The update ready (⊞R, docs/DESIGN.md §4.12 « Mises à jour »). */
+.ch-sys-update-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 6px;
+  color: var(--ch-ink);
+}
+
+.ch-sys-notes {
+  margin: 0;
+  padding: 0 0 4px;
+  list-style: none;
+  color: var(--ch-ink-2);
+}
+
+.ch-sys-notes li {
+  position: relative;
+  padding-left: 14px;
+}
+
+.ch-sys-notes li::before {
+  position: absolute;
+  left: 2px;
+  color: var(--ch-faint);
+  content: '·';
+}

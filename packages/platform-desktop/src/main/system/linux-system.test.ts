@@ -600,3 +600,131 @@ describe('the System service of the X250 (phase 5.4)', () => {
     expect(system.journal().at(-1)?.text).toBe('Clavier K380 appairé');
   });
 });
+
+describe('the updates of the X250 (phase 5.12)', () => {
+  const FILE = '/run/charpentier/update.json';
+  const file = (change: Record<string, unknown> = {}) =>
+    JSON.stringify({
+      contract: 1,
+      installed: {
+        version: '0.5.0',
+        generation: 42,
+        installedAt: '2026-11-12T10:20:00Z',
+        notes: ['Le moniteur.'],
+        dataFormat: 1,
+      },
+      ready: null,
+      previous: { version: '0.4.2', generation: 41, dataFormat: 1 },
+      setAside: null,
+      lastCheck: '2026-11-13T14:05:00Z',
+      checking: false,
+      failure: null,
+      development: false,
+      ...change,
+    });
+  const READY = {
+    version: '0.6.0',
+    generation: 43,
+    publishedAt: '2026-11-13T08:00:00Z',
+    receivedAt: '2026-11-13T14:05:00Z',
+    notes: ['L’entretien avec le Compagnon.'],
+  };
+  const shown = (system: LinuxSystem) =>
+    system
+      .journal()
+      .filter((m) => !m.quiet)
+      .map((m) => m.text);
+
+  it('shows nothing without the service, from a development system, or another contract', async () => {
+    const x250 = fakeX250();
+    const { system } = await start(x250);
+    expect(system.state().update).toBeNull();
+    for (const text of [file({ development: true }), file({ contract: 2 }), '{oops']) {
+      x250.files.set(FILE, text);
+      await system.refresh();
+      expect(system.state().update).toBeNull();
+    }
+  });
+
+  it('reads the version installed, announces the one ready, and says a failure once', async () => {
+    const x250 = fakeX250();
+    x250.files.set(FILE, file());
+    const { system } = await start(x250);
+    expect(system.state().update).toMatchObject({
+      installed: { version: '0.5.0', notes: ['Le moniteur.'] },
+      ready: null,
+      previous: { version: '0.4.2', readable: true },
+    });
+    expect(system.journal()[0]?.text).toBe('démarrage · charpentier 0.5.0');
+
+    x250.files.set(FILE, file({ ready: READY }));
+    await system.checkUpdate();
+    expect(
+      ran(x250.runs, 'systemctl', 'start', '--no-block', 'charpentier-update-check.service'),
+    ).toBe(true);
+    expect(system.state().update?.ready).toMatchObject({ version: '0.6.0' });
+    expect(shown(system).at(-1)).toBe('mise à jour prête · ⊞R redémarrer');
+    // Read again, nothing new: nothing said.
+    await system.refresh();
+    expect(shown(system).filter((t) => t.startsWith('mise à jour prête'))).toHaveLength(1);
+
+    const failure = (at: string, reason = 'signature') => ({ version: '0.7.0', at, reason });
+    x250.files.set(FILE, file({ failure: failure('2026-11-13T15:00:00Z') }));
+    await system.refresh();
+    expect(shown(system).at(-1)).toBe('mise à jour écartée · signature invalide');
+    // The next check fails the same way: in the journal, not on the line.
+    x250.files.set(FILE, file({ failure: failure('2026-11-13T16:00:00Z') }));
+    await system.refresh();
+    expect(shown(system).filter((t) => t.startsWith('mise à jour écartée'))).toHaveLength(1);
+    x250.files.set(FILE, file({ failure: failure('2026-11-13T17:00:00Z', 'interrupted') }));
+    await system.refresh();
+    expect(system.journal().at(-1)).toMatchObject({
+      text: '0.7.0 : téléchargement interrompu',
+      quiet: true,
+    });
+  });
+
+  it('goes back to the previous version through its boot service, never to an unreadable one', async () => {
+    const x250 = fakeX250();
+    x250.files.set(FILE, file());
+    const { system } = await start(x250);
+    expect(await system.bootVersion('0.3.0')).toBe('failed');
+    expect(await system.bootVersion('0.4.2')).toBe('ok');
+    expect(ran(x250.runs, 'systemctl', 'start', 'charpentier-update-boot@41.service')).toBe(true);
+    expect(ran(x250.runs, 'systemctl', 'reboot')).toBe(true);
+
+    x250.files.set(FILE, file({ previous: { version: '0.4.2', generation: 41, dataFormat: 0 } }));
+    await system.refresh();
+    expect(system.state().update?.previous).toEqual({ version: '0.4.2', readable: false });
+    expect(await system.bootVersion('0.4.2')).toBe('failed');
+  });
+
+  it('says at the start that it is up to date, or back on the previous version', async () => {
+    const x250 = fakeX250();
+    x250.files.set(FILE, file());
+    const first = await start(x250);
+    first.system.dispose();
+
+    const installed = (version: string, generation: number) => ({
+      version,
+      generation,
+      installedAt: '2026-11-13T14:40:00Z',
+      notes: [],
+      dataFormat: 1,
+    });
+    x250.files.set(FILE, file({ installed: installed('0.6.0', 43) }));
+    const updated = await start(x250, first.dir);
+    expect(updated.system.journal().map((m) => m.text)).toEqual([
+      'redémarrage pour la mise à jour',
+      'démarrage · charpentier 0.6.0',
+      'à jour · 0.6.0',
+    ]);
+    expect(updated.system.journal()[0]?.quiet).toBe(true);
+    updated.system.dispose();
+
+    x250.files.set(FILE, file({ setAside: { version: '0.6.0', generation: 43, dataFormat: 1 } }));
+    const back = await start(x250, first.dir);
+    expect(shown(back.system).at(-1)).toBe('revenu à 0.5.0 · 0.6.0 mise de côté');
+    expect(back.system.state().update?.setAside).toEqual({ version: '0.6.0', readable: true });
+  });
+});

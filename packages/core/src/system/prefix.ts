@@ -23,6 +23,7 @@ const WORDS = [
   'eteindre',
   'redemarrer',
   'usb',
+  'maj',
   'journal',
   'reglages',
   'moniteur',
@@ -40,6 +41,7 @@ const PANEL: Partial<Record<Word, Segment>> = {
   eteindre: 'systeme',
   redemarrer: 'systeme',
   usb: 'usb',
+  maj: 'maj',
   journal: 'message',
 };
 

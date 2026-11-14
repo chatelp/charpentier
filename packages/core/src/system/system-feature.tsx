@@ -39,6 +39,13 @@ export function createSystemFeature({ modifier }: { readonly modifier: SystemMod
     },
     { id: 'systemJournal', scope: 'global', keybinding: key('j'), run: panel('message') },
     {
+      id: 'systemUpdate',
+      scope: 'global',
+      keybinding: key('r'),
+      isEnabled: (ctx) => !!system(ctx).state().update?.ready,
+      run: panel('maj'),
+    },
+    {
       id: 'systemUsb',
       scope: 'global',
       keybinding: key('u'),

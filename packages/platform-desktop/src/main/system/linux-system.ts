@@ -4,6 +4,9 @@ import path from 'node:path';
 import {
   createLockKeeper,
   DEFAULT_SYSTEM_SETTINGS,
+  deviceVersion,
+  startMessages,
+  updateMessages,
   isValidCode,
   type LockRecord,
   MESSAGE_LENGTH,
@@ -25,6 +28,9 @@ import {
   parseMounted,
   parseOutputList,
   parseUsbKey,
+  parseUpdate,
+  UPDATE_FILE,
+  type UpdateTarget,
   type UsbKey,
   bluetoothPowered,
   cpuLoad,
@@ -108,6 +114,8 @@ interface Stored {
   /** The code's fingerprint, never the code. */
   readonly lock?: LockRecord | null;
   readonly firstStartDone?: boolean;
+  /** The version the app saw last: a new one at start is an update (phase 5.12). */
+  readonly lastVersion?: string;
 }
 
 function loadStored(file: string): Stored {
@@ -177,7 +185,10 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
     },
     lock: { locked: false, hasCode: !!stored.lock, retryAt: null },
     firstStart: stored.firstStartDone !== true,
+    update: null,
   };
+  /** The generations one can boot on, for `bootVersion`. */
+  let updateTargets: readonly UpdateTarget[] = [];
   let lockRecord: LockRecord | null = stored.lock ?? null;
   const keeper = createLockKeeper({
     load: () => lockRecord,
@@ -218,13 +229,14 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
     state = { ...state, ...change };
     emit();
   };
-  const post = (text: string) => {
+  const post = (text: string, quiet = false) => {
     journal = [
       ...journal,
       {
         id: `s${++sequence}`,
         text: text.slice(0, MESSAGE_LENGTH),
         at: now().toISOString(),
+        ...(quiet && { quiet }),
       },
     ];
     emit();
@@ -238,10 +250,25 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
       night: state.night.mode,
       lock: lockRecord,
       firstStartDone: !state.firstStart,
+      ...(lastVersion && { lastVersion }),
     });
   };
 
+  let lastVersion = stored.lastVersion;
+
   // — Reading —
+
+  /** Set once the start's journal is written: from then on, an update's change is said. */
+  let started = false;
+
+  /** The update service's file (docs/x250-update-contract.md). */
+  async function readUpdate() {
+    const read = parseUpdate(await tools.read(UPDATE_FILE));
+    const before = state.update;
+    updateTargets = read?.targets ?? [];
+    state = { ...state, update: read?.update ?? null };
+    if (started) for (const m of updateMessages(before, state.update)) post(m.text, m.quiet);
+  }
 
   async function readDevice() {
     const [product, cpuinfo, meminfo, osRelease, link, uptime, installed, disk, blocks] =
@@ -536,6 +563,7 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
       readBluetooth(),
       readUsb(false),
       readPrinters(),
+      readUpdate(),
     ]);
     updateNight();
     emit();
@@ -805,6 +833,26 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
     suspend: async () => {
       await run('systemctl', 'suspend');
     },
+    checkUpdate: async () => {
+      await run('systemctl', 'start', '--no-block', 'charpentier-update-check.service');
+      await readUpdate();
+      emit();
+    },
+    bootVersion: async (version) => {
+      const target = updateTargets.find((t) => t.version === version);
+      const known = [state.update?.previous, state.update?.setAside].find(
+        (v) => v?.version === version,
+      );
+      if (!target || !known?.readable) return 'failed';
+      const set = await run(
+        'systemctl',
+        'start',
+        `charpentier-update-boot@${target.generation}.service`,
+      );
+      if (set.code !== 0) return 'failed';
+      await run('systemctl', 'reboot');
+      return 'ok';
+    },
     reboot: async () => {
       await run('systemctl', 'reboot');
     },
@@ -814,20 +862,34 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
 
     start: async () => {
       await refresh();
+      const version = deviceVersion(state);
+      const atStart = startMessages(lastVersion ?? null, state.update);
+      const line = (text: string, at: string, quiet?: boolean) => ({
+        id: `s${++sequence}`,
+        text,
+        at,
+        ...(quiet && { quiet }),
+      });
       journal = [
-        {
-          id: `s${++sequence}`,
-          text: `démarrage · charpentier ${options.appVersion}`,
-          at: state.device.bootedAt,
-        },
+        // « redémarrage pour la mise à jour » comes before the start itself.
+        ...atStart.filter((m) => m.quiet).map((m) => line(m.text, state.device.bootedAt, true)),
+        line(`démarrage · charpentier ${version}`, state.device.bootedAt),
         ...journal,
+        ...atStart.filter((m) => !m.quiet).map((m) => line(m.text, now().toISOString())),
       ];
+      if (state.update && lastVersion !== version) {
+        lastVersion = version;
+        save();
+      }
+      started = true;
       emit();
       timers.push(
         setInterval(quietly(readCpu), periods.cpu),
         setInterval(
           quietly(() =>
-            Promise.all([readPowerSupplies(), readBrightness(), readVolume()]).then(() => {}),
+            Promise.all([readPowerSupplies(), readBrightness(), readVolume(), readUpdate()]).then(
+              () => {},
+            ),
           ),
           periods.power,
         ),

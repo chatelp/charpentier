@@ -72,6 +72,8 @@ export async function connectSystem(bridge: DesktopBridge): Promise<SystemServic
     unlock: call('unlock'),
     setLockCode: call('setLockCode'),
     finishFirstStart: call('finishFirstStart'),
+    checkUpdate: call('checkUpdate'),
+    bootVersion: call('bootVersion'),
     suspend: call('suspend'),
     reboot: call('reboot'),
     powerOff: call('powerOff'),

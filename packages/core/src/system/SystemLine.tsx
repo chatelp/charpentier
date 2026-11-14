@@ -21,7 +21,7 @@ import { featureText } from '../features/feature';
 import type { WorkspaceContext } from '../workspace/workspace-context';
 import { Gauge, Signal, sparkline, Square } from './controls';
 import { useBatteryGuard, useDeviceKeys } from './device-keys';
-import { SystemPanel } from './panels';
+import { focusFirstControl, SystemPanel } from './panels';
 import { PrintSheet } from './PrintSheet';
 import {
   MONITOR_VIEW,
@@ -159,7 +159,8 @@ export function SystemLine({
   const locked = state.lock.locked;
   const level = batteryLevel(state);
   const low = hasBattery(state) && !state.power.charging && level <= state.settings.lowBattery;
-  const lastMessage = journal.at(-1);
+  // The journal's quiet lines (« téléchargement interrompu ») never reach the line.
+  const lastMessage = [...journal].reverse().find((m) => !m.quiet);
   const time = new Intl.DateTimeFormat(i18n.language, {
     hour: '2-digit',
     minute: '2-digit',
@@ -215,6 +216,15 @@ export function SystemLine({
         </span>
       ),
     ),
+    maj:
+      state.update?.ready &&
+      segment(
+        'maj',
+        <>
+          {label('maj')}
+          <span className="ch-sys-value">{state.update.ready.version}</span>
+        </>,
+      ),
     usb:
       state.usb &&
       segment(
@@ -384,6 +394,12 @@ function PanelPortal({
     const x = seg?.getBoundingClientRect().left ?? 0;
     setLeft(Math.max(8, Math.min(x, window.innerWidth - width - 8)));
   }, [line, segment]);
+
+  // Hidden while it is placed, it could not take the focus: it takes it now.
+  const placed = left !== null;
+  useEffect(() => {
+    if (placed) focusFirstControl(panel.current);
+  }, [placed]);
 
   useEffect(() => {
     const onDown = (event: MouseEvent) => {

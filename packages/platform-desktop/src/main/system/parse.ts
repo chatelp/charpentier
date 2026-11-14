@@ -1,4 +1,10 @@
-import type { Battery, BluetoothDevice, WifiNetwork } from '@charpentier/platform';
+import type {
+  Battery,
+  BluetoothDevice,
+  SystemUpdate,
+  UpdateFailure,
+  WifiNetwork,
+} from '@charpentier/platform';
 
 /**
  * Readers of what the Linux tools print (docs/PLAN.md phase 5.4). Pure
@@ -457,3 +463,87 @@ export const parsePrinterNames = (text: string): string[] =>
 /** `lpstat -d`: « system default destination: Brother_HL_L2350 ». */
 export const parseDefaultPrinter = (text: string): string | null =>
   /destination:\s*(\S+)/.exec(text)?.[1] ?? null;
+
+/** The update file's contract (docs/x250-update-contract.md). */
+export const UPDATE_FILE = '/run/charpentier/update.json';
+const UPDATE_CONTRACT = 1;
+const FAILURES = new Set<UpdateFailure>(['signature', 'unreadable', 'disk-full', 'interrupted']);
+
+/** A generation one can boot on: its version, and its number for the boot service. */
+export interface UpdateTarget {
+  readonly version: string;
+  readonly generation: number;
+}
+
+/**
+ * Reads `/run/charpentier/update.json`, written by the update service of
+ * `charpentier-os`. Null when it is missing, of another contract, from a
+ * development system, or not what the contract says: nothing is shown then.
+ */
+export function parseUpdate(
+  text: string | null,
+): { readonly update: SystemUpdate; readonly targets: readonly UpdateTarget[] } | null {
+  if (!text) return null;
+  let raw: unknown;
+  try {
+    raw = JSON.parse(text);
+  } catch {
+    return null;
+  }
+  const o = (v: unknown): Record<string, unknown> | null =>
+    v && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : null;
+  const str = (v: unknown) => (typeof v === 'string' && v ? v : null);
+  const int = (v: unknown) => (typeof v === 'number' && Number.isInteger(v) ? v : null);
+  const notes = (v: unknown) =>
+    Array.isArray(v) ? v.filter((n): n is string => typeof n === 'string') : [];
+  const root = o(raw);
+  if (!root || root['contract'] !== UPDATE_CONTRACT || root['development'] === true) return null;
+  const installed = o(root['installed']);
+  const version = str(installed?.['version']);
+  if (!installed || !version) return null;
+  const format = int(installed['dataFormat']) ?? 1;
+  const targets: UpdateTarget[] = [];
+  const other = (v: unknown) => {
+    const g = o(v);
+    const otherVersion = str(g?.['version']);
+    const generation = int(g?.['generation']);
+    if (!g || !otherVersion || generation === null) return null;
+    targets.push({ version: otherVersion, generation });
+    return { version: otherVersion, readable: (int(g['dataFormat']) ?? 1) >= format };
+  };
+  const ready = o(root['ready']);
+  const readyVersion = str(ready?.['version']);
+  const failure = o(root['failure']);
+  const reason = failure?.['reason'];
+  const failed = str(failure?.['version']);
+  return {
+    targets,
+    update: {
+      installed: {
+        version,
+        installedAt: str(installed['installedAt']) ?? new Date(0).toISOString(),
+        notes: notes(installed['notes']),
+      },
+      ready:
+        ready && readyVersion
+          ? {
+              version: readyVersion,
+              publishedAt: str(ready['publishedAt']) ?? str(ready['receivedAt']) ?? '',
+              notes: notes(ready['notes']),
+            }
+          : null,
+      previous: other(root['previous']),
+      setAside: other(root['setAside']),
+      lastCheck: str(root['lastCheck']),
+      checking: root['checking'] === true,
+      failure:
+        failure && failed && FAILURES.has(reason as UpdateFailure)
+          ? {
+              version: failed,
+              at: str(failure['at']) ?? '',
+              reason: reason as UpdateFailure,
+            }
+          : null,
+    },
+  };
+}

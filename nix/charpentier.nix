@@ -83,6 +83,9 @@ stdenv.mkDerivation (finalAttrs: {
     cp apps/desktop/package.json $app/
     cp -r apps/desktop/out $app/out
     cp -r apps/desktop/resources/dictionaries $app/resources/
+    # The projects' format this version reads: the update service compares it
+    # before offering to go back (docs/x250-update-contract.md).
+    cp apps/desktop/resources/data-format $app/data-format
     cp apps/desktop/resources/icon.png $out/share/icons/hicolor/512x512/apps/charpentier.png
     makeWrapper ${lib.getExe electron} $out/bin/charpentier \
       --add-flags $app \
