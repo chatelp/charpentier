@@ -35,7 +35,8 @@ services:
   # only the X250's MAC gets the installer. Off by default, on for an install:
   #   docker compose --profile netboot up -d pixiecore   …   docker compose stop pixiecore
   pixiecore:
-    image: pixiecore/pixiecore:master
+    # The only tag published (2020-09-20), pinned to its amd64 image.
+    image: pixiecore/pixiecore:master@sha256:f9ad6ef63ca80a2c96ec6d89ea8fc24e785fba697a8a39a26bc3e5e7524a21ab
     profiles: [netboot]
     network_mode: host
     command:

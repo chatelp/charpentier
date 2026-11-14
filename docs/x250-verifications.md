@@ -1,12 +1,13 @@
 # Vérifications sur le vrai X250
 
-À faire une fois, à la main, après la première installation (docs/PLAN.md, phases 5.4 à 5.9 bis). Chaque ligne cochée permet de passer la phase à « Réalisé ». Ce qui ne marche pas : le noter tel quel (ce qu'on a fait, ce qu'on a vu), avec une photo de l'écran si possible.
+À faire une fois, à la main, après la première installation (docs/PLAN.md, phases 5.4 à 5.13). Chaque ligne cochée permet de passer la phase à « Réalisé ». Ce qui ne marche pas : le noter tel quel (ce qu'on a fait, ce qu'on a vu), avec une photo de l'écran si possible.
 
-Plus tard, la phase 5.10 bis automatisera la plupart de ces vérifications.
+Une fois le X250 installé, la phase 5.10 bis rejoue la plupart de ces vérifications depuis le Yoga L13 (dernière partie) ; restent à la main le rabat, les vraies touches, la clé USB, le Bluetooth et le téléphone.
 
 ## Avant de commencer
 
-- [ ] BIOS du X250 (F1 au démarrage) : Secure Boot désactivé.
+- [ ] BIOS du X250 (F1 au démarrage) : Secure Boot désactivé ; pour l'installation par le réseau, « UEFI IPv4 Network Stack » activé.
+- [ ] L'adresse MAC de la carte Ethernet du X250, relevée dans le BIOS ou sur l'étiquette (pour l'installation par le réseau) : ____.
 - [ ] La clé d'installation est prête (image construite sur le Yoga L13 avec l'app à jour).
 - [ ] Le chargeur est branché, le Wi-Fi de la maison et son mot de passe sont sous la main.
 - [ ] Une clé USB vide (pour la copie des textes), un casque ou un clavier Bluetooth, une imprimante allumée si possible.
@@ -20,6 +21,15 @@ Plus tard, la phase 5.10 bis automatisera la plupart de ces vérifications.
 - [ ] La copie va au bout, « retirez la clé pour continuer », puis redémarrage.
 - [ ] Durée de l'installation : ____ min.
 
+## 5.9 ter · L'installation par le réseau (au lieu de la clé)
+
+Préalables sur le prodesk2021 (infra/README.md, « Installer le X250 par le réseau ») : `NETBOOT_SECRET` et `NETBOOT_MACS` dans le `.env`, serveur redéployé, pare-feu ouvert, Pixiecore allumé.
+
+- [ ] Le X250 branché par câble sur le réseau de la maison, F12 puis la carte réseau : l'installateur s'affiche (sans parler de clé) en environ une minute.
+- [ ] La suite comme avec la clé (ci-dessus), jusqu'à « ⏎ redémarrer ».
+- [ ] Une autre machine qui démarre sur le réseau (le Mac ne compte pas) ne reçoit rien.
+- [ ] Pixiecore arrêté ensuite.
+
 ## 5.9 · Le démarrage
 
 - [ ] L'écran du mot de passe du disque : fond sombre, « charpentier · x250 », « mot de passe du disque : », un point par caractère, net et à la bonne taille sur l'écran du X250.
@@ -30,7 +40,7 @@ Plus tard, la phase 5.10 bis automatisera la plupart de ces vérifications.
 
 ## 5.6 · Le premier démarrage et le verrou
 
-- [ ] Le premier démarrage guide : Wi-Fi, code, synchronisation, Compagnon ; chaque étape peut être remise à plus tard (Échap).
+- [ ] Au premier démarrage, le choix « téléphone ⏎ » ou « clavier Échap ». Par le clavier : Wi-Fi, code, synchronisation, Compagnon ; chaque étape peut être remise à plus tard (Échap). Le téléphone : partie 5.13.
 - [ ] Le Wi-Fi de la maison se rejoint depuis l'étape Wi-Fi.
 - [ ] Un code de verrouillage choisi (deux fois).
 - [ ] La connexion au serveur de synchro (`https://charpentier.chatel.pm`, ton compte) : « Synchronisé » dans le pied, et ton roman apparaît dans la bibliothèque.
@@ -38,6 +48,18 @@ Plus tard, la phase 5.10 bis automatisera la plupart de ces vérifications.
 - [ ] La clé du Compagnon (si tu la donnes) est toujours là après un redémarrage.
 - [ ] Rabattre l'écran, attendre quelques secondes, le rouvrir : le code est demandé, aucun texte n'est visible avant.
 - [ ] Un code faux : le champ tremble une fois et se vide.
+
+## 5.13 · Le premier démarrage depuis le téléphone
+
+À faire sur un X250 neuf (ou réinstallé), à la place du premier démarrage au clavier.
+
+- [ ] Le choix « téléphone » est allumé (la carte Wi-Fi du X250 sait ouvrir un réseau) ; ⏎.
+- [ ] Le QR code se lit avec l'appareil photo du téléphone : le téléphone rejoint `charpentier-xxxx`, l'étape 1 se coche seule, la ligne système dit `wifi temporaire`.
+- [ ] Le second QR code ouvre la page sur le téléphone ; l'adresse tapée à la main demande le code à six chiffres affiché.
+- [ ] Le gestionnaire de mots de passe du téléphone remplit le Wi-Fi de la maison, le compte et la clé du Compagnon.
+- [ ] Envoyer : le réseau temporaire disparaît (il n'est plus dans la liste du téléphone), chaque ligne se coche sur le X250.
+- [ ] Un mot de passe Wi-Fi faux : « Corriger depuis le téléphone ⏎ » rouvre le réseau temporaire, le reste est gardé.
+- [ ] Le code du verrou, au clavier, puis « Écrire ⏎ » : le roman synchronisé s'ouvre, sans avoir tapé un mot de passe sur le X250.
 
 ## 5.4 · L'essentiel du système
 
@@ -68,6 +90,19 @@ Plus tard, la phase 5.10 bis automatisera la plupart de ces vérifications.
 - [ ] Écrire une scène, la fermer, la rouvrir : rien n'est perdu.
 - [ ] La correction orthographique française souligne une faute.
 - [ ] Une phrase écrite sur le X250 arrive sur le Mac, et inversement.
+
+## 5.12 · Les mises à jour (après la première release de l'app)
+
+- [ ] Après une release, le X250 (ailleurs qu'à la maison, par exemple sur le partage de connexion du téléphone) dit « mise à jour prête · ⊞R redémarrer » dans l'heure, et `maj x.y.z` reste dans la ligne.
+- [ ] « À propos » : la version installée et sa date, la carte « Version x.y.z prête », Vérifier maintenant.
+- [ ] ⊞R puis ⏎ ⏎ : l'écran du disque porte « mise à jour x.y.z », puis « à jour · x.y.z » ; le texte écrit juste avant est là, et sur le Mac.
+- [ ] « Revenir à la version précédente » depuis « À propos » : redémarrage, « revenu à … · … mise de côté » ; puis repasser à la version mise de côté.
+
+## 5.10 et 5.10 bis · Depuis le Yoga L13
+
+- [ ] Une mise à jour du X250 depuis le Yoga L13 (version développement), sans le toucher.
+- [ ] Les essais automatiques passent sur le vrai X250, avec le compte rendu et les captures ; le temps de démarrage relevé.
+- [ ] La version d'écriture réinstallée ensuite : plus aucun accès par le réseau (SSH refusé).
 
 ## Ce qu'on note pour la suite
 

@@ -69,7 +69,13 @@ ssh prodesk2021.local 'cd ~/Docker/charpentier && docker compose --profile netbo
 ssh prodesk2021.local 'cd ~/Docker/charpentier && docker compose stop pixiecore'
 ```
 
-À vérifier avant la première fois : qu'aucun autre service DHCP ou de démarrage réseau ne tourne sur la machine (ports UDP 67, 69 et 4011), et l'étiquette exacte de l'image Pixiecore.
+Vérifié le 14 novembre 2026 sur le prodesk2021 : les ports UDP 67, 69 et 4011 et le port TCP 8082 sont libres ; le DHCP du Pi-hole est éteint, et son conteneur ne publie pas le port 67. Le Pi-hole tient `192.168.1.2:8081` ; le serveur prend `127.0.0.1:8081`, une autre adresse, sans conflit. L'image de Pixiecore n'a qu'une étiquette, `master` (2020), figée par son empreinte dans `docker-compose.yml`.
+
+**Pare-feu** : ufw est actif sur la machine. Pixiecore étant sur le réseau de l'hôte, ufw s'applique à lui (contrairement aux ports publiés par Docker). Avant la première installation, regarder `sudo ufw status verbose` ; s'il ne laisse pas passer le démarrage réseau depuis la carte du réseau de la maison (`br0`), l'ouvrir sur cette carte seulement (le premier message DHCP du X250 part de 0.0.0.0, une règle « depuis 192.168.1.0/24 » ne le laisserait pas passer) :
+
+```bash
+ssh -t prodesk2021.local 'sudo ufw allow in on br0 to any port 67,69,4011 proto udp && sudo ufw allow in on br0 to any port 8082 proto tcp'
+```
 
 ## Restaurer une sauvegarde
 
