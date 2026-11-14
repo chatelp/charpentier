@@ -120,7 +120,11 @@ export interface SystemSettings {
   readonly showCpu: boolean;
   /** The external screen's scale, in % (« externe seul »). */
   readonly externalScale: 100 | 125 | 150;
+  /** The night mode's warmth, in kelvin: light, medium or strong (docs/DESIGN.md §4.12). */
+  readonly nightWarmth: NightWarmth;
 }
+
+export type NightWarmth = 4600 | 4000 | 3400;
 
 export interface SystemState {
   readonly device: {
@@ -203,6 +207,7 @@ export const DEFAULT_SYSTEM_SETTINGS: SystemSettings = {
   clock24: true,
   showCpu: true,
   externalScale: 100,
+  nightWarmth: 4000,
 };
 
 /** Below this level, on battery, the device saves the scene and sleeps (§4.12). */

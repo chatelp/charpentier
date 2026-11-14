@@ -233,6 +233,18 @@ function Display() {
             onChange={(mode) => void system.setNightMode(mode)}
           />
         </Row>
+        <Row label={s('rows.nightWarmth')} help={s('rows.nightWarmthHelp')}>
+          <Keys
+            options={[
+              { value: 4600 as const, label: s('values.warmthLight') },
+              { value: 4000 as const, label: s('values.warmthMedium') },
+              { value: 3400 as const, label: s('values.warmthStrong') },
+            ]}
+            value={state.settings.nightWarmth}
+            label={s('rows.nightWarmth')}
+            onChange={set('nightWarmth')}
+          />
+        </Row>
       </Group>
       <Group title={s('groups.external')}>
         <Row label={s('rows.external')} help={s('rows.externalHelp')}>

@@ -413,6 +413,11 @@ describe('the System service of the X250 (phase 5.4)', () => {
     await system.setSetting('autoTime', false);
     expect(ran(x250.runs, 'timedatectl', 'set-ntp', 'false')).toBe(true);
     await system.setNightMode('on');
+    const night = () => x250.daemons.filter((d) => d.command === 'wlsunset').at(-1);
+    expect(night()?.args).toEqual(['-T', '4001', '-t', '4000']);
+    // A stronger warmth: wlsunset starts again at it.
+    await system.setSetting('nightWarmth', 3400);
+    expect(night()?.args).toEqual(['-T', '3401', '-t', '3400']);
 
     system.dispose();
     const again = await start(fakeX250(), dir);

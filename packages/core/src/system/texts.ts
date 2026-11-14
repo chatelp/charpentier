@@ -355,6 +355,8 @@ export const systemTexts: TextTree = {
         brightness: 'Luminosité',
         night: 'Mode nuit',
         nightHelp: 'Automatique de 21 h à 7 h.',
+        nightWarmth: 'Chaleur',
+        nightWarmthHelp: 'Plus forte, moins de bleu le soir.',
         external: 'Écran externe',
         externalHelp:
           'Externe seul : l’app passe sur le moniteur branché, l’écran du portable s’éteint ; elle revient quand on le débranche.',
@@ -416,6 +418,9 @@ export const systemTexts: TextTree = {
         on: 'oui',
         off: 'non',
         none: 'aucune',
+        warmthLight: 'légère',
+        warmthMedium: 'moyenne',
+        warmthStrong: 'forte',
       },
     },
   },

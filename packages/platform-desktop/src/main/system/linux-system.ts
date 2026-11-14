@@ -501,14 +501,17 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
     await run('swaymsg', ...touchpad, 'natural_scroll', on(s.naturalScrolling));
   }
 
-  /** The warm light (wlsunset): always, or from 21 h to 7 h. */
+  /** The warm light (wlsunset), at the chosen warmth: always, or from 21 h to 7 h. */
   function applyNight() {
     stopNight?.();
     stopNight = null;
     const mode = state.night.mode;
-    if (mode === 'on') stopNight = tools.daemon('wlsunset', ['-T', '4001', '-t', '4000']);
+    const warm = String(state.settings.nightWarmth);
+    // Always: the day's temperature just above the night's, so it never changes.
+    const day = String(state.settings.nightWarmth + 1);
+    if (mode === 'on') stopNight = tools.daemon('wlsunset', ['-T', day, '-t', warm]);
     if (mode === 'auto')
-      stopNight = tools.daemon('wlsunset', ['-S', '07:00', '-s', '21:00', '-t', '4000']);
+      stopNight = tools.daemon('wlsunset', ['-S', '07:00', '-s', '21:00', '-t', warm]);
     updateNight();
   }
   const updateNight = () => {
@@ -678,6 +681,7 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
       )
         await applyInput();
       if (key === 'autoTime') await run('timedatectl', 'set-ntp', value ? 'true' : 'false');
+      if (key === 'nightWarmth') applyNight();
     },
     // Printing needs the host's PDF (see `printPdf`): the service alone cannot lay out a page.
     print: async () => 'failed',
