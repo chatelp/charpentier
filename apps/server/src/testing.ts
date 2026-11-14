@@ -25,8 +25,18 @@ export async function freshDatabase(): Promise<Database> {
   return db;
 }
 
-export async function startServer(db: Database, cacheDir: string | null = null) {
-  const server = createSyncServer({ db, port: 0, address: '127.0.0.1', cacheDir });
+export async function startServer(
+  db: Database,
+  cacheDir: string | null = null,
+  netboot?: { secret: string | null; macs: readonly string[] },
+) {
+  const server = createSyncServer({
+    db,
+    port: 0,
+    address: '127.0.0.1',
+    cacheDir,
+    ...(netboot && { netboot }),
+  });
   await server.listen();
   servers.push(server);
   const { port } = server.address;

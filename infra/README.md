@@ -56,6 +56,21 @@ ssh -t prodesk2021.local 'cd ~/Docker/charpentier && docker compose exec server 
 
 Avec des morceaux de 95 Mo au plus, ni Cloudflare ni le délai de Traefik (60 s par défaut en v3) ne devraient couper un envoi. Le nettoyage des anciennes versions n'est pas encore fait : surveiller la place du volume.
 
+## Installer le X250 par le réseau (phase 5.9 ter, D-32)
+
+Pixiecore (Apache 2.0) répond aux machines qui démarrent sur le réseau de la maison et demande au serveur quoi leur donner : seul le X250, reconnu à l'adresse MAC de sa carte Ethernet, reçoit l'installateur (le noyau et l'initrd de la version publiée, déposés par la CI sous `/api/netboot/<version>/`). Le serveur ne répond à Pixiecore que par 127.0.0.1:8081, avec un secret, et jamais à une requête venue par Traefik. Le service est **éteint par défaut**.
+
+Une fois, dans le `.env` de la machine : `NETBOOT_SECRET` (au hasard, `openssl rand -hex 24`) et `NETBOOT_MACS` (l'adresse MAC Ethernet du X250, plusieurs séparées par des virgules), puis redéployer le serveur.
+
+Pour une installation (X250 branché par câble, F12 puis la carte réseau ; BIOS : « UEFI IPv4 Network Stack » activé, Secure Boot désactivé) :
+
+```bash
+ssh prodesk2021.local 'cd ~/Docker/charpentier && docker compose --profile netboot up -d pixiecore'
+ssh prodesk2021.local 'cd ~/Docker/charpentier && docker compose stop pixiecore'
+```
+
+À vérifier avant la première fois : qu'aucun autre service DHCP ou de démarrage réseau ne tourne sur la machine (ports UDP 67, 69 et 4011), et l'étiquette exacte de l'image Pixiecore.
+
 ## Restaurer une sauvegarde
 
 Une archive contient le volume sous `/backup/db` (vérifié le 13 novembre 2026 ; la restauration elle-même n'a pas encore été essayée).

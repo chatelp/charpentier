@@ -9,9 +9,15 @@ services:
     restart: unless-stopped
     environment:
       DATABASE_URL: postgres://charpentier:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@db:5432/charpentier
+      # The X250's network boot (phase 5.9 ter): Pixiecore's secret and the MACs it serves.
+      NETBOOT_SECRET: ${NETBOOT_SECRET:-}
+      NETBOOT_MACS: ${NETBOOT_MACS:-}
     # The X250's binary cache (D-31): rebuilt by the CI if lost, so not backed up.
     volumes:
       - cache:/data/nix-cache
+    # For Pixiecore only, on this machine (never published beyond 127.0.0.1).
+    ports:
+      - '127.0.0.1:8081:8080'
     depends_on:
       db:
         condition: service_healthy
@@ -23,6 +29,21 @@ services:
       traefik.http.routers.charpentier.rule: Host(`${CHARPENTIER_HOST:?set CHARPENTIER_HOST in .env}`)
       traefik.http.routers.charpentier.tls.certresolver: ${TRAEFIK_CERTRESOLVER:-cloudflare}
       traefik.http.services.charpentier.loadbalancer.server.port: '8080'
+
+  # The X250 installed over the network (phase 5.9 ter, D-32): answers the
+  # machines that start on the home network, asking the server what to boot;
+  # only the X250's MAC gets the installer. Off by default, on for an install:
+  #   docker compose --profile netboot up -d pixiecore   …   docker compose stop pixiecore
+  pixiecore:
+    image: pixiecore/pixiecore:master
+    profiles: [netboot]
+    network_mode: host
+    command:
+      - api
+      - http://127.0.0.1:8081/netboot/${NETBOOT_SECRET:?set NETBOOT_SECRET in .env}
+      # Traefik holds port 80 of the host.
+      - --port=8082
+    depends_on: [server]
 
   db:
     image: postgres:17-alpine

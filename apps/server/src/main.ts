@@ -29,6 +29,11 @@ if (command) {
 
 const port = Number(process.env['PORT'] ?? 8080);
 const cacheDir = process.env['CACHE_DIR'] ?? '/data/nix-cache';
-const server = createSyncServer({ db, port, address: '0.0.0.0', cacheDir });
+// The X250's network boot (phase 5.9 ter): Pixiecore's secret, and the MACs it serves.
+const netboot = {
+  secret: process.env['NETBOOT_SECRET'] || null,
+  macs: (process.env['NETBOOT_MACS'] ?? '').split(',').filter(Boolean),
+};
+const server = createSyncServer({ db, port, address: '0.0.0.0', cacheDir, netboot });
 await server.listen();
 console.log(`Charpentier sync server listening on port ${port}.`);

@@ -6,6 +6,7 @@ import { documentOwner } from './document-names';
 import { handleApi, LoginLimiter } from './http-api';
 import { handleInstaller } from './installer';
 import { handleCache } from './nix-cache';
+import { handleNetboot, type NetbootOptions } from './netboot';
 import { handleUpdates } from './updates';
 
 export interface SyncServerOptions {
@@ -14,6 +15,8 @@ export interface SyncServerOptions {
   readonly address?: string;
   /** Where the X250's binary cache keeps its files (D-31); without it, no cache. */
   readonly cacheDir?: string | null;
+  /** The network boot of the X250 (phase 5.9 ter); without a secret, none. */
+  readonly netboot?: NetbootOptions;
 }
 
 /** What a connection is, once its token has been checked. */
@@ -32,6 +35,7 @@ export interface ConnectionContext {
 export function createSyncServer(options: SyncServerOptions): Server<ConnectionContext> {
   const { db } = options;
   const cacheDir = options.cacheDir ?? null;
+  const netboot = options.netboot ?? { secret: null, macs: [] };
   const limiter = new LoginLimiter();
   return new Server<ConnectionContext>({
     ...(options.port !== undefined && { port: options.port }),
@@ -64,6 +68,7 @@ export function createSyncServer(options: SyncServerOptions): Server<ConnectionC
         (await handleCache(db, cacheDir, request, response)) ||
         (await handleUpdates(db, cacheDir, request, response)) ||
         (await handleInstaller(db, cacheDir, request, response)) ||
+        (await handleNetboot(db, cacheDir, netboot, request, response)) ||
         (await handleApi(db, limiter, request, response))
       )
         return Promise.reject();
