@@ -1,8 +1,8 @@
 {
   # The app's Nix package (docs/PLAN.md phase 5.8), for the X250's system: that
-  # system and its install key live in their own repository, charpentier-os,
-  # which takes this flake as an input and builds it (its scripts/nix.sh: the
-  # Mac has no Nix).
+  # system and its install key live in their own repository,
+  # github:chatelp/charpentier-os, which takes this flake (main, as pushed) as
+  # an input and builds it.
   description = "Charpentier : le paquet Nix de l'app";
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";

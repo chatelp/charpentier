@@ -48,8 +48,8 @@ stdenv.mkDerivation (finalAttrs: {
     pnpm = pnpm_10_latest;
     pnpmWorkspaces = [ "@charpentier/desktop..." ];
     fetcherVersion = 5;
-    # Refreshed when the lockfile changes: in ../charpentier-os, `scripts/nix.sh build
-    # .#charpentier --override-input charpentier path:/src/charpentier-writer` gives the new one.
+    # Refreshed when the lockfile changes: in charpentier-os, `scripts/nix.sh build
+    # .#charpentier --override-input charpentier path:<this checkout>` gives the new one.
     hash = "sha256-+oa2fp45rsRrWPIOgctUO8GKgQvOhk4gA2nv8BllJjs=";
   };
 
