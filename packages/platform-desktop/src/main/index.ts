@@ -18,3 +18,4 @@ export {
 } from './system/linux-system';
 export { nodeTools, type SystemTools, type RunResult } from './system/tools';
 export { exportTexts } from './export-texts';
+export { shareUpdateAccess } from './update-access';

@@ -32,6 +32,7 @@ import {
   SpellClient,
   type MirrorStrings,
   createLinuxSystem,
+  shareUpdateAccess,
   type LinuxSystem,
   exportTexts,
   nodeTools,
@@ -260,6 +261,29 @@ const sync = new SyncEngine({
   device: deviceName(),
 });
 // Projects that came from another device get their Markdown mirror too; every window hears the status.
+/**
+ * The X250's update service reads the cache with this device's token
+ * (docs/x250-update-contract.md): given at each sign-in, taken back at sign-out.
+ */
+function shareAccountWithUpdates() {
+  if (process.platform !== 'linux' || !appliance) return;
+  let account: SyncAccount | null;
+  try {
+    const stored = secrets.get(SYNC_ACCOUNT_SECRET);
+    account = stored ? (JSON.parse(stored) as SyncAccount) : null;
+  } catch {
+    account = null;
+  }
+  try {
+    shareUpdateAccess(
+      path.join(app.getPath('appData'), 'charpentier', 'update-access.json'),
+      account,
+    );
+  } catch (error) {
+    console.error('Charpentier: the update service cannot read the account', error);
+  }
+}
+sync.onStatusChange(() => shareAccountWithUpdates());
 sync.onStatusChange((status) => {
   syncMirrors();
   for (const contents of sessions.keys())
@@ -460,6 +484,8 @@ function secretsWithoutKeychain() {
 
 void app.whenReady().then(() => {
   secretsWithoutKeychain();
+  // Once the secrets can be read (without a keychain, in clear on the device).
+  shareAccountWithUpdates();
   // A device has no menu bar (on the Mac, the hidden one keeps ⌘Q for development).
   Menu.setApplicationMenu(appliance && process.platform !== 'darwin' ? null : appMenu());
   sync.start();

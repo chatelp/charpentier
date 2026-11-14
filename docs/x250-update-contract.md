@@ -42,6 +42,14 @@ Entre le service de mise à jour du système (`charpentier-os`, sous root) et l'
 - `development` : `true` sur la version développement de 5.10 bis ; le service n'y installe jamais rien, l'app ne montre rien.
 - `dataFormat` : le format des projets que cette version sait lire, lu dans le paquet de l'app de la génération (`<app>/share/charpentier/data-format`, un entier ; absent = 1). Il vient de `apps/desktop/resources/data-format`, à augmenter quand une version enregistre les projets d'une façon que les précédentes ne savent plus relire. L'app ne propose pas de revenir à une version dont le `dataFormat` est inférieur à celui de la version installée (bouton grisé, aide qui dit pourquoi).
 
+## Le compte, pour lire le cache
+
+Le cache du serveur ne répond qu'aux appareils du compte. L'app écrit, à chaque connexion à la synchronisation et au démarrage, `~auteur/.config/charpentier/update-access.json` = `{"server": "https://charpentier.chatel.pm", "token": "<jeton d'appareil>"}` (mode 0600), et le retire à la déconnexion (X250 seulement, `--appliance`). Le service le lit en root là où il est, sans le copier ; il passe le jeton au cache en `Authorization: Bearer` (ou Basic, utilisateur indifférent, mot de passe = jeton). Fichier absent : rien n'est vérifié, `lastCheck` ne bouge pas.
+
+Le pointeur : `GET <server>/api/updates/latest` avec le même jeton répond `{ "version", "notes", "systems": { "azerty", "bepo", "qwerty" }, "publishedAt" }` ; `notes` est un texte, une note par ligne (le service coupe aux sauts de ligne, retire les lignes vides et un « - » de tête) ; 404 tant qu'aucune version n'est publiée.
+
+La version installée : le système ne la connaît pas lui-même. Le service tient un registre `/var/lib/charpentier/update/generations.json` (génération → version, notes, date), rempli quand il installe ; pour la première installation, par la clé, la version est celle du paquet de l'app (`charpentier-0.1.0` → `0.1.0`).
+
 ## Les gestes de l'app
 
 Permis à `auteur` sans mot de passe par une règle polkit limitée à ces unités (`org.freedesktop.systemd1.manage-units`, verbe `start`) :
