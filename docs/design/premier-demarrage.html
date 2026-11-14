@@ -1,0 +1,579 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Charpentier · premier démarrage depuis le téléphone</title>
+    <!-- The app's own styles: the mock is drawn with the real tokens, the real line and the real cover. -->
+    <link rel="stylesheet" href="../../packages/core/src/styles/base.css" />
+    <link rel="stylesheet" href="../../packages/core/src/system/system.css" />
+    <link rel="stylesheet" href="../../packages/core/src/system/cover.css" />
+    <style>
+      /* Maquette du premier démarrage du X250 depuis le téléphone (PLAN 5.13, D-33).
+         La barre du haut sert à comparer ; elle ne fait pas partie du design. */
+      body {
+        margin: 0;
+        background: #8d949e;
+        font-family: var(--ch-font-ui);
+      }
+      .bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 14px;
+        padding: 10px 16px;
+        background: #2b3038;
+        color: #dfe3ea;
+        font: 12px var(--ch-font-ui);
+      }
+      .bar b {
+        margin-right: 4px;
+        color: #8a929e;
+        font-weight: 500;
+      }
+      .bar button {
+        padding: 2px 8px;
+        border: 0;
+        border-radius: 6px;
+        background: #383e48;
+        color: #dfe3ea;
+        font: inherit;
+        cursor: pointer;
+      }
+      .bar button.on {
+        background: #dfe3ea;
+        color: #22262d;
+      }
+      #frame {
+        position: relative;
+        width: 1536px;
+        height: 864px;
+        margin: 16px auto;
+        overflow: hidden;
+        background: var(--ch-bg);
+        color: var(--ch-ink);
+      }
+      #frame > .ch-sysline {
+        position: absolute;
+        inset: 0 0 auto;
+      }
+      #frame > .ch-cover {
+        position: absolute;
+        inset: 30px 0 0;
+      }
+
+      /* ── Proposal: what the phone path adds to the cover (cover.css) ── */
+
+      /* The choice: two raised cards, the one under the keyboard lit. */
+      .ph-choice {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+        width: min(40rem, 100%);
+        margin: 6px 0 0;
+      }
+      .ph-card {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 18px 20px 16px;
+        border-radius: var(--ch-radius-md);
+        background: var(--ch-bg);
+        box-shadow: var(--ch-raise-s);
+        color: var(--ch-ink);
+        text-align: left;
+      }
+      .ph-card.is-lit {
+        background: var(--ch-lit-bg);
+        box-shadow: var(--ch-raise-s), var(--ch-lit);
+      }
+      .ph-card.is-off {
+        box-shadow: none;
+        color: var(--ch-faint);
+      }
+      .ph-card-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        font: 500 16px var(--ch-font-ui);
+      }
+      .ph-card-tag {
+        color: var(--ch-mentor);
+        font: 400 11px var(--ch-font-sys);
+      }
+      .ph-card p {
+        margin: 0;
+        color: var(--ch-ink-2);
+        font: 400 13.5px/1.5 var(--ch-font-ui);
+      }
+      .ph-card.is-off p {
+        color: var(--ch-faint);
+      }
+      .ph-card kbd {
+        align-self: flex-end;
+        margin-top: 4px;
+      }
+      .ph-hint {
+        margin: 18px 0 0;
+        color: var(--ch-faint);
+        font: 400 12px var(--ch-font-sys);
+      }
+
+      /* The code to scan, and its words for a phone without a camera. */
+      .ph-scan {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 34px;
+        align-items: center;
+        width: min(44rem, 100%);
+        margin: 4px 0 0;
+      }
+      /* The code always dark on a pale square with its margin, in both themes: every camera reads it. */
+      .ph-qr {
+        padding: 14px;
+        border-radius: var(--ch-radius-md);
+        background: var(--ch-bg);
+        box-shadow: var(--ch-raise-s);
+      }
+      .ph-qr svg {
+        display: block;
+        width: 196px;
+        height: 196px;
+        border-radius: 6px;
+        background: #f4f6f9;
+      }
+      .ph-qr.is-faded svg {
+        opacity: 0.18;
+      }
+      .ph-say {
+        margin: 0 0 14px;
+        color: var(--ch-ink);
+        font: 400 16px/1.5 var(--ch-font-ui);
+      }
+      .ph-say em {
+        color: var(--ch-ink-2);
+      }
+      .ph-plain {
+        margin: 0;
+        padding: 12px 14px;
+        border-radius: var(--ch-radius-md);
+        box-shadow: var(--ch-inset);
+        font: 400 13px/1.9 var(--ch-font-sys);
+      }
+      .ph-plain-head {
+        display: block;
+        color: var(--ch-muted);
+        font: 400 11.5px var(--ch-font-sys);
+      }
+      .ph-plain dt {
+        display: inline-block;
+        width: 8.5em;
+        color: var(--ch-muted);
+      }
+      .ph-plain dd {
+        display: inline;
+        margin: 0;
+        color: var(--ch-ink);
+        font-weight: 500;
+      }
+      .ph-plain dd::after {
+        content: '\a';
+        white-space: pre;
+      }
+      .ph-wait {
+        margin: 12px 0 0;
+        color: var(--ch-muted);
+        font: 400 12px var(--ch-font-sys);
+      }
+      .ph-wait.is-news {
+        color: var(--ch-ink);
+      }
+      .ph-wait.is-news::before {
+        content: '→ ';
+        color: var(--ch-faint);
+      }
+      .ph-tip {
+        margin: 10px 0 0;
+        color: var(--ch-muted);
+        font: 400 12.5px/1.5 var(--ch-font-ui);
+      }
+
+      /* The settings received: one line each, its state on the right. */
+      .ph-apply {
+        width: min(38rem, 100%);
+        margin: 4px 0 0;
+        padding: 6px 0;
+        border-radius: var(--ch-radius-md);
+        box-shadow: var(--ch-inset);
+        list-style: none;
+      }
+      .ph-apply li {
+        display: grid;
+        grid-template-columns: 11.5em 1fr auto;
+        align-items: baseline;
+        gap: 12px;
+        margin: 0 6px;
+        padding: 9px 12px;
+        border-radius: calc(var(--ch-radius-md) - 4px);
+        font: 400 13px var(--ch-font-sys);
+      }
+      .ph-apply .what {
+        color: var(--ch-muted);
+      }
+      .ph-apply .value {
+        overflow: hidden;
+        color: var(--ch-ink-2);
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .ph-apply .state {
+        color: var(--ch-ink);
+      }
+      .ph-apply li.is-todo .state,
+      .ph-apply li.is-todo .value {
+        color: var(--ch-faint);
+      }
+      /* Where the device is now: lit (§4.7). */
+      .ph-apply li.is-now {
+        background: var(--ch-lit-bg);
+        box-shadow: var(--ch-lit);
+      }
+      /* A failure: the state inverted, as an alert of the system line; never red. */
+      .ph-apply li.is-failed .state {
+        padding: 0 6px;
+        background: var(--ch-ink);
+        color: var(--ch-bg);
+      }
+      .ph-apply .why {
+        grid-column: 2 / 4;
+        margin-top: -4px;
+        color: var(--ch-ink);
+        font: 400 13px/1.45 var(--ch-font-ui);
+      }
+
+      .ph-actions {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin: 18px 0 0;
+      }
+      .ph-actions .ch-btn {
+        padding: 6px 12px;
+        font-size: 13px;
+      }
+      .ph-actions kbd {
+        margin-left: 4px;
+        color: var(--ch-faint);
+        font: 400 11px var(--ch-font-ui);
+      }
+      .ch-first-steps {
+        display: flex;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="bar" id="bar"></div>
+    <div id="frame"></div>
+
+    <script>
+      const S = { screen: 'choix', entry: 'choix', theme: 'light', code: 'x250' };
+
+      const SCREENS = [
+        ['choix', 'choix'],
+        ['reseau', '1 · rejoindre'],
+        ['page', '2 · ouvrir'],
+        ['remplir', 'page ouverte'],
+        ['appliquer', '3 · appliquer'],
+        ['code', 'code'],
+        ['fin', 'fin'],
+        ['echec', 'wifi refusé'],
+        ['partiel', 'fin, avec reste'],
+        ['parti', 'téléphone parti'],
+        ['expire', 'code renouvelé'],
+        ['sanswifi', 'aucun wifi possible'],
+      ];
+
+      /* A stand-in for a QR code (29 × 29, version 3): finders, timing, alignment, noise.
+         The app draws a real one. */
+      function qr(seed) {
+        const n = 29;
+        const m = Array.from({ length: n }, () => Array(n).fill(0));
+        let x = seed;
+        const rnd = () => (x = (x * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+        for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) m[r][c] = rnd() < 0.47 ? 1 : 0;
+        const finder = (r0, c0) => {
+          for (let r = -1; r < 8; r++)
+            for (let c = -1; c < 8; c++) {
+              const rr = r0 + r,
+                cc = c0 + c;
+              if (rr < 0 || cc < 0 || rr >= n || cc >= n) continue;
+              const ring = Math.max(Math.abs(r - 3), Math.abs(c - 3));
+              m[rr][cc] = r < 0 || c < 0 || r > 6 || c > 6 ? 0 : ring === 2 ? 0 : 1;
+            }
+        };
+        finder(0, 0);
+        finder(0, n - 7);
+        finder(n - 7, 0);
+        for (let i = 8; i < n - 8; i++) m[6][i] = m[i][6] = i % 2 ? 0 : 1;
+        for (let r = -2; r <= 2; r++)
+          for (let c = -2; c <= 2; c++)
+            m[22 + r][22 + c] = Math.max(Math.abs(r), Math.abs(c)) === 1 ? 0 : 1;
+        let d = '';
+        for (let r = 0; r < n; r++)
+          for (let c = 0; c < n; c++) if (m[r][c]) d += `M${c + 4} ${r + 4}h1v1h-1z`;
+        return `<svg viewBox="0 0 37 37" shape-rendering="crispEdges" aria-label="code à viser"><path d="${d}" fill="#14161a"/></svg>`;
+      }
+
+      function sysline(msg, wifi) {
+        const g = (k) =>
+          Array.from(
+            { length: 10 },
+            (_, i) => `<span${i < k ? ' class="is-full"' : ''}></span>`,
+          ).join('');
+        return `<div class="ch-system ch-sysline" role="toolbar" aria-label="ligne système">
+          <button class="ch-sys-seg is-systeme"><svg class="ch-sys-square" viewBox="0 0 24 24" width="13" height="13"><path d="M3 2h6v13h13v6H3z" fill="currentColor"/><circle cx="17" cy="8" r="3" fill="#86aedb"/></svg><span class="ch-sys-word">système</span><kbd>⊞</kbd></button>
+          <button class="ch-sys-seg is-message"><span class="ch-sys-message">${msg}</span></button>
+          <button class="ch-sys-seg is-wifi"><span class="ch-sys-label">wifi</span><span class="ch-sys-value">${wifi}</span></button>
+          <button class="ch-sys-seg is-lum"><span class="ch-sys-label">lum</span><span class="ch-sys-gauge">${g(6)}</span><span class="ch-sys-value">60</span></button>
+          <button class="ch-sys-seg is-vol"><span class="ch-sys-label">vol</span><span class="ch-sys-gauge">${g(4)}</span><span class="ch-sys-value">40</span></button>
+          <button class="ch-sys-seg is-bat"><span class="ch-sys-label">bat</span><span class="ch-sys-gauge">${g(8)}</span><span class="ch-sys-value">82 %</span><span class="ch-sys-remaining">5h40</span></button>
+          <button class="ch-sys-seg is-date"><span class="ch-sys-day">sam. 14</span><span class="ch-sys-value">18:16</span></button>
+        </div>`;
+      }
+
+      const TEMP = 'charpentier-7f3k';
+      const head = (mentor, steps, on) => `
+        <h1 class="ch-first-title">Bienvenue</h1>
+        <div class="ch-first-fleuron" aria-hidden="true">⁂</div>
+        <p class="ch-first-mentor">${mentor}</p>
+        ${
+          steps
+            ? `<ol class="ch-seg ch-first-steps">${steps
+                .map((s, i) => `<li${i === on ? ' class="is-on"' : ''}>${i + 1} ${s}</li>`)
+                .join('')}</ol>`
+            : ''
+        }`;
+      const PHONE = ['rejoindre', 'remplir', 'appliquer'];
+      const keys = (...b) =>
+        `<p class="ph-actions">${b
+          .map(
+            ([label, key, cls]) =>
+              `<span class="ch-btn${cls ? ' ' + cls : ''}">${label} <kbd>${key}</kbd></span>`,
+          )
+          .join('')}</p>`;
+
+      function scan({ seed, say, plain, wait, news, tip, faded }) {
+        return `<div class="ph-scan">
+          <div class="ph-qr${faded ? ' is-faded' : ''}">${qr(seed)}</div>
+          <div>
+            <p class="ph-say">${say}</p>
+            <dl class="ph-plain"><span class="ph-plain-head">sans appareil photo</span>${plain
+              .map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`)
+              .join('')}</dl>
+            ${tip ? `<p class="ph-tip">${tip}</p>` : ''}
+            <p class="ph-wait${news ? ' is-news' : ''}">${wait}</p>
+          </div>
+        </div>`;
+      }
+
+      const plainNet = [
+        ['réseau', TEMP],
+        ['mot de passe', 'tilleul-cadran-47'],
+      ];
+      const plainPage = [
+        ['adresse', '10.42.0.1:8080'],
+        ['code', '482 913'],
+      ];
+
+      function apply(rows) {
+        return `<ul class="ph-apply">${rows
+          .map(
+            ([what, value, state, cls, why]) =>
+              `<li class="${cls || ''}"><span class="what">${what}</span><span class="value">${value}</span><span class="state">${state}</span>${
+                why ? `<span class="why">${why}</span>` : ''
+              }</li>`,
+          )
+          .join('')}</ul>`;
+      }
+
+      function screen() {
+        const s = S.screen;
+        const chooser = (off) => `
+          ${head('Avant d’écrire, quelques réglages. Le plus simple : depuis votre téléphone.')}
+          <div class="ph-choice">
+            <div class="ph-card ${off ? 'is-off' : 'is-lit'}">
+              <span class="ph-card-head">Depuis votre téléphone <span class="ph-card-tag">${off ? 'indisponible' : 'recommandé'}</span></span>
+              <p>${
+                off
+                  ? 'Ce X250 ne peut pas ouvrir de réseau pour le téléphone : sa carte Wi-Fi ne répond pas.'
+                  : 'Vous visez un code, vous remplissez une page ; votre gestionnaire de mots de passe fait le reste.'
+              }</p>
+              ${off ? '' : '<kbd>⏎</kbd>'}
+            </div>
+            <div class="ph-card${off ? ' is-lit' : ''}">
+              <span class="ph-card-head">Au clavier</span>
+              <p>Quatre étapes ici, l’une après l’autre : Wi‑Fi, code, synchronisation, Compagnon.</p>
+              <kbd>${off ? '⏎' : 'Échap'}</kbd>
+            </div>
+          </div>
+          <p class="ph-hint">${off ? '⏎ continuer au clavier' : '← → choisir · ⏎ continuer'}</p>`;
+
+        if (s === 'choix') return [sysline('démarrage · charpentier 0.5.0', '—'), chooser(false)];
+        if (s === 'sanswifi') return [sysline('wifi · aucune carte prête', '—'), chooser(true)];
+
+        const netScreen = (wait, news) =>
+          head('Tout se règle depuis votre téléphone.', PHONE, 0) +
+          scan({
+            seed: 7,
+            say: 'Ouvrez l’appareil photo du téléphone et visez ce code : il rejoint le réseau du X250.',
+            plain: plainNet,
+            wait,
+            news,
+          }) +
+          keys(['Au clavier', 'Échap']);
+
+        if (s === 'reseau')
+          return [
+            sysline(`réseau temporaire ouvert · ${TEMP}`, 'temporaire'),
+            netScreen('en attente d’un téléphone…'),
+          ];
+        if (s === 'parti')
+          return [
+            sysline('le téléphone a quitté le réseau', 'temporaire'),
+            netScreen(
+              'Le téléphone a quitté le réseau avant d’envoyer. Visez à nouveau ce code.',
+              true,
+            ),
+          ];
+
+        const pageScreen = (wait, news, seed = 23) =>
+          head('Tout se règle depuis votre téléphone.', PHONE, 1) +
+          scan({
+            seed,
+            say: 'Le téléphone a rejoint le réseau. Visez ce second code : il ouvre la page des réglages.',
+            plain: plainPage,
+            tip: 'Si le téléphone propose de quitter ce réseau « sans internet », restez-y : la page est ici.',
+            wait,
+            news,
+          }) +
+          keys(['Au clavier', 'Échap']);
+
+        if (s === 'page')
+          return [
+            sysline('un téléphone a rejoint le réseau', 'temporaire'),
+            pageScreen('en attente de la page…'),
+          ];
+        if (s === 'expire')
+          return [
+            sysline('nouveau code · le précédent a expiré', 'temporaire'),
+            pageScreen(
+              'Le code précédent a expiré : en voici un nouveau. La page déjà ouverte ne peut plus envoyer.',
+              true,
+              41,
+            ),
+          ];
+        if (s === 'remplir')
+          return [
+            sysline('page ouverte sur le téléphone', 'temporaire'),
+            head('Tout se règle depuis votre téléphone.', PHONE, 1) +
+              scan({
+                seed: 23,
+                faded: true,
+                say: 'La page est ouverte sur le téléphone. Remplissez-la, puis touchez « Envoyer au X250 ».',
+                plain: plainPage,
+                wait: 'page ouverte · en attente des réglages…',
+              }) +
+              keys(['Au clavier', 'Échap']),
+          ];
+
+        if (s === 'appliquer')
+          return [
+            sysline('synchronisation · connexion à charpentier.chatel.pm', 'Maison-5G'),
+            head('Réglages reçus. Le X250 s’en occupe.', PHONE, 2) +
+              apply([
+                ['réseau temporaire', TEMP, 'fermé'],
+                ['wifi de la maison', 'Maison-5G', 'connecté'],
+                ['synchronisation', 'charpentier.chatel.pm', 'en cours…', 'is-now'],
+                ['compagnon', 'clé sk-ant-…4f2a', 'à venir', 'is-todo'],
+              ]) +
+              '<p class="ph-wait">Rien à faire : chaque ligne s’applique à son tour.</p>',
+          ];
+        if (s === 'echec')
+          return [
+            sysline('wifi · Maison-5G refuse le mot de passe', '—'),
+            head('Un réglage n’est pas passé.', PHONE, 2) +
+              apply([
+                ['réseau temporaire', TEMP, 'fermé'],
+                [
+                  'wifi de la maison',
+                  'Maison-5G',
+                  'refusé',
+                  'is-failed',
+                  'Maison-5G refuse ce mot de passe.',
+                ],
+                ['synchronisation', 'charpentier.chatel.pm', 'attend le wifi', 'is-todo'],
+                ['compagnon', 'clé sk-ant-…4f2a', 'attend le wifi', 'is-todo'],
+              ]) +
+              keys(
+                ['Corriger depuis le téléphone', '⏎', 'is-mentor'],
+                ['Taper le mot de passe ici', 'Échap'],
+              ),
+          ];
+        if (s === 'code')
+          return [
+            sysline('compagnon · clé vérifiée', 'Maison-5G'),
+            head('Un dernier réglage, sur ce clavier : le code qui le verrouille.', PHONE, 2) +
+              `<form class="ch-first-step">
+                <p class="ch-first-intro">Vous le taperez ici chaque jour ; choisissez-le avec ces touches.</p>
+                <input class="ch-first-input" placeholder="Code de verrouillage (4 chiffres ou plus)" />
+                <input class="ch-first-input" placeholder="Le même, une seconde fois" />
+                <p class="ch-first-actions"><span class="ch-btn is-mentor">Continuer <kbd>⏎</kbd></span><span class="ch-btn">Sans code</span><span class="ch-btn">Plus tard <kbd>Échap</kbd></span></p>
+              </form>`,
+          ];
+        if (s === 'fin' || s === 'partiel') {
+          const part = s === 'partiel';
+          return [
+            sysline(part ? 'compagnon · clé refusée' : 'synchronisation · 3 romans', 'Maison-5G'),
+            head(part ? 'Presque tout est prêt.' : 'Tout est prêt.') +
+              apply([
+                ['réseau temporaire', TEMP, 'fermé'],
+                ['wifi de la maison', 'Maison-5G', 'connecté'],
+                ['synchronisation', 'charpentier.chatel.pm', '3 romans'],
+                part
+                  ? [
+                      'compagnon',
+                      'clé sk-ant-…4f2a',
+                      'refusée',
+                      'is-failed',
+                      'Anthropic refuse cette clé. Vous la changerez dans les réglages, quand vous voudrez.',
+                    ]
+                  : ['compagnon', 'clé sk-ant-…4f2a', 'vérifiée'],
+                ['verrouillage', 'code à 4 chiffres', 'choisi'],
+              ]) +
+              keys(['Écrire', '⏎', 'is-author']),
+          ];
+        }
+        return [sysline('', ''), ''];
+      }
+
+      function render() {
+        document.documentElement.dataset.theme = S.theme;
+        const [line, body] = screen();
+        document.getElementById('frame').innerHTML =
+          `${line}<div class="ch-cover"><div class="ch-first">${body}</div></div>`;
+        const btn = (k, v, l) =>
+          `<button class="${S[k] === v ? 'on' : ''}" data-k="${k}" data-v="${v}">${l}</button>`;
+        document.getElementById('bar').innerHTML =
+          `<span><b>Écran</b>${SCREENS.map(([v, l]) => btn('screen', v, l)).join(' ')}</span>` +
+          `<span><b>Thème</b>${btn('theme', 'light', 'clair')} ${btn('theme', 'dark', 'sombre')}</span>` +
+          `<span><b>Téléphone</b><a href="telephone.html" style="color:#86aedb">page du téléphone →</a></span>`;
+      }
+      document.getElementById('bar').addEventListener('click', (e) => {
+        const b = e.target.closest('button');
+        if (!b) return;
+        S[b.dataset.k] = b.dataset.v;
+        render();
+      });
+      render();
+    </script>
+  </body>
+</html>
