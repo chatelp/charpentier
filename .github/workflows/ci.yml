@@ -23,3 +23,16 @@ jobs:
       - run: pnpm check
       # The desktop app itself: built, launched in Electron (virtual display), killed mid-write.
       - run: xvfb-run -a pnpm test:desktop
+
+  # The app's Nix package, as the X250's system takes it (charpentier-os, D-29):
+  # a dependency added without its new pnpmDeps hash (nix/charpentier.nix)
+  # breaks it, and the Mac has no Nix to see it. The error gives the new hash.
+  nix-package:
+    name: paquet Nix de l'app
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+      - uses: DeterminateSystems/nix-installer-action@v23
+      - run: nix build --print-build-logs .#charpentier
+      - run: test "$(cat result/share/charpentier/data-format)" = 1
