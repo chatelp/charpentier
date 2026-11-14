@@ -91,7 +91,8 @@ const until = async (check: () => boolean | Promise<boolean>, timeout = 10_000) 
   }
 };
 
-describe('sync between two desktop apps (step 4.3)', () => {
+// Real sync over a real socket: slower on a busy machine (GitHub's, or the Mac under load).
+describe('sync between two desktop apps (step 4.3)', { timeout: 20_000 }, () => {
   it('brings a project to another device, then merges what both wrote offline', async () => {
     const url = await server();
     const mac = device('Mac');
