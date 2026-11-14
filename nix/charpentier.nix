@@ -50,7 +50,7 @@ stdenv.mkDerivation (finalAttrs: {
     fetcherVersion = 5;
     # Refreshed when the lockfile changes: in charpentier-os, `scripts/nix.sh build
     # .#charpentier --override-input charpentier path:<this checkout>` gives the new one.
-    hash = "sha256-+oa2fp45rsRrWPIOgctUO8GKgQvOhk4gA2nv8BllJjs=";
+    hash = "sha256-w1y9/pp9fjcVEhTaAHbLP2yIxH6scjyopvQZXsoRAHI=";
   };
 
   nativeBuildInputs = [
