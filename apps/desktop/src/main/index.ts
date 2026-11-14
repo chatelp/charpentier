@@ -193,6 +193,32 @@ const agents = new AgentHost(llm, secrets, store, {
 // ─── Sync with the author's server (step 4.3); signing in comes with phase 4.4 ───
 
 const SYNC_ACCOUNT_SECRET = 'sync.account';
+
+/**
+ * The name this device gives the server, read in « Appareils connectés… »:
+ * on Linux the machine's model (« ThinkPad X250 »), or the virtual machine it
+ * is (« QEMU · x250 »), rather than a host name every X250 shares.
+ */
+function deviceName(): string {
+  const host = os.hostname().replace(/\.(local|lan|home)$/, '');
+  if (process.platform !== 'linux') return host;
+  const dmi = (file: string) => {
+    try {
+      return fs.readFileSync(`/sys/class/dmi/id/${file}`, 'utf8').trim();
+    } catch {
+      return '';
+    }
+  };
+  const vendor = dmi('sys_vendor');
+  const product = dmi('product_name');
+  if (/qemu|kvm|vmware|virtualbox|innotek|microsoft/i.test(`${vendor} ${product}`))
+    return `${vendor || product} · ${host}`;
+  // Lenovo puts the model in product_version (« ThinkPad X250 »), others in product_name.
+  const model = /thinkpad|ideapad|yoga/i.test(dmi('product_version'))
+    ? dmi('product_version')
+    : product;
+  return model || host;
+}
 const sync = new SyncEngine({
   store,
   library,
@@ -213,7 +239,7 @@ const sync = new SyncEngine({
     },
   },
   stateDir: path.join(app.getPath('userData'), 'sync'),
-  device: os.hostname(),
+  device: deviceName(),
 });
 // Projects that came from another device get their Markdown mirror too; every window hears the status.
 sync.onStatusChange((status) => {
