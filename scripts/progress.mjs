@@ -48,7 +48,7 @@ for (const line of lines) {
     });
     continue;
   }
-  const phaseMatch = /^### (\d+\.\d+(?: bis)?) (.+)$/.exec(line);
+  const phaseMatch = /^### (\d+\.\d+(?: bis| ter)?) (.+)$/.exec(line);
   if (phaseMatch && step) {
     // The step has phases: drop its placeholder row.
     const placeholder = rows.findIndex((r) => r.step === step.id && r.placeholder);
