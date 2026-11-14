@@ -433,7 +433,7 @@
 
         if (s === 'reseau')
           return [
-            sysline(`réseau temporaire ouvert · ${TEMP}`, 'temporaire'),
+            sysline(`réseau temporaire · ${TEMP}`, 'temporaire'),
             netScreen('en attente d’un téléphone…'),
           ];
         if (s === 'parti')
@@ -487,7 +487,7 @@
 
         if (s === 'appliquer')
           return [
-            sysline('synchronisation · connexion à charpentier.chatel.pm', 'Maison-5G'),
+            sysline('synchronisation · connexion à charpentier…', 'Maison-5G'),
             head('Réglages reçus. Le X250 s’en occupe.', PHONE, 2) +
               apply([
                 ['réseau temporaire', TEMP, 'fermé'],
@@ -499,7 +499,7 @@
           ];
         if (s === 'echec')
           return [
-            sysline('wifi · Maison-5G refuse le mot de passe', '—'),
+            sysline('Maison-5G refuse le mot de passe', '—'),
             head('Un réglage n’est pas passé.', PHONE, 2) +
               apply([
                 ['réseau temporaire', TEMP, 'fermé'],
@@ -532,12 +532,12 @@
         if (s === 'fin' || s === 'partiel') {
           const part = s === 'partiel';
           return [
-            sysline(part ? 'compagnon · clé refusée' : 'synchronisation · 3 romans', 'Maison-5G'),
+            sysline(part ? 'compagnon · clé refusée' : 'synchronisation · connectée', 'Maison-5G'),
             head(part ? 'Presque tout est prêt.' : 'Tout est prêt.') +
               apply([
                 ['réseau temporaire', TEMP, 'fermé'],
                 ['wifi de la maison', 'Maison-5G', 'connecté'],
-                ['synchronisation', 'charpentier.chatel.pm', '3 romans'],
+                ['synchronisation', 'charpentier.chatel.pm', 'connectée'],
                 part
                   ? [
                       'compagnon',
