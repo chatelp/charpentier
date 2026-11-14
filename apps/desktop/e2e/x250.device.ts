@@ -12,11 +12,17 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
  * Nothing here writes: the author's novel and account are never touched.
  * Every test leaves the app as it found it. The system's key is Super on the
  * device (CHARPENTIER_DEVICE_SYSKEY=Control to try it on the Mac, where ⌘ is
- * the app's).
+ * the app's). CHARPENTIER_DEVICE_VM=1: a virtual machine, without batteries.
+ *
+ * Before the tests (the test script of charpentier-os does both):
+ * - the first start is done (or put off): « Bienvenue » covers everything;
+ * - the screen does not go off: the keys sent here do not pass through sway,
+ *   so they do not count as activity; `swaymsg '[app_id=".*"] inhibit_idle open'`.
  */
 const device = process.env['CHARPENTIER_DEVICE'];
 const sysKey = process.env['CHARPENTIER_DEVICE_SYSKEY'] ?? 'Meta';
 const mod = process.env['CHARPENTIER_DEVICE_MOD'] ?? 'Control';
+const vm = process.env['CHARPENTIER_DEVICE_VM'] === '1';
 
 describe.skipIf(!device)('the X250 itself', () => {
   let browser: Browser;
@@ -64,8 +70,9 @@ describe.skipIf(!device)('the X250 itself', () => {
   it('reads its system: the time, the battery, the Wi-Fi', async () => {
     const text = (await line().textContent()) ?? '';
     expect(text).toMatch(/\d{1,2}:\d{2}/);
-    // The X250 runs on two batteries.
-    await line().locator('[data-seg="bat"]').waitFor();
+    // The X250 runs on two batteries; a virtual machine on none, and says nothing of them.
+    if (vm) expect(await line().locator('[data-seg="bat"]').count()).toBe(0);
+    else await line().locator('[data-seg="bat"]').waitFor();
     await line().locator('[data-seg="wifi"]').waitFor();
     expect(text).not.toContain('bat 0 %');
   });
