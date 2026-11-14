@@ -286,6 +286,30 @@ describe('the system line of the X250 (phase 5.3)', () => {
     await waitFor(() => expect(document.activeElement).toBe(editor));
   });
 
+  it('lets the first start go on without any network in range (a virtual machine)', async () => {
+    const system = createSimulatedSystem({ firstStart: true });
+    const inRange = system.state().wifi.networks;
+    system.simulate.networks([]);
+    await start(system, { focused: false });
+    await screen.findByText('Bienvenue');
+    // No field to hold the keys: the step does, Échap puts the Wi-Fi off.
+    await userEvent.keyboard('{Escape}');
+    await screen.findByLabelText('Votre code (4 à 8 lettres ou chiffres)');
+    expect(system.state().firstStart).toBe(true);
+
+    // Networks that come after the step opened (a first scan) take the focus.
+    cleanup();
+    const late = createSimulatedSystem({ firstStart: true });
+    late.simulate.networks([]);
+    await start(late, { focused: false });
+    await screen.findByText('Bienvenue');
+    late.simulate.networks(inRange);
+    const list = await screen.findByRole('listbox', { name: 'Réseaux Wi-Fi' });
+    await waitFor(() =>
+      expect(document.activeElement).toBe(within(list).getAllByRole('option')[0]),
+    );
+  });
+
   it('copies the texts to a USB key from its panel (phase 5.7)', async () => {
     const system = createSimulatedSystem();
     await start(system);

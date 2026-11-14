@@ -6,6 +6,7 @@ import {
   type SystemMessage,
   type SystemService,
   type SystemState,
+  type WifiNetwork,
 } from './system';
 import { createLockKeeper, isValidCode, type LockRecord } from './lock-keeper';
 import { simulatedMonitor } from './monitor-simulated';
@@ -24,6 +25,8 @@ export interface SimulatedSystem extends SystemService {
     battery(level: number, charging?: boolean): void;
     /** Takes the batteries out: a machine on mains alone (a virtual machine). */
     noBattery(): void;
+    /** The networks in range (none: a virtual machine, a first scan not done yet). */
+    networks(networks: readonly WifiNetwork[]): void;
     /** A cpu sample (load in %), as every 5 s on the device. */
     cpu(load: number, temperature?: number): void;
     /** Drops the connection (out of range). */
@@ -302,6 +305,15 @@ export function createSimulatedSystem(
             charging,
             remaining: charging ? null : Math.round(level * 4.1),
             batteries: s.power.batteries.map((b) => ({ ...b, level })),
+          },
+        })),
+      networks: (networks) =>
+        update((s) => ({
+          ...s,
+          wifi: {
+            ...s.wifi,
+            networks,
+            connected: networks.some((n) => n.ssid === s.wifi.connected) ? s.wifi.connected : null,
           },
         })),
       noBattery: () =>

@@ -116,6 +116,11 @@
   font: italic 400 18px var(--ch-font-text);
 }
 
+/* The step holds the keys when none of its fields can (phase 5.6). */
+.ch-first-step:focus {
+  outline: none;
+}
+
 .ch-first-steps {
   margin: 0 0 18px;
   padding: 0;

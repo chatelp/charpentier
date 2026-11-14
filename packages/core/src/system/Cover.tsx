@@ -191,8 +191,18 @@ function StepForm({
   readonly extra?: ReactNode;
   readonly children: ReactNode;
 }) {
+  // The keys reach the step even when it has no field yet (no network in
+  // range, a scan still running): the form takes the focus, its fields after.
+  const form = useRef<HTMLFormElement>(null);
+  useEffect(() => {
+    const element = form.current;
+    if (element && !element.contains(document.activeElement))
+      element.focus({ preventScroll: true });
+  }, []);
   return (
     <form
+      ref={form}
+      tabIndex={-1}
       className="ch-first-step"
       onSubmit={(e) => {
         e.preventDefault();
@@ -240,16 +250,20 @@ function WifiStep({
 }) {
   const state = useSystemState(system);
   const networks = state.wifi.networks;
-  const [chosen, setChosen] = useState<string | null>(
-    () => state.wifi.connected ?? networks[0]?.ssid ?? null,
-  );
+  // The network chosen, else the joined one, else the first in range (a scan may come late).
+  const [picked, setChosen] = useState<string | null>(() => state.wifi.connected);
+  const chosen = picked ?? networks[0]?.ssid ?? null;
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const list = useRef<HTMLUListElement>(null);
+  // Networks that arrive after the step opened (the first scan): the chosen
+  // one takes the focus, unless the author is typing a password.
+  const inRange = networks.length > 0;
   useEffect(() => {
+    if (!inRange || document.activeElement instanceof HTMLInputElement) return;
     list.current?.querySelector<HTMLElement>('[aria-selected="true"]')?.focus();
-  }, []);
+  }, [inRange]);
   const network = networks.find((n) => n.ssid === chosen);
   const needsPassword = !!network && network.secure && !network.known;
 
