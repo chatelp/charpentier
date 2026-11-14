@@ -161,10 +161,8 @@
   user-select: text;
 }
 
-@media (max-width: 1180px) {
-  .ch-pastille {
-    left: calc(100% + 0.5rem + var(--ch-pastille-rank, 0) * 18px);
-  }
+.ch-app[data-narrow] .ch-pastille {
+  left: calc(100% + 0.5rem + var(--ch-pastille-rank, 0) * 18px);
 }
 
 /* ── Right panel ── */

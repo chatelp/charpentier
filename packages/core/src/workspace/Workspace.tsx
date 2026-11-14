@@ -61,8 +61,12 @@ import './workspace.css';
 
 let paletteSequence = 0;
 
-/** Under this width the Compagnon's notes unfold under their paragraph (docs/DESIGN.md §4.2). */
-const NARROW_WINDOW = '(max-width: 1180px)';
+/**
+ * Under this width the Compagnon's notes unfold under their paragraph (docs/DESIGN.md §4.2):
+ * the margin must hold the gap (3.5rem), the note and a little air, on both sides of the text.
+ */
+const narrowWindow = (measureRem: number) =>
+  `(max-width: ${Math.round((measureRem + 2 * (3.5 + 18.5 + 1.5)) * 16)}px)`;
 
 /** The commands offered when the command line opens empty (docs/DESIGN.md §4.6). */
 const SUGGESTED_COMMANDS = [
@@ -328,7 +332,7 @@ export function ProjectWorkspace({
   }, [editor, knownNames]);
 
   // Narrow window (docs/DESIGN.md §4.2): the note unfolds under its paragraph, in this element.
-  const narrow = useMediaQuery(NARROW_WINDOW);
+  const narrow = useMediaQuery(narrowWindow(prefs.measure));
   const noteSlot = useMemo(() => {
     const slot = document.createElement('div');
     slot.className = 'ch-note-slot';
@@ -751,6 +755,7 @@ export function ProjectWorkspace({
       data-typewriter={prefs.typewriter || undefined}
       data-mentor-panel={mentorPanel ?? (sheetPanel ? 'sheet' : undefined)}
       data-navigator={navigatorOpen || undefined}
+      data-narrow={narrow || undefined}
       data-mentor-level={mentorLevel}
     >
       <FeatureTopZones ctx={ctx} />

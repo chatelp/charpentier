@@ -146,7 +146,7 @@ export function WritingFooter({
             </span>
           )
         )}
-        <span>{t('footer.saved')}</span>
+        <span className="ch-footer-saved">{t('footer.saved')}</span>
         {syncState &&
           (syncState.onClick ? (
             <button

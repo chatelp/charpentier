@@ -28,7 +28,8 @@
   justify-content: center;
   align-items: baseline;
   gap: 0.6em;
-  padding: 14px var(--ch-space-4) 10px;
+  /* Room on both sides for « Écrire | Atelier »: the crumbs stay centred and never pass under it. */
+  padding: 14px var(--ch-header-side) 10px;
   background: var(--ch-bg);
   color: var(--ch-muted);
   font-family: var(--ch-font-text);
@@ -48,6 +49,10 @@
 }
 
 .ch-crumb {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   padding: 0;
   border: 0;
   background: none;
@@ -74,12 +79,14 @@
 }
 
 .ch-crumb-sep {
+  flex: none;
   color: var(--ch-faint);
   font-variant-caps: normal;
 }
 
+/* The text keeps clear of the edge handles (« Manuscrit », « Compagnon »). */
 .ch-page {
-  width: min(var(--ch-measure), calc(100% - 4rem));
+  width: min(var(--ch-measure), calc(100% - 2 * var(--ch-page-side)));
   margin: 0 auto;
   padding: 13vh 0 34vh;
 }
@@ -149,10 +156,24 @@
   gap: 14px;
 }
 
-/* The right side stops before the command zone: long state texts end with an ellipsis. */
+/*
+ * Writing: three columns, the command zone centred in the middle one. It narrows before the
+ * sides do; the sides then shorten their texts (ellipsis) or hide what matters least.
+ */
+.ch-app[data-view='write'] .ch-footer {
+  display: grid;
+  grid-template-columns: minmax(4.5rem, 1fr) minmax(10rem, min(30rem, 38vw)) minmax(9rem, 1fr);
+}
+
 .ch-app[data-view='write'] .ch-footer-right {
   min-width: 0;
-  max-width: calc(50% - min(15rem, 19vw) - 16px);
+  container-type: inline-size;
+}
+
+/* Clipped, not hidden: the buttons keep their relief. */
+.ch-footer-right {
+  overflow: clip;
+  overflow-clip-margin: 10px;
 }
 
 .ch-footer-right > * {
@@ -168,14 +189,26 @@
 
 /* The command zone is centred under the text column, whatever is on either side. */
 .ch-footer-middle {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
   display: flex;
+  min-width: 0;
+}
+
+.ch-footer-middle > .ch-cmdzone {
+  width: 100%;
 }
 
 .ch-footer-words {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* « Enregistré » is always true: it goes first when the side is short. */
+@container (max-width: 15rem) {
+  .ch-footer-saved {
+    display: none;
+  }
 }
 
 .ch-footer-today {
