@@ -8,8 +8,10 @@ import {
   readProjectMeta,
   listScenes,
   trashScene,
+  variantFragment,
 } from '@charpentier/schema';
 import { describe, expect, it } from 'vitest';
+import * as Y from 'yjs';
 import { createTestPlatform } from '../testing/test-platform';
 import {
   ensureScene,
@@ -17,6 +19,7 @@ import {
   lastScenePref,
   LEGACY_PROJECT_PREF,
   openProject,
+  projectFromSync,
   renameProjectEverywhere,
 } from './default-scene';
 
@@ -120,5 +123,60 @@ describe('ensureScene', () => {
     const chapterId = createChapter(root, { title: 'Vide' });
     const id = ensureScene(root, titles);
     expect(getScene(root, id)?.chapterId).not.toBe(chapterId); // first chapter is used
+  });
+});
+
+describe('a new device signed in (phase 5.6)', () => {
+  /** Writes a sentence in the project's first scene, as the author would. */
+  async function write(
+    platform: ReturnType<typeof withPreferences>,
+    projectId: string,
+    root: Y.Doc,
+  ) {
+    const sceneId = ensureScene(root, titles);
+    const scene = getScene(root, sceneId);
+    const handle = await platform.documents.open(guids.scene(projectId, sceneId));
+    const paragraph = new Y.XmlElement('paragraph');
+    paragraph.insert(0, [new Y.XmlText('Il pleuvait sur Nantes.')]);
+    variantFragment(handle.doc, scene?.activeVariantId ?? '').insert(0, [paragraph]);
+  }
+
+  it('opens the novel that came, not another blank start, and trashes its own', async () => {
+    const platform = withPreferences();
+    const novel = await openProject(
+      platform,
+      (await platform.library.create({ title: titles.project, kind: 'novel' })).id,
+      titles,
+    );
+    await write(platform, novel.projectId, novel.root);
+    // Another device's blank start reached the account, more recent than the novel.
+    const stray = (await platform.library.create({ title: titles.project, kind: 'novel' })).id;
+    await openProject(platform, stray, titles);
+    // This device's own blank start, open now.
+    const own = await openProject(
+      platform,
+      (await platform.library.create({ title: titles.project, kind: 'novel' })).id,
+      titles,
+    );
+
+    expect(await projectFromSync(platform, own, titles)).toBe(novel.projectId);
+    expect((await platform.library.listTrashed()).map((p) => p.id)).toEqual([own.projectId]);
+    expect((await platform.library.list()).map((p) => p.id)).toContain(stray);
+  });
+
+  it('keeps a project already written in, and one alone', async () => {
+    const platform = withPreferences();
+    const written = await openProject(
+      platform,
+      (await platform.library.create({ title: titles.project, kind: 'novel' })).id,
+      titles,
+    );
+    await write(platform, written.projectId, written.root);
+    expect(await projectFromSync(platform, written, titles)).toBeNull();
+    // A blank start with nothing else in the account stays open.
+    const alone = withPreferences();
+    const blank = await openProject(alone, await initialProjectId(alone, titles), titles);
+    expect(await projectFromSync(alone, blank, titles)).toBeNull();
+    expect(await alone.library.listTrashed()).toEqual([]);
   });
 });

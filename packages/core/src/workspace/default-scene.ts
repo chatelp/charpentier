@@ -153,15 +153,15 @@ export async function renameProjectEverywhere(
  */
 export async function isBlankProject(
   platform: Platform,
-  session: ProjectSession,
+  projectId: string,
+  root: Y.Doc,
   titles: DefaultTitles,
 ): Promise<boolean> {
-  const { root, projectId } = session;
   if (readProjectMeta(root)?.title !== titles.project) return false;
   const scenes = listAllScenes(root);
-  if (scenes.length !== 1 || listChapters(root).length > 1) return false;
+  if (scenes.length > 1 || listChapters(root).length > 1) return false;
   const scene = scenes[0] && getScene(root, scenes[0].id);
-  if (!scene) return false;
+  if (!scene) return true;
   const handle = await platform.documents.open(guids.scene(projectId, scene.id));
   try {
     await handle.whenLoaded;
@@ -174,18 +174,34 @@ export async function isBlankProject(
   }
 }
 
+async function isBlankInLibrary(platform: Platform, projectId: string, titles: DefaultTitles) {
+  const handle = await platform.documents.open(guids.project(projectId));
+  try {
+    await handle.whenLoaded;
+    return await isBlankProject(platform, projectId, handle.doc, titles);
+  } finally {
+    await handle.close();
+  }
+}
+
 /**
  * Just signed in, the device's novel has come from the sync: when the project
- * open is still blank, it goes to the trash (never deleted) and the novel
- * that came, the most recent, opens instead. Null otherwise.
+ * open is still blank, it goes to the trash (never deleted) and the most
+ * recent project of the account that is not blank itself (another device's
+ * blank start may have reached the account) opens instead. Null otherwise.
  */
 export async function projectFromSync(
   platform: Platform,
   session: ProjectSession,
   titles: DefaultTitles,
 ): Promise<string | null> {
-  const other = (await platform.library.list()).find((p) => p.id !== session.projectId);
-  if (!other || !(await isBlankProject(platform, session, titles))) return null;
-  await platform.library.trash(session.projectId);
-  return other.id;
+  const others = (await platform.library.list()).filter((p) => p.id !== session.projectId);
+  if (others.length === 0) return null;
+  if (!(await isBlankProject(platform, session.projectId, session.root, titles))) return null;
+  for (const other of others) {
+    if (await isBlankInLibrary(platform, other.id, titles)) continue;
+    await platform.library.trash(session.projectId);
+    return other.id;
+  }
+  return null;
 }
