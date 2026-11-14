@@ -132,6 +132,9 @@
   --ch-mentor-soft: rgb(31 79 124 / 0.1);
   --ch-author: #b2432a; /* carpenter's-pencil vermilion: the author's own marks */
   --ch-author-soft: rgb(178 67 42 / 0.22);
+  /* A QR code stays dark on light in every theme: every phone camera reads it so. */
+  --ch-qr-ground: #ffffff;
+  --ch-qr-ink: #1d2026;
 }
 
 @media (prefers-color-scheme: dark) {

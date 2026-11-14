@@ -266,6 +266,10 @@ describe('the system line of the X250 (phase 5.3)', () => {
     await screen.findByText('Bienvenue');
     expect(editor.closest('[inert]')).not.toBeNull();
     screen.getByText('Avant d’écrire, quatre réglages. Chacun peut attendre.');
+    // From the phone first; « Au clavier » (Échap) for the four steps.
+    await screen.findByRole('img', { name: 'Code du réseau temporaire' });
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(system.simulate.calls).toContain('stopPhoneSetup'));
     // Wi-Fi: already joined; ⏎ continues.
     await screen.findByRole('listbox', { name: 'Réseaux Wi-Fi' });
     await userEvent.keyboard('{Enter}');
@@ -292,7 +296,10 @@ describe('the system line of the X250 (phase 5.3)', () => {
     system.simulate.networks([]);
     await start(system, { focused: false });
     await screen.findByText('Bienvenue');
+    await screen.findByRole('img', { name: 'Code du réseau temporaire' });
+    await userEvent.keyboard('{Escape}');
     // No field to hold the keys: the step does, Échap puts the Wi-Fi off.
+    await screen.findByText(/Aucun réseau en vue/);
     await userEvent.keyboard('{Escape}');
     await screen.findByLabelText('Votre code (4 à 8 lettres ou chiffres)');
     expect(system.state().firstStart).toBe(true);
@@ -302,12 +309,44 @@ describe('the system line of the X250 (phase 5.3)', () => {
     const late = createSimulatedSystem({ firstStart: true });
     late.simulate.networks([]);
     await start(late, { focused: false });
-    await screen.findByText('Bienvenue');
+    await screen.findByRole('img', { name: 'Code du réseau temporaire' });
+    await userEvent.keyboard('{Escape}');
+    await screen.findByText(/Aucun réseau en vue/);
     late.simulate.networks(inRange);
     const list = await screen.findByRole('listbox', { name: 'Réseaux Wi-Fi' });
     await waitFor(() =>
       expect(document.activeElement).toBe(within(list).getAllByRole('option')[0]),
     );
+  });
+
+  it('starts from the phone: a code to join, a code to open the page, then what was set (phase 5.13)', async () => {
+    const system = createSimulatedSystem({ firstStart: true });
+    await start(system, { focused: false });
+    const join = await screen.findByRole('img', { name: 'Code du réseau temporaire' });
+    expect(join.querySelector('path')?.getAttribute('d')).toMatch(/^M\d+ \d+h1v1h-1z/);
+    screen.getByText('réseau charpentier-k7m2 · mot de passe p4rk8wq2zn');
+
+    system.simulate.phoneJoined();
+    await screen.findByRole('img', { name: 'Code de la page des réglages' });
+    screen.getByText('http://10.42.0.1:8080/?t=essai');
+
+    system.simulate.phoneSent({ mentor: { status: 'failed', reason: 'invalid' } });
+    const results = await screen.findByRole('list', { name: 'Réglages reçus du téléphone' });
+    expect(results.textContent).toContain('Wi-Fi de la maisonfait');
+    expect(results.textContent).toContain('Compagnonrefusé');
+    // Continue: the lock's code, then only what the phone did not set.
+    await userEvent.click(screen.getByRole('button', { name: /Continuer/ }));
+    const steps = await screen.findByRole('list', { name: 'étapes du premier démarrage' });
+    expect(steps.textContent).toBe('2 code4 compagnon');
+    await screen.findByLabelText('Votre code (4 à 8 lettres ou chiffres)');
+  });
+
+  it('goes to the keyboard at once without a Wi-Fi card that can open a network', async () => {
+    const system = createSimulatedSystem({ firstStart: true });
+    system.startPhoneSetup = async () => 'unavailable';
+    await start(system, { focused: false });
+    await screen.findByRole('listbox', { name: 'Réseaux Wi-Fi' });
+    expect(screen.queryByRole('img', { name: 'Code du réseau temporaire' })).toBeNull();
   });
 
   it('copies the texts to a USB key from its panel (phase 5.7)', async () => {

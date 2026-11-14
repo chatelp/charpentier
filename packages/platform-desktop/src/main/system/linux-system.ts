@@ -14,6 +14,8 @@ import {
   type MonitorSample,
   type PrintJob,
   type NightMode,
+  type PhoneSettings,
+  type PhoneStep,
   type SystemMessage,
   type SystemService,
   type SystemSettings,
@@ -51,6 +53,7 @@ import {
   type BatteryFiles,
 } from './parse';
 import { createLinuxMonitor } from './linux-monitor';
+import { servePhonePage, type PhonePage } from './phone-page';
 import type { SystemTools } from './tools';
 
 /**
@@ -91,13 +94,30 @@ export interface LinuxSystemOptions {
   /** The app's processes and open documents, for the monitor (Electron knows them). */
   readonly app?: () => MonitorSample['app'];
   /** Polling periods, in ms (the tests shorten them). */
-  readonly periods?: { readonly cpu?: number; readonly power?: number; readonly slow?: number };
+  readonly periods?: {
+    readonly cpu?: number;
+    readonly power?: number;
+    readonly slow?: number;
+    /** Looking for a phone on the temporary network (phase 5.13). */
+    readonly phone?: number;
+  };
   /** The keyboard chosen at installation (`/etc/charpentier/keyboard`): the default layout. */
   readonly keyboard?: SystemSettings['keyboardLayout'];
   /** Writes every project in Markdown into `folder` (the USB key's copy). */
   readonly exportTexts?: (folder: string) => Promise<void>;
   /** PBKDF2 rounds of the code (fewer in the tests). */
   readonly lockIterations?: number;
+  /**
+   * Applies what the phone sent beyond the Wi-Fi (phase 5.13): the sync's
+   * sign-in and the Compagnon's key, in the main process. Each result is the
+   * action's own (`ok`, `invalid`, `saved`…); null when it was not given.
+   */
+  readonly phoneSettings?: (settings: Omit<PhoneSettings, 'wifi'>) => Promise<{
+    readonly sync: string | null;
+    readonly mentor: string | null;
+  }>;
+  /** Where the phone's page listens; the tests use 127.0.0.1 and any port. */
+  readonly phonePage?: { readonly host?: string; readonly port: number };
 }
 
 const SINK = '@DEFAULT_AUDIO_SINK@';
@@ -131,7 +151,7 @@ let sequence = 0;
 export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
   const { tools } = options;
   const now = options.now ?? (() => new Date());
-  const periods = { cpu: 5_000, power: 15_000, slow: 60_000, ...options.periods };
+  const periods = { cpu: 5_000, power: 15_000, slow: 60_000, phone: 2_000, ...options.periods };
   const listeners = new Set<() => void>();
   // A new array at each message: the interface sees it changed.
   let journal: readonly SystemMessage[] = [];
@@ -186,6 +206,7 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
     lock: { locked: false, hasCode: !!stored.lock, retryAt: null },
     firstStart: stored.firstStartDone !== true,
     update: null,
+    phoneSetup: null,
   };
   /** The generations one can boot on, for `bootVersion`. */
   let updateTargets: readonly UpdateTarget[] = [];
@@ -634,6 +655,146 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
     }
   }
 
+  // — The first start from the phone (phase 5.13) —
+
+  const HOTSPOT = 'charpentier-setup';
+  /** Letters and digits one cannot mistake for one another, read off the screen. */
+  const CLEAR = 'abcdefghjkmnpqrstuvwxyz23456789';
+  const pick = (length: number) =>
+    Array.from(crypto.getRandomValues(new Uint8Array(length)), (b) => CLEAR[b % CLEAR.length]).join(
+      '',
+    );
+  let phone: {
+    device: string;
+    page: PhonePage;
+    timer: ReturnType<typeof setInterval>;
+  } | null = null;
+
+  const setPhone = (change: Partial<NonNullable<SystemState['phoneSetup']>>) => {
+    if (state.phoneSetup) update({ phoneSetup: { ...state.phoneSetup, ...change } });
+  };
+
+  /** The temporary network and its page, gone. */
+  async function closeHotspot() {
+    const current = phone;
+    phone = null;
+    if (!current) return;
+    clearInterval(current.timer);
+    await current.page.close();
+    networkAction = true;
+    try {
+      await run('nmcli', 'connection', 'down', 'id', HOTSPOT);
+      await run('nmcli', 'connection', 'delete', 'id', HOTSPOT);
+    } finally {
+      networkAction = false;
+    }
+  }
+
+  /** A phone on the temporary network: `ip neigh` knows its address. */
+  async function watchPhone() {
+    if (!phone || !state.phoneSetup) return;
+    if (phone.page.expired() && !state.phoneSetup.expired) setPhone({ expired: true });
+    if (state.phoneSetup.stage !== 'waiting') return;
+    const neighbours = await run('ip', 'neigh', 'show', 'dev', phone.device);
+    if (/lladdr\s+\S+.*\b(REACHABLE|STALE|DELAY|PROBE)\b/.test(neighbours.stdout))
+      setPhone({ stage: 'joined', page: phone.page.url });
+  }
+
+  async function received(settings: PhoneSettings) {
+    const pending: PhoneStep = { status: 'pending' };
+    const skipped: PhoneStep = { status: 'skipped' };
+    setPhone({
+      stage: 'applying',
+      steps: {
+        wifi: settings.wifi ? pending : skipped,
+        sync: settings.sync ? pending : skipped,
+        mentor: settings.apiKey ? pending : skipped,
+      },
+    });
+    const steps = () => state.phoneSetup?.steps ?? null;
+    const step = (key: 'wifi' | 'sync' | 'mentor', result: PhoneStep) => {
+      const current = steps();
+      if (current) setPhone({ steps: { ...current, [key]: result } });
+    };
+    const outcome = (result: string | null, ok: readonly string[]): PhoneStep =>
+      result === null
+        ? skipped
+        : ok.includes(result)
+          ? { status: 'ok' }
+          : { status: 'failed', reason: result };
+    // One radio: the temporary network goes before the home one is joined.
+    await closeHotspot();
+    if (settings.wifi) {
+      const result = await connectWifi(settings.wifi.ssid, settings.wifi.password || undefined);
+      step('wifi', outcome(result, ['connected']));
+    }
+    const rest = {
+      ...(settings.sync && { sync: settings.sync }),
+      ...(settings.apiKey && { apiKey: settings.apiKey }),
+    };
+    if ((rest.sync || rest.apiKey) && options.phoneSettings) {
+      const results = await options.phoneSettings(rest).catch(() => ({
+        sync: rest.sync ? 'failed' : null,
+        mentor: rest.apiKey ? 'failed' : null,
+      }));
+      step('sync', outcome(results.sync, ['ok']));
+      step('mentor', outcome(results.mentor, ['saved']));
+    }
+    setPhone({ stage: 'done' });
+  }
+
+  async function startPhoneSetup(): Promise<'ok' | 'unavailable'> {
+    await closeHotspot();
+    const devices = parseDevices(
+      (await run('nmcli', '-t', '-f', 'DEVICE,TYPE,STATE,CONNECTION', 'device')).stdout,
+    );
+    const device = devices.find((d) => d.type === 'wifi')?.device;
+    if (!device) return 'unavailable';
+    const network = { ssid: `charpentier-${pick(4)}`, password: pick(10) };
+    networkAction = true;
+    let opened;
+    try {
+      opened = await run(
+        'nmcli',
+        'device',
+        'wifi',
+        'hotspot',
+        'ifname',
+        device,
+        'con-name',
+        HOTSPOT,
+        'ssid',
+        network.ssid,
+        'password',
+        network.password,
+      );
+    } finally {
+      networkAction = false;
+    }
+    if (opened.code !== 0) return 'unavailable';
+    const host =
+      options.phonePage?.host ??
+      parseAddress((await run('nmcli', '-g', 'IP4.ADDRESS', 'device', 'show', device)).stdout) ??
+      '10.42.0.1';
+    let page: PhonePage;
+    try {
+      page = await servePhonePage({
+        host,
+        port: options.phonePage?.port ?? 8080,
+        onSettings: (settings) => void received(settings),
+        now: () => now().getTime(),
+      });
+    } catch {
+      await run('nmcli', 'connection', 'delete', 'id', HOTSPOT);
+      return 'unavailable';
+    }
+    phone = { device, page, timer: setInterval(quietly(watchPhone), periods.phone) };
+    update({
+      phoneSetup: { network, page: null, stage: 'waiting', steps: null, expired: false },
+    });
+    return 'ok';
+  }
+
   const service: LinuxSystem = {
     monitor,
     state: () => state,
@@ -814,6 +975,11 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
       setLocked(false);
       return 'ok';
     },
+    startPhoneSetup,
+    stopPhoneSetup: async () => {
+      await closeHotspot();
+      update({ phoneSetup: null });
+    },
     finishFirstStart: async () => {
       update({ firstStart: false });
       save();
@@ -937,6 +1103,10 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
     refresh,
     dispose: () => {
       disposed = true;
+      if (phone) {
+        clearInterval(phone.timer);
+        void phone.page.close();
+      }
       for (const timer of timers) clearInterval(timer);
       for (const stop of stops) stop();
       stopIdle?.();

@@ -1,9 +1,10 @@
-import type { SystemService, WifiNetwork } from '@charpentier/platform';
+import type { PhoneSetup, PhoneStep, SystemService, WifiNetwork } from '@charpentier/platform';
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePlatform } from '../app/platform-context';
 import { featureText } from '../features/feature';
 import { Signal } from './controls';
+import { QrCode, wifiCode } from './QrCode';
 import { useSystemState } from './system-store';
 import './cover.css';
 
@@ -137,11 +138,23 @@ function FirstStart({ system }: { readonly system: SystemService }) {
     ...(platform.sync ? (['sync'] as const) : []),
     ...(platform.agents ? (['mentor'] as const) : []),
   ];
+  // From the phone first (phase 5.13); the keyboard when it is not possible or not wanted.
+  const [phone, setPhone] = useState(true);
+  const [done, setDone] = useState<readonly Step[]>([]);
+  const remaining = steps.filter((s) => !done.includes(s));
   const [step, setStep] = useState<Step>('wifi');
   const next = () => {
-    const i = steps.indexOf(step);
-    const following = steps[i + 1];
+    const i = remaining.indexOf(step);
+    const following = remaining[i + 1];
     if (following) setStep(following);
+    else void system.finishFirstStart();
+  };
+  /** Back to the keyboard, without what the phone already set. */
+  const toKeyboard = (set: readonly Step[]) => {
+    setPhone(false);
+    setDone(set);
+    const first = steps.find((s) => !set.includes(s));
+    if (first) setStep(first);
     else void system.finishFirstStart();
   };
 
@@ -152,26 +165,150 @@ function FirstStart({ system }: { readonly system: SystemService }) {
         ⁂
       </div>
       <p className="ch-first-mentor">{f('mentor')}</p>
-      <ol className="ch-seg ch-first-steps" aria-label={f('steps')}>
-        {steps.map((s) => (
-          <li
-            key={s}
-            className={s === step ? 'is-on' : undefined}
-            aria-current={s === step || undefined}
-          >
-            {f(`step.${s}`)}
-          </li>
-        ))}
-      </ol>
-      {step === 'wifi' && <WifiStep system={system} f={f} onDone={next} />}
-      {step === 'code' && <CodeStep system={system} f={f} onDone={next} />}
-      {step === 'sync' && <SyncStep f={f} onDone={next} />}
-      {step === 'mentor' && <MentorStep f={f} onDone={next} />}
+      {phone && <PhoneStepView system={system} f={f} onDone={toKeyboard} />}
+      {!phone && (
+        <ol className="ch-seg ch-first-steps" aria-label={f('steps')}>
+          {remaining.map((s) => (
+            <li
+              key={s}
+              className={s === step ? 'is-on' : undefined}
+              aria-current={s === step || undefined}
+            >
+              {f(`step.${s}`)}
+            </li>
+          ))}
+        </ol>
+      )}
+      {!phone && step === 'wifi' && <WifiStep system={system} f={f} onDone={next} />}
+      {!phone && step === 'code' && <CodeStep system={system} f={f} onDone={next} />}
+      {!phone && step === 'sync' && <SyncStep f={f} onDone={next} />}
+      {!phone && step === 'mentor' && <MentorStep f={f} onDone={next} />}
     </div>
   );
 }
 
 type F = (key: string, options?: Readonly<Record<string, unknown>>) => string;
+
+/**
+ * The first start from the phone (phase 5.13, D-33): a code to join the
+ * device's temporary network, then, once the phone is on it, a code to open
+ * its page; the settings arrive, the device applies them and says how each
+ * went. « Au clavier » (Échap) leaves for the four steps; what the phone set
+ * is not asked again, the lock's code always is (it is the device's).
+ */
+function PhoneStepView({
+  system,
+  f,
+  onDone,
+}: {
+  readonly system: SystemService;
+  readonly f: F;
+  onDone(set: readonly Step[]): void;
+}) {
+  const setup = useSystemState(system).phoneSetup;
+  const [starting, setStarting] = useState(true);
+  const open = () =>
+    system.startPhoneSetup().then((result) => {
+      setStarting(false);
+      if (result === 'unavailable') onDone([]);
+    });
+  // A new code after an expired one.
+  const start = () => {
+    setStarting(true);
+    void open();
+  };
+  useEffect(() => {
+    void open();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once, at the start
+  }, []);
+
+  const leave = (set: readonly Step[]) => {
+    void system.stopPhoneSetup();
+    onDone(set);
+  };
+  const applied = (steps: NonNullable<PhoneSetup['steps']>): Step[] => [
+    ...(steps.wifi.status === 'ok' ? (['wifi'] as const) : []),
+    ...(steps.sync.status === 'ok' ? (['sync'] as const) : []),
+    ...(steps.mentor.status === 'ok' ? (['mentor'] as const) : []),
+  ];
+  const finished = setup?.stage === 'done' && setup.steps;
+
+  return (
+    <StepForm
+      f={f}
+      busy={starting || setup?.stage === 'applying'}
+      message={null}
+      onSubmit={() =>
+        finished ? leave(applied(setup.steps ?? noSteps)) : setup?.expired ? start() : undefined
+      }
+      onLater={() => leave(finished && setup.steps ? applied(setup.steps) : [])}
+      laterLabel={finished ? undefined : f('phone.keyboard')}
+      hideSubmit={!finished && !setup?.expired}
+    >
+      {setup && !setup.steps && (
+        <div className="ch-first-phone">
+          {setup.expired ? (
+            <p className="ch-first-phone-text">{f('phone.expired')}</p>
+          ) : setup.page ? (
+            <>
+              <QrCode value={setup.page} label={f('phone.pageCode')} />
+              <div className="ch-first-phone-text">
+                <p>{f('phone.open')}</p>
+                <p className="ch-first-clear">{setup.page}</p>
+              </div>
+            </>
+          ) : (
+            <>
+              <QrCode
+                value={wifiCode(setup.network.ssid, setup.network.password)}
+                label={f('phone.networkCode')}
+              />
+              <div className="ch-first-phone-text">
+                <p>{f('phone.join')}</p>
+                <p className="ch-first-clear">{f('phone.network', setup.network)}</p>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+      {setup?.steps && (
+        <ul className="ch-first-results" aria-label={f('phone.results')}>
+          {(['wifi', 'sync', 'mentor'] as const).map((key) => (
+            <PhoneResult key={key} name={f(`phone.step.${key}`)} step={setup.steps?.[key]} f={f} />
+          ))}
+        </ul>
+      )}
+    </StepForm>
+  );
+}
+
+const noSteps: NonNullable<PhoneSetup['steps']> = {
+  wifi: { status: 'skipped' },
+  sync: { status: 'skipped' },
+  mentor: { status: 'skipped' },
+};
+
+function PhoneResult({
+  name,
+  step,
+  f,
+}: {
+  readonly name: string;
+  readonly step: PhoneStep | undefined;
+  readonly f: F;
+}) {
+  if (!step) return null;
+  const said =
+    step.status === 'failed'
+      ? f(`phone.reason.${step.reason}`, { defaultValue: f('phone.reason.failed') })
+      : f(`phone.status.${step.status}`);
+  return (
+    <li className={step.status === 'failed' ? 'is-failed' : undefined}>
+      <span>{name}</span>
+      <span>{said}</span>
+    </li>
+  );
+}
 
 /** A step: its form (⏎ continues), « Plus tard » (Échap). */
 function StepForm({
@@ -181,6 +318,8 @@ function StepForm({
   busy,
   message,
   extra,
+  laterLabel,
+  hideSubmit = false,
   children,
 }: {
   readonly f: F;
@@ -189,6 +328,10 @@ function StepForm({
   readonly busy: boolean;
   readonly message: string | null;
   readonly extra?: ReactNode;
+  /** « Plus tard » by default. */
+  readonly laterLabel?: string | undefined;
+  /** Nothing to continue yet (the phone has the hand). */
+  readonly hideSubmit?: boolean;
   readonly children: ReactNode;
 }) {
   // The keys reach the step even when it has no field yet (no network in
@@ -227,12 +370,14 @@ function StepForm({
         {busy ? f('busy') : message}
       </p>
       <p className="ch-first-actions">
-        <button type="submit" className="ch-btn is-mentor" disabled={busy}>
-          {f('continue')} <kbd>{f('enterKey')}</kbd>
-        </button>
+        {!hideSubmit && (
+          <button type="submit" className="ch-btn is-mentor" disabled={busy}>
+            {f('continue')} <kbd>{f('enterKey')}</kbd>
+          </button>
+        )}
         {extra}
         <button type="button" className="ch-btn" onClick={onLater}>
-          {f('later')} <kbd>{f('escapeKey')}</kbd>
+          {laterLabel ?? f('later')} <kbd>{f('escapeKey')}</kbd>
         </button>
       </p>
     </form>

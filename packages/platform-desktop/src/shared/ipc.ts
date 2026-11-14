@@ -196,6 +196,8 @@ export const SYSTEM_ACTIONS = [
   'unlock',
   'setLockCode',
   'finishFirstStart',
+  'startPhoneSetup',
+  'stopPhoneSetup',
   // A version already in the boot menu only: the service checks it (phase 5.12).
   'checkUpdate',
   'bootVersion',

@@ -7,6 +7,7 @@ export default defineProject({
   // mid-run makes Vite reload the page and the first run fails.
   optimizeDeps: {
     include: [
+      'uqr',
       '@tiptap/core',
       '@tiptap/react',
       '@tiptap/pm/model',

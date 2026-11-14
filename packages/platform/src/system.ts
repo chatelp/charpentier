@@ -57,6 +57,15 @@ export interface SystemService {
   setLockCode(code: string | null, current?: string): Promise<'ok' | 'wrong' | 'invalid'>;
   /** The four steps of the first start are done or put off (§4.12). */
   finishFirstStart(): Promise<void>;
+  /**
+   * The first start from the phone (phase 5.13, D-33): the device opens a
+   * temporary network and, once a phone joined it, serves a page with a
+   * one-time token, where the author fills in the settings. `unavailable`:
+   * no Wi-Fi card that can do it.
+   */
+  startPhoneSetup(): Promise<'ok' | 'unavailable'>;
+  /** Closes the temporary network and the page (« Au clavier », Échap). */
+  stopPhoneSetup(): Promise<void>;
   /** « Vérifier maintenant » (phase 5.12): the result comes as usual, in the state and the line. */
   checkUpdate(): Promise<void>;
   /**
@@ -118,6 +127,39 @@ export interface SystemUpdate {
 }
 
 export type UpdateFailure = 'signature' | 'unreadable' | 'disk-full' | 'interrupted';
+
+/**
+ * The first start from the phone, as the device shows it (phase 5.13). The
+ * settings themselves (passwords, key) never reach the interface: the main
+ * process applies them and says only how it went.
+ */
+export interface PhoneSetup {
+  /** The temporary network, shown in clear beside its code. */
+  readonly network: { readonly ssid: string; readonly password: string };
+  /** The page's address with its token, once a phone joined the network. */
+  readonly page: string | null;
+  readonly stage: 'waiting' | 'joined' | 'applying' | 'done';
+  /** What became of each setting received; null until they arrive. */
+  readonly steps: {
+    readonly wifi: PhoneStep;
+    readonly sync: PhoneStep;
+    readonly mentor: PhoneStep;
+  } | null;
+  /** The page's token is no longer valid (15 min, or already used): a new one is needed. */
+  readonly expired: boolean;
+}
+
+/** `reason`: the result of the action (`wrong-password`, `invalid`, `unreachable`…). */
+export type PhoneStep =
+  | { readonly status: 'pending' | 'ok' | 'skipped' }
+  | { readonly status: 'failed'; readonly reason: string };
+
+/** What the phone sent, as the page posts it (empty fields left out). */
+export interface PhoneSettings {
+  readonly wifi?: { readonly ssid: string; readonly password: string };
+  readonly sync?: { readonly server: string; readonly email: string; readonly password: string };
+  readonly apiKey?: string;
+}
 
 export interface WifiNetwork {
   readonly ssid: string;
@@ -221,6 +263,8 @@ export interface SystemState {
   readonly firstStart: boolean;
   /** Null without an update service (a development system, a machine of its own). */
   readonly update: SystemUpdate | null;
+  /** The first start from the phone, while it runs (phase 5.13). */
+  readonly phoneSetup: PhoneSetup | null;
 }
 
 /** The version shown everywhere: the system's when it has updates, else the app's. */

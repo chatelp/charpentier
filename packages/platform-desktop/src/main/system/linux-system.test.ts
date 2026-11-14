@@ -61,6 +61,7 @@ function fakeX250() {
   const screens = { external: false, externalActive: false, internalActive: true, scale: 1 };
   const runs: string[][] = [];
   const bt = { paired: false };
+  const hotspot = { up: false, phone: false, ssid: '', password: '', fails: false };
   const daemons: {
     command: string;
     args: readonly string[];
@@ -73,6 +74,18 @@ function fakeX250() {
 
   function nmcli(args: readonly string[]): RunResult {
     const a = args.join(' ');
+    if (a.startsWith('device wifi hotspot ifname wlp3s0 con-name charpentier-setup ssid ')) {
+      if (hotspot.fails)
+        return fail('Error: Failed to setup a Wi-Fi hotspot: device does not support AP mode.');
+      hotspot.up = true;
+      hotspot.ssid = args[8] ?? '';
+      hotspot.password = args[10] ?? '';
+      return ok('Device "wlp3s0" successfully activated.\n');
+    }
+    if (a === 'connection down id charpentier-setup') {
+      hotspot.up = false;
+      return ok();
+    }
     if (a === '-t -f WIFI radio') return ok(net.radio ? 'enabled\n' : 'disabled\n');
     if (a.startsWith('radio wifi')) {
       net.radio = args[2] === 'on';
@@ -227,6 +240,12 @@ function fakeX250() {
             : ok('system default destination: Brother_HL_L2350\n');
         case 'lp':
           return ok('request id is Brother_HL_L2350-12 (1 file(s))\n');
+        case 'ip':
+          return ok(
+            hotspot.phone
+              ? '10.42.0.23 lladdr 5e:aa:bb:cc:dd:ee REACHABLE\n'
+              : '10.42.0.99 FAILED\n',
+          );
         case 'brightnessctl':
         case 'systemctl':
           return ok();
@@ -247,7 +266,7 @@ function fakeX250() {
       };
     },
   };
-  return { tools, files, net, sound, usb, screens, runs, daemons };
+  return { tools, files, net, sound, usb, screens, runs, daemons, hotspot };
 }
 
 const clock = { now: new Date('2026-11-13T15:00:00Z') };
@@ -263,6 +282,7 @@ async function start(
   x250 = fakeX250(),
   folder?: string,
   exportTexts?: (folder: string) => Promise<void>,
+  extra: Partial<Parameters<typeof createLinuxSystem>[0]> = {},
 ) {
   const dir = folder ?? fs.mkdtempSync(path.join(os.tmpdir(), 'charpentier-system-'));
   if (!folder) folders.push(dir);
@@ -272,9 +292,10 @@ async function start(
     hostname: 'x250',
     settingsFile: path.join(dir, 'system.json'),
     now: () => clock.now,
-    periods: { cpu: 3_600_000, power: 3_600_000, slow: 3_600_000 },
+    periods: { cpu: 3_600_000, power: 3_600_000, slow: 3_600_000, phone: 20 },
     lockIterations: 1_000,
     ...(exportTexts && { exportTexts }),
+    ...extra,
   });
   systems.push(system);
   await system.start();
@@ -726,5 +747,123 @@ describe('the updates of the X250 (phase 5.12)', () => {
     const back = await start(x250, first.dir);
     expect(shown(back.system).at(-1)).toBe('revenu à 0.5.0 · 0.6.0 mise de côté');
     expect(back.system.state().update?.setAside).toEqual({ version: '0.6.0', readable: true });
+  });
+});
+
+describe('the first start from the phone (phase 5.13)', () => {
+  const phoneStart = async (results = { sync: 'ok', mentor: 'saved' }) => {
+    const given: unknown[] = [];
+    const x250 = fakeX250();
+    const started = await start(x250, undefined, undefined, {
+      phonePage: { host: '127.0.0.1', port: 0 },
+      phoneSettings: async (settings) => {
+        given.push(settings);
+        return {
+          sync: settings.sync ? results.sync : null,
+          mentor: settings.apiKey ? results.mentor : null,
+        };
+      },
+    });
+    return { ...started, given };
+  };
+  const until = async (check: () => boolean) => {
+    for (let i = 0; i < 100 && !check(); i++) await new Promise((r) => setTimeout(r, 20));
+    expect(check()).toBe(true);
+  };
+
+  it('opens a temporary network, shows the page once a phone joined, applies what it sent', async () => {
+    const { system, x250, given } = await phoneStart();
+    expect(await system.startPhoneSetup()).toBe('ok');
+    const setup = system.state().phoneSetup;
+    expect(setup).toMatchObject({ stage: 'waiting', page: null, steps: null, expired: false });
+    expect(setup?.network.ssid).toMatch(/^charpentier-[a-z2-9]{4}$/);
+    expect(setup?.network.password).toMatch(/^[a-z2-9]{10}$/);
+    expect(x250.hotspot).toMatchObject({ up: true, ssid: setup?.network.ssid });
+
+    // A phone joins: the page's address appears (checked every 2 s).
+    x250.hotspot.phone = true;
+    await until(() => system.state().phoneSetup?.stage === 'joined');
+    const page = system.state().phoneSetup?.page ?? '';
+    const url = new URL(page);
+    const sent = await fetch(`${url.origin}/envoyer`, {
+      method: 'POST',
+      body: new URLSearchParams({
+        t: url.searchParams.get('t') ?? '',
+        ssid: 'Livebox-4A2C',
+        wifiPassword: 'bonjour1',
+        server: 'https://charpentier.chatel.pm',
+        email: 'auteur@exemple.fr',
+        password: 'secret',
+        apiKey: 'sk-ant-essai',
+      }),
+    });
+    expect(sent.status).toBe(200);
+    await until(() => system.state().phoneSetup?.stage === 'done');
+    // The temporary network went down before the home one was joined.
+    expect(x250.hotspot.up).toBe(false);
+    expect(ran(x250.runs, 'nmcli', 'connection', 'delete', 'id', 'charpentier-setup')).toBe(true);
+    expect(system.state().phoneSetup?.steps).toEqual({
+      wifi: { status: 'failed', reason: 'wrong-password' },
+      sync: { status: 'ok' },
+      mentor: { status: 'ok' },
+    });
+    // The secrets reached the main process only, never the state.
+    expect(given).toEqual([
+      {
+        sync: {
+          server: 'https://charpentier.chatel.pm',
+          email: 'auteur@exemple.fr',
+          password: 'secret',
+        },
+        apiKey: 'sk-ant-essai',
+      },
+    ]);
+    expect(JSON.stringify(system.state())).not.toContain('secret');
+    await system.stopPhoneSetup();
+    expect(system.state().phoneSetup).toBeNull();
+  });
+
+  it('joins the home network, and says a refused account or key', async () => {
+    const { system, x250 } = await phoneStart({ sync: 'invalid', mentor: 'invalid' });
+    await system.startPhoneSetup();
+    x250.hotspot.phone = true;
+    await until(() => !!system.state().phoneSetup?.page);
+    const url = new URL(system.state().phoneSetup?.page ?? '');
+    await fetch(`${url.origin}/envoyer`, {
+      method: 'POST',
+      body: new URLSearchParams({
+        t: url.searchParams.get('t') ?? '',
+        ssid: 'Maison-5G',
+        wifiPassword: 'le-bon-mot',
+        server: 'https://charpentier.chatel.pm',
+        email: 'auteur@exemple.fr',
+        password: 'faux',
+        apiKey: 'sk-faux',
+      }),
+    });
+    await until(() => system.state().phoneSetup?.stage === 'done');
+    expect(system.state().wifi.connected).toBe('Maison-5G');
+    expect(system.state().phoneSetup?.steps).toEqual({
+      wifi: { status: 'ok' },
+      sync: { status: 'failed', reason: 'invalid' },
+      mentor: { status: 'failed', reason: 'invalid' },
+    });
+  });
+
+  it('closes everything on « Au clavier », and is unavailable without a Wi-Fi card', async () => {
+    const { system, x250 } = await phoneStart();
+    await system.startPhoneSetup();
+    x250.hotspot.phone = true;
+    await until(() => !!system.state().phoneSetup?.page);
+    const page = system.state().phoneSetup?.page ?? '';
+    await system.stopPhoneSetup();
+    expect(x250.hotspot.up).toBe(false);
+    expect(system.state().phoneSetup).toBeNull();
+    // The page is gone with the network.
+    expect(await fetch(page).catch(() => 'closed')).toBe('closed');
+
+    x250.hotspot.fails = true;
+    expect(await system.startPhoneSetup()).toBe('unavailable');
+    expect(system.state().phoneSetup).toBeNull();
   });
 });

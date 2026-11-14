@@ -228,3 +228,61 @@
   color: var(--ch-faint);
   font: 400 11px var(--ch-font-ui);
 }
+
+/* The first start from the phone (phase 5.13): the code in the page's ink, on paper. */
+.ch-first-phone {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--ch-space-5);
+  align-items: center;
+}
+
+.ch-qr {
+  display: block;
+  width: 200px;
+  height: 200px;
+  border-radius: var(--ch-radius-md);
+  box-shadow: var(--ch-raise);
+}
+
+.ch-qr-ground {
+  fill: var(--ch-qr-ground);
+}
+
+.ch-qr-ink {
+  fill: var(--ch-qr-ink);
+}
+
+.ch-first-phone-text p {
+  margin: 0 0 var(--ch-space-2);
+}
+
+.ch-first-clear {
+  color: var(--ch-ink-2);
+  font: 13px / 1.6 var(--ch-font-sys);
+  overflow-wrap: anywhere;
+}
+
+.ch-first-results {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ch-first-results li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--ch-space-4);
+  padding: 6px 0;
+}
+
+.ch-first-results .is-failed {
+  color: var(--ch-author);
+}
+
+@media (max-width: 640px) {
+  .ch-first-phone {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+}

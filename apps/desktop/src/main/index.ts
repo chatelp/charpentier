@@ -126,6 +126,12 @@ function deviceSystem(): (SystemService & { dispose?(): void }) | null {
     settingsFile: path.join(app.getPath('userData'), 'system.json'),
     // The keyboard chosen at installation (charpentier-os, hosts/x250).
     keyboard: installedKeyboard(),
+    // The first start from the phone (phase 5.13): the account and the key go
+    // straight to the sync and the Compagnon, never through the interface.
+    phoneSettings: async ({ sync: account, apiKey }) => ({
+      sync: account ? await sync.signIn(account.server, account.email, account.password) : null,
+      mentor: apiKey ? String(await agents.handle({ type: 'agents.setKey', key: apiKey })) : null,
+    }),
     // The USB key's copy: every project, in Markdown.
     exportTexts: (folder) => exportTexts(store, library, folder, mirrorStrings),
     // The monitor's « charpentier » dial: Electron's processes (the speller is a

@@ -3,6 +3,7 @@ import {
   MESSAGE_LENGTH,
   messageAbout,
   type NightMode,
+  type PhoneSetup,
   type SystemMessage,
   type SystemService,
   type SystemState,
@@ -40,6 +41,12 @@ export interface SimulatedSystem extends SystemService {
     updateFailed(reason: UpdateFailure, version?: string): void;
     /** No update service (a development system). */
     noUpdates(): void;
+    /** A phone joined the temporary network of the first start (phase 5.13). */
+    phoneJoined(): void;
+    /** The phone sent the settings; how each went (all fine by default). */
+    phoneSent(steps?: Partial<NonNullable<PhoneSetup['steps']>>): void;
+    /** The page's token ran out. */
+    phoneExpired(): void;
     /** The actions called, for the tests (`suspend`, `reboot`…). */
     readonly calls: readonly string[];
   };
@@ -130,6 +137,7 @@ export function createSimulatedSystem(
       checking: false,
       failure: null,
     },
+    phoneSetup: null,
   };
   let record: LockRecord | null = null;
   const keeper = createLockKeeper({
@@ -319,6 +327,24 @@ export function createSimulatedSystem(
       return 'ok';
     },
     finishFirstStart: async () => update((s) => ({ ...s, firstStart: false })),
+    startPhoneSetup: async () => {
+      calls.push('startPhoneSetup');
+      update((s) => ({
+        ...s,
+        phoneSetup: {
+          network: { ssid: 'charpentier-k7m2', password: 'p4rk8wq2zn' },
+          page: null,
+          stage: 'waiting',
+          steps: null,
+          expired: false,
+        },
+      }));
+      return 'ok';
+    },
+    stopPhoneSetup: async () => {
+      calls.push('stopPhoneSetup');
+      update((s) => ({ ...s, phoneSetup: null }));
+    },
     checkUpdate: async () => {
       calls.push('checkUpdate');
       changeUpdate((u) => ({ ...u, lastCheck: now().toISOString() }));
@@ -388,6 +414,31 @@ export function createSimulatedSystem(
       updateFailed: (reason, version = '0.6.0') =>
         changeUpdate((u) => ({ ...u, failure: { version, at: now().toISOString(), reason } })),
       noUpdates: () => update((s) => ({ ...s, update: null })),
+      phoneJoined: () =>
+        update((s) => ({
+          ...s,
+          phoneSetup: s.phoneSetup && {
+            ...s.phoneSetup,
+            stage: 'joined',
+            page: 'http://10.42.0.1:8080/?t=essai',
+          },
+        })),
+      phoneSent: (steps = {}) =>
+        update((s) => ({
+          ...s,
+          phoneSetup: s.phoneSetup && {
+            ...s.phoneSetup,
+            stage: 'done',
+            steps: {
+              wifi: { status: 'ok' },
+              sync: { status: 'ok' },
+              mentor: { status: 'ok' },
+              ...steps,
+            },
+          },
+        })),
+      phoneExpired: () =>
+        update((s) => ({ ...s, phoneSetup: s.phoneSetup && { ...s.phoneSetup, expired: true } })),
       wifiLost: () => {
         update((s) => ({ ...s, wifi: { ...s.wifi, connected: null, address: null } }));
         post('réseau perdu');
