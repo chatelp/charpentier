@@ -190,11 +190,14 @@ export function WorkBlock({
     return (
       <div className="ch-work" onKeyDown={own}>
         {label}
-        <div className="ch-work-card is-flat" role="status" aria-live="polite">
-          <p className="ch-work-doing">{t(`work.task.${task}.doing`, { name })}</p>
+        <div className="ch-work-card is-flat">
+          {/* Announced at its start only: the elapsed time below is not read every second. */}
+          <p className="ch-work-doing" role="status">
+            {t(`work.task.${task}.doing`, { name })}
+          </p>
           <div className="ch-work-count">
             <span />
-            <span>{formatElapsed(elapsed)}</span>
+            <span aria-hidden="true">{formatElapsed(elapsed)}</span>
           </div>
           <div className="ch-work-actions">
             <button type="button" className="ch-btn" onClick={() => ctx.stopWork()}>

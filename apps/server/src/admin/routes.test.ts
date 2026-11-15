@@ -121,6 +121,8 @@ describe('the administration page (phase 4.6)', () => {
     console.log('NAV', page.slice(page.indexOf('<nav'), page.indexOf('</nav>')));
     expect(page).toContain('pierre@example.org <span class="adm-tag">vous</span>');
     expect(page).toContain('helene@example.org');
+    // A creation date is written in full, never « aujourd'hui ».
+    expect(page).toMatch(/<td>\d{1,2} [a-zé]+\.? \d{4}<\/td>/);
     expect(page).toMatch(/<a href="\/admin\/comptes" +aria-current="page" ?>comptes<\/a/);
 
     const style = await b.request('/admin/style/admin.css');

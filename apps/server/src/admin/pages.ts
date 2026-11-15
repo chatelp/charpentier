@@ -77,6 +77,16 @@ export function ago(iso: string, clock: Clock): string {
   return fr.dates.ago.days(Math.floor(hours / 24));
 }
 
+/** A creation date, a fact: always in full (« 15 nov. 2026 », docs/DESIGN.md §4.13 « Dates »). */
+export function dated(iso: string, clock: Clock): string {
+  return new Date(iso).toLocaleDateString('fr-FR', {
+    timeZone: clock.timeZone,
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
 /** « 640 ko », « 3,4 Mo ». */
 export function size(bytes: number): string {
   if (bytes < 1000) return `${bytes} o`;
@@ -217,7 +227,7 @@ export function accountsPage(page: Frame, accounts: readonly AccountRow[], selfI
               (a) => markup`<tr${a.disabledAt ? markup` class="is-off"` : ''}>
         <td>${a.email}${a.id === selfId ? markup` <span class="adm-tag">${fr.accounts.you}</span>` : ''}${a.disabledAt ? markup` <span class="adm-tag">${fr.accounts.disabled}</span>` : ''}</td>
         <td>${a.isAdmin ? fr.accounts.admin : fr.accounts.author}</td>
-        <td>${when(a.createdAt, page.clock)}</td>
+        <td>${dated(a.createdAt, page.clock)}</td>
         <td class="num">${a.devices}</td>
         <td>${when(a.lastSeenAt, page.clock)}</td>
         <td class="act"><a class="adm-btn" href="/admin/comptes/${a.id}">${fr.accounts.open}</a></td>
@@ -274,7 +284,7 @@ export function accountPage(
       </p>
       <h1>
         ${account.email}
-        <small>${fr.accounts.createdOn(role, when(account.createdAt, page.clock))}</small>
+        <small>${fr.accounts.createdOn(role, dated(account.createdAt, page.clock))}</small>
       </h1>
       <div class="adm-actions">
         <a class="adm-btn" href="${base}/reinitialiser">${fr.account.reset}</a>
@@ -304,7 +314,7 @@ export function accountPage(
             ${devices.map(
               (d) => markup`<tr${d.revoked ? markup` class="is-off"` : ''}>
         <td>${d.device || '—'}${d.revoked ? markup` <span class="adm-tag">${fr.account.revoked}</span>` : ''}</td>
-        <td>${when(d.createdAt, page.clock)}</td>
+        <td>${dated(d.createdAt, page.clock)}</td>
         <td>${when(d.lastSeenAt, page.clock)}</td>
         <td class="act">${d.revoked ? '' : markup`<a class="adm-btn" href="${base}/appareils/${d.id}/revoquer">${fr.account.revokeDevice}</a>`}</td>
       </tr>`,
