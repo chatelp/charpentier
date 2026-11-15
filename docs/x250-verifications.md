@@ -6,20 +6,27 @@ Une fois le X250 installé, la phase 5.10 bis rejoue la plupart de ces vérifica
 
 ## Avant de commencer
 
-- [ ] BIOS du X250 (F1 au démarrage) : Secure Boot désactivé ; pour l'installation par le réseau, « UEFI IPv4 Network Stack » activé.
-- [ ] L'adresse MAC de la carte Ethernet du X250, relevée dans le BIOS ou sur l'étiquette (pour l'installation par le réseau) : ____.
-- [ ] La clé d'installation est prête (image construite sur le Yoga L13 avec l'app à jour).
+- [x] BIOS du X250 (F1 au démarrage) : démarrage en **UEFI Only**, **CSM Support : No** (sinon F12 ne démarre pas la clé), Secure Boot désactivé ; pour l'installation par le réseau, « UEFI IPv4 Network Stack » activé et « PXE IPv4 First ». Wake on LAN reste désactivé.
+- [x] L'adresse MAC de la carte Ethernet du X250, relevée dans le BIOS ou sur l'étiquette (pour l'installation par le réseau) : 68:f7:28:de:67:f9.
+- [x] La clé d'installation est prête (image construite sur le Yoga L13 avec l'app à jour ; v0.1.0 écrite par Rufus en mode DD et relue à l'identique le 15 novembre 2026).
 - [ ] Le chargeur est branché, le Wi-Fi de la maison et son mot de passe sont sous la main.
 - [ ] Une clé USB vide (pour la copie des textes), un casque ou un clavier Bluetooth, une imprimante allumée si possible.
 
 ## 5.9 bis · L'installation
 
-- [ ] F12 au démarrage, choisir la clé : l'installateur s'affiche dans la matière du système (fond sombre, chasse fixe).
+- [x] F12 au démarrage, choisir la clé : l'installateur s'affiche dans la matière du système (fond sombre, chasse fixe).
 - [ ] Le clavier choisi à l'accueil est bien celui qu'on tape ensuite.
 - [ ] Le disque proposé est le bon (modèle et taille), l'effacement demande ⏎ ⏎.
 - [ ] Le mot de passe du disque, tapé deux fois. Le noter sur papier, rangé loin de l'ordinateur.
-- [ ] La copie va au bout, « retirez la clé pour continuer », puis redémarrage.
+- [x] La copie va au bout, « retirez la clé pour continuer », puis redémarrage.
 - [ ] Durée de l'installation : ____ min.
+
+Constats de la première installation (15 novembre 2026) :
+- Le système installé n'avait aucun micrologiciel, donc pas de Wi-Fi : corrigé côté `charpentier-os` (`hardware.enableRedistributableFirmware`, pull request `chatelp/charpentier-os#9`).
+- La carte Wi-Fi de ce X250 est une Dell DW1830 (Broadcom BCM43602, pilote `brcmfmac`, Bluetooth BCM20703A1), pas l'Intel 7265 d'origine.
+- Une fois, la carte n'apparaissait pas du tout (port PCIe 00:1c.1 absent) ; elle est revenue après un passage par le BIOS (redémarrage à chaud). À vérifier : un démarrage à froid. Si elle manque encore, deux parades : un redémarrage automatique unique quand le Wi-Fi manque, ou une carte Intel.
+- L'écran de l'installateur clignote à chaque pourcentage, et l'effacement du disque reste figé environ une minute sans explication : à reprendre côté `charpentier-os`.
+- Le disque portait un OpenCore (ancien macOS) qui démarrait à la place de la clé tant que le CSM était actif ; l'installation l'a effacé.
 
 ## 5.9 ter · L'installation par le réseau (au lieu de la clé)
 
@@ -60,6 +67,8 @@ Préalables sur le prodesk2021 (infra/README.md, « Installer le X250 par le ré
 - [ ] Envoyer : le réseau temporaire disparaît (il n'est plus dans la liste du téléphone), chaque ligne se coche sur le X250.
 - [ ] Un mot de passe Wi-Fi faux : « Corriger depuis le téléphone ⏎ » rouvre le réseau temporaire, le reste est gardé.
 - [ ] Le code du verrou, au clavier, puis « Écrire ⏎ » : le roman synchronisé s'ouvre, sans avoir tapé un mot de passe sur le X250.
+
+Premier essai le 15 novembre 2026 (Z Fold5, variante dev) : la configuration est passée, mais avec la PMF du point d'accès coupée à la main et une page qui expirait pendant qu'on allait chercher la clé du Compagnon. Les deux sont corrigés dans l'app (commits 570881a et f6153a6), pas encore installés sur le X250 : refaire cette partie avec l'app à jour avant de cocher.
 
 ## 5.4 · L'essentiel du système
 
