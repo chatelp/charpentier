@@ -1,9 +1,5 @@
 /* The X250's system line and its panels (docs/DESIGN.md §4.12). */
 
-.ch-system {
-  --ch-mentor: #86aedb;
-}
-
 .ch-sysline {
   display: flex;
   align-items: stretch;

@@ -12,9 +12,12 @@ services:
       # The X250's network boot (phase 5.9 ter): Pixiecore's secret and the MACs it serves.
       NETBOOT_SECRET: ${NETBOOT_SECRET:-}
       NETBOOT_MACS: ${NETBOOT_MACS:-}
+      # The administration page (phase 4.6) reports on the backups, read-only.
+      BACKUP_DIR: /backups
     # The X250's binary cache (D-31): rebuilt by the CI if lost, so not backed up.
     volumes:
       - cache:/data/nix-cache
+      - ${BACKUP_ARCHIVE:?set BACKUP_ARCHIVE in .env}:/backups:ro
     # For Pixiecore only, on this machine (never published beyond 127.0.0.1).
     ports:
       - '127.0.0.1:8081:8080'

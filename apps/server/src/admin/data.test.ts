@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
-import { createUser, login, sessionFor } from './accounts';
+import { createUser, login, sessionFor } from '../accounts';
 import {
   ADMIN_IDLE_MS,
   AdminError,
@@ -18,9 +18,9 @@ import {
   revokeDevice,
   setAccountAdmin,
   setAccountDisabled,
-} from './admin';
-import { migrate, storeDocument } from './database';
-import { account, cleanUp, freshDatabase } from './testing';
+} from './data';
+import { migrate, storeDocument } from '../database';
+import { account, cleanUp, freshDatabase } from '../testing';
 
 afterEach(cleanUp);
 
@@ -57,12 +57,10 @@ describe('administration (phase 4.6)', () => {
 
   it('creates an account that can then sign in from the app', async () => {
     const { db, admin } = await withAdmin();
-    await createAccount(db, admin, {
-      email: 'Helene@Example.org',
-      password: PASSWORD,
-      isAdmin: false,
-    });
-    expect(await login(db, 'helene@example.org', PASSWORD, 'Mac')).not.toBeNull();
+    const created = await createAccount(db, admin, { email: 'Helene@Example.org', isAdmin: false });
+    // Drawn by the server: four words and two digits (docs/DESIGN.md §4.13).
+    expect(created.password).toMatch(/^[a-z]+-[a-z]+-[a-z]+-[a-z]+-\d\d$/);
+    expect(await login(db, 'helene@example.org', created.password, 'Mac')).not.toBeNull();
     await expect(
       createAccount(db, admin, { email: 'helene@example.org', password: PASSWORD, isAdmin: false }),
     ).rejects.toThrow(new AdminError('email-taken'));
@@ -100,9 +98,9 @@ describe('administration (phase 4.6)', () => {
     expect(await sessionFor(db, second?.token ?? '')).toBeNull();
     expect(await sessionFor(db, helene.token)).not.toBeNull();
 
-    await resetAccountPassword(db, admin, helene.userId, 'un autre mot de passe long');
+    const { password } = await resetAccountPassword(db, admin, helene.userId);
     expect(await sessionFor(db, helene.token)).toBeNull();
-    expect(await login(db, helene.email, 'un autre mot de passe long', 'Mac')).not.toBeNull();
+    expect(await login(db, helene.email, password, 'Mac')).not.toBeNull();
 
     await setAccountAdmin(db, admin, helene.userId, true);
     await setAccountAdmin(db, admin, helene.userId, false);

@@ -214,6 +214,8 @@
     inset calc(var(--ch-depth-s) * -1) calc(var(--ch-depth-s) * -1) var(--ch-blur-s)
       var(--ch-highlight);
   --ch-lit-bg: transparent;
+  /* Its one blue: the Compagnon's, lighter on this dark (and the dot of /admin's emblem). */
+  --ch-mentor: #86aedb;
   color-scheme: dark;
   background-color: var(--ch-bg);
   color: var(--ch-ink);

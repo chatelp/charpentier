@@ -29,9 +29,18 @@ L'inscription est fermée : un compte se crée sur la machine, le mot de passe e
 ssh -t prodesk2021.local 'cd ~/Docker/charpentier && docker compose exec server node main.js create-user adresse@exemple.fr'
 ```
 
-Mot de passe oublié : la même commande avec `reset-password` à la place de `create-user` (tous les appareils sont alors déconnectés).
+Mot de passe oublié : la même commande avec `reset-password` à la place de `create-user` (tous les appareils sont alors déconnectés). `create-user --admin` crée un administrateur ; le premier compte l'est toujours. La page `/admin` fait aussi tout cela (ci-dessous).
 
 Dans l'app : ligne de commande (⌘K), « Se connecter à un serveur de synchro… », adresse `https://charpentier.chatel.pm`, puis l'e-mail et le mot de passe.
+
+## Administration (phase 4.6, `/admin`)
+
+Une page du serveur (docs/DESIGN.md §4.13) : comptes (créer, réinitialiser le mot de passe, désactiver, rôle d'administrateur), appareils (révoquer : la synchro de l'appareil s'arrête aussitôt), projets (export en Markdown, une archive `.zip`), sauvegardes (alerte au-delà de 48 h), journal. Réservée aux administrateurs : le premier compte l'est, les autres le deviennent par la page ou par `create-user --admin`. Le mot de passe d'un compte créé ou réinitialisé par la page est tiré au hasard et affiché une seule fois.
+
+- **Qui l'atteint** : seulement le réseau de la maison et Tailscale. Le serveur prend pour client la dernière adresse de `X-Forwarded-For` (celle que Traefik ajoute) et répond 404 à toute autre ; réglage `ADMIN_NETWORKS` (CIDR séparés par des virgules ; par défaut les réseaux privés, `100.64.0.0/10` et `fd7a:115c:a1e0::/48`). Par Cloudflare, la dernière adresse est celle de Cloudflare : `/admin` n'existe pas depuis Internet.
+- **Comment l'atteindre depuis la maison** : *à décider*. Le cookie de la page exige HTTPS (`__Host-`, `Secure`) ; il faut donc une adresse HTTPS qui ne passe pas par Cloudflare : `charpentier.chatel.pm` résolu vers le prodesk par le DNS de la maison, ou Tailscale Serve, ou un routeur Traefik à part. Rien n'est déployé tant que ce n'est pas choisi.
+- **Sauvegardes** : le dossier `BACKUP_ARCHIVE` est monté en lecture seule dans le serveur (`BACKUP_DIR=/backups`) ; la page ne restaure jamais (voir plus bas).
+- **Heures** : `ADMIN_TIMEZONE` (par défaut `Europe/Paris`).
 
 ## API
 

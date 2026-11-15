@@ -9,9 +9,10 @@ import {
   normalizeEmail,
   tokenHash,
   type DeviceSession,
-} from './accounts';
-import { loadDocument, type Database } from './database';
-import { hashPassword } from './passwords';
+} from '../accounts';
+import { loadDocument, type Database } from '../database';
+import { hashPassword } from '../passwords';
+import { drawPassphrase } from './passphrase';
 
 /**
  * What the administration page does (docs/PLAN.md phase 4.6), apart from
@@ -100,7 +101,7 @@ export async function adminLogout(db: Database, sessionId: string): Promise<void
 
 export async function logAction(
   db: Database,
-  adminId: string,
+  adminId: string | null,
   action: string,
   target = '',
   detail = '',
@@ -112,6 +113,7 @@ export async function logAction(
 }
 
 export interface LogEntry {
+  readonly id: number;
   readonly at: string;
   readonly admin: string;
   readonly action: string;
@@ -119,22 +121,25 @@ export interface LogEntry {
   readonly detail: string;
 }
 
-export async function readLog(db: Database, limit = 100): Promise<LogEntry[]> {
+export async function readLog(db: Database, limit = 50, before?: number): Promise<LogEntry[]> {
   const { rows } = await db.query<{
+    id: string | number;
     at: Date;
-    email: string;
+    email: string | null;
     action: string;
     target: string;
     detail: string;
   }>(
-    `select l.at, u.email, l.action, l.target, l.detail
-     from admin_log l join users u on u.id = l.admin_id
+    `select l.id, l.at, u.email, l.action, l.target, l.detail
+     from admin_log l left join users u on u.id = l.admin_id
+     where $2::bigint is null or l.id < $2
      order by l.id desc limit $1`,
-    [limit],
+    [limit, before ?? null],
   );
   return rows.map((r) => ({
+    id: Number(r.id),
     at: new Date(r.at).toISOString(),
-    admin: r.email,
+    admin: r.email ?? '',
     action: r.action,
     target: r.target,
     detail: r.detail,
@@ -189,35 +194,43 @@ async function emailOf(db: Database, userId: string): Promise<string> {
   if (!email) throw new AdminError('no-account');
   return email;
 }
-
+/**
+ * A new account. Its password is drawn by the server (docs/DESIGN.md §4.13)
+ * unless given, and returned to be shown once.
+ */
 export async function createAccount(
   db: Database,
   admin: AdminSession,
-  input: { readonly email: string; readonly password: string; readonly isAdmin: boolean },
-): Promise<string> {
+  input: { readonly email: string; readonly password?: string; readonly isAdmin: boolean },
+): Promise<{ readonly id: string; readonly email: string; readonly password: string }> {
   const email = normalizeEmail(input.email);
-  if (!/^[^@\s]+@[^@\s]+$/.test(email)) throw new AdminError('bad-email');
-  if (input.password.length < MIN_PASSWORD_LENGTH) throw new AdminError('short-password');
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new AdminError('bad-email');
+  const password = input.password ?? drawPassphrase();
+  if (password.length < MIN_PASSWORD_LENGTH) throw new AdminError('short-password');
   const { rows } = await db.query('select 1 from users where email = $1', [email]);
   if (rows.length) throw new AdminError('email-taken');
   const id = randomUUID();
   await db.query('insert into users (id, email, password_hash, is_admin) values ($1, $2, $3, $4)', [
     id,
     email,
-    await hashPassword(input.password),
+    await hashPassword(password),
     input.isAdmin,
   ]);
   await logAction(db, admin.userId, 'account.create', email, input.isAdmin ? 'admin' : '');
-  return id;
+  return { id, email, password };
 }
 
-/** A new password: every device of the account is signed out. Returns the sessions revoked. */
+/**
+ * A new password (drawn unless given): every device of the account is signed
+ * out. Returns it, to be shown once, and the sessions revoked.
+ */
 export async function resetAccountPassword(
   db: Database,
   admin: AdminSession,
   userId: string,
-  password: string,
-): Promise<string[]> {
+  given?: string,
+): Promise<{ readonly password: string; readonly email: string; readonly revoked: string[] }> {
+  const password = given ?? drawPassphrase();
   if (password.length < MIN_PASSWORD_LENGTH) throw new AdminError('short-password');
   const email = await emailOf(db, userId);
   await db.query('update users set password_hash = $2 where id = $1', [
@@ -226,7 +239,7 @@ export async function resetAccountPassword(
   ]);
   const revoked = await revokeAll(db, userId);
   await logAction(db, admin.userId, 'account.reset-password', email);
-  return revoked;
+  return { password, email, revoked };
 }
 
 async function revokeAll(db: Database, userId: string): Promise<string[]> {
@@ -293,8 +306,43 @@ export async function setAccountAdmin(
 
 // ─── Devices ───
 
-export const accountDevices = (db: Database, userId: string): Promise<DeviceSession[]> =>
+export interface DeviceRow {
+  readonly id: string;
+  readonly device: string;
+  readonly createdAt: string;
+  readonly lastSeenAt: string;
+  readonly revoked: boolean;
+}
+
+/** An account's devices, the revoked ones too (set aside, not deleted), most recently seen first. */
+export async function accountDevices(db: Database, userId: string): Promise<DeviceRow[]> {
+  const { rows } = await db.query<{
+    id: string;
+    device: string;
+    created_at: Date;
+    last_seen_at: Date;
+    revoked_at: Date | null;
+  }>(
+    `select id, device, created_at, last_seen_at, revoked_at from sessions
+     where user_id = $1 order by revoked_at is not null, last_seen_at desc limit 50`,
+    [userId],
+  );
+  return rows.map((r) => ({
+    id: r.id,
+    device: r.device,
+    createdAt: new Date(r.created_at).toISOString(),
+    lastSeenAt: new Date(r.last_seen_at).toISOString(),
+    revoked: r.revoked_at !== null,
+  }));
+}
+
+/** The live devices, as the app lists them. */
+export const liveDevices = (db: Database, userId: string): Promise<DeviceSession[]> =>
   listSessions(db, userId);
+
+export async function getAccount(db: Database, userId: string): Promise<AccountRow | null> {
+  return (await listAccounts(db)).find((a) => a.id === userId) ?? null;
+}
 
 export async function revokeDevice(
   db: Database,
@@ -391,34 +439,50 @@ export interface BackupInfo {
   readonly stale: boolean;
 }
 
+/** The last archives of the backups folder, most recent first (none: no folder, or empty). */
+export function listBackups(dir: string | null, count = 5, now = Date.now()): BackupInfo[] {
+  if (!dir) return [];
+  let entries: string[];
+  try {
+    entries = fs.readdirSync(dir);
+  } catch {
+    return [];
+  }
+  const files: { name: string; size: number; mtime: number }[] = [];
+  for (const name of entries) {
+    if (name.startsWith('.')) continue;
+    try {
+      const stat = fs.statSync(path.join(dir, name));
+      if (stat.isFile()) files.push({ name, size: stat.size, mtime: stat.mtimeMs });
+    } catch {
+      // Gone meanwhile.
+    }
+  }
+  return files
+    .sort((a, b) => b.mtime - a.mtime)
+    .slice(0, count)
+    .map((f) => ({
+      name: f.name,
+      size: f.size,
+      at: new Date(f.mtime).toISOString(),
+      stale: now - f.mtime > BACKUP_MAX_AGE_MS,
+    }));
+}
+
+/** Whether the backups folder is mounted at all (otherwise the page says so, without alarm). */
+export function backupsMounted(dir: string | null): boolean {
+  if (!dir) return false;
+  try {
+    return fs.statSync(dir).isDirectory();
+  } catch {
+    return false;
+  }
+}
+
 /**
  * The last archive in the backups folder (the nightly job's, infra/README.md),
  * mounted read-only into the server; null when there is none or no folder.
  */
 export function latestBackup(dir: string | null, now = Date.now()): BackupInfo | null {
-  if (!dir) return null;
-  let entries: string[];
-  try {
-    entries = fs.readdirSync(dir);
-  } catch {
-    return null;
-  }
-  let latest: { name: string; size: number; mtime: number } | null = null;
-  for (const name of entries) {
-    if (name.startsWith('.')) continue;
-    try {
-      const stat = fs.statSync(path.join(dir, name));
-      if (stat.isFile() && (!latest || stat.mtimeMs > latest.mtime))
-        latest = { name, size: stat.size, mtime: stat.mtimeMs };
-    } catch {
-      // Gone meanwhile.
-    }
-  }
-  if (!latest) return null;
-  return {
-    name: latest.name,
-    size: latest.size,
-    at: new Date(latest.mtime).toISOString(),
-    stale: now - latest.mtime > BACKUP_MAX_AGE_MS,
-  };
+  return listBackups(dir, 1, now)[0] ?? null;
 }

@@ -34,6 +34,14 @@ const netboot = {
   secret: process.env['NETBOOT_SECRET'] || null,
   macs: (process.env['NETBOOT_MACS'] ?? '').split(',').filter(Boolean),
 };
-const server = createSyncServer({ db, port, address: '0.0.0.0', cacheDir, netboot });
+// The administration page (phase 4.6): who may reach it, the backups it reports on.
+const admin = {
+  ...(process.env['ADMIN_NETWORKS'] && {
+    networks: process.env['ADMIN_NETWORKS'].split(',').filter(Boolean),
+  }),
+  backupsDir: process.env['BACKUP_DIR'] || null,
+  timeZone: process.env['ADMIN_TIMEZONE'] || 'Europe/Paris',
+};
+const server = createSyncServer({ db, port, address: '0.0.0.0', cacheDir, netboot, admin });
 await server.listen();
 console.log(`Charpentier sync server listening on port ${port}.`);

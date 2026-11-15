@@ -20,7 +20,14 @@ const WINDOW_MS = 15 * 60_000;
 const MAX_BODY = 10_000;
 
 export class LoginLimiter {
+  static readonly MAX_ATTEMPTS = MAX_ATTEMPTS;
   readonly #attempts = new Map<string, { count: number; until: number }>();
+
+  /** Attempts made in the current window (the log tells repeated refusals). */
+  attempts(key: string): number {
+    const entry = this.#attempts.get(key);
+    return entry && entry.until > this.now() ? entry.count : 0;
+  }
 
   constructor(private readonly now: () => number = Date.now) {}
 

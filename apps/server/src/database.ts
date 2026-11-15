@@ -91,7 +91,8 @@ export async function migrate(db: Database): Promise<void> {
     create table if not exists admin_log (
       id bigserial primary key,
       at timestamptz not null default now(),
-      admin_id uuid not null references users (id),
+      -- Null for what nobody signed in did (sign-in refused).
+      admin_id uuid references users (id),
       action text not null,
       target text not null default '',
       detail text not null default ''
