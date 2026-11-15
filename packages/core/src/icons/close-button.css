@@ -78,9 +78,10 @@
   height: 20px;
 }
 
-/* A full-frame view's corner. */
+/* A full-frame view's corner, above the view's own content. */
 .ch-close.is-corner {
   position: absolute;
   top: 12px;
   right: 14px;
+  z-index: 1;
 }

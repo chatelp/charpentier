@@ -302,14 +302,23 @@
   right: calc(var(--ch-panel-w) + 24px);
 }
 
-/* A panel never covers the content, in any view (docs/DESIGN.md §4.3): the Atelier and the overview stop before it. */
+/*
+ * A panel never covers the content, in any view (docs/DESIGN.md §4.3): the
+ * Atelier, the overview, the settings and the features' full-frame views stop
+ * before it, and their close cross with them (§4.8). The library replaces the
+ * workspace, panels and all.
+ */
 .ch-app[data-mentor-panel] .ch-atelier,
-.ch-app[data-mentor-panel] .ch-overview {
+.ch-app[data-mentor-panel] .ch-overview,
+.ch-app[data-mentor-panel] .ch-settings,
+.ch-app[data-mentor-panel] .ch-feature-view {
   right: calc(var(--ch-panel-w) + 24px);
 }
 
 .ch-app[data-navigator] .ch-atelier,
-.ch-app[data-navigator] .ch-overview {
+.ch-app[data-navigator] .ch-overview,
+.ch-app[data-navigator] .ch-settings,
+.ch-app[data-navigator] .ch-feature-view {
   left: calc(var(--ch-drawer-w) + 24px);
 }
 
