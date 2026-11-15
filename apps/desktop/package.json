@@ -1,6 +1,6 @@
 {
   "name": "@charpentier/desktop",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Desktop host (Electron): main process, preload bridge, renderer.",
   "license": "SEE LICENSE IN ../../LICENSE.md",
