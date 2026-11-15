@@ -352,7 +352,7 @@ Sur le X250, l'app est la partie visible du système [D-24]. Maquette : cadre «
 | Son | volume, muet ; sons de l'interface, son de frappe |
 | Batterie et veille | les deux batteries ; écran éteint après (5, 15 min, jamais) ; veille après (15, 30 min, jamais) ; rabat fermé = veille ; seuils de batterie faible |
 | Verrouillage | demander le code : à chaque réveil (défaut), après 15 min de veille, jamais ; changer le code (4 à 8 chiffres ou lettres) ; après 5 erreurs, 30 s d'attente, doublées à chaque série ; code oublié : réinitialisé depuis le Mac |
-| Clavier et pavé tactile | disposition (AZERTY, BÉPO, QWERTY) ; couper le pavé pendant la frappe (oui par défaut), toucher pour cliquer, défilement naturel, pavé oui / non |
+| Clavier et pavé tactile | disposition (AZERTY, QWERTY ; BÉPO retiré le 15 novembre 2026, D-34) ; couper le pavé pendant la frappe (oui par défaut), toucher pour cliquer, défilement naturel, pavé oui / non |
 | Impression | imprimantes du réseau (sans pilote), par défaut, page de test ; format A4 / Lettre, interligne |
 | Clé USB | état ; Copier mes textes (tous les projets en Markdown dans `Charpentier/<date>/`, rien n'est effacé sur la clé) ; Éjecter |
 | Date et heure | fuseau, heure automatique par le réseau, format 24 h / 12 h |
@@ -413,7 +413,7 @@ Sur le X250, l'app est la partie visible du système [D-24]. Maquette : cadre «
   - « installer charpentier 0.5.0 sur cet ordinateur ».
   - « tout est sur la clé : rien à télécharger, pas besoin de réseau ».
   - « environ 5 minutes ».
-  - Le **clavier** (choix de l'auteur) : `azerty` (inversé : le choix), `bépo`, `qwerty`, « ← → changer ».
+  - Le **clavier** (choix de l'auteur) : `azerty` (inversé : le choix), `qwerty`, « ← → changer ». `bépo`, d'abord proposé, est retiré (D-34) ; les maquettes le montrent encore.
   - Une ligne « essai » où l'on tape librement, avec l'aide « tapez quelques lettres : ce clavier servira au mot de passe ».
   - Ce choix vaut pour l'écran du disque à chaque démarrage et pour l'app (réglage Clavier).
   - « secteur  branché ».
