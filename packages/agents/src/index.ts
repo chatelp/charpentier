@@ -26,7 +26,6 @@ export {
   DEEP_AGENTS,
   DEEP_PRICES,
   deepWork,
-  deepWorkKey,
   deepWorkSchemas,
   deepWorkSystemPrompt,
   estimateDeepWork,

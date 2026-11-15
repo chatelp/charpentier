@@ -12,11 +12,23 @@ export type DeepTask = 'structure' | 'clues' | 'character';
 
 /** What a task on the whole manuscript will cost, announced before it runs. */
 export interface DeepWorkEstimate {
+  /** What it reads. */
+  readonly scenes: number;
+  readonly words: number;
   readonly inputTokens: number;
+  /** The usual answer, thinking included. */
   readonly outputTokens: number;
-  /** In US dollars, the provider's currency. */
+  /** In US dollars, the provider's currency: the usual cost, and at most (the longest answer). */
   readonly usd: number;
+  readonly usdMax: number;
+  /** How long it usually takes, in seconds: from, to. */
+  readonly seconds: readonly [number, number];
+  /** When it last ran on this very manuscript, if it did (ISO date). */
+  readonly unchangedSince?: string;
 }
+
+/** How a background work ended: `stopped` by the author, `empty` with nothing to read. */
+export type DeepWorkOutcome = AskResult | 'stopped' | 'empty';
 
 /** Outcome of asking the Compagnon to answer (its answer lands in the mentor document). */
 export type AskResult = 'answered' | 'unavailable' | 'offline' | 'refused' | 'failed';
@@ -87,7 +99,9 @@ export interface AgentsService {
     readonly projectId: string;
     readonly task: DeepTask;
     readonly characterId?: string;
-  }): Promise<AskResult>;
+  }): Promise<DeepWorkOutcome>;
+  /** « Arrêter »: the running work stops, and nothing it found is filed. */
+  stopDeepWork(input: { readonly projectId: string }): Promise<void>;
   /** D-20: the model of the light, frequent work. */
   lightModel(): Promise<'opus' | 'haiku'>;
   setLightModel(model: 'opus' | 'haiku'): Promise<void>;

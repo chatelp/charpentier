@@ -80,6 +80,10 @@ export class IpcAgentsService implements AgentsService {
     return this.bridge.invoke({ type: 'agents.deepWork', ...input });
   }
 
+  async stopDeepWork(input: { readonly projectId: string }) {
+    await this.bridge.invoke({ type: 'agents.stopDeepWork', ...input });
+  }
+
   lightModel() {
     return this.bridge.invoke({ type: 'agents.lightModel' });
   }

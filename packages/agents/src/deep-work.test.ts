@@ -4,11 +4,13 @@ import {
   createChapter,
   createEntity,
   createScene,
+  getScene,
   initProject,
   listEntities,
   listSignals,
   parseSceneMarkdown,
   readFieldRef,
+  readWorkRecord,
   rejectEntity,
   variantFragment,
   writeSceneDocToFragment,
@@ -63,6 +65,24 @@ function fakeLlm(output: DeepWorkOutput) {
 }
 
 describe('specialised agents on the whole manuscript (D-27)', () => {
+  it('says when the manuscript has not changed since the last run', async () => {
+    const m = manuscript();
+    const empty = { review: 'Rien.', narrativeModel: null, acts: [], arcs: [], signals: [] };
+    await deepWork({ llm: fakeLlm(empty).llm, ...m, task: 'structure' });
+    const since = readWorkRecord(m.mentorDoc, { task: 'structure' })?.at;
+    expect(estimateDeepWork({ ...m, task: 'structure' })?.unchangedSince).toBe(since);
+    expect(estimateDeepWork({ ...m, task: 'clues' })?.unchangedSince).toBeUndefined();
+    const doc = m.sceneDocs.get(m.ids[0] ?? '');
+    const scene = getScene(m.root, m.ids[0] ?? '');
+    doc?.transact(() =>
+      writeSceneDocToFragment(
+        parseSceneMarkdown('Un autre texte.'),
+        variantFragment(doc, scene?.activeVariantId ?? ''),
+      ),
+    );
+    expect(estimateDeepWork({ ...m, task: 'structure' })?.unchangedSince).toBeUndefined();
+  });
+
   it('checks the structure: an abandoned arc signalled where it stops, the missing act proposed', async () => {
     const m = manuscript();
     const [quai, crue, retour] = m.ids as [string, string, string];
@@ -133,9 +153,19 @@ describe('specialised agents on the whole manuscript (D-27)', () => {
     expect(signal?.textAnchor?.sceneId).toBe(crue);
     expect(signal?.author).toBe('mentor');
     // The Compagnon is the only voice: the review is its message.
-    expect(chatMessages(m.mentorDoc).map((c) => `${c.role}: ${c.text}`)).toEqual([
-      'compagnon: Le point sur la structure\n\nLe départ tient bien. La lettre du frère disparaît après la crue : est-ce voulu ?',
+    expect(chatMessages(m.mentorDoc).map((c) => [c.role, c.text, c.work])).toEqual([
+      [
+        'compagnon',
+        'Le départ tient bien. La lettre du frère disparaît après la crue : est-ce voulu ?',
+        { task: 'structure' },
+      ],
     ]);
+    // What it left, for the block in the Atelier and the bilan's buttons.
+    expect(readWorkRecord(m.mentorDoc, { task: 'structure' })).toMatchObject({
+      proposals: 3,
+      signalIds: [signal?.id],
+      reviewId: chatMessages(m.mentorDoc)[0]?.id,
+    });
   });
 
   it('tracks the clues and never proposes again a clue the author rejected', async () => {
@@ -207,7 +237,10 @@ describe('specialised agents on the whole manuscript (D-27)', () => {
     expect(field('occupation').value).toBe('batelière'); // Validated, and not a field of this task.
     expect(field('occupation').proposal).toBeUndefined();
     expect(field('secret').proposal).toBeUndefined(); // Dialogue: never a line of the novel.
-    expect(chatMessages(m.mentorDoc)[0]?.text).toMatch(/^Le point sur Hélène\n\n/);
+    expect(chatMessages(m.mentorDoc)[0]?.work).toEqual({
+      task: 'character',
+      characterId: m.helene,
+    });
   });
 
   it('resolves its own remarks of last time that it does not make again', async () => {
@@ -280,6 +313,10 @@ describe('specialised agents on the whole manuscript (D-27)', () => {
     expect(estimate?.inputTokens).toBeGreaterThan(100);
     expect(estimate?.usd).toBeGreaterThan(0);
     expect(estimate?.usd).toBeLessThan(0.5);
+    expect(estimate).toMatchObject({ scenes: 3, words: 41 });
+    expect(estimate?.usdMax).toBeGreaterThan(estimate?.usd ?? 0);
+    expect(estimate?.seconds[0]).toBeLessThan(estimate?.seconds[1] ?? 0);
+    expect(estimate?.unchangedSince).toBeUndefined();
     expect(estimateDeepWork({ ...m, task: 'character', characterId: 'nobody' })).toBeUndefined();
 
     const empty = new Y.Doc();

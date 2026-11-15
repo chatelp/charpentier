@@ -27,13 +27,17 @@ afterEach(() => {
 /** A model that answers every task with a review, and counts how many run at once. */
 function fakeClient() {
   const seen = { calls: 0, atOnce: 0, maxAtOnce: 0, prompts: [] as string[] };
-  const create = async (body: { messages: { content: string }[] }) => {
+  const create = async (
+    body: { messages: { content: string }[] },
+    options?: { signal?: AbortSignal },
+  ) => {
     seen.calls++;
     seen.atOnce++;
     seen.maxAtOnce = Math.max(seen.maxAtOnce, seen.atOnce);
     seen.prompts.push(body.messages.map((m) => m.content).join('\n'));
-    await new Promise((resolve) => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 30));
     seen.atOnce--;
+    if (options?.signal?.aborted) throw new Error('Request was aborted.');
     const text = JSON.stringify({
       review: 'La pluie installe la scène. Que veut Hélène ?',
       narrativeModel: null,
@@ -86,7 +90,7 @@ describe('the specialised agents in the main process (D-27)', () => {
       projectId,
       task: 'structure',
     });
-    expect(estimate).toMatchObject({ inputTokens: expect.any(Number), usd: expect.any(Number) });
+    expect(estimate).toMatchObject({ scenes: 2, words: 10, usd: expect.any(Number) });
     expect(seen.calls).toBe(0); // Estimating costs nothing.
 
     const [structure, clues] = await Promise.all([
@@ -98,10 +102,16 @@ describe('the specialised agents in the main process (D-27)', () => {
     expect(seen.prompts[0]).toContain('Il pleuvait sur Nantes.');
     expect(seen.prompts[0]).toContain('Hélène poussa la porte du bureau.');
     const mentor = store.acquire(guids.mentor(projectId), 'test');
-    expect(chatMessages(mentor).map((m) => m.text.split('\n')[0])).toEqual([
-      'Le point sur la structure',
-      'Le point sur les indices',
-    ]);
+    expect(chatMessages(mentor).map((m) => m.work?.task)).toEqual(['structure', 'clues']);
+  });
+
+  it('stops a running work: nothing is filed', async () => {
+    const { host, store, projectId } = await setUp();
+    const run = host.handle({ type: 'agents.deepWork', projectId, task: 'structure' });
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    await host.handle({ type: 'agents.stopDeepWork', projectId });
+    expect(await run).toBe('stopped');
+    expect(chatMessages(store.acquire(guids.mentor(projectId), 'test'))).toEqual([]);
   });
 
   it('has nothing to estimate for a character that does not exist', async () => {

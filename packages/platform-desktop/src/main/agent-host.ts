@@ -12,6 +12,7 @@ import type {
   AskResult,
   DeepTask,
   DeepWorkEstimate,
+  DeepWorkOutcome,
   LlmStatus,
 } from '@charpentier/platform';
 import {
@@ -278,21 +279,26 @@ export class AgentHost {
     projectId: string,
     task: DeepTask,
     characterId: string | undefined,
-  ): Promise<AskResult> {
+  ): Promise<DeepWorkOutcome> {
     if (this.llm.status() === 'unconfigured') return 'unavailable';
     const previous = this.#running.get(projectId) ?? Promise.resolve();
-    const run = previous.then(async (): Promise<AskResult> => {
+    const controller = new AbortController();
+    this.#works.set(projectId, controller);
+    const run = previous.then(async (): Promise<DeepWorkOutcome> => {
+      if (controller.signal.aborted) return 'stopped';
       try {
         return await this.#withManuscript(projectId, async (docs) => {
-          await deepWork({
+          const result = await deepWork({
             llm: this.llm,
             ...docs,
             task,
             ...(characterId !== undefined && { characterId }),
+            signal: controller.signal,
           });
-          return 'answered' as const;
+          return result === 'nothing-to-read' ? 'empty' : 'answered';
         });
       } catch (error) {
+        if (controller.signal.aborted) return 'stopped';
         if (error instanceof LlmUnconfiguredError) return 'unavailable';
         if (error instanceof LlmRefusalError) return 'refused';
         if (error instanceof Anthropic.APIConnectionError) return 'offline';
@@ -304,8 +310,13 @@ export class AgentHost {
       projectId,
       run.catch(() => {}),
     );
-    return run;
+    return run.finally(() => {
+      if (this.#works.get(projectId) === controller) this.#works.delete(projectId);
+    });
   }
+
+  /** The background work of each project, to stop it (« Arrêter »). */
+  readonly #works = new Map<string, AbortController>();
 
   /** Holds the documents an agent needs for the time of its work. */
   async #withDocs<T>(
@@ -353,7 +364,9 @@ export class AgentHost {
 
   async handle(
     request: AgentRequest,
-  ): Promise<LlmStatus | ApiKeyResult | AskResult | DeepWorkEstimate | 'opus' | 'haiku' | null> {
+  ): Promise<
+    LlmStatus | ApiKeyResult | DeepWorkOutcome | DeepWorkEstimate | 'opus' | 'haiku' | null
+  > {
     switch (request.type) {
       case 'agents.status':
         return this.llm.status();
@@ -386,6 +399,9 @@ export class AgentHost {
         return this.#estimateDeepWork(request.projectId, request.task, request.characterId);
       case 'agents.deepWork':
         return this.#deepWork(request.projectId, request.task, request.characterId);
+      case 'agents.stopDeepWork':
+        this.#works.get(request.projectId)?.abort();
+        return null;
       case 'agents.lightModel':
         return this.lightModel.get();
       case 'agents.setLightModel':

@@ -102,6 +102,7 @@ export class RendererSession {
       case 'agents.interview':
       case 'agents.estimateDeepWork':
       case 'agents.deepWork':
+      case 'agents.stopDeepWork':
       case 'agents.lightModel':
       case 'agents.setLightModel':
         if (!this.services.agents) throw new Error('No agents in this host');

@@ -24,6 +24,7 @@ const disabledAgents: AgentsService = {
   interview: async () => 'unavailable',
   estimateDeepWork: async () => null,
   deepWork: async () => 'unavailable',
+  stopDeepWork: async () => {},
   lightModel: async () => 'opus',
   setLightModel: async () => {},
 };

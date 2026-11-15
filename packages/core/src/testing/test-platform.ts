@@ -37,6 +37,7 @@ export function createTestPlatform(overrides: Partial<Platform> = {}): Platform 
       interview: async () => 'unavailable',
       estimateDeepWork: async () => null,
       deepWork: async () => 'unavailable',
+      stopDeepWork: async () => {},
       lightModel: async () => 'opus',
       setLightModel: async () => {},
     },

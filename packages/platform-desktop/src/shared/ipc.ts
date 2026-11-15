@@ -3,6 +3,7 @@ import type {
   AskResult,
   DeepTask,
   DeepWorkEstimate,
+  DeepWorkOutcome,
   LlmStatus,
   MenuModel,
   SignInResult,
@@ -80,6 +81,7 @@ export type Request =
       readonly task: DeepTask;
       readonly characterId?: string;
     }
+  | { readonly type: 'agents.stopDeepWork'; readonly projectId: string }
   | { readonly type: 'sync.status' }
   | { readonly type: 'sync.account' }
   | {
@@ -130,7 +132,8 @@ export interface Responses {
   'agents.reviewChapter': AskResult;
   'agents.interview': AskResult;
   'agents.estimateDeepWork': DeepWorkEstimate | null;
-  'agents.deepWork': AskResult;
+  'agents.deepWork': DeepWorkOutcome;
+  'agents.stopDeepWork': null;
   'agents.lightModel': 'opus' | 'haiku';
   'sync.status': SyncStatus;
   'sync.account': SyncAccountInfo | null;

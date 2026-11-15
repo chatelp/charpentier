@@ -13,6 +13,10 @@ import {
   listSignals,
   listTrashedEntities,
   readFieldRef,
+  readWorkRecord,
+  workKey,
+  writeWorkRecord,
+  type WorkRef,
   readOutline,
   readSingleton,
   variantFragment,
@@ -290,6 +294,8 @@ export function estimateDeepWork(input: {
   readonly sceneDocs: ReadonlyMap<string, Y.Doc>;
   readonly task: DeepTask;
   readonly characterId?: string;
+  /** To say when the manuscript has not changed since the last run. */
+  readonly mentorDoc?: Y.Doc;
 }): DeepWorkEstimate | undefined {
   const { root, sceneDocs, task, characterId } = input;
   const manuscript = manuscriptOf(root, sceneDocs);
@@ -302,29 +308,36 @@ export function estimateDeepWork(input: {
     JSON.stringify(deepWorkSchemas[task]).length;
   const inputTokens = Math.ceil(chars / CHARS_PER_TOKEN);
   const outputTokens = EXPECTED_OUTPUT;
-  const usd = (inputTokens * DEEP_PRICES.input + outputTokens * DEEP_PRICES.output) / 1_000_000;
-  return { inputTokens, outputTokens, usd };
+  const cost = (output: number) =>
+    (inputTokens * DEEP_PRICES.input + output * DEEP_PRICES.output) / 1_000_000;
+  const reading = inputTokens / READ_TOKENS_PER_SECOND;
+  const last = input.mentorDoc && readWorkRecord(input.mentorDoc, workRef(task, characterId));
+  return {
+    scenes: manuscript.scenes.length,
+    words: manuscript.scenes.reduce((n, s) => n + countWords(s.text), 0),
+    inputTokens,
+    outputTokens,
+    usd: cost(outputTokens),
+    usdMax: cost(OUTPUT_BUDGET),
+    seconds: [
+      Math.round(reading + outputTokens / FAST_TOKENS_PER_SECOND),
+      Math.round(reading + outputTokens / SLOW_TOKENS_PER_SECOND),
+    ],
+    ...(last && last.digest === digestOf(manuscript.text) && { unchangedSince: last.at }),
+  };
 }
 
+/** The pace of the deep model, for the duration announced (rough, on purpose). */
+const READ_TOKENS_PER_SECOND = 20_000;
+const FAST_TOKENS_PER_SECOND = 90;
+const SLOW_TOKENS_PER_SECOND = 45;
+
+const countWords = (text: string) => text.split(/\s+/u).filter(Boolean).length;
+const digestOf = (text: string) => hashEvidence([{ sceneId: '', variantId: '', quote: text }]);
+const workRef = (task: DeepTask, characterId: string | undefined): WorkRef =>
+  task === 'character' ? { task, characterId: characterId ?? '' } : { task };
+
 // ─── The work ───
-
-/** Titles of the review in the conversation, by language (the UI's catalogue is not reachable here). */
-const HEADINGS: Record<string, Record<DeepTask, (name: string) => string>> = {
-  fr: {
-    structure: () => 'Le point sur la structure',
-    clues: () => 'Le point sur les indices',
-    character: (name) => `Le point sur ${name}`,
-  },
-  en: {
-    structure: () => 'Where the structure stands',
-    clues: () => 'Where the clues stand',
-    character: (name) => `Where ${name} stands`,
-  },
-};
-
-/** Key of a task's last run in the mentor document's `analyses` map (its signals, to resolve). */
-export const deepWorkKey = (task: DeepTask, characterId?: string) =>
-  task === 'character' ? `deep:character:${characterId ?? ''}` : `deep:${task}`;
 
 const normalizeName = (s: string) =>
   s
@@ -532,11 +545,12 @@ export function applyDeepWork(
   }
 
   // ─── Signals in the text ───
-  const key = deepWorkKey(task, characterId);
-  const analyses = mentorDoc.getMap<string>('analyses');
-  const before = new Set<string>(safeList(analyses.get(key)));
+  const work = workRef(task, characterId);
+  const key = workKey(work);
+  const before = new Set<string>(readWorkRecord(mentorDoc, work)?.fingerprints ?? []);
   const all = listSignals(root);
   const reported: string[] = [];
+  const signalIds: string[] = [];
   let signals = 0;
   for (const s of output.signals.slice(0, MAX_SIGNALS)) {
     const where = located(s);
@@ -550,8 +564,12 @@ export function applyDeepWork(
       },
     ]);
     reported.push(fingerprint);
-    if (all.some((x) => x.fingerprint === fingerprint && x.state !== 'resolved')) continue;
-    writer.raiseSignal({
+    const earlier = all.find((x) => x.fingerprint === fingerprint && x.state !== 'resolved');
+    if (earlier) {
+      if (earlier.state === 'open') signalIds.push(earlier.id);
+      continue;
+    }
+    const id = writer.raiseSignal({
       kind,
       message: s.message.trim(),
       ...(s.title.trim() && { title: s.title.trim() }),
@@ -559,6 +577,7 @@ export function applyDeepWork(
       textAnchor: where.anchor,
       fingerprint,
     });
+    signalIds.push(id);
     signals++;
   }
   // This task's remarks of last time that it does not make again.
@@ -575,34 +594,29 @@ export function applyDeepWork(
       resolved++;
 
   // ─── The review, in the Compagnon's voice ───
+  // The interface names and dates it (« Bilan de la structure »): the text is the review alone.
   const review = output.review.trim().slice(0, MAX_DEEP_REVIEW);
-  const language = sceneContext(root, undefined, undefined).language.slice(0, 2);
-  const characterName = characterId
-    ? nameOf(
-        listEntities(root, 'characters').find((c) => c.id === characterId) ?? emptyEntity,
-        'name',
-      )
-    : '';
-  const heading = (HEADINGS[language] ?? HEADINGS['fr'])?.[task](characterName) ?? '';
   const origin = agentOrigin(agent);
   mentorDoc.transact(() => {
-    if (review && narrativeProseIn(review, authorText).length === 0)
-      addChatMessage(mentorDoc, { role: 'compagnon', text: `${heading}\n\n${review}` }, origin);
-    analyses.set(key, JSON.stringify(reported));
+    const reviewId =
+      review && narrativeProseIn(review, authorText).length === 0
+        ? addChatMessage(mentorDoc, { role: 'compagnon', text: review, work }, origin)
+        : undefined;
+    writeWorkRecord(
+      mentorDoc,
+      work,
+      {
+        at: new Date().toISOString(),
+        digest: digestOf(manuscript.text),
+        proposals,
+        signalIds,
+        fingerprints: reported,
+        ...(reviewId && { reviewId }),
+      },
+      origin,
+    );
   }, origin);
   return { proposals, signals, resolved };
-}
-
-const emptyEntity = { id: '', status: 'proposed', fields: {} } as unknown as EntityInfo;
-
-function safeList(json: string | undefined): string[] {
-  if (!json) return [];
-  try {
-    const value: unknown = JSON.parse(json);
-    return Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : [];
-  } catch {
-    return [];
-  }
 }
 
 /** Reads a field without throwing (an agent may name a sheet that is gone). */
