@@ -906,6 +906,22 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
         'password',
         network.password,
       );
+      // NetworkManager announces protected management frames as optional, and
+      // Android then fails to join a Broadcom card's access point (the
+      // author's X250, a DW1830). WPA2-PSK does without them; a global setting
+      // would also break the WPA3 networks the X250 joins as a client.
+      if (opened.code === 0) {
+        const pmf = await run(
+          'nmcli',
+          'connection',
+          'modify',
+          HOTSPOT,
+          '802-11-wireless-security.pmf',
+          'disable',
+        );
+        if (pmf.code === 0) opened = await run('nmcli', 'connection', 'up', 'id', HOTSPOT);
+        if (opened.code !== 0) await run('nmcli', 'connection', 'delete', 'id', HOTSPOT);
+      }
     } finally {
       networkAction = false;
     }

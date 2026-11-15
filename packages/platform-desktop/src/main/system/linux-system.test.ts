@@ -61,7 +61,15 @@ function fakeX250() {
   const screens = { external: false, externalActive: false, internalActive: true, scale: 1 };
   const runs: string[][] = [];
   const bt = { paired: false };
-  const hotspot = { up: false, phone: false, ssid: '', password: '', fails: false };
+  const hotspot = {
+    up: false,
+    phone: false,
+    ssid: '',
+    password: '',
+    fails: false,
+    pmf: 'default',
+    upFails: false,
+  };
   const daemons: {
     command: string;
     args: readonly string[];
@@ -81,6 +89,23 @@ function fakeX250() {
       hotspot.ssid = args[8] ?? '';
       hotspot.password = args[10] ?? '';
       return ok('Device "wlp3s0" successfully activated.\n');
+    }
+    if (a === 'connection modify charpentier-setup 802-11-wireless-security.pmf disable') {
+      hotspot.pmf = 'disable';
+      return ok();
+    }
+    if (a === 'connection up id charpentier-setup') {
+      if (hotspot.upFails) {
+        hotspot.up = false;
+        return fail('Error: Connection activation failed.');
+      }
+      hotspot.up = true;
+      return ok('Connection successfully activated.\n');
+    }
+    if (a === 'connection delete id charpentier-setup') {
+      hotspot.up = false;
+      hotspot.pmf = 'default';
+      return ok();
     }
     if (a === 'connection down id charpentier-setup') {
       hotspot.up = false;
@@ -797,7 +822,7 @@ describe('the first start from the phone (phase 5.13)', () => {
     expect(setup).toMatchObject({ stage: 'join', open: true, page: null, steps: null });
     expect(setup?.network.ssid).toMatch(/^charpentier-[a-z2-9]{4}$/);
     expect(setup?.network.password).toMatch(/^[a-z]+-[a-z]+-[1-9]\d$/);
-    expect(x250.hotspot).toMatchObject({ up: true, ssid: setup?.network.ssid });
+    expect(x250.hotspot).toMatchObject({ up: true, ssid: setup?.network.ssid, pmf: 'disable' });
     expect(lines(system).at(-1)).toBe(`réseau temporaire · ${setup?.network.ssid}`);
 
     // A phone joins: the page's address and its six digits appear.
@@ -910,6 +935,12 @@ describe('the first start from the phone (phase 5.13)', () => {
     });
     await system.stopPhoneSetup();
 
+    x250.hotspot.upFails = true;
+    expect(await system.startPhoneSetup()).toBe('unavailable');
+    expect(system.state().phoneSetup).toBeNull();
+    expect(x250.hotspot).toMatchObject({ up: false, pmf: 'default' });
+
+    x250.hotspot.upFails = false;
     x250.hotspot.fails = true;
     expect(await system.startPhoneSetup()).toBe('unavailable');
     expect(system.state().phoneSetup).toBeNull();
