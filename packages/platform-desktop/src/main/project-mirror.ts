@@ -4,29 +4,27 @@ import {
   addSignal,
   addVariantMeta,
   createCheckpoint,
-  entityModules,
-  fragmentToSceneDoc,
   getScene,
-  evidenceSceneId,
   guids,
-  listEntities,
+  MANUSCRIPT_DIR,
   MIRROR,
+  MODULES_DIR,
+  moduleFiles,
   newId,
   parseSceneMarkdown,
   readOutline,
-  readSingleton,
+  sceneFile,
+  sceneMarkdown,
+  scenePaths,
   serializeSceneMarkdown,
-  singletonModules,
   variantFragment,
   writeSceneDocToFragment,
-  type FieldState,
 } from '@charpentier/schema';
 import { prosemirrorToYXmlFragment } from '@tiptap/y-tiptap';
 import * as Y from 'yjs';
 import type { DocStore } from './doc-store';
 import { blocksOf, diffHunks, merge3 } from './merge3';
 import { STATE_DIR, writeJsonAtomic } from './projects';
-import { toYaml } from './yaml';
 
 /** Texts the mirror writes into the project (the main process has no i18n yet). */
 export interface MirrorStrings {
@@ -43,66 +41,15 @@ interface IndexEntry {
   readonly path: string;
 }
 
-export const MANUSCRIPT_DIR = 'manuscrit';
-export const MODULES_DIR = 'modules';
-
-const pad = (n: number) => String(n).padStart(2, '0');
-
-/** `Le retour à Nantes` → `le-retour-a-nantes`. */
-export function slug(title: string): string {
-  return (
-    title
-      .normalize('NFD')
-      .replace(/\p{Diacritic}/gu, '')
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-      .slice(0, 60)
-      .replace(/-+$/, '') || 'sans-titre'
-  );
-}
+export { MANUSCRIPT_DIR, MODULES_DIR, sceneFile, slug } from '@charpentier/schema';
 
 const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n|$)/;
-
-export function sceneFile(sceneId: string, variantId: string, body: string): string {
-  return [
-    '---',
-    '# Charpentier : identifiants de la scène, à ne pas modifier.',
-    `scene: ${sceneId}`,
-    `variant: ${variantId}`,
-    '---',
-    '',
-    body,
-  ].join('\n');
-}
 
 export function parseSceneFile(text: string): { sceneId?: string; body: string } {
   const match = FRONTMATTER.exec(text);
   if (!match) return { body: text };
   const sceneId = /^scene:\s*(\S+)\s*$/m.exec(match[1] ?? '')?.[1];
   return { ...(sceneId && { sceneId }), body: text.slice(match[0].length).replace(/^\r?\n/, '') };
-}
-
-const MODULE_FILES: Record<string, string> = {
-  meta: 'meta.yaml',
-  characters: 'personnages.yaml',
-  structure: 'structure.yaml',
-  acts: 'structure.yaml',
-  arcs: 'structure.yaml',
-  worldRules: 'regles-du-monde.yaml',
-  clues: 'indices.yaml',
-};
-
-function fieldForYaml(state: FieldState) {
-  return {
-    status: state.status ?? 'empty',
-    ...(state.value !== undefined && { value: state.value }),
-    ...(state.proposal && {
-      proposal: state.proposal.value,
-      // A scene's id, or `entretien` for what the author said in the interview (D-26).
-      source: state.proposal.evidence.map((e) => evidenceSceneId(e) ?? 'entretien'),
-    }),
-  };
 }
 
 function atomicWrite(file: string, content: string) {
@@ -219,9 +166,7 @@ export class ProjectMirror {
   }
 
   #markdownOf(sceneId: string, variantId: string): string {
-    return serializeSceneMarkdown(
-      fragmentToSceneDoc(variantFragment(this.#sceneDoc(sceneId), variantId)),
-    );
+    return sceneMarkdown(this.#sceneDoc(sceneId), variantId);
   }
 
   /** Writes every file that is not up to date (scenes moved or renamed follow their file). */
@@ -229,15 +174,13 @@ export class ProjectMirror {
     clearTimeout(this.#timer);
     const root = this.#root;
     if (!root) return;
-    const outline = readOutline(root);
     const live = new Set<string>();
-    outline.forEach((chapter, ci) => {
-      const dir = `${pad(ci + 1)}-${slug(chapter.title)}`;
-      chapter.scenes.forEach((scene, si) => {
-        live.add(scene.id);
-        const relative = path.join(MANUSCRIPT_DIR, dir, `${pad(si + 1)}-${slug(scene.title)}.md`);
+    for (const scene of scenePaths(root)) {
+      {
+        live.add(scene.sceneId);
+        const relative = path.join(...scene.path.split('/'));
         const target = path.join(this.folder, relative);
-        const previous = this.#index.get(scene.id);
+        const previous = this.#index.get(scene.sceneId);
         if (
           previous &&
           previous.path !== relative &&
@@ -247,17 +190,17 @@ export class ProjectMirror {
           fs.renameSync(path.join(this.folder, previous.path), target);
           this.#written.delete(previous.path);
         }
-        const body = this.#markdownOf(scene.id, scene.activeVariantId);
-        const content = sceneFile(scene.id, scene.activeVariantId, body);
+        const body = this.#markdownOf(scene.sceneId, scene.variantId);
+        const content = sceneFile(scene.sceneId, scene.variantId, body);
         if (readOr(target, '') !== content) {
           atomicWrite(target, content);
         }
         this.#written.set(relative, content);
-        if (readOr(this.#basePath(scene.id), '\u0000') !== body)
-          atomicWrite(this.#basePath(scene.id), body);
-        this.#index.set(scene.id, { path: relative });
-      });
-    });
+        if (readOr(this.#basePath(scene.sceneId), '\u0000') !== body)
+          atomicWrite(this.#basePath(scene.sceneId), body);
+        this.#index.set(scene.sceneId, { path: relative });
+      }
+    }
     // Scenes gone to the trash: their file goes (the scene itself stays in the project).
     for (const [sceneId, entry] of this.#index) {
       if (live.has(sceneId)) continue;
@@ -282,36 +225,8 @@ export class ProjectMirror {
   }
 
   #writeModules(root: Y.Doc) {
-    const files = new Map<string, Record<string, unknown>>();
-    const add = (module: string, value: unknown) => {
-      const file = MODULE_FILES[module] ?? `${module}.yaml`;
-      files.set(file, { ...(files.get(file) ?? {}), [module]: value });
-    };
-    for (const module of singletonModules) {
-      add(
-        module,
-        Object.fromEntries(
-          Object.entries(readSingleton(root, module)).map(([k, v]) => [k, fieldForYaml(v)]),
-        ),
-      );
-    }
-    for (const module of entityModules) {
-      add(
-        module,
-        listEntities(root, module).map((e) => ({
-          id: e.id,
-          status: e.status,
-          fields: Object.fromEntries(
-            Object.entries(e.fields).map(([k, v]) => [k, fieldForYaml(v)]),
-          ),
-        })),
-      );
-    }
-    const header =
-      '# Charpentier : modules du projet, en lecture seule (les modifications ici ne sont pas reprises).\n';
-    for (const [file, value] of files) {
+    for (const [file, content] of moduleFiles(root)) {
       const target = path.join(this.folder, MODULES_DIR, file);
-      const content = header + toYaml(value);
       if (readOr(target, '') !== content) atomicWrite(target, content);
     }
   }
