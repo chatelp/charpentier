@@ -16,13 +16,13 @@ if (!databaseUrl) {
 const db = new pg.Pool({ connectionString: databaseUrl });
 await migrate(db);
 
-const [command, argument] = process.argv.slice(2);
+const [command, ...args] = process.argv.slice(2);
 if (command) {
   if (!(COMMANDS as readonly string[]).includes(command)) {
     console.error(`Unknown command: ${command}. Commands: ${COMMANDS.join(', ')}.`);
     process.exit(2);
   }
-  const code = await runCommand(db, command as (typeof COMMANDS)[number], argument);
+  const code = await runCommand(db, command as (typeof COMMANDS)[number], args);
   await db.end();
   process.exit(code);
 }

@@ -5,7 +5,7 @@ import type { Database } from './database';
 /**
  * Server commands (D-21: sign-up is closed, accounts are made on the server):
  *
- *   node main.js create-user <email>
+ *   node main.js create-user [--admin] <email>   (the first account is an administrator anyway)
  *   node main.js reset-password <email>
  *   node main.js create-ci-token <name>    the CI's token for the X250's versions (D-31), shown once
  *   node main.js revoke-ci-token <name>
@@ -58,8 +58,10 @@ function readPassword(prompt: string): Promise<string> {
 export async function runCommand(
   db: Database,
   command: (typeof COMMANDS)[number],
-  email: string | undefined,
+  args: readonly string[],
 ): Promise<number> {
+  const admin = args.includes('--admin');
+  const email = args.find((a) => !a.startsWith('--'));
   if (command === 'create-ci-token' || command === 'revoke-ci-token') {
     const name = email ?? '';
     if (!isCiTokenName(name)) {
@@ -82,8 +84,8 @@ export async function runCommand(
   const password = await readPassword(`Password (at least ${MIN_PASSWORD_LENGTH} characters): `);
   try {
     if (command === 'create-user') {
-      await createUser(db, email, password);
-      console.log(`Account created for ${email}.`);
+      await createUser(db, email, password, { admin });
+      console.log(`Account created for ${email}${admin ? ', administrator' : ''}.`);
     } else {
       await resetPassword(db, email, password);
       console.log(`Password changed for ${email}; every device was signed out.`);

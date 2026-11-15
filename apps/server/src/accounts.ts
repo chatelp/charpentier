@@ -5,7 +5,7 @@ import { DUMMY_HASH, hashPassword, verifyPassword } from './passwords';
 /** Accounts and device sessions (D-21): one session per device, revocable. */
 
 export const normalizeEmail = (email: string) => email.trim().toLowerCase();
-const tokenHash = (token: string) => createHash('sha256').update(token).digest('hex');
+export const tokenHash = (token: string) => createHash('sha256').update(token).digest('hex');
 
 /** A password the server accepts: long enough to resist guessing. */
 export const MIN_PASSWORD_LENGTH = 12;
@@ -15,14 +15,20 @@ function checkPassword(password: string) {
     throw new Error(`The password needs at least ${MIN_PASSWORD_LENGTH} characters.`);
 }
 
-export async function createUser(db: Database, email: string, password: string): Promise<string> {
+export async function createUser(
+  db: Database,
+  email: string,
+  password: string,
+  options: { readonly admin?: boolean } = {},
+): Promise<string> {
   checkPassword(password);
   const id = randomUUID();
-  await db.query('insert into users (id, email, password_hash) values ($1, $2, $3)', [
-    id,
-    normalizeEmail(email),
-    await hashPassword(password),
-  ]);
+  // The first account is an administrator (phase 4.6), as the migration says.
+  await db.query(
+    `insert into users (id, email, password_hash, is_admin)
+     values ($1, $2, $3, $4 or not exists (select 1 from users))`,
+    [id, normalizeEmail(email), await hashPassword(password), options.admin ?? false],
+  );
   return id;
 }
 
@@ -41,6 +47,27 @@ export async function resetPassword(db: Database, email: string, password: strin
   );
 }
 
+/** The account these credentials open, if it exists and is not disabled. */
+export async function checkCredentials(
+  db: Database,
+  email: string,
+  password: string,
+): Promise<{ readonly id: string; readonly isAdmin: boolean } | null> {
+  const { rows } = await db.query<{
+    id: string;
+    password_hash: string;
+    is_admin: boolean;
+    disabled_at: Date | null;
+  }>('select id, password_hash, is_admin, disabled_at from users where email = $1', [
+    normalizeEmail(email),
+  ]);
+  const user = rows[0];
+  // Same work whether the account exists or not.
+  const valid = await verifyPassword(password, user?.password_hash ?? DUMMY_HASH);
+  if (!user || !valid || user.disabled_at) return null;
+  return { id: user.id, isAdmin: user.is_admin };
+}
+
 export interface Login {
   readonly token: string;
   readonly userId: string;
@@ -54,14 +81,8 @@ export async function login(
   password: string,
   device: string,
 ): Promise<Login | null> {
-  const { rows } = await db.query<{ id: string; password_hash: string }>(
-    'select id, password_hash from users where email = $1',
-    [normalizeEmail(email)],
-  );
-  const user = rows[0];
-  // Same work whether the account exists or not.
-  const valid = await verifyPassword(password, user?.password_hash ?? DUMMY_HASH);
-  if (!user || !valid) return null;
+  const user = await checkCredentials(db, email, password);
+  if (!user) return null;
   const token = randomBytes(32).toString('base64url');
   const sessionId = randomUUID();
   await db.query('insert into sessions (id, user_id, token_hash, device) values ($1, $2, $3, $4)', [
@@ -84,6 +105,7 @@ export async function sessionFor(db: Database, token: string): Promise<Session |
   const { rows } = await db.query<{ id: string; user_id: string }>(
     `update sessions set last_seen_at = now()
      where token_hash = $1 and revoked_at is null
+       and user_id in (select id from users where disabled_at is null)
      returning id, user_id`,
     [tokenHash(token)],
   );

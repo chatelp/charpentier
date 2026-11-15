@@ -64,6 +64,39 @@ export async function migrate(db: Database): Promise<void> {
       published_at timestamptz not null default now()
     )
   `);
+  // Administration (phase 4.6): roles, disabled accounts (never deleted), the
+  // page's own sessions (a cookie), and the log of what administrators did.
+  await db.query(
+    'alter table users add column if not exists is_admin boolean not null default false',
+  );
+  await db.query('alter table users add column if not exists disabled_at timestamptz');
+  // The first account is an administrator, as long as there is none.
+  await db.query(`
+    update users set is_admin = true
+    where id = (select id from users order by created_at, id limit 1)
+      and not exists (select 1 from users where is_admin)
+  `);
+  await db.query(`
+    create table if not exists admin_sessions (
+      id uuid primary key,
+      user_id uuid not null references users (id),
+      token_hash text not null unique,
+      csrf text not null,
+      created_at timestamptz not null default now(),
+      last_seen_at timestamptz not null default now(),
+      revoked_at timestamptz
+    )
+  `);
+  await db.query(`
+    create table if not exists admin_log (
+      id bigserial primary key,
+      at timestamptz not null default now(),
+      admin_id uuid not null references users (id),
+      action text not null,
+      target text not null default '',
+      detail text not null default ''
+    )
+  `);
   // The install key's image of each version (the last two kept).
   await db.query(`
     create table if not exists installers (
