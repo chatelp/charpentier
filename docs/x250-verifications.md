@@ -104,6 +104,8 @@ Premier essai le 15 novembre 2026 (Z Fold5, variante dev) : la configuration est
 
 ## 5.12 · Les mises à jour (après la première release de l'app)
 
+La v0.1.1 est publiée depuis le 15 novembre 2026 à 21:34 : c'est la release attendue ici. Le X250 doit être revenu à la version d'écriture (la version développement se met à jour depuis le Yoga L13, pas depuis le serveur).
+
 - [ ] Après une release, le X250 (ailleurs qu'à la maison, par exemple sur le partage de connexion du téléphone) dit « mise à jour prête · ⊞R redémarrer » dans l'heure, et `maj x.y.z` reste dans la ligne.
 - [ ] « À propos » : la version installée et sa date, la carte « Version x.y.z prête », Vérifier maintenant.
 - [ ] ⊞R puis ⏎ ⏎ : l'écran du disque porte « mise à jour x.y.z », puis « à jour · x.y.z » ; le texte écrit juste avant est là, et sur le Mac.
