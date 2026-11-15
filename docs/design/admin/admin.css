@@ -1,0 +1,472 @@
+/*
+ * Server administration page (docs/DESIGN.md §4.13). Plain server-rendered HTML, no bundle:
+ * serve packages/core/src/styles/tokens.css as-is, then this file. The whole page is in the
+ * system material (.ch-system on <html>), the same in both themes. Its blue (`--ch-mentor` in
+ * .ch-system, today in system.css) belongs in tokens.css. No colour of its own:
+ * an alert is inverted, never red.
+ */
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('JetBrainsMono-Variable.woff2') format('woff2');
+  font-weight: 400 500;
+  font-display: swap;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* <html class="ch-system"> : the material from the first paint, even past the end of the page. */
+html.ch-system {
+  background: var(--ch-bg);
+}
+
+body.adm {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--ch-bg);
+  color: var(--ch-ink-2);
+  font: 13px / 1.55 var(--ch-font-sys);
+  font-variant-numeric: tabular-nums;
+}
+
+.adm a {
+  color: var(--ch-ink);
+  text-decoration: underline;
+  text-decoration-color: var(--ch-faint);
+  text-underline-offset: 3px;
+}
+
+/* ── Header: a system line of its own ── */
+.adm-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 24px;
+  padding: 10px 24px;
+  border-bottom: 1px solid var(--ch-shade);
+  box-shadow: 0 1px 0 var(--ch-highlight);
+}
+
+.adm-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ch-ink);
+  font-weight: 500;
+}
+
+/* The square's blue dot: the system's only colour, its emblem (§3.1). */
+.adm-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ch-mentor);
+}
+
+.adm-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.adm-nav a {
+  padding: 4px 10px;
+  border-radius: var(--ch-radius-sm);
+  color: var(--ch-muted);
+  text-decoration: none;
+}
+
+.adm-nav a:hover {
+  color: var(--ch-ink);
+}
+
+.adm-nav a[aria-current='page'] {
+  color: var(--ch-ink);
+  box-shadow: var(--ch-lit);
+}
+
+.adm-who {
+  margin-left: auto;
+  color: var(--ch-muted);
+}
+
+/* ── Alert (backups older than 48 h) and messages ── */
+.adm-alert {
+  margin: 0;
+  padding: 8px 24px;
+  background: var(--ch-ink);
+  color: var(--ch-bg);
+  font-weight: 500;
+}
+
+.adm-alert a {
+  color: var(--ch-bg);
+  text-decoration-color: currentColor;
+}
+
+.adm-flash {
+  margin: 0;
+  padding: 8px 24px;
+  border-bottom: 1px solid var(--ch-shade);
+  box-shadow: 0 1px 0 var(--ch-highlight);
+  color: var(--ch-ink);
+}
+
+.adm-flash::before {
+  content: '› ';
+  color: var(--ch-muted);
+}
+
+/* ── Page ── */
+.adm-main {
+  max-width: 68rem;
+  margin: 0 auto;
+  padding: 28px 24px 64px;
+}
+
+.adm h1 {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 0 20px;
+  color: var(--ch-ink);
+  font: 500 18px / 1.3 var(--ch-font-sys);
+}
+
+.adm h1 small {
+  color: var(--ch-muted);
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.adm h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 32px 0 12px;
+  color: var(--ch-muted);
+  font: 400 12px / 1.4 var(--ch-font-sys);
+}
+
+/* An engraved rule to the edge, like a marking gauge (§4.11). */
+.adm h2::after {
+  content: '';
+  flex: 1;
+  height: 2px;
+  border-top: 1px solid var(--ch-shade);
+  border-bottom: 1px solid var(--ch-highlight);
+}
+
+.adm-lead {
+  margin: -12px 0 20px;
+  color: var(--ch-muted);
+}
+
+/* ── Tables ── */
+.adm-scroll {
+  overflow-x: auto;
+}
+
+.adm-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.adm-table th {
+  padding: 0 12px 8px 0;
+  color: var(--ch-faint);
+  font-weight: 400;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.adm-table td {
+  padding: 10px 12px 10px 0;
+  border-top: 1px solid var(--ch-shade);
+  box-shadow: inset 0 1px 0 var(--ch-highlight);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.adm-table td:first-child {
+  color: var(--ch-ink);
+}
+
+.adm-table .num {
+  text-align: right;
+}
+
+.adm-table .act {
+  width: 1%;
+  text-align: right;
+}
+
+.adm-table .act form {
+  display: inline;
+}
+
+/* A disabled account, a project in the trash: set aside, still there (§1, « estompé »). */
+.adm-table tr.is-off td {
+  color: var(--ch-faint);
+}
+
+/* ── Tags, buttons, fields ── */
+.adm-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 7px;
+  border-radius: 6px;
+  box-shadow: var(--ch-inset);
+  color: var(--ch-muted);
+  font-size: 11px;
+  line-height: 18px;
+}
+
+.adm-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 11px;
+  border: 0;
+  border-radius: var(--ch-radius-sm);
+  background: var(--ch-bg);
+  box-shadow: var(--ch-raise-s);
+  color: var(--ch-ink-2);
+  font: 400 12px / 1.4 var(--ch-font-sys);
+  text-decoration: none;
+  cursor: pointer;
+  transition: box-shadow var(--ch-dur-relief) var(--ch-ease);
+}
+
+.adm-btn:hover {
+  color: var(--ch-ink);
+}
+
+/* Held or reached by the keyboard: lit, never sunk (§4.7). */
+.adm-btn:active,
+.adm-btn:focus-visible,
+.adm-nav a:focus-visible,
+.adm a:focus-visible {
+  outline: none;
+  box-shadow: var(--ch-lit);
+  transition: none;
+}
+
+.adm-btn.is-main {
+  color: var(--ch-ink);
+  font-weight: 500;
+}
+
+.adm a.adm-btn {
+  text-decoration: none;
+}
+
+.adm-btn kbd {
+  color: var(--ch-faint);
+  font: inherit;
+}
+
+.adm-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ch-ink-2);
+  font: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--ch-faint);
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.adm-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px 16px;
+}
+
+.adm-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--ch-muted);
+  font-size: 12px;
+}
+
+.adm-field input[type='email'],
+.adm-field input[type='password'],
+.adm-field input[type='text'] {
+  width: 20rem;
+  max-width: 100%;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: var(--ch-radius-md);
+  background: var(--ch-bg);
+  box-shadow: var(--ch-inset);
+  color: var(--ch-ink);
+  font: 13px / 1.4 var(--ch-font-sys);
+  caret-color: var(--ch-ink);
+}
+
+.adm-field input:focus {
+  outline: none;
+}
+
+.adm-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 7px;
+  color: var(--ch-ink-2);
+}
+
+.adm-check input {
+  accent-color: var(--ch-ink);
+}
+
+.adm-error {
+  margin: 0;
+  padding: 6px 10px;
+  background: var(--ch-ink);
+  color: var(--ch-bg);
+}
+
+/* ── Confirmation of a sensitive action: its own page, a card in relief ── */
+.adm-card {
+  max-width: 36rem;
+  padding: 22px 24px;
+  border-radius: var(--ch-radius-lg);
+  box-shadow: var(--ch-raise);
+}
+
+.adm-card h1 {
+  margin-bottom: 12px;
+  font-size: 15px;
+}
+
+.adm-card ul {
+  margin: 0 0 20px;
+  padding: 0;
+  list-style: none;
+}
+
+.adm-card li {
+  padding: 3px 0 3px 16px;
+  text-indent: -16px;
+}
+
+.adm-card li::before {
+  content: '· ';
+  color: var(--ch-faint);
+}
+
+.adm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+
+/* A password shown once. */
+.adm-secret {
+  margin: 0 0 8px;
+  padding: 14px 16px;
+  border-radius: var(--ch-radius-md);
+  box-shadow: var(--ch-inset);
+  color: var(--ch-ink);
+  font-size: 18px;
+  letter-spacing: 0.02em;
+  user-select: all;
+}
+
+.adm-note {
+  margin: 0 0 20px;
+  color: var(--ch-muted);
+  font-size: 12px;
+}
+
+.adm-code {
+  display: block;
+  margin: 8px 0 0;
+  padding: 10px 14px;
+  border-radius: var(--ch-radius-md);
+  box-shadow: var(--ch-inset);
+  color: var(--ch-ink);
+  font: inherit;
+  white-space: pre-wrap;
+}
+
+/* The last backup, at a glance. */
+.adm-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 28px;
+  margin: 0 0 8px;
+}
+
+.adm-status b {
+  display: block;
+  color: var(--ch-faint);
+  font-weight: 400;
+  font-size: 11px;
+}
+
+.adm-status span {
+  color: var(--ch-ink);
+  font-size: 15px;
+}
+
+.adm-status .is-alert span {
+  padding: 0 6px;
+  background: var(--ch-ink);
+  color: var(--ch-bg);
+}
+
+/* ── Sign-in ── */
+.adm-login {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 24px;
+}
+
+.adm-login .adm-card {
+  width: 100%;
+  max-width: 24rem;
+}
+
+.adm-login .adm-form {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.adm-login .adm-field input {
+  width: 100%;
+}
+
+.adm-login .adm-brand {
+  margin-bottom: 18px;
+}
+
+@media (max-width: 640px) {
+  .adm-head,
+  .adm-alert,
+  .adm-flash {
+    padding-inline: 16px;
+  }
+
+  .adm-main {
+    padding: 20px 16px 48px;
+  }
+
+  .adm-who {
+    margin-left: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .adm-btn {
+    transition: none;
+  }
+}
