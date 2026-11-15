@@ -84,6 +84,14 @@ describe('contribution points of the core (phase 5.1)', () => {
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(document.activeElement).toBe(editor));
 
+    // A click on an empty spot leaves the focus on the body: Échap still goes back to the text.
+    await userEvent.keyboard(mod(','));
+    await screen.findByRole('listbox', { name: 'Sections des réglages' });
+    (document.activeElement as HTMLElement).blur();
+    expect(document.activeElement).toBe(document.body);
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(document.activeElement).toBe(editor));
+
     // A full-frame view.
     await command('vue sonde');
     await userEvent.click(await screen.findByRole('button', { name: 'Fermer la sonde' }));

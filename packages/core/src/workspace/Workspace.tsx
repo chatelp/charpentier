@@ -537,6 +537,22 @@ export function ProjectWorkspace({
     window.addEventListener('keydown', onKeyDown, true);
     return () => window.removeEventListener('keydown', onKeyDown, true);
   }, [registry]);
+  // Échap leaves the settings and the full-frame views wherever the focus is:
+  // a click on an empty spot of the page leaves it on the body, out of their
+  // own key handlers (found on the X250).
+  const fullFrame = view === 'settings' || view.startsWith('view:');
+  useEffect(() => {
+    if (!fullFrame || palette !== null || navigatorOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' || event.defaultPrevented || isCovered()) return;
+      const focused = document.activeElement;
+      if (focused && focused !== document.body) return;
+      event.preventDefault();
+      setView('write');
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [fullFrame, palette, navigatorOpen]);
   // The host's application menu (macOS menu bar): every command, chosen with the mouse.
   useEffect(() => {
     const menu = platform.menu;
