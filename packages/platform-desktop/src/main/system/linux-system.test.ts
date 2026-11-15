@@ -602,8 +602,8 @@ describe('the System service of the X250 (phase 5.4)', () => {
     const { system, x250 } = await start();
     expect(ran(x250.runs, 'swaymsg', 'input', 'type:keyboard', 'xkb_layout', 'fr')).toBe(true);
     expect(ran(x250.runs, 'swaymsg', 'input', 'type:touchpad', 'dwt', 'enabled')).toBe(true);
-    await system.setSetting('keyboardLayout', 'bepo');
-    expect(ran(x250.runs, 'swaymsg', 'input', 'type:keyboard', 'xkb_variant', 'bepo')).toBe(true);
+    await system.setSetting('keyboardLayout', 'qwerty');
+    expect(ran(x250.runs, 'swaymsg', 'input', 'type:keyboard', 'xkb_layout', 'us')).toBe(true);
     await system.setSetting('naturalScrolling', true);
     expect(ran(x250.runs, 'swaymsg', 'input', 'type:touchpad', 'natural_scroll', 'enabled')).toBe(
       true,
@@ -620,6 +620,19 @@ describe('the System service of the X250 (phase 5.4)', () => {
     expect(system.state().night.active).toBe(false);
   });
 
+  it('falls back from a withdrawn layout (BÉPO) to the installed one', async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'charpentier-system-'));
+    folders.push(dir);
+    fs.writeFileSync(
+      path.join(dir, 'system.json'),
+      JSON.stringify({ settings: { keyboardLayout: 'bepo', naturalScrolling: true } }),
+    );
+    const { system } = await start(fakeX250(), dir, undefined, { keyboard: 'qwerty' });
+    expect(system.state().settings).toMatchObject({
+      keyboardLayout: 'qwerty',
+      naturalScrolling: true,
+    });
+  });
   it('prints through CUPS, on the default printer of the network (phase 5.7)', async () => {
     const { system, x250 } = await start();
     expect(system.state().printers).toEqual([

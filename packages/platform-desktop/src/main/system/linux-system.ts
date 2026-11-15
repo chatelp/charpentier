@@ -149,6 +149,16 @@ function loadStored(file: string): Stored {
 
 let sequence = 0;
 
+/**
+ * A layout saved before it was withdrawn (BÉPO, 15 November 2026) falls back
+ * to the one installed, or AZERTY.
+ */
+function knownLayout(settings: SystemSettings, installed?: SystemSettings['keyboardLayout']) {
+  return settings.keyboardLayout in XKB_LAYOUTS
+    ? settings
+    : { ...settings, keyboardLayout: installed ?? DEFAULT_SYSTEM_SETTINGS.keyboardLayout };
+}
+
 export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
   const { tools } = options;
   const now = options.now ?? (() => new Date());
@@ -199,11 +209,14 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
     cpu: { load: 0, temperature: 0, history: [] },
     printers: [],
     timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    settings: {
-      ...DEFAULT_SYSTEM_SETTINGS,
-      ...(options.keyboard && { keyboardLayout: options.keyboard }),
-      ...stored.settings,
-    },
+    settings: knownLayout(
+      {
+        ...DEFAULT_SYSTEM_SETTINGS,
+        ...(options.keyboard && { keyboardLayout: options.keyboard }),
+        ...stored.settings,
+      },
+      options.keyboard,
+    ),
     lock: { locked: false, hasCode: !!stored.lock, retryAt: null },
     firstStart: stored.firstStartDone !== true,
     update: null,

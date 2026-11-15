@@ -111,7 +111,7 @@ describe('the X250’s binary cache (phase 5.11)', () => {
 describe('the X250’s version pointer (phase 5.11)', () => {
   const version = (
     v: string,
-    systems: Record<string, string> = { azerty: SYSTEM, bepo: SYSTEM, qwerty: SYSTEM },
+    systems: Record<string, string> = { azerty: SYSTEM, qwerty: SYSTEM },
   ) => JSON.stringify({ version: v, notes: 'Les fiches se replient.', systems });
 
   it('publishes a version once its systems are in the cache, for the CI only', async () => {
@@ -143,7 +143,7 @@ describe('the X250’s version pointer (phase 5.11)', () => {
     expect(await latest.json()).toMatchObject({
       version: '0.6.0-2',
       notes: 'Les fiches se replient.',
-      systems: { azerty: SYSTEM, bepo: SYSTEM, qwerty: SYSTEM },
+      systems: { azerty: SYSTEM, qwerty: SYSTEM },
       publishedAt: expect.stringMatching(/^\d{4}-\d\d-\d\dT/),
     });
   });

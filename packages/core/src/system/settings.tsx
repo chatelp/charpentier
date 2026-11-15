@@ -482,7 +482,6 @@ function Keyboard() {
           <Keys
             options={[
               { value: 'azerty', label: 'AZERTY' },
-              { value: 'bepo', label: 'BÉPO' },
               { value: 'qwerty', label: 'QWERTY' },
             ]}
             value={state.settings.keyboardLayout}

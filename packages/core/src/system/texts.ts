@@ -233,7 +233,7 @@ export const systemTexts: TextTree = {
         recommended: 'recommandé',
         unavailable: 'indisponible',
         phoneText:
-          'Vous visez un code, vous remplissez une page ; votre gestionnaire de mots de passe fait le reste.',
+          'Vous visez un code, vous remplissez une page ; votre gestionnaire de mots de passe fait le reste. Préparez votre clé Anthropic avant de commencer : sur ce réseau, le téléphone n’a pas internet.',
         phoneOff:
           'Ce X250 ne peut pas ouvrir de réseau pour le téléphone : sa carte Wi-Fi ne répond pas.',
         keyboard: 'Au clavier',

@@ -212,7 +212,7 @@ export interface SystemSettings {
   readonly sleepAfter: 15 | 30 | null;
   readonly lowBattery: number;
   readonly askCode: 'wake' | 'after15' | 'never';
-  readonly keyboardLayout: 'azerty' | 'bepo' | 'qwerty';
+  readonly keyboardLayout: 'azerty' | 'qwerty';
   readonly touchpad: boolean;
   readonly touchpadWhileTyping: boolean;
   readonly tapToClick: boolean;

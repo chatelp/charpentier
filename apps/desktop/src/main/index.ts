@@ -104,10 +104,11 @@ const PROCESS_KINDS: Partial<Record<string, AppProcessKind>> = {
   GPU: 'graphics',
 };
 
-function installedKeyboard(): 'azerty' | 'bepo' | 'qwerty' | undefined {
+/** The layout chosen at install time; BÉPO is no longer offered (15 November 2026). */
+function installedKeyboard(): 'azerty' | 'qwerty' | undefined {
   try {
     const value = fs.readFileSync('/etc/charpentier/keyboard', 'utf8').trim();
-    return value === 'azerty' || value === 'bepo' || value === 'qwerty' ? value : undefined;
+    return value === 'azerty' || value === 'qwerty' ? value : undefined;
   } catch {
     return undefined;
   }

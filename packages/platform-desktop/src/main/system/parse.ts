@@ -446,7 +446,6 @@ export function parseOutputList(text: string): Output[] {
 /** The keyboard layouts of the settings, as xkb knows them. */
 export const XKB_LAYOUTS = {
   azerty: { layout: 'fr', variant: '' },
-  bepo: { layout: 'fr', variant: 'bepo' },
   qwerty: { layout: 'us', variant: '' },
 } as const;
 
