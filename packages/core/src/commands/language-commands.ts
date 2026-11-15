@@ -1,4 +1,5 @@
-import { addToDictionary, setMentorLevel } from '@charpentier/schema';
+import { addToDictionary, listEntities, setMentorLevel } from '@charpentier/schema';
+import { workName } from '../work/use-background-work';
 import {
   applyCorrection,
   issueAtCursor,
@@ -200,6 +201,46 @@ export const languageCommands: readonly LanguageCommand[] = [
         ctx.outline.flatMap((c) => c.scenes.map((s) => s.id)),
         false,
       );
+    },
+  },
+  // The Compagnon's background work (D-27): no shortcut, a paid work does not
+  // start from a key (docs/DESIGN.md §4.5); confirmed in its block of the Atelier.
+  {
+    id: 'checkStructure',
+    scope: 'global',
+    isEnabled: (ctx) => ctx.platform.agents.status() !== 'disabled' && !ctx.work.running,
+    run: (ctx) => ctx.askWork({ task: 'structure' }),
+  },
+  {
+    id: 'trackClues',
+    scope: 'global',
+    isEnabled: (ctx) => ctx.platform.agents.status() !== 'disabled' && !ctx.work.running,
+    run: (ctx) => ctx.askWork({ task: 'clues' }),
+  },
+  {
+    id: 'characterReport',
+    scope: 'global',
+    isEnabled: (ctx) => ctx.platform.agents.status() !== 'disabled' && !ctx.work.running,
+    run: (ctx) => {
+      // The character open in the Atelier, otherwise a choice among them.
+      const open = ctx.atelierLocation.target;
+      if (ctx.view === 'atelier' && open?.module === 'characters' && open.entityId) {
+        ctx.askWork({ task: 'character', characterId: open.entityId });
+        return;
+      }
+      const characters = listEntities(ctx.root, 'characters').filter(
+        (c) => c.status !== 'rejected',
+      );
+      ctx.openPalette({
+        kind: 'pick',
+        placeholder: ctx.t('work.pickCharacter'),
+        empty: ctx.t('work.noCharacter'),
+        items: characters.map((c) => ({
+          id: c.id,
+          label: workName(ctx.root, { task: 'character', characterId: c.id }),
+        })),
+        onPick: (id) => ctx.askWork({ task: 'character', characterId: id }),
+      });
     },
   },
   {

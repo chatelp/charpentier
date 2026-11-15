@@ -89,6 +89,7 @@ export function WritingFooter({
   tools,
   features,
   syncState,
+  work,
 }: {
   /** Hidden outside the writing surface. */
   readonly words: number | undefined;
@@ -107,6 +108,8 @@ export function WritingFooter({
   readonly features?: ReactNode;
   /** Where the sync stands (step 4.4); clickable when it waits on the author. */
   readonly syncState?: { readonly text: string; readonly onClick?: () => void } | undefined;
+  /** The Compagnon's background work, while it runs: a click opens its module. */
+  readonly work?: { readonly text: string; readonly onClick: () => void } | undefined;
 }) {
   const { t } = useTranslation();
   return (
@@ -122,6 +125,16 @@ export function WritingFooter({
       </span>
       <span className="ch-footer-middle">{commandZone}</span>
       <span className="ch-footer-right">
+        {work && (
+          <button
+            type="button"
+            tabIndex={-1}
+            className="ch-footer-button is-mentor ch-footer-work"
+            onClick={work.onClick}
+          >
+            {work.text}
+          </button>
+        )}
         <span role="status" aria-live="polite" className="ch-footer-fit">
           {status}
         </span>

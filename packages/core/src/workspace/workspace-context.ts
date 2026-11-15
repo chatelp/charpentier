@@ -6,6 +6,8 @@ import type * as Y from 'yjs';
 import type { AtelierLocation } from '../atelier/Atelier';
 import type { SheetTarget } from '../atelier/atelier-data';
 import type { PaletteRequest } from '../palette/palette-request';
+import type { WorkRef } from '@charpentier/schema';
+import type { WorkState } from '../work/use-background-work';
 import type { PrefsUpdate, WritingPrefs } from './writing-prefs';
 
 export type WorkspaceView = 'write' | 'atelier' | 'overview' | 'settings' | `view:${string}`;
@@ -46,6 +48,15 @@ export interface WorkspaceContext {
   analyze(sceneIds: readonly string[], automatic: boolean): void;
   /** Asks the Compagnon for its review of a chapter, left in the conversation. */
   reviewChapter(chapterId: string, automatic: boolean): void;
+  /** The Compagnon's background work (D-27): asked, running, ended. */
+  readonly work: WorkState;
+  /** Opens the Atelier where a work's results arrive, its block in confirmation. */
+  askWork(ref: WorkRef): void;
+  cancelWork(ref?: WorkRef): void;
+  launchWork(): void;
+  stopWork(): void;
+  /** Where the Atelier stands (or last stood). */
+  readonly atelierLocation: AtelierLocation;
   shortcutLabel(commandId: string): string | undefined;
   /** A short, discreet confirmation (read by screen readers). */
   notify(message: string): void;

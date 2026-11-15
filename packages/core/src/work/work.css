@@ -1,0 +1,159 @@
+/* The Compagnon's background work at the foot of a module's list (docs/DESIGN.md §4.5). */
+.ch-work {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 10px;
+}
+.ch-work + .ch-atl-hint {
+  margin-top: 10px;
+}
+.ch-work-label {
+  margin: 0;
+  padding-left: 6px;
+  color: var(--ch-mentor);
+}
+.ch-work-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  text-align: left;
+  border-radius: var(--ch-radius-md);
+}
+.ch-work-btn .ch-medallion,
+.ch-work-head .ch-medallion {
+  color: var(--ch-mentor);
+}
+.ch-work-btn b,
+.ch-work-head b {
+  display: block;
+  color: var(--ch-mentor);
+  font: 500 12.5px/1.3 var(--ch-font-ui);
+}
+.ch-work-btn small {
+  display: block;
+  margin-top: 2px;
+  color: var(--ch-muted);
+  font: 11px/1.35 var(--ch-font-ui);
+}
+.ch-work-btn[aria-disabled='true'] {
+  box-shadow: none;
+  background: transparent;
+  cursor: default;
+}
+.ch-work-btn[aria-disabled='true'] b,
+.ch-work-btn[aria-disabled='true'] .ch-medallion {
+  color: var(--ch-faint);
+}
+.ch-work-btn[aria-disabled='true'] .ch-medallion {
+  box-shadow: none;
+}
+.ch-work-note {
+  margin: 0 2px;
+  color: var(--ch-muted);
+  font: 11px/1.5 var(--ch-font-ui);
+}
+.ch-work-note .ch-link {
+  color: var(--ch-ink-2);
+}
+.ch-work-note kbd {
+  color: var(--ch-faint);
+  font: inherit;
+}
+.ch-work-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border-radius: var(--ch-radius-md);
+  box-shadow: var(--ch-raise);
+  background: var(--ch-bg);
+}
+.ch-work-card.is-flat {
+  box-shadow: none;
+  background: transparent;
+  padding: 4px 2px;
+}
+.ch-work-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ch-work-what {
+  margin: 0;
+  color: var(--ch-ink-2);
+  font: 11.5px/1.5 var(--ch-font-ui);
+}
+.ch-work-cost {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 8px;
+  border-top: 1px solid var(--ch-shade);
+}
+.ch-work-cost .ch-label {
+  margin: 0;
+  color: var(--ch-muted);
+}
+.ch-work-cost strong {
+  color: var(--ch-ink);
+  font: 400 19px/1.25 var(--ch-font-text);
+}
+.ch-work-cost span {
+  color: var(--ch-faint);
+  font: 11px/1.4 var(--ch-font-ui);
+}
+.ch-work-unchanged {
+  margin: 0 0 6px;
+  color: var(--ch-muted);
+  font: 11px/1.45 var(--ch-font-ui);
+}
+.ch-work-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.ch-work-actions .ch-btn {
+  padding: 5px 9px;
+}
+.ch-work-actions kbd {
+  color: var(--ch-faint);
+  font: inherit;
+}
+.ch-work-doing {
+  margin: 0;
+  color: var(--ch-mentor);
+  font: italic 400 14px/1.35 var(--ch-font-text);
+}
+.ch-work-count {
+  display: flex;
+  justify-content: space-between;
+  color: var(--ch-muted);
+  font: 11px/1.4 var(--ch-font-ui);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The bilan in the conversation: named and dated, its results as buttons. */
+.ch-bilan-head {
+  margin: 18px 0 6px;
+  color: var(--ch-mentor);
+}
+.ch-bilan-head small {
+  color: var(--ch-faint);
+  font: 11px var(--ch-font-ui);
+  letter-spacing: 0;
+  text-transform: none;
+  font-variant-caps: normal;
+}
+.ch-bilan-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.ch-bilan-links .ch-btn {
+  color: var(--ch-mentor);
+}

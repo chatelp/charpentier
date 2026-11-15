@@ -36,6 +36,7 @@ import { FieldRow } from './FieldRow';
 import { Interview } from './Interview';
 import { ATELIER_MODULES, moduleDefs, type AtelierModule, type FieldDef } from './module-defs';
 import './atelier.css';
+import { WorkBlock } from '../work/WorkBlock';
 
 /** The rail: the interview with the Compagnon (D-26), then the modules. */
 export type AtelierRail = 'interview' | AtelierModule;
@@ -97,6 +98,10 @@ export const RAIL_PICTOS: Record<AtelierModule, PictogramName> = {
   worldRules: 'regles',
   clues: 'indices',
 };
+
+/** The background works at the foot of a module's list (docs/DESIGN.md §4.5). */
+const STRUCTURE_WORK = { task: 'structure' } as const;
+const CLUES_WORK = { task: 'clues' } as const;
 
 /** The « + New » buttons under the filter, by rail (docs/DESIGN.md §4.5). */
 const NEW_ENTRY: Record<AtelierModule, readonly EntityModule[]> = {
@@ -400,6 +405,18 @@ export function Atelier({
               </button>
             </p>
           )}
+          {rail === 'structure' && <WorkBlock ctx={ctx} work={STRUCTURE_WORK} />}
+          {rail === 'clues' && <WorkBlock ctx={ctx} work={CLUES_WORK} />}
+          {rail === 'characters' &&
+            selected?.target.module === 'characters' &&
+            selected.target.entityId &&
+            !selected.rejected && (
+              <WorkBlock
+                key={selected.target.entityId}
+                ctx={ctx}
+                work={{ task: 'character', characterId: selected.target.entityId }}
+              />
+            )}
           <p className="ch-atl-hint">{t('atelier.listHint')}</p>
         </div>
       )}

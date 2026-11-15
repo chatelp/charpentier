@@ -59,6 +59,8 @@ import { FeatureFooterItems, FeatureTopZones, useFeatures } from '../features/fe
 import { SettingsView } from '../features/SettingsView';
 import './workspace.css';
 import { CloseButton } from '../icons/CloseButton';
+import { useBackgroundWork, workName } from '../work/use-background-work';
+import { workLocation } from '../work/WorkBlock';
 
 let paletteSequence = 0;
 
@@ -250,6 +252,29 @@ export function ProjectWorkspace({
   const chapter = outline[chapterIndex];
   const sceneDocs = useSceneDocs(platform, projectId, sceneId, scene?.activeVariantId ?? '');
   const [status, setStatus] = useState<{ key: number; text: string } | null>(null);
+  const work = useBackgroundWork(platform, projectId, (ref, outcome) => {
+    if (outcome === 'answered')
+      setStatus({
+        key: ++paletteSequence,
+        text: t(`work.task.${ref.task}.footerDone`, {
+          name: workName(root, ref),
+          key: registry.shortcutLabel('talkToMentor') ?? '',
+        }),
+      });
+  });
+  // Leaving the module (or the character) where a work waits for « Lancer » cancels it.
+  const confirming = work.state.confirm?.ref;
+  const cancelWork = work.cancel;
+  useEffect(() => {
+    if (!confirming) return;
+    const here = workLocation(confirming);
+    const same =
+      view === 'atelier' &&
+      atelierLocation.rail === here.rail &&
+      (confirming.task !== 'character' ||
+        atelierLocation.target?.entityId === confirming.characterId);
+    if (!same) cancelWork(confirming);
+  }, [confirming, view, atelierLocation, cancelWork]);
   const { agents } = platform;
   const subscribeAgents = useCallback(
     (onChange: () => void) => agents.onStatusChange(onChange),
@@ -501,6 +526,17 @@ export function ProjectWorkspace({
     mentorLevel,
     analyze,
     reviewChapter,
+    work: work.state,
+    askWork: (ref) => {
+      work.ask(ref);
+      setAtelierLocation(workLocation(ref));
+      setView('atelier');
+      setNavigatorOpen(false);
+    },
+    cancelWork: work.cancel,
+    launchWork: work.launch,
+    stopWork: work.stop,
+    atelierLocation,
     sceneWords,
     sceneTexts,
     shortcutLabel: (id) => registry.shortcutLabel(id),
@@ -895,6 +931,7 @@ export function ProjectWorkspace({
           levelName={t(`mentor.level.name.${mentorLevel}`)}
           conversation={
             <Conversation
+              ctx={ctx}
               projectId={projectId}
               sceneId={sceneId}
               active={palette === null && mentorPanel === 'conversation'}
@@ -992,6 +1029,17 @@ export function ProjectWorkspace({
             : undefined
         }
         features={<FeatureFooterItems ctx={ctx} />}
+        work={
+          work.state.running && {
+            text: t(`work.task.${work.state.running.ref.task}.doing`, {
+              name: workName(root, work.state.running.ref),
+            }),
+            onClick: () => {
+              const ref = work.state.running?.ref;
+              if (ref) ctx.openAtelier(workLocation(ref));
+            },
+          }
+        }
         syncState={
           syncStatus === 'off'
             ? undefined

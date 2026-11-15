@@ -199,7 +199,10 @@
     "syncSignIn": "Se connecter à un serveur de synchro…",
     "syncSignOut": "Se déconnecter du serveur",
     "syncDevices": "Appareils connectés…",
-    "openSettings": "Ouvrir les réglages"
+    "openSettings": "Ouvrir les réglages",
+    "checkStructure": "Vérifier la structure",
+    "trackClues": "Suivre les indices",
+    "characterReport": "Faire le point sur un personnage…"
   },
   "palette": {
     "label": "Ligne de commande",
@@ -790,5 +793,101 @@
     "key": "Échap",
     "keySystem": "échap",
     "title": "{{label}} ({{key}})"
+  },
+  "work": {
+    "heading": "Le Compagnon",
+    "never": "Dernière fois : jamais",
+    "cost": "Coût estimé",
+    "about": "environ {{amount}}",
+    "atMost": "au plus {{amount}} · {{duration}}",
+    "amount": {
+      "lessThanCent": "moins d’un centime",
+      "cents_one": "{{count}} centime",
+      "cents_other": "{{count}} centimes",
+      "euros": "{{amount}} €"
+    },
+    "duration": {
+      "underMinute": "moins d’une minute",
+      "oneMinute": "1 minute environ",
+      "minutes": "{{min}} à {{max}} minutes"
+    },
+    "when": {
+      "today": "aujourd’hui à {{time}}",
+      "yesterday": "hier à {{time}}",
+      "date": "le {{date}}"
+    },
+    "whenShort": {
+      "today": "aujourd’hui {{time}}",
+      "yesterday": "hier {{time}}",
+      "date": "{{date}}"
+    },
+    "launch": "Lancer",
+    "launchKey": "⏎",
+    "cancel": "Annuler",
+    "cancelKey": "Échap",
+    "stop": "Arrêter",
+    "retry": "Réessayer",
+    "estimating": "Estimation du coût…",
+    "read": "{{read}} scènes lues sur {{total}}",
+    "proposals_one": "{{count}} proposition",
+    "proposals_other": "{{count}} propositions",
+    "signals_one": "{{count}} signalement",
+    "signals_other": "{{count}} signalements",
+    "review": "le bilan",
+    "nothing": "rien à signaler",
+    "proposalsIn_one": "{{count}} proposition dans {{module}} ›",
+    "proposalsIn_other": "{{count}} propositions dans {{module}} ›",
+    "proposalsInSheet_one": "{{count}} proposition dans sa fiche ›",
+    "proposalsInSheet_other": "{{count}} propositions dans sa fiche ›",
+    "signalAt": "1 signalement · {{scene}} ›",
+    "others": "et {{count}} autres ›",
+    "unchanged": "Le manuscrit n’a pas changé depuis la dernière fois ({{when}}).",
+    "noKey": "Le Compagnon a besoin de votre clé d’API.",
+    "enterKey": "Saisir la clé",
+    "offline": "Pas de réseau : ce travail attendra la connexion.",
+    "empty": "Rien à relire pour l’instant : écrivez d’abord quelques scènes.",
+    "pickCharacter": "Faire le point sur quel personnage ?",
+    "noCharacter": "Aucun personnage pour l’instant : créez-en un dans l’Atelier.",
+    "task": {
+      "structure": {
+        "name": "Vérifier la structure",
+        "sub": "Actes, arcs et tension",
+        "title": "Vérifier la structure",
+        "what": "Le Compagnon relit tout le manuscrit ({{scenes}} scènes, {{words}} mots) pour voir ses actes, ses arcs et sa tension. Il propose, vous décidez.",
+        "doing": "Le Compagnon vérifie la structure…",
+        "done": "Vérifiée {{when}}",
+        "bilan": "Bilan de la structure",
+        "footerDone": "Le bilan de la structure est dans la conversation avec le Compagnon ({{key}}).",
+        "busy": "Un travail à la fois : le Compagnon vérifie la structure ({{elapsed}}).",
+        "failed": "La vérification n’a pas abouti.",
+        "stopped": "Arrêtée à {{elapsed}} : rien n’a été rangé."
+      },
+      "clues": {
+        "name": "Suivre les indices",
+        "sub": "Posés, exploités, révélations préparées",
+        "title": "Suivre les indices",
+        "what": "Le Compagnon relit tout le manuscrit ({{scenes}} scènes, {{words}} mots) pour suivre chaque indice : où il est posé, où il resservira, si les révélations sont préparées. Il propose, vous décidez.",
+        "doing": "Le Compagnon suit les indices…",
+        "done": "Suivis {{when}}",
+        "bilan": "Bilan des indices",
+        "footerDone": "Le bilan des indices est dans la conversation avec le Compagnon ({{key}}).",
+        "busy": "Un travail à la fois : le Compagnon suit les indices ({{elapsed}}).",
+        "failed": "Le suivi des indices n’a pas abouti.",
+        "stopped": "Arrêté à {{elapsed}} : rien n’a été rangé."
+      },
+      "character": {
+        "name": "Faire le point",
+        "sub": "sur {{name}}, scène par scène",
+        "title": "Faire le point sur {{name}}",
+        "what": "Le Compagnon relit tout le manuscrit ({{scenes}} scènes, {{words}} mots) pour suivre {{name}} scène par scène : ce que ce personnage veut, ce qu’il sait, comment il change. Il propose, vous décidez.",
+        "doing": "Le Compagnon fait le point sur {{name}}…",
+        "done": "Point fait {{when}}",
+        "bilan": "Point sur {{name}}",
+        "footerDone": "Le point sur {{name}} est dans la conversation avec le Compagnon ({{key}}).",
+        "busy": "Un travail à la fois : le Compagnon fait le point sur {{name}} ({{elapsed}}).",
+        "failed": "Le point sur {{name}} n’a pas abouti.",
+        "stopped": "Arrêté à {{elapsed}} : rien n’a été rangé."
+      }
+    }
   }
 }

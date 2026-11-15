@@ -1,9 +1,11 @@
 import { addChatMessage, AUTHOR, chatMessages, guids, type ChatMessage } from '@charpentier/schema';
-import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import { Fragment, useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import * as Y from 'yjs';
 import { usePlatform } from '../app/platform-context';
 import { useDocSnapshot } from '../hooks/use-doc-snapshot';
+import { BilanHeading, BilanLinks } from '../work/Bilan';
+import type { WorkspaceContext } from '../workspace/workspace-context';
 
 export interface ConversationProps {
   readonly projectId: string;
@@ -12,6 +14,8 @@ export interface ConversationProps {
   readonly onInsertExample: (text: string) => void;
   readonly active: boolean;
   readonly onClose: () => void;
+  /** For the bilans of the background works (their heading, their links). */
+  readonly ctx?: WorkspaceContext;
 }
 
 const empty = new Y.Doc();
@@ -27,6 +31,7 @@ export function Conversation({
   onInsertExample,
   active,
   onClose,
+  ctx,
 }: ConversationProps) {
   const { t } = useTranslation();
   const platform = usePlatform();
@@ -96,7 +101,16 @@ export function Conversation({
       <div ref={transcript} className="ch-transcript" role="log" aria-live="polite">
         {messages.length === 0 && <p className="ch-transcript-empty">{t('mentor.chatEmpty')}</p>}
         {messages.map((message) => (
-          <Turn key={message.id} message={message} onInsert={onInsertExample} />
+          <Fragment key={message.id}>
+            {ctx && message.work && (
+              <BilanHeading ctx={ctx} message={message} work={message.work} />
+            )}
+            <Turn message={message} onInsert={onInsertExample}>
+              {ctx && message.work && mentorDoc && (
+                <BilanLinks ctx={ctx} mentorDoc={mentorDoc} message={message} work={message.work} />
+              )}
+            </Turn>
+          </Fragment>
         ))}
         {waiting && <p className="ch-transcript-waiting">{t('mentor.thinking')}</p>}
         {problem && <p className="ch-transcript-problem">{problem}</p>}
@@ -120,9 +134,11 @@ export function Conversation({
 function Turn({
   message,
   onInsert,
+  children,
 }: {
   readonly message: ChatMessage;
   readonly onInsert: (text: string) => void;
+  readonly children?: ReactNode;
 }) {
   const { t } = useTranslation();
   const compagnon = message.role === 'compagnon';
@@ -144,6 +160,7 @@ function Turn({
           </button>
         </div>
       )}
+      {children}
     </div>
   );
 }
