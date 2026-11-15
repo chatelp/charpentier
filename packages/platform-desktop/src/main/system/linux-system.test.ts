@@ -881,6 +881,14 @@ describe('the first start from the phone (phase 5.13)', () => {
     await until(() => system.state().phoneSetup?.note === 'renewed');
     expect(system.state().phoneSetup?.page?.url).not.toBe(first);
     expect(lines(system).at(-1)).toBe('nouveau code · le précédent a expiré');
+
+    // Opened on the phone, the page outlives the 10 minutes.
+    const url = system.state().phoneSetup?.page?.url ?? '';
+    expect((await fetch(url)).status).toBe(200);
+    clock.now = new Date(clock.now.getTime() + 30 * 60_000);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(system.state().phoneSetup?.page?.url).toBe(url);
+    expect((await fetch(url)).status).toBe(200);
   });
 
   it('keeps the rest when the home Wi-Fi is refused; a second round brings the Wi-Fi alone', async () => {

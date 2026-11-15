@@ -8,8 +8,11 @@ import type { PhoneSettings } from '@charpentier/platform';
  * D-33, docs/DESIGN.md §4.12; its look: docs/design/telephone.html). Served
  * by the app on the temporary network only (bound to its address), behind a
  * one-time token, or the six digits shown on the device for a page opened by
- * hand. Both last 10 minutes; the device renews them. The settings go
- * straight to the main process, never to the interface.
+ * hand. Both last 10 minutes until the page is opened, and the device renews
+ * them. An opened page keeps its token until it sends, or the temporary
+ * network closes: filling it can take long (the Companion's key is fetched
+ * elsewhere, the phone off this network meanwhile). The settings go straight
+ * to the main process, never to the interface.
  */
 export interface PhonePage {
   /** `http://10.42.0.1:8080/?t=…` */
@@ -18,7 +21,10 @@ export interface PhonePage {
   readonly address: string;
   /** The six digits, `482913`. */
   code(): string;
-  /** The token and the code are over (10 minutes, or too many wrong codes). */
+  /**
+   * The token and the code are over: sent, too many wrong codes, or 10 minutes
+   * without the page being opened.
+   */
   expired(): boolean;
   /** A new token and a new code; a page already open can no longer send. */
   renew(): void;
@@ -488,15 +494,18 @@ export async function servePhonePage(options: PhonePageOptions): Promise<PhonePa
   let issued = 0;
   let used = false;
   let wrongCodes = 0;
+  let open = false;
   const renew = () => {
     token = randomBytes(24).toString('base64url');
     code = sixDigits();
     issued = now();
     used = false;
     wrongCodes = 0;
+    open = false;
   };
   renew();
-  const expired = () => used || wrongCodes >= MAX_WRONG_CODES || now() - issued > TOKEN_LIFETIME;
+  const expired = () =>
+    used || wrongCodes >= MAX_WRONG_CODES || (!open && now() - issued > TOKEN_LIFETIME);
   const valid = (given: string | null) => !expired() && same(given, token);
   const formState = (): FormState => ({
     token,
@@ -517,6 +526,7 @@ export async function servePhonePage(options: PhonePageOptions): Promise<PhonePa
     response.end(page(body, nonce));
   };
   const opened = () => {
+    open = true;
     options.onOpened?.();
   };
   const readBody = (request: http.IncomingMessage, done: (fields: URLSearchParams) => void) => {

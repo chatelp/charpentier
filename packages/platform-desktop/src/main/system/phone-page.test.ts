@@ -118,6 +118,18 @@ describe('the page the phone opens at the first start (phase 5.13)', () => {
     expect(received).toEqual([]);
   });
 
+  it('keeps an opened page past 10 minutes, until it sends', async () => {
+    let time = 0;
+    const { page, token, received, post } = await serve({ now: () => time });
+    expect((await fetch(page.url())).status).toBe(200);
+    time = 45 * 60_000;
+    expect(page.expired()).toBe(false);
+    expect((await fetch(page.url())).status).toBe(200);
+    expect((await post('/reglages', { t: token(), ...FULL })).status).toBe(200);
+    expect(received).toHaveLength(1);
+    expect(page.expired()).toBe(true);
+  });
+
   it('shows the Wi-Fi alone, « à revoir », for a second round', async () => {
     const { page } = await serve({
       wifiOnly: { ssid: 'Livebox-4A2C', why: 'Livebox-4A2C a refusé ce mot de passe.' },
