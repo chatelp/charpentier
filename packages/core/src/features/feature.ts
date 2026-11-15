@@ -111,6 +111,11 @@ export interface FeatureView {
   /** Text key of its name (its landmark for screen readers). */
   readonly label: string;
   readonly component: ComponentType<FeatureViewProps>;
+  /**
+   * The view draws its own close cross (docs/DESIGN.md §4.8, the monitor in its
+   * header); otherwise the core puts one in the frame's top-right corner.
+   */
+  readonly ownClose?: boolean;
 }
 
 export interface FeatureViewProps extends WorkspaceProps {

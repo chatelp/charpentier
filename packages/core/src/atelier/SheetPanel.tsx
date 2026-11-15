@@ -7,6 +7,7 @@ import { readAtelier, sceneNumbers, shownValue, type SheetTarget } from './ateli
 import { Sheet } from './Atelier';
 import { moduleDefs } from './module-defs';
 import './atelier.css';
+import { CloseButton } from '../icons/CloseButton';
 
 export interface SheetPanelProps {
   readonly ctx: WorkspaceContext;
@@ -95,6 +96,7 @@ export function SheetPanel({ ctx, target, active, onOpenInAtelier, onClose }: Sh
         />
       </div>
       <p className="ch-panel-hint">{t('atelier.sheetPanelHint')}</p>
+      <CloseButton purpose="panel" onClose={onClose} corner />
     </aside>
   );
 }

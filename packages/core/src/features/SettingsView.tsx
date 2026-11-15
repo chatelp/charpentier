@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import type { WorkspaceContext } from '../workspace/workspace-context';
 import { featureText, type SettingsSection } from './feature';
 import { useFeatures } from './features-context';
+import { CloseButton } from '../icons/CloseButton';
 
 /**
  * The settings view (docs/DESIGN.md §4.12): full frame, like the Atelier. On
@@ -127,6 +128,7 @@ export function SettingsView({
         )}
         <Section ctx={ctx} />
       </div>
+      <CloseButton purpose="toText" onClose={onClose} corner />
     </section>
   );
 }

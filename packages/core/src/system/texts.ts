@@ -341,8 +341,6 @@ export const systemTexts: TextTree = {
       min1: '1 min',
       min10: '10 min',
       hour1: '1 h',
-      escape: 'revenir au texte',
-      escapeKey: 'Échap',
       noData: 'en attente des mesures…',
       processor: 'processeur',
       processorValue: '{{load}} % · {{ghz}} GHz',

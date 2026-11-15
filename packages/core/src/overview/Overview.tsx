@@ -22,6 +22,7 @@ import { useDocSnapshot } from '../hooks/use-doc-snapshot';
 import type { WorkspaceContext } from '../workspace/workspace-context';
 import { useSceneHistory } from './use-scene-history';
 import './overview.css';
+import { CloseButton } from '../icons/CloseButton';
 
 const readCheckpoints = (doc: Y.Doc) => listCheckpoints(doc);
 /** Restore points shown in the strip; the others through « Tous (N)… ». */
@@ -197,6 +198,7 @@ export function Overview({ ctx, active, onOpen, onClose }: OverviewProps) {
 
   return (
     <section className="ch-overview" aria-label={t('overview.label')} onKeyDown={onKeyDown}>
+      <CloseButton purpose="toText" onClose={onClose} corner />
       <h2 className="ch-overview-title">{project?.title}</h2>
       <p className="ch-overview-sub">
         {[

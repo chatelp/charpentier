@@ -195,6 +195,16 @@
   color: var(--ch-faint);
 }
 
+.ch-sys-head-end {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ch-sys-head .ch-close {
+  margin: -3px -6px -3px 0;
+}
+
 .ch-sys-row {
   display: flex;
   align-items: center;

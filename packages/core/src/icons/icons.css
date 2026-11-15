@@ -76,9 +76,9 @@
 }
 
 .ch-panel-title-name {
-  flex: 1;
-  min-width: 0;
+  flex: none;
   margin: 0;
+  white-space: nowrap;
   font: 400 19px / 1.2 var(--ch-font-text);
 }
 
@@ -94,11 +94,16 @@
 }
 
 .ch-panel-title-context {
-  flex: none;
-  max-width: 50%;
+  flex: 1 1 auto;
+  min-width: 0;
   overflow: hidden;
+  text-align: right;
   color: var(--ch-muted);
   font: 11.5px var(--ch-font-ui);
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.ch-panel-title .ch-close {
+  margin-right: -6px;
 }

@@ -4,6 +4,7 @@ import { filterByQuery } from '../commands/registry';
 import { matchRanges } from './highlight';
 import type { PaletteRequest, PaletteScope, PickItem } from './palette-request';
 import './palette.css';
+import { CloseButton } from '../icons/CloseButton';
 
 export interface PaletteCommand extends PickItem {
   run(): void;
@@ -227,6 +228,7 @@ export function CommandPalette({
             onKeyDown={onKeyDown}
           />
           {showHint && <span className="ch-cmd-hint">{t('palette.prefixHint')}</span>}
+          <CloseButton purpose="commandLine" onClose={onClose} />
         </div>
         {request.kind !== 'input' && (
           <div className="ch-cmd-results ch-raised ch-tool">

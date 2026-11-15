@@ -127,7 +127,7 @@ export function createSystemFeature({ modifier }: { readonly modifier: SystemMod
       hint: 'system.settings.hint',
     },
     prefixes: [systemPrefix],
-    views: [{ id: MONITOR_VIEW, label: 'system.monitor.name', component: Monitor }],
+    views: [{ id: MONITOR_VIEW, label: 'system.monitor.name', component: Monitor, ownClose: true }],
     // The lock and the first start, over everything (phase 5.6).
     cover: {
       active: (platform) => {

@@ -781,5 +781,14 @@
       "worldRules": "Règles du monde",
       "clues": "Indices"
     }
+  },
+  "close": {
+    "panel": "Fermer le panneau",
+    "toText": "Revenir au texte",
+    "commandLine": "Fermer la ligne de commande",
+    "generic": "Fermer",
+    "key": "Échap",
+    "keySystem": "échap",
+    "title": "{{label}} ({{key}})"
   }
 }

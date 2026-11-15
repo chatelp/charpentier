@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import type { PrefsUpdate, WritingPrefs } from './writing-prefs';
 import { stepMeasure, stepTextSize } from './writing-prefs';
 import './entry-points.css';
+import { CloseButton } from '../icons/CloseButton';
 
 /** « Label (shortcut) »: the native tooltip of every entry point (docs/DESIGN.md §4.8). */
 export const withShortcut = (label: string, shortcut: string | undefined) =>
@@ -184,7 +185,7 @@ export function DisplaySheet({
     close.current = onClose;
   });
   useEffect(() => {
-    ref.current?.querySelector('button')?.focus();
+    ref.current?.querySelector<HTMLElement>('button:not(.ch-close)')?.focus();
     const onDown = (event: MouseEvent) => {
       const target = event.target as Node;
       if (ref.current?.contains(target)) return;
@@ -210,6 +211,7 @@ export function DisplaySheet({
       }}
     >
       <p className="ch-display-title ch-label">{t('display.title')}</p>
+      <CloseButton purpose="generic" onClose={() => onClose(true)} corner />
       <Row
         label={t('display.textSize')}
         shortcut={pair(shortcut('decreaseTextSize'), shortcut('increaseTextSize'))}

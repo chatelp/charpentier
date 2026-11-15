@@ -119,6 +119,11 @@ export default tseslint.config(
   {
     languageOptions: { globals: { ...globals.es2023 } },
   },
+  // Design mock scripts, injected into the app in a browser (docs/design).
+  {
+    files: ['docs/design/**/*.js'],
+    languageOptions: { globals: { ...globals.browser } },
+  },
   // Node tooling: root config files and scripts.
   {
     files: [

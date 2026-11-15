@@ -5,10 +5,11 @@ import {
   type SystemService,
   type WifiNetwork,
 } from '@charpentier/platform';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePlatform } from '../app/platform-context';
 import { featureText } from '../features/feature';
+import { CloseButton } from '../icons/CloseButton';
 import type { WorkspaceContext } from '../workspace/workspace-context';
 import { Gauge, Keys, PanelRow, Signal, Slider } from './controls';
 import { beforeRestart } from './restart';
@@ -59,19 +60,20 @@ export function SystemPanel({
   useEffect(() => focusFirstControl(body.current), [segment]);
   return (
     <div ref={body} className="ch-sys-panel-body" onKeyDown={(e) => moveInPanel(e, body.current)}>
-      {PANELS[segment]({ ctx, onDone })}
+      <PanelClose.Provider value={onDone}>{PANELS[segment]({ ctx, onDone })}</PanelClose.Provider>
     </div>
   );
 }
 
 /**
- * Opened from the keyboard or a click: the first control takes the focus. Also
+ * Opened from the keyboard or a click: the first control takes the focus (never
+ * the close cross of the header). Also
  * called once the panel is placed, a hidden element taking no focus.
  */
 export function focusFirstControl(root: HTMLElement | null) {
   root
     ?.querySelector<HTMLElement>(
-      'input:not([type=range]), button.is-item, [role=radio][aria-checked=true], input, button',
+      'input:not([type=range]), button.is-item, [role=radio][aria-checked=true], input, button:not(.ch-close)',
     )
     ?.focus();
 }
@@ -94,11 +96,18 @@ interface PanelProps {
   readonly onDone: () => void;
 }
 
+/** Closes the panel open around a header (its close cross, docs/DESIGN.md §4.8). */
+const PanelClose = createContext<(() => void) | null>(null);
+
 function Head({ name, aside }: { readonly name: string; readonly aside?: ReactNode }) {
+  const close = useContext(PanelClose);
   return (
     <p className="ch-sys-head">
       <span>{name}</span>
-      {aside && <span className="ch-sys-head-aside">{aside}</span>}
+      <span className="ch-sys-head-end">
+        {aside && <span className="ch-sys-head-aside">{aside}</span>}
+        {close && <CloseButton purpose="generic" onClose={close} system />}
+      </span>
     </p>
   );
 }

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { CloseButton } from './CloseButton';
 import './icons.css';
 
 /**
@@ -105,23 +106,30 @@ export function Monogram({
   );
 }
 
-/** A panel's engraved title (docs/DESIGN.md §4.11): medallion, title, and its context. */
+/**
+ * A panel's engraved title (docs/DESIGN.md §4.11): medallion, title, its
+ * context, and the close cross at the end (§4.8). The name never breaks: the
+ * context shortens first.
+ */
 export function PanelTitle({
   picto,
   name,
   context,
   variant,
+  onClose,
 }: {
   readonly picto: PictogramName;
   readonly name: string;
   readonly context: string;
   readonly variant: 'mentor' | 'manuscript';
+  readonly onClose?: () => void;
 }) {
   return (
     <div className="ch-panel-title">
       <Medallion name={picto} size={34} mentor={variant === 'mentor'} />
       <p className={`ch-panel-title-name is-${variant}`}>{name}</p>
       <span className="ch-panel-title-context">{context}</span>
+      {onClose && <CloseButton purpose="panel" onClose={onClose} />}
     </div>
   );
 }

@@ -238,6 +238,7 @@ export function Navigator({ ctx, outline, active, onClose, signals }: NavigatorP
       <PanelTitle
         picto="manuscrit"
         variant="manuscript"
+        onClose={onClose}
         name={t('navigator.title')}
         context={[
           readProjectMeta(ctx.root)?.title,

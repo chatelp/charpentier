@@ -266,6 +266,7 @@ export function MentorPanel(props: MentorPanelProps) {
       <PanelTitle
         picto="compagnon"
         variant="mentor"
+        onClose={props.onClose}
         name={t('mentor.name')}
         context={[
           t('mentor.pointsCount', { count: flat.length }),

@@ -1,0 +1,86 @@
+/* The close cross (docs/DESIGN.md §4.8 « Sortie à la souris »). */
+.ch-close {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 13px;
+  background: transparent;
+  color: var(--ch-faint);
+  cursor: pointer;
+  transition: color var(--ch-dur-relief);
+}
+
+.ch-close kbd {
+  max-width: 0;
+  overflow: hidden;
+  color: inherit;
+  font: 500 10.5px / 1.5 var(--ch-font-ui);
+  opacity: 0;
+  white-space: nowrap;
+  transition:
+    max-width var(--ch-dur-relief),
+    opacity var(--ch-dur-relief);
+}
+
+.ch-close-x {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  transition:
+    box-shadow var(--ch-dur-relief),
+    background-color var(--ch-dur-relief);
+}
+
+.ch-close svg {
+  display: block;
+}
+
+.ch-close:hover,
+.ch-close:focus-visible {
+  color: var(--ch-ink);
+  outline: none;
+}
+
+.ch-close:hover kbd,
+.ch-close:focus-visible kbd {
+  max-width: 4em;
+  opacity: 1;
+}
+
+.ch-close:hover .ch-close-x {
+  box-shadow: var(--ch-raise-s);
+}
+
+.ch-close:focus-visible .ch-close-x,
+.ch-close:active .ch-close-x {
+  background: var(--ch-lit-bg);
+  box-shadow: var(--ch-lit);
+}
+
+/* In the system's material: the key in fixed pitch, a 20 px target. */
+.ch-close.is-system {
+  height: 20px;
+}
+
+.ch-close.is-system kbd {
+  font-family: var(--ch-font-sys);
+}
+
+.ch-close.is-system .ch-close-x {
+  width: 20px;
+  height: 20px;
+}
+
+/* A full-frame view's corner. */
+.ch-close.is-corner {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+}

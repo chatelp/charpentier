@@ -9,6 +9,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePlatform } from '../app/platform-context';
 import { featureText, type FeatureViewProps } from '../features/feature';
+import { CloseButton } from '../icons/CloseButton';
 import { Gauge, Square } from './controls';
 import { duration, hours, minutesSince } from './panels';
 import { useSystemState } from './system-store';
@@ -241,9 +242,7 @@ export function Monitor({ active, onClose }: FeatureViewProps) {
           </button>
         ))}
       </div>
-      <button type="button" className="ch-mon-escape" onClick={onClose}>
-        <kbd>{m('escapeKey')}</kbd> {m('escape')}
-      </button>
+      <CloseButton purpose="toText" onClose={onClose} system />
     </header>
   );
 

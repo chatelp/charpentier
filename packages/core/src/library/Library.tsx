@@ -5,6 +5,7 @@ import { usePlatform } from '../app/platform-context';
 import { renameProjectEverywhere } from '../workspace/default-scene';
 import { projectStatsPref, readProjectStats, type ProjectStats } from './project-stats';
 import './library.css';
+import { CloseButton } from '../icons/CloseButton';
 
 export interface LibraryProps {
   readonly currentProjectId: string | undefined;
@@ -190,6 +191,8 @@ export function Library({ currentProjectId, creating = false, onOpen, onClose }:
       aria-label={t('library.label')}
       onKeyDown={(e) => void onKeyDown(e)}
     >
+      {/* Nothing to go back to without an open project. */}
+      {currentProjectId != null && <CloseButton purpose="toText" onClose={onClose} corner />}
       <div className="ch-library-top">
         <h1 className="ch-library-title">{t('library.label')}</h1>
         {newButtons}

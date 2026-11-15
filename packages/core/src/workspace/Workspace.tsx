@@ -58,6 +58,7 @@ import { featureText } from '../features/feature';
 import { FeatureFooterItems, FeatureTopZones, useFeatures } from '../features/features-context';
 import { SettingsView } from '../features/SettingsView';
 import './workspace.css';
+import { CloseButton } from '../icons/CloseButton';
 
 let paletteSequence = 0;
 
@@ -944,7 +945,7 @@ export function ProjectWorkspace({
         />
       )}
       {featureViews.map(
-        ({ id, label, component: View }) =>
+        ({ id, label, component: View, ownClose }) =>
           view === `view:${id}` && (
             <section
               key={id}
@@ -961,6 +962,9 @@ export function ProjectWorkspace({
                 active={palette === null && !navigatorOpen}
                 onClose={() => setView('write')}
               />
+              {!ownClose && (
+                <CloseButton purpose="toText" onClose={() => setView('write')} corner />
+              )}
             </section>
           ),
       )}
