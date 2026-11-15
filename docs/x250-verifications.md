@@ -72,10 +72,10 @@ Premier essai le 15 novembre 2026 (Z Fold5, variante dev) : la configuration est
 
 ## 5.4 · L'essentiel du système
 
-- [ ] La ligne système en haut : Wi-Fi, luminosité, volume, batterie, heure, sans rien de coupé.
-- [ ] Le Wi-Fi : la liste des réseaux, rejoindre, oublier un réseau.
-- [ ] Les touches de luminosité : la jauge bouge, le segment s'allume une seconde ; jamais d'écran noir.
-- [ ] Les touches de volume et de muet : même chose.
+- [x] La ligne système en haut : Wi-Fi, luminosité, volume, batterie, heure, sans rien de coupé.
+- [x] Le Wi-Fi : la liste des réseaux, rejoindre, oublier un réseau.
+- [x] Les touches de luminosité : la jauge bouge, le segment s'allume une seconde ; jamais d'écran noir.
+- [x] Les touches de volume et de muet : même chose.
 - [ ] La batterie : les deux batteries du X250 (interne et amovible) apparaissent, avec niveau et usure ; débrancher le chargeur affiche le temps restant.
 - [ ] La mise en veille, le redémarrage et l'arrêt depuis le menu du système (⊞).
 - [ ] « À propos » : X250, NixOS, disque chiffré : oui.
