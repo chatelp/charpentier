@@ -80,7 +80,7 @@ Premier essai le 15 novembre 2026 (Z Fold5, variante dev) : la configuration est
 - [ ] La mise en veille, le redémarrage et l'arrêt depuis le menu du système (⊞).
 - [ ] « À propos » : X250, NixOS, disque chiffré : oui.
 - [ ] Dans les réglages, cliquer dans le vide puis Échap : retour au texte (bug du 15 novembre, corrigé dans c70b019).
-- [ ] Chaque panneau et chaque vue se ferme aussi à la souris, par son bouton de fermeture (quand il sera fait).
+- [ ] Chaque panneau et chaque vue se ferme aussi à la souris, par sa croix (au survol, « Échap » sort à sa gauche) : réglages, moniteur, panneaux de la ligne système, Compagnon, manuscrit, ligne de commande, `Aa`.
 
 ## 5.5 · Le moniteur
 
