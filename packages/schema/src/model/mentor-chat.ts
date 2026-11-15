@@ -51,6 +51,18 @@ export function readWorkRecord(mentorDoc: Y.Doc, work: WorkRef): WorkRecord | un
   return works(mentorDoc).get(workKey(work));
 }
 
+/** Every work that ran, with what it left, most recent first. */
+export function listWorkRecords(mentorDoc: Y.Doc): (readonly [WorkRef, WorkRecord])[] {
+  return [...works(mentorDoc).entries()]
+    .map(([key, record]): readonly [WorkRef, WorkRecord] => [
+      key.startsWith('character:')
+        ? { task: 'character', characterId: key.slice('character:'.length) }
+        : { task: key === 'clues' ? 'clues' : 'structure' },
+      record,
+    ])
+    .sort((a, b) => (a[1].at < b[1].at ? 1 : -1));
+}
+
 export function writeWorkRecord(
   mentorDoc: Y.Doc,
   work: WorkRef,

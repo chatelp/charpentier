@@ -74,11 +74,13 @@ async function start() {
             if (outcome === 'answered') {
               const root = doc(guids.project(input.projectId));
               const mentor = doc(guids.mentor(input.projectId));
-              createAgentWriter(root, 'structure').proposeEntity(
-                'acts',
-                { title: 'Le retour à Nantes' },
-                [],
-              );
+              const writer = createAgentWriter(root, 'structure');
+              const signalId = writer.raiseSignal({
+                kind: 'craft',
+                title: 'Un arc qui s’arrête',
+                message: 'La lettre s’efface ici. Qu’en reste-t-il ?',
+              });
+              writer.proposeEntity('acts', { title: 'Le retour à Nantes' }, []);
               const reviewId = addChatMessage(
                 mentor,
                 {
@@ -95,7 +97,7 @@ async function start() {
                   at: new Date().toISOString(),
                   digest: 'x',
                   proposals: 1,
-                  signalIds: [],
+                  signalIds: [signalId],
                   fingerprints: [],
                   reviewId,
                 },
@@ -150,10 +152,15 @@ describe('the Compagnon’s background work (phase 6.3, DESIGN §4.5)', () => {
     finish('answered');
     await screen.findByText(/Vérifiée aujourd’hui à/);
     screen.getByRole('button', { name: '1 proposition' });
+    screen.getByRole('button', { name: '1 signalement' }).click();
+    // Its remarks head the points, under the bilan's name.
+    await screen.findByText(/^Bilan de la structure · \d\d:\d\d$/, {
+      selector: '.ch-points-group',
+    });
     await screen.findByText(/Le bilan de la structure est dans la conversation/);
 
     // The bilan in the conversation: named, dated, its proposal one click away.
-    screen.getByRole('button', { name: 'le bilan' }).click();
+    screen.getByRole('tab', { name: 'Conversation' }).click();
     await screen.findByText(/Bilan de la structure/, { selector: '.ch-bilan-head' });
     screen.getByRole('button', { name: '1 proposition dans Structure ›' });
   });

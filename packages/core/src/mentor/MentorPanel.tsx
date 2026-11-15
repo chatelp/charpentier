@@ -46,6 +46,15 @@ export interface MentorPanelProps {
   readonly analyzeShortcut?: string | undefined;
   /** Name of the intervention level, for the panel's title (« cran Accompagnant »). */
   readonly levelName?: string;
+  /**
+   * The remarks of each background work, grouped at the head of the panel
+   * whatever the scene, until they are all dealt with (docs/DESIGN.md §4.5).
+   */
+  readonly workGroups?: readonly {
+    readonly key: string;
+    readonly label: string;
+    readonly signalIds: readonly string[];
+  }[];
 }
 
 /** A sheet proposal of the Compagnon waiting for the author (a whole entry, or one field). */
@@ -130,16 +139,24 @@ export function MentorPanel(props: MentorPanelProps) {
     return found;
   }, [atelier, t]);
 
+  const workGroups = props.workGroups;
   const groups: Group[] = useMemo(() => {
     const sig = (s: Signal): Point => ({ kind: 'signal', id: s.id, signal: s });
-    const here = signals
+    const ofWork = new Set(workGroups?.flatMap((g) => g.signalIds));
+    const byWork = (workGroups ?? []).map((g) => ({
+      key: `work:${g.key}`,
+      label: g.label,
+      points: signals.filter((s) => g.signalIds.includes(s.id)).map(sig),
+    }));
+    const others = signals.filter((s) => !ofWork.has(s.id));
+    const here = others
       .filter((s) => s.textAnchor?.sceneId === sceneId)
       .sort((a, b) => sceneOrder.indexOf(a.id) - sceneOrder.indexOf(b.id))
       .map(sig);
     const byChapter = outline.map((chapter, ci) => ({
       key: `chapter:${chapter.id}`,
       label: t('mentor.groups.chapter', { numeral: toRoman(ci + 1) }),
-      points: signals
+      points: others
         .filter(
           (s) =>
             s.textAnchor &&
@@ -149,12 +166,13 @@ export function MentorPanel(props: MentorPanelProps) {
         .map(sig),
     }));
     return [
+      ...byWork,
       { key: 'scene', label: t('mentor.groups.scene'), points: here },
       ...byChapter,
       {
         key: 'sheets',
         label: t('mentor.groups.sheets'),
-        points: signals.filter((s) => !s.textAnchor && s.fieldRef).map(sig),
+        points: others.filter((s) => !s.textAnchor && s.fieldRef).map(sig),
       },
       {
         key: 'proposals',
@@ -164,10 +182,10 @@ export function MentorPanel(props: MentorPanelProps) {
       {
         key: 'project',
         label: t('mentor.groups.project'),
-        points: signals.filter((s) => !s.textAnchor && !s.fieldRef).map(sig),
+        points: others.filter((s) => !s.textAnchor && !s.fieldRef).map(sig),
       },
     ].filter((g) => g.points.length > 0);
-  }, [signals, sceneId, sceneOrder, outline, proposals, t]);
+  }, [signals, sceneId, sceneOrder, outline, proposals, workGroups, t]);
 
   const flat = groups.flatMap((g) => g.points);
   const selected = flat.find((p) => p.id === selectedId) ?? flat[0];

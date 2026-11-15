@@ -1,4 +1,10 @@
-import { listEntities, readMentorLevel, readOutline } from '@charpentier/schema';
+import {
+  listEntities,
+  listWorkRecords,
+  readMentorLevel,
+  readOutline,
+  workKey,
+} from '@charpentier/schema';
 import type * as Y from 'yjs';
 import type { Editor } from '@tiptap/core';
 import {
@@ -60,7 +66,8 @@ import { SettingsView } from '../features/SettingsView';
 import './workspace.css';
 import { CloseButton } from '../icons/CloseButton';
 import { useBackgroundWork, workName } from '../work/use-background-work';
-import { workLocation } from '../work/WorkBlock';
+import { useMentorDoc, workLocation } from '../work/WorkBlock';
+import { formatWhen } from '../work/work-format';
 
 let paletteSequence = 0;
 
@@ -262,6 +269,24 @@ export function ProjectWorkspace({
         }),
       });
   });
+  // The remarks of each background work, at the head of the points.
+  const mentorDoc = useMentorDoc(projectId);
+  const workRecords = useDocSnapshot(mentorDoc, listWorkRecords);
+  const workGroups = useMemo(
+    () =>
+      workRecords.map(([ref, record]) => {
+        const today = new Date(record.at).toDateString() === new Date().toDateString();
+        const when = today
+          ? new Date(record.at).toLocaleTimeString(language, { hour: '2-digit', minute: '2-digit' })
+          : formatWhen(t, record.at, language, new Date(), true);
+        return {
+          key: workKey(ref),
+          label: `${t(`work.task.${ref.task}.bilan`, { name: workName(root, ref) })} · ${when}`,
+          signalIds: record.signalIds,
+        };
+      }),
+    [workRecords, language, root, t],
+  );
   // Leaving the module (or the character) where a work waits for « Lancer » cancels it.
   const confirming = work.state.confirm?.ref;
   const cancelWork = work.cancel;
@@ -927,6 +952,7 @@ export function ProjectWorkspace({
           }
           tab={mentorPanel}
           onTab={setMentorPanel}
+          workGroups={workGroups}
           header={<InterventionSlider root={root} level={mentorLevel} />}
           levelName={t(`mentor.level.name.${mentorLevel}`)}
           conversation={
