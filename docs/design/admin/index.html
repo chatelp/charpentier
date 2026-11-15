@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="fr" class="ch-system">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>charpentier · admin (maquette)</title>
+    <!-- Mock of /admin (DESIGN §4.13). Screens: ?ecran=connexion|comptes|cree|compte|confirmer|projets|sauvegardes|journal ; &alerte (backup older than 48 h), &erreur (sign-in refused). -->
+    <style>
+      @font-face {
+        font-family: 'JetBrains Mono';
+        src: url('../../../packages/core/src/fonts/JetBrainsMono-Variable.woff2') format('woff2');
+        font-weight: 400 500;
+      }
+    </style>
+    <link rel="stylesheet" href="../../../packages/core/src/styles/tokens.css" />
+    <link rel="stylesheet" href="../../../packages/core/src/system/system.css" />
+    <link rel="stylesheet" href="admin.css" />
+  </head>
+  <body class="adm">
+    <template id="head">
+      <header class="adm-head">
+        <span class="adm-brand"><i class="adm-dot"></i>charpentier · admin</span>
+        <nav class="adm-nav" aria-label="sections">
+          <a href="?ecran=comptes" data-nav="comptes">comptes</a>
+          <a href="?ecran=projets" data-nav="projets">projets</a>
+          <a href="?ecran=sauvegardes" data-nav="sauvegardes">sauvegardes</a>
+          <a href="?ecran=journal" data-nav="journal">journal</a>
+        </nav>
+        <span class="adm-who"
+          >pierre@exemple.fr ·
+          <form method="post" style="display: inline">
+            <button class="adm-link">se déconnecter</button>
+          </form></span
+        >
+      </header>
+      <p class="adm-alert" data-alert hidden>
+        sauvegarde en retard · la dernière date du 12 nov. à 03:00, il y a 3 jours ·
+        <a href="?ecran=sauvegardes&alerte">voir</a>
+      </p>
+    </template>
+
+    <!-- 1 · Sign-in -->
+    <div data-ecran="connexion" class="adm-login">
+      <form class="adm-card" method="post">
+        <p class="adm-brand"><i class="adm-dot"></i>charpentier · admin</p>
+        <div class="adm-form">
+          <p class="adm-error" data-erreur hidden>e-mail ou mot de passe incorrect</p>
+          <label class="adm-field"
+            >e-mail <input type="email" autocomplete="username" value="pierre@exemple.fr"
+          /></label>
+          <label class="adm-field"
+            >mot de passe <input type="password" autocomplete="current-password"
+          /></label>
+          <div class="adm-actions">
+            <button class="adm-btn is-main">se connecter <kbd>⏎</kbd></button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- 2 · Accounts -->
+    <div data-ecran="comptes" data-nav-of="comptes">
+      <main class="adm-main">
+        <h1>comptes <small>3</small></h1>
+        <div class="adm-scroll">
+          <table class="adm-table">
+            <thead>
+              <tr>
+                <th>e-mail</th>
+                <th>rôle</th>
+                <th>créé le</th>
+                <th class="num">appareils</th>
+                <th>dernière connexion</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>pierre@exemple.fr <span class="adm-tag">vous</span></td>
+                <td>admin</td>
+                <td>2 nov. 2026</td>
+                <td class="num">3</td>
+                <td>aujourd’hui 09:12</td>
+                <td class="act"><a class="adm-btn" href="?ecran=compte">ouvrir ›</a></td>
+              </tr>
+              <tr>
+                <td>claire@exemple.fr</td>
+                <td>auteur</td>
+                <td>14 nov. 2026</td>
+                <td class="num">1</td>
+                <td>hier 21:40</td>
+                <td class="act"><a class="adm-btn" href="?ecran=compte">ouvrir ›</a></td>
+              </tr>
+              <tr class="is-off">
+                <td>essai@exemple.fr <span class="adm-tag">désactivé</span></td>
+                <td>auteur</td>
+                <td>3 nov. 2026</td>
+                <td class="num">0</td>
+                <td>4 nov. 2026</td>
+                <td class="act"><a class="adm-btn" href="?ecran=compte">ouvrir ›</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h2>nouveau compte</h2>
+        <form class="adm-form" method="post">
+          <label class="adm-field"
+            >e-mail <input type="email" placeholder="nom@exemple.fr"
+          /></label>
+          <label class="adm-check"><input type="checkbox" /> administrateur</label>
+          <button class="adm-btn is-main">créer le compte</button>
+        </form>
+        <p class="adm-note" style="margin-top: 10px">
+          le mot de passe est tiré au hasard et affiché une seule fois
+        </p>
+      </main>
+    </div>
+
+    <!-- 3 · Account created: the password, once -->
+    <div data-ecran="cree" data-nav-of="comptes">
+      <p class="adm-flash">compte créé · claire@exemple.fr</p>
+      <main class="adm-main">
+        <div class="adm-card">
+          <h1>mot de passe de claire@exemple.fr</h1>
+          <p class="adm-secret">tilleul-cadran-noyer-47</p>
+          <p class="adm-note">
+            à transmettre à claire@exemple.fr, qui s’en servira pour se connecter depuis l’app · il
+            ne sera plus affiché
+          </p>
+          <div class="adm-actions">
+            <a class="adm-btn is-main" href="?ecran=compte">c’est noté ›</a>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- 4 · One account and its devices -->
+    <div data-ecran="compte" data-nav-of="comptes">
+      <main class="adm-main">
+        <p class="adm-note" style="margin: 0 0 6px"><a href="?ecran=comptes">‹ comptes</a></p>
+        <h1>claire@exemple.fr <small>auteur · créé le 14 nov. 2026</small></h1>
+        <div class="adm-actions">
+          <a class="adm-btn" href="?ecran=confirmer">réinitialiser le mot de passe…</a>
+          <a class="adm-btn" href="?ecran=confirmer">donner le rôle d’administrateur…</a>
+          <a class="adm-btn" href="?ecran=confirmer">désactiver…</a>
+        </div>
+        <h2>appareils · 2</h2>
+        <div class="adm-scroll">
+          <table class="adm-table">
+            <thead>
+              <tr>
+                <th>appareil</th>
+                <th>première connexion</th>
+                <th>dernière connexion</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>MacBook de Claire</td>
+                <td>14 nov. 2026</td>
+                <td>hier 21:40</td>
+                <td class="act"><a class="adm-btn" href="?ecran=confirmer">révoquer…</a></td>
+              </tr>
+              <tr class="is-off">
+                <td>X250 <span class="adm-tag">révoqué</span></td>
+                <td>14 nov. 2026</td>
+                <td>14 nov. 2026</td>
+                <td class="act"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h2>projets · 1</h2>
+        <div class="adm-scroll">
+          <table class="adm-table">
+            <tbody>
+              <tr>
+                <td>Les Eaux de la Loire</td>
+                <td class="num">1,2 Mo</td>
+                <td>hier 21:38</td>
+                <td class="act"><a class="adm-btn" href="#">exporter en markdown ↓</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </main>
+    </div>
+
+    <!-- 5 · Confirmation of a sensitive action -->
+    <div data-ecran="confirmer" data-nav-of="comptes">
+      <main class="adm-main">
+        <form class="adm-card" method="post">
+          <h1>désactiver claire@exemple.fr ?</h1>
+          <ul>
+            <li>ses 2 appareils perdent la synchronisation à leur prochaine connexion</li>
+            <li>ses projets restent sur le serveur, intacts</li>
+            <li>vous pourrez le réactiver à tout moment</li>
+          </ul>
+          <div class="adm-actions">
+            <button class="adm-btn is-main" autofocus>désactiver le compte <kbd>⏎</kbd></button>
+            <a href="?ecran=compte">annuler</a>
+          </div>
+        </form>
+      </main>
+    </div>
+
+    <!-- 6 · Projects -->
+    <div data-ecran="projets" data-nav-of="projets">
+      <main class="adm-main">
+        <h1>projets <small>4</small></h1>
+        <div class="adm-scroll">
+          <table class="adm-table">
+            <thead>
+              <tr>
+                <th>titre</th>
+                <th>propriétaire</th>
+                <th class="num">taille</th>
+                <th>dernière écriture</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>La Batelière</td>
+                <td>pierre@exemple.fr</td>
+                <td class="num">3,4 Mo</td>
+                <td>aujourd’hui 09:30</td>
+                <td class="act"><a class="adm-btn" href="#">exporter en markdown ↓</a></td>
+              </tr>
+              <tr>
+                <td>Nouvelles d’hiver</td>
+                <td>pierre@exemple.fr</td>
+                <td class="num">640 ko</td>
+                <td>12 nov. 2026</td>
+                <td class="act"><a class="adm-btn" href="#">exporter en markdown ↓</a></td>
+              </tr>
+              <tr>
+                <td>Les Eaux de la Loire</td>
+                <td>claire@exemple.fr</td>
+                <td class="num">1,2 Mo</td>
+                <td>hier 21:38</td>
+                <td class="act"><a class="adm-btn" href="#">exporter en markdown ↓</a></td>
+              </tr>
+              <tr class="is-off">
+                <td>Brouillon <span class="adm-tag">corbeille</span></td>
+                <td>pierre@exemple.fr</td>
+                <td class="num">12 ko</td>
+                <td>3 nov. 2026</td>
+                <td class="act"><a class="adm-btn" href="#">exporter en markdown ↓</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </main>
+    </div>
+
+    <!-- 7 · Backups -->
+    <div data-ecran="sauvegardes" data-nav-of="sauvegardes">
+      <main class="adm-main">
+        <h1>sauvegardes</h1>
+        <div class="adm-status" data-status>
+          <p data-lastp><b>dernière</b><span data-last>aujourd’hui à 03:00 · il y a 6 h</span></p>
+          <p><b>taille</b><span>48 Mo</span></p>
+          <p><b>suivante</b><span>demain à 03:00</span></p>
+        </div>
+        <p class="adm-note" data-ok>une sauvegarde par nuit · alerte au-delà de 48 h</p>
+        <h2>dernières</h2>
+        <div class="adm-scroll">
+          <table class="adm-table">
+            <thead>
+              <tr>
+                <th>date</th>
+                <th class="num">taille</th>
+                <th>état</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td data-row1>15 nov. 2026 03:00</td>
+                <td class="num">48 Mo</td>
+                <td>complète</td>
+              </tr>
+              <tr>
+                <td>14 nov. 2026 03:00</td>
+                <td class="num">47 Mo</td>
+                <td>complète</td>
+              </tr>
+              <tr>
+                <td>13 nov. 2026 03:00</td>
+                <td class="num">47 Mo</td>
+                <td>complète</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h2>restaurer</h2>
+        <p style="margin: 0">
+          la restauration se fait sur le serveur, en ligne de commande, jamais depuis cette page :
+        </p>
+        <code class="adm-code">charpentier-server restore --from 2026-11-15</code>
+      </main>
+    </div>
+
+    <!-- 8 · Administration log -->
+    <div data-ecran="journal" data-nav-of="journal">
+      <main class="adm-main">
+        <h1>journal</h1>
+        <p class="adm-lead">les actions faites depuis cette page, les plus récentes d’abord</p>
+        <div class="adm-scroll">
+          <table class="adm-table">
+            <thead>
+              <tr>
+                <th>quand</th>
+                <th>qui</th>
+                <th>action</th>
+                <th>sur</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>aujourd’hui 09:14</td>
+                <td>pierre@exemple.fr</td>
+                <td>appareil révoqué</td>
+                <td>claire@exemple.fr · X250</td>
+              </tr>
+              <tr>
+                <td>aujourd’hui 09:13</td>
+                <td>pierre@exemple.fr</td>
+                <td>projet exporté</td>
+                <td>La Batelière</td>
+              </tr>
+              <tr>
+                <td>14 nov. 18:02</td>
+                <td>pierre@exemple.fr</td>
+                <td>compte créé</td>
+                <td>claire@exemple.fr</td>
+              </tr>
+              <tr>
+                <td>4 nov. 10:30</td>
+                <td>pierre@exemple.fr</td>
+                <td>compte désactivé</td>
+                <td>essai@exemple.fr</td>
+              </tr>
+              <tr>
+                <td>4 nov. 10:29</td>
+                <td>pierre@exemple.fr</td>
+                <td>connexion refusée · 5 essais</td>
+                <td>—</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="adm-note" style="margin-top: 14px"><a href="#">plus anciens ›</a></p>
+      </main>
+    </div>
+
+    <script>
+      // Mock only: the real page is rendered by the server, one screen per URL.
+      const q = new URLSearchParams(location.search);
+      const screen = q.get('ecran') || 'comptes';
+      for (const el of document.querySelectorAll('[data-ecran]')) {
+        if (el.dataset.ecran !== screen) el.remove();
+      }
+      const page = document.querySelector('[data-ecran]');
+      if (page?.dataset.navOf) {
+        page.prepend(document.getElementById('head').content.cloneNode(true));
+        page
+          .querySelector(`[data-nav="${page.dataset.navOf}"]`)
+          .setAttribute('aria-current', 'page');
+      }
+      if (q.has('alerte')) {
+        document.querySelector('[data-alert]')?.removeAttribute('hidden');
+        const s = document.querySelector('[data-status]');
+        if (s) {
+          s.querySelector('[data-lastp]').classList.add('is-alert');
+          s.querySelector('[data-last]').textContent = '12 nov. à 03:00 · il y a 3 jours';
+          document.querySelector('[data-ok]').textContent =
+            'en retard : la sauvegarde de nuit ne passe plus depuis le 13 nov. · voir les journaux du serveur';
+          const rows = document.querySelectorAll('[data-ecran] tbody tr td:first-child');
+          ['12 nov. 2026 03:00', '11 nov. 2026 03:00', '10 nov. 2026 03:00'].forEach(
+            (d, i) => (rows[i].textContent = d),
+          );
+        }
+      }
+      if (q.has('erreur')) document.querySelector('[data-erreur]')?.removeAttribute('hidden');
+    </script>
+  </body>
+</html>
