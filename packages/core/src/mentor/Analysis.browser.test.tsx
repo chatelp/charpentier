@@ -57,6 +57,8 @@ describe('the Compagnon reads a scene', () => {
         ask: async () => 'answered',
         lightModel: async () => 'opus',
         setLightModel: async () => {},
+        estimateDeepWork: async () => null,
+        deepWork: async () => 'unavailable',
         interview: async () => 'unavailable',
         reviewChapter: async () => 'answered',
         // What the main process's analysis does on this scene.
@@ -164,6 +166,8 @@ describe('the Compagnon reads a scene', () => {
         ask: async () => 'answered',
         lightModel: async () => 'opus',
         setLightModel: async () => {},
+        estimateDeepWork: async () => null,
+        deepWork: async () => 'unavailable',
         interview: async () => 'unavailable',
         analyze: async ({ sceneIds, automatic }) => (
           analyses.push({ sceneIds, automatic }),

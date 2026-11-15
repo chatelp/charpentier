@@ -1,6 +1,8 @@
 import type {
   ApiKeyResult,
   AskResult,
+  DeepTask,
+  DeepWorkEstimate,
   LlmStatus,
   MenuModel,
   SignInResult,
@@ -66,6 +68,18 @@ export type Request =
       readonly section?: string;
       readonly pass?: boolean;
     }
+  | {
+      readonly type: 'agents.estimateDeepWork';
+      readonly projectId: string;
+      readonly task: DeepTask;
+      readonly characterId?: string;
+    }
+  | {
+      readonly type: 'agents.deepWork';
+      readonly projectId: string;
+      readonly task: DeepTask;
+      readonly characterId?: string;
+    }
   | { readonly type: 'sync.status' }
   | { readonly type: 'sync.account' }
   | {
@@ -115,6 +129,8 @@ export interface Responses {
   'agents.analyze': AskResult;
   'agents.reviewChapter': AskResult;
   'agents.interview': AskResult;
+  'agents.estimateDeepWork': DeepWorkEstimate | null;
+  'agents.deepWork': AskResult;
   'agents.lightModel': 'opus' | 'haiku';
   'sync.status': SyncStatus;
   'sync.account': SyncAccountInfo | null;

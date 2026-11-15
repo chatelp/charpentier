@@ -59,6 +59,8 @@ async function start() {
       reviewChapter: async () => 'answered',
       lightModel: async () => 'opus',
       setLightModel: async () => {},
+      estimateDeepWork: async () => null,
+      deepWork: async () => 'unavailable',
       interview: async (input) => {
         asked.push(input);
         const root = doc(guids.project(input.projectId));

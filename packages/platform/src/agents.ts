@@ -4,6 +4,20 @@ import type { LlmStatus } from './llm';
 /** `no-keychain`: a good key, but this system has nowhere to keep it safely. */
 export type ApiKeyResult = 'saved' | 'invalid' | 'offline' | 'no-keychain';
 
+/**
+ * Background work on the whole manuscript, by a specialised agent (D-27):
+ * check the structure, track the clues, take stock of one character.
+ */
+export type DeepTask = 'structure' | 'clues' | 'character';
+
+/** What a task on the whole manuscript will cost, announced before it runs. */
+export interface DeepWorkEstimate {
+  readonly inputTokens: number;
+  readonly outputTokens: number;
+  /** In US dollars, the provider's currency. */
+  readonly usd: number;
+}
+
 /** Outcome of asking the Compagnon to answer (its answer lands in the mentor document). */
 export type AskResult = 'answered' | 'unavailable' | 'offline' | 'refused' | 'failed';
 
@@ -55,6 +69,24 @@ export interface AgentsService {
     readonly section?: string;
     /** « Passer »: another question on the same section. */
     readonly pass?: boolean;
+  }): Promise<AskResult>;
+  /**
+   * What a task on the whole manuscript will cost (D-27, docs/PLAN.md §6.3),
+   * or null when there is nothing to read (no text, no such character).
+   */
+  estimateDeepWork(input: {
+    readonly projectId: string;
+    readonly task: DeepTask;
+    readonly characterId?: string;
+  }): Promise<DeepWorkEstimate | null>;
+  /**
+   * Runs it: proposals and signals in the project, the review in the
+   * conversation. One task at a time per project, queued with the readings.
+   */
+  deepWork(input: {
+    readonly projectId: string;
+    readonly task: DeepTask;
+    readonly characterId?: string;
   }): Promise<AskResult>;
   /** D-20: the model of the light, frequent work. */
   lightModel(): Promise<'opus' | 'haiku'>;

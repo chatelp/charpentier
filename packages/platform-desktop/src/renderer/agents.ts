@@ -1,4 +1,4 @@
-import type { AgentsService, LlmStatus } from '@charpentier/platform';
+import type { AgentsService, DeepTask, LlmStatus } from '@charpentier/platform';
 import type { DesktopBridge } from '../shared/ipc';
 
 /** The Compagnon as the renderer sees it: a status, and the key going in (never out). */
@@ -62,6 +62,22 @@ export class IpcAgentsService implements AgentsService {
     readonly pass?: boolean;
   }) {
     return this.bridge.invoke({ type: 'agents.interview', ...input });
+  }
+
+  estimateDeepWork(input: {
+    readonly projectId: string;
+    readonly task: DeepTask;
+    readonly characterId?: string;
+  }) {
+    return this.bridge.invoke({ type: 'agents.estimateDeepWork', ...input });
+  }
+
+  deepWork(input: {
+    readonly projectId: string;
+    readonly task: DeepTask;
+    readonly characterId?: string;
+  }) {
+    return this.bridge.invoke({ type: 'agents.deepWork', ...input });
   }
 
   lightModel() {

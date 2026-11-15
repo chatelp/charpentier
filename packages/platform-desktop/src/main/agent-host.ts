@@ -1,6 +1,19 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { analyzeScene, answerAuthor, interviewTurn, reviewChapter } from '@charpentier/agents';
-import type { ApiKeyResult, AskResult, LlmStatus } from '@charpentier/platform';
+import {
+  analyzeScene,
+  answerAuthor,
+  deepWork,
+  estimateDeepWork,
+  interviewTurn,
+  reviewChapter,
+} from '@charpentier/agents';
+import type {
+  ApiKeyResult,
+  AskResult,
+  DeepTask,
+  DeepWorkEstimate,
+  LlmStatus,
+} from '@charpentier/platform';
 import {
   agentOrigin,
   fragmentPlainText,
@@ -216,6 +229,84 @@ export class AgentHost {
     }
   }
 
+  /** Holds the project, its mentor document and every scene of the manuscript. */
+  async #withManuscript<T>(
+    projectId: string,
+    work: (docs: { root: Y.Doc; mentorDoc: Y.Doc; sceneDocs: Map<string, Y.Doc> }) => Promise<T>,
+  ): Promise<T> {
+    const rootGuid = guids.project(projectId);
+    const mentorGuid = guids.mentor(projectId);
+    return this.#withDocs([rootGuid, mentorGuid], async (docs) => {
+      const root = docs.get(rootGuid);
+      const mentorDoc = docs.get(mentorGuid);
+      if (!root || !mentorDoc) throw new Error('Documents missing');
+      const sceneIds = readOutline(root).flatMap((c) => c.scenes.map((s) => s.id));
+      const sceneGuids = sceneIds.map((id) => guids.scene(projectId, id));
+      return this.#withDocs(sceneGuids, (held) =>
+        work({
+          root,
+          mentorDoc,
+          sceneDocs: new Map(
+            sceneIds.flatMap((id, i) => {
+              const doc = held.get(sceneGuids[i] ?? '');
+              return doc ? [[id, doc] as const] : [];
+            }),
+          ),
+        }),
+      );
+    });
+  }
+
+  async #estimateDeepWork(
+    projectId: string,
+    task: DeepTask,
+    characterId: string | undefined,
+  ): Promise<DeepWorkEstimate | null> {
+    return this.#withManuscript(
+      projectId,
+      async (docs) =>
+        estimateDeepWork({
+          ...docs,
+          task,
+          ...(characterId !== undefined && { characterId }),
+        }) ?? null,
+    );
+  }
+
+  /** A specialised agent on the whole manuscript (D-27), queued with the readings. */
+  async #deepWork(
+    projectId: string,
+    task: DeepTask,
+    characterId: string | undefined,
+  ): Promise<AskResult> {
+    if (this.llm.status() === 'unconfigured') return 'unavailable';
+    const previous = this.#running.get(projectId) ?? Promise.resolve();
+    const run = previous.then(async (): Promise<AskResult> => {
+      try {
+        return await this.#withManuscript(projectId, async (docs) => {
+          await deepWork({
+            llm: this.llm,
+            ...docs,
+            task,
+            ...(characterId !== undefined && { characterId }),
+          });
+          return 'answered' as const;
+        });
+      } catch (error) {
+        if (error instanceof LlmUnconfiguredError) return 'unavailable';
+        if (error instanceof LlmRefusalError) return 'refused';
+        if (error instanceof Anthropic.APIConnectionError) return 'offline';
+        console.error(`Charpentier: the ${task} work failed`, error);
+        return 'failed';
+      }
+    });
+    this.#running.set(
+      projectId,
+      run.catch(() => {}),
+    );
+    return run;
+  }
+
   /** Holds the documents an agent needs for the time of its work. */
   async #withDocs<T>(
     guidsNeeded: readonly string[],
@@ -262,7 +353,7 @@ export class AgentHost {
 
   async handle(
     request: AgentRequest,
-  ): Promise<LlmStatus | ApiKeyResult | AskResult | 'opus' | 'haiku' | null> {
+  ): Promise<LlmStatus | ApiKeyResult | AskResult | DeepWorkEstimate | 'opus' | 'haiku' | null> {
     switch (request.type) {
       case 'agents.status':
         return this.llm.status();
@@ -291,6 +382,10 @@ export class AgentHost {
           ...(request.section !== undefined && { section: request.section }),
           ...(request.pass !== undefined && { pass: request.pass }),
         });
+      case 'agents.estimateDeepWork':
+        return this.#estimateDeepWork(request.projectId, request.task, request.characterId);
+      case 'agents.deepWork':
+        return this.#deepWork(request.projectId, request.task, request.characterId);
       case 'agents.lightModel':
         return this.lightModel.get();
       case 'agents.setLightModel':

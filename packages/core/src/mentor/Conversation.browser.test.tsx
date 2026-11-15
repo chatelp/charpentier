@@ -43,6 +43,8 @@ describe('conversation with the Compagnon', () => {
         reviewChapter: async () => 'answered',
         lightModel: async () => 'opus',
         setLightModel: async () => {},
+        estimateDeepWork: async () => null,
+        deepWork: async () => 'unavailable',
         interview: async () => 'unavailable',
         // What the main process does: answer in the mentor document.
         ask: async ({ projectId }) => {

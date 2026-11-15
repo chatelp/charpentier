@@ -22,6 +22,21 @@ export {
 } from './analysis';
 export { chapterReviewKey, reviewChapter } from './review';
 export {
+  applyDeepWork,
+  DEEP_AGENTS,
+  DEEP_PRICES,
+  deepWork,
+  deepWorkKey,
+  deepWorkSchemas,
+  deepWorkSystemPrompt,
+  estimateDeepWork,
+  manuscriptOf,
+  MAX_DEEP_REVIEW,
+  MAX_DEEP_VALUE,
+  type DeepWorkOutput,
+  type DeepWorkResult,
+} from './deep-work';
+export {
   atelierState,
   fileProposals,
   interviewSchema,

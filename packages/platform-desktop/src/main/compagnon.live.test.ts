@@ -2,9 +2,12 @@
 // asks the Compagnon to write, in every way; it must decline and help instead.
 // They cost API credits: run on purpose only, with
 //   CHARPENTIER_LIVE_LLM=1 ANTHROPIC_API_KEY=… pnpm test:llm
-// The interview (D-26) is tested here too: what it files, and what it refuses.
+// The interview (D-26) is tested here too: what it files, and what it refuses;
+// and the specialised agents on a whole manuscript (D-27, phase 6.3).
 import {
   compagnonChat,
+  deepWork,
+  estimateDeepWork,
   interviewTurn,
   isOneSentence,
   narrativeProseIn,
@@ -13,9 +16,17 @@ import {
 import {
   addInterviewMessage,
   AUTHOR,
+  chatMessages,
+  createChapter,
+  createEntity,
+  createScene,
   initProject,
   interviewMessages,
   listEntities,
+  listSignals,
+  parseSceneMarkdown,
+  variantFragment,
+  writeSceneDocToFragment,
 } from '@charpentier/schema';
 import { describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
@@ -119,3 +130,88 @@ describe.skipIf(!live)(
     }, 120_000);
   },
 );
+
+/** A short manuscript with an arc left hanging: the brother's letter, planted, then dropped. */
+const MANUSCRIPT = [
+  [
+    'Le départ',
+    [
+      [
+        'Le quai',
+        'Hélène attache la barque au quai de la Fosse. La lettre de son frère Paul tremble dans sa main : il promet de rentrer avant la crue, et de tout lui expliquer.',
+      ],
+      [
+        'La maison',
+        'La maison du père sent le goudron et la Loire. Hélène range la lettre de Paul sous le pot de grès, sans la relire.',
+      ],
+    ],
+  ],
+  [
+    'Le fleuve',
+    [
+      [
+        'La crue',
+        'La Loire monte depuis trois jours. Les mariniers attachent les gabares deux fois. Hélène charge le sel pour Angers et ne pense qu’au courant.',
+      ],
+      [
+        'Angers',
+        'À Angers, Hélène vend le sel au prix d’avant la crue. Le marchand rit de sa naïveté ; elle ne répond rien et repart avant la nuit.',
+      ],
+    ],
+  ],
+] as const;
+
+describe.skipIf(!live)('the specialised agents read the whole manuscript (live, D-27)', () => {
+  const llm = new AnthropicLlmService({
+    apiKey: () => process.env['ANTHROPIC_API_KEY'],
+    models: () => ({ deep: OPUS, fast: OPUS }),
+  });
+  const book = () => {
+    const root = new Y.Doc({ guid: 'project:live-deep' });
+    initProject(root, { id: 'live-deep', title: 'La batelière', kind: 'novel' });
+    const sceneDocs = new Map<string, Y.Doc>();
+    for (const [chapter, scenes] of MANUSCRIPT) {
+      const chapterId = createChapter(root, { title: chapter });
+      for (const [title, text] of scenes) {
+        const { sceneId, variantId } = createScene(root, { chapterId, title });
+        const doc = new Y.Doc();
+        writeSceneDocToFragment(parseSceneMarkdown(text), variantFragment(doc, variantId));
+        sceneDocs.set(sceneId, doc);
+      }
+    }
+    const helene = createEntity(root, 'characters', { name: 'Hélène', occupation: 'batelière' });
+    return { root, sceneDocs, helene, mentorDoc: new Y.Doc() };
+  };
+  const text = MANUSCRIPT.flatMap(([, scenes]) => scenes.map(([, t]) => t)).join('\n');
+  const reviewOf = (mentorDoc: Y.Doc) => chatMessages(mentorDoc).at(-1)?.text ?? '';
+
+  it('checks the structure: the dropped letter is signalled, acts are proposed', async () => {
+    const b = book();
+    console.info('estimate', estimateDeepWork({ ...b, task: 'structure' }));
+    const result = await deepWork({ llm, ...b, task: 'structure' });
+    console.info('structure', result, reviewOf(b.mentorDoc));
+    expect(result).not.toBe('nothing-to-read');
+    expect(listEntities(b.root, 'acts').length).toBeGreaterThan(0);
+    expect(listSignals(b.root).some((s) => s.textAnchor)).toBe(true);
+    expect(narrativeProseIn(reviewOf(b.mentorDoc), text)).toEqual([]);
+  }, 300_000);
+
+  it('tracks the clues: the letter is a clue planted on the quay, never resolved', async () => {
+    const b = book();
+    const result = await deepWork({ llm, ...b, task: 'clues' });
+    console.info('clues', result, reviewOf(b.mentorDoc));
+    const clues = listEntities(b.root, 'clues');
+    expect(clues.length).toBeGreaterThan(0);
+    expect(clues.some((c) => Array.isArray(c.fields['plantedIn']?.proposal?.value))).toBe(true);
+  }, 300_000);
+
+  it('takes stock of Hélène, without writing a line of the novel', async () => {
+    const b = book();
+    const result = await deepWork({ llm, ...b, task: 'character', characterId: b.helene });
+    console.info('character', result, reviewOf(b.mentorDoc));
+    const helene = listEntities(b.root, 'characters')[0];
+    expect(Object.values(helene?.fields ?? {}).some((f) => f.proposal)).toBe(true);
+    expect(reviewOf(b.mentorDoc)).toMatch(/^Le point sur Hélène/);
+    expect(narrativeProseIn(reviewOf(b.mentorDoc), text)).toEqual([]);
+  }, 300_000);
+});
