@@ -1,6 +1,6 @@
 import type { LlmService } from '@charpentier/platform';
 import { isOneSentence, narrativeProseIn } from './guard';
-import { generateWithMemory, memoryInstructions, type MemoryStore } from './memory';
+import { generateWithMemory, MEMORY_INSTRUCTIONS, memoryContext, type MemoryStore } from './memory';
 import { compagnonSystemPrompt, chatAnswerSchema, type MentorLevel } from './prompts';
 
 export interface ChatContext {
@@ -83,19 +83,34 @@ export async function compagnonChat(
     context.scene?.text ?? '',
     ...history.filter((t) => t.role === 'author').map((t) => t.text),
   ].join('\n');
+  // From the most stable to the most changing (the prompt cache, phase 6.5):
+  // the thread so far, then, with the author's last words, the book as it
+  // stands (sheets, scene) and the notebook.
+  const lastAuthor = history.at(-1)?.role === 'author' ? history.at(-1) : undefined;
+  const past = (lastAuthor ? history.slice(0, -1) : history).map((t) => ({
+    role: t.role === 'author' ? ('user' as const) : ('assistant' as const),
+    content:
+      t.role === 'author'
+        ? t.text
+        : JSON.stringify({ reply: t.text, example: null, styleChoiceId: null }),
+  }));
+  const before = [
+    ...(past[0]?.role === 'user'
+      ? []
+      : [{ role: 'user' as const, content: 'The thread with the author so far:' }]),
+    ...past,
+  ];
   const messages = [
-    // Consecutive user messages are merged by the API: the context opens the first turn.
-    { role: 'user' as const, content: contextMessage(context) },
-    ...history.map((t) => ({
-      role: t.role === 'author' ? ('user' as const) : ('assistant' as const),
-      content:
-        t.role === 'author'
-          ? t.text
-          : JSON.stringify({ reply: t.text, example: null, styleChoiceId: null }),
-    })),
+    ...before.map((m, index) => (index === before.length - 1 ? { ...m, stable: true } : m)),
+    {
+      role: 'user' as const,
+      content: [contextMessage(context), memory && memoryContext(memory), lastAuthor?.text ?? '']
+        .filter(Boolean)
+        .join('\n\n'),
+    },
   ];
   const system = memory
-    ? `${compagnonSystemPrompt(context)}\n\n${memoryInstructions(memory)}`
+    ? `${compagnonSystemPrompt(context)}\n\n${MEMORY_INSTRUCTIONS}`
     : compagnonSystemPrompt(context);
 
   for (let attempt = 0; attempt < 2; attempt++) {

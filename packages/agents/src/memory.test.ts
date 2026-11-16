@@ -13,7 +13,7 @@ import { describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
 import { answerAuthor } from './conversation';
 import { interviewTurn } from './interview';
-import { generateWithMemory, projectMemory } from './memory';
+import { generateWithMemory, projectMemory, threadWindow } from './memory';
 
 function project() {
   const root = new Y.Doc({ guid: 'project:p' });
@@ -126,6 +126,8 @@ describe('the notebook as the memory tool sees it (phase 6.5)', () => {
     });
     expect(requests[1]?.messages.at(-1)).toEqual({
       role: 'user',
+      // The latest results are the loop's cache point.
+      stable: true,
       content: [
         {
           type: 'tool_result',
@@ -156,6 +158,7 @@ describe('one Compagnon: each mode knows what was said in the other (D-35)', () 
     const said = JSON.stringify(requests[0]?.messages);
     expect(said).toContain('(in the interview) Mon grand-père était marin.');
     expect(requests[0]?.system).toContain('YOUR NOTEBOOK');
+    expect(requests[0]?.system).toContain('PRECEDENCE');
     expect(chatMessages(mentorDoc).at(-1)?.text).toBe('Qu’il était marin.');
     const note = findNote(mentorDoc, '/memories/projet/grand-pere.md');
     expect(note?.sources).toEqual([chatMessages(mentorDoc)[0]?.id]);
@@ -182,7 +185,10 @@ describe('one Compagnon: each mode knows what was said in the other (D-35)', () 
     expect(JSON.stringify(requests[0]?.messages)).toContain(
       '(in the conversation about the text) Je veux un ton nuancé.',
     );
-    expect(requests[0]?.system).toContain('/memories/auteur/rythme.md: Écrit le matin.');
+    // The notebook, short, goes whole with the turn; the system prompt stays the same.
+    expect(JSON.stringify(requests[0]?.messages.at(-1))).toContain(
+      '/memories/auteur/rythme.md\\nÉcrit le matin.',
+    );
   });
 
   it('reads the whole thread at first, while the notebook is empty, then the last messages', async () => {
@@ -203,15 +209,41 @@ describe('one Compagnon: each mode knows what was said in the other (D-35)', () 
       answer,
     );
     await interviewTurn({ llm: first.llm, root, mentorDoc, mode: 'free' });
-    // The Atelier, then all 40 messages (written in the same instant: their order is not checked).
-    expect(first.requests[0]?.messages).toHaveLength(41);
-    expect(first.requests[0]?.system).toContain('YOUR NOTEBOOK IS EMPTY');
+    // All 40 messages: 39 before, the last one with the turn (same instant: order not checked).
+    expect(first.requests[0]?.messages).toHaveLength(40);
+    expect(JSON.stringify(first.requests[0]?.messages.at(-1))).toContain('YOUR NOTEBOOK IS EMPTY');
 
     addInterviewMessage(mentorDoc, { role: 'author', text: 'Et maintenant ?' }, AUTHOR);
     const next = scriptedLlm([], answer);
     await interviewTurn({ llm: next.llm, root, mentorDoc, mode: 'free' });
-    // The Atelier, then the last 30 only: the notebook holds the rest.
-    expect(next.requests[0]?.messages).toHaveLength(31);
-    expect(next.requests[0]?.system).toContain('/memories/projet/debut.md: Parole 0 : le début.');
+    // A window of the thread now (its start moves by steps of 20): the notebook holds the rest.
+    const sent = next.requests[0]?.messages ?? [];
+    expect(sent.length).toBeLessThan(43);
+    expect(sent.length).toBeGreaterThanOrEqual(30);
+    expect(JSON.stringify(sent.at(-1))).not.toContain('YOUR NOTEBOOK IS EMPTY');
+    expect(JSON.stringify(sent.at(-1))).toContain('Parole 0 : le début.');
+  });
+
+  it('moves the thread’s window by steps, its start the same from call to call (prompt cache)', () => {
+    const { mentorDoc } = project();
+    const memory = projectMemory({ mentorDoc });
+    memory.run({ command: 'create', path: '/memories/projet/a.md', file_text: 'Un fait.' });
+    const thread = Array.from({ length: 59 }, (_, i) => i);
+    const starts = [50, 51, 55, 59].map((n) => threadWindow(thread.slice(0, n), memory, 30)[0]);
+    expect(starts).toEqual([20, 20, 20, 20]);
+    expect(
+      threadWindow(
+        Array.from({ length: 60 }, (_, i) => i),
+        memory,
+        30,
+      )[0],
+    ).toBe(20);
+    expect(
+      threadWindow(
+        Array.from({ length: 70 }, (_, i) => i),
+        memory,
+        30,
+      )[0],
+    ).toBe(40);
   });
 });

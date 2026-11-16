@@ -26,6 +26,17 @@ export class LlmUnconfiguredError extends Error {}
  * Anthropic's official SDK, the author's own key (BYOK). The status follows
  * the network and the key; the author's writing never depends on it.
  */
+/** A cache point on a message's last block (everything before it is the same next time). */
+function cachePoint(content: unknown): unknown {
+  const blocks =
+    typeof content === 'string' ? [{ type: 'text', text: content }] : (content as unknown[]);
+  if (blocks.length === 0) return content;
+  const last = blocks.at(-1) as Record<string, unknown>;
+  // Thinking blocks cannot carry a cache point; the message's other blocks can.
+  if (last['type'] === 'thinking' || last['type'] === 'redacted_thinking') return blocks;
+  return [...blocks.slice(0, -1), { ...last, cache_control: { type: 'ephemeral' } }];
+}
+
 /**
  * A message's content for the Messages API: text, a tool's results, or the
  * model's own turn sent back exactly as it came (its thinking included,
@@ -135,7 +146,9 @@ export class AnthropicLlmService implements LlmService {
           system: [{ type: 'text', text: request.system, cache_control: { type: 'ephemeral' } }],
           messages: request.messages.map((m) => ({
             role: m.role,
-            content: anthropicContent(m.content),
+            content: m.stable
+              ? cachePoint(anthropicContent(m.content))
+              : anthropicContent(m.content),
           })) as Anthropic.Beta.Messages.BetaMessageParam[],
           // The notebook (phase 6.5): Claude's own memory tool, run by the caller.
           ...(request.tools?.some((t) => t.kind === 'memory') && {
@@ -152,6 +165,11 @@ export class AnthropicLlmService implements LlmService {
         { signal },
       );
       this.#setStatus('available');
+      // What the call cost, for the record (phase 6.5: the prompt cache, measured).
+      const { usage } = message;
+      console.info(
+        `Charpentier: ${model} · ${usage.input_tokens} sent, ${usage.cache_read_input_tokens ?? 0} read from the cache, ${usage.cache_creation_input_tokens ?? 0} written to it, ${usage.output_tokens} out`,
+      );
       if (message.stop_reason === 'refusal') throw new LlmRefusalError('The model declined');
       const toolCalls = message.content.flatMap((block) =>
         block.type === 'tool_use' && block.name === 'memory'
@@ -174,6 +192,8 @@ export class AnthropicLlmService implements LlmService {
         usage: {
           inputTokens: message.usage.input_tokens,
           outputTokens: message.usage.output_tokens,
+          cacheReadTokens: message.usage.cache_read_input_tokens ?? 0,
+          cacheWriteTokens: message.usage.cache_creation_input_tokens ?? 0,
         },
       };
     } catch (error) {

@@ -229,7 +229,8 @@ describe('the interview with the Compagnon (phase 6.1)', () => {
 
     // The Compagnon asks first.
     await interviewTurn({ llm, root, mentorDoc, mode: 'guided' });
-    expect(asked[0]?.system).toContain(SECTION_SPECIALISTS.meta);
+    // The mode and its specialist come with the turn, the system prompt staying the same.
+    expect(asked[0]?.messages.at(-1)).toContain(SECTION_SPECIALISTS.meta);
     expect(asked[0]?.messages.at(-1)).toContain('guided interview');
     expect(interviewMessages(mentorDoc).at(-1)).toMatchObject({
       role: 'compagnon',
@@ -269,7 +270,7 @@ describe('the interview with the Compagnon (phase 6.1)', () => {
     });
 
     await interviewTurn({ llm, root, mentorDoc, mode: 'guided', section: 'structure' });
-    expect(asked[0]?.system).toContain(SECTION_SPECIALISTS.structure);
+    expect(asked[0]?.messages.at(-1)).toContain(SECTION_SPECIALISTS.structure);
     expect(interviewMessages(mentorDoc).at(-1)).toMatchObject({
       section: 'structure',
       question: 'Comment le roman se termine-t-il pour Hélène ?',

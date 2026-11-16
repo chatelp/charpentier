@@ -24,7 +24,13 @@ import {
   type SingletonModule,
 } from '@charpentier/schema';
 import type * as Y from 'yjs';
-import { generateWithMemory, memoryInstructions, projectMemory, threadWindow } from './memory';
+import {
+  generateWithMemory,
+  MEMORY_INSTRUCTIONS,
+  memoryContext,
+  projectMemory,
+  threadWindow,
+} from './memory';
 import { narrativeProseIn } from './guard';
 import { compagnonSystemPrompt, type MentorLevel } from './prompts';
 
@@ -130,17 +136,10 @@ export function interviewSystemPrompt(input: {
       Object.entries(byField).map(([f, values]) => `- ${m}.${f}: ${values.join(' | ')}`),
     )
     .join('\n');
-  const mode =
-    input.mode === 'free'
-      ? `MODE: FREE. The author talks freely about their book, as to a friend who knows the craft. Answer what they say or ask, briefly, and put what they tell you about the book in the right section of the Atelier (see PROPOSALS). In "reply", say in a few words where you put what ("I noted Hélène in the characters, and the period in the project."). You may end with one question, if it helps.`
-      : input.section
-        ? `MODE: GUIDED. You lead, one question at a time, on one section of the Atelier. Take what the author just answered into PROPOSALS and acknowledge it briefly in "reply" (where you put what; empty acknowledgement when there was no answer). Then ask ONE next question about this section (what is still missing or only proposed in it) in "question", and say in "why" in one short sentence why it matters for the book. If the author passed on your last question, ask a different one.\n${SECTION_SPECIALISTS[input.section]}`
-        : `MODE: GUIDED. Every section of the Atelier has a first answer. Take the author's last answer into PROPOSALS, say so in "reply", and invite them to review the proposals in the Atelier or to go on freely; "question" and "why" are null.`;
   return `${compagnonSystemPrompt(input)}
 
 THE INTERVIEW
-This is not about a scene: you are talking with the author about their book to fill their Atelier, the sheets that describe it (the project, characters, structure, world rules, clues). The author's sheets as they stand are given first, with ids and statuses.
-${mode}
+This is not about a scene: you are talking with the author about their book to fill their Atelier, the sheets that describe it (the project, characters, structure, world rules, clues). The author's sheets as they stand come with their last words, with ids and statuses, then your notebook, then the mode of this turn (free, or guided on one section with its specialist).
 
 PROPOSALS
 Each proposal is one value for one field of the Atelier, drawn from what the AUTHOR said. Rules:
@@ -156,7 +155,24 @@ ${choices}
 - No proposal is fine: an empty list when the author said nothing for the sheets.
 
 OUTPUT
-Return JSON with "reply" (what you say to the author), "question" and "why" (guided mode only, null otherwise) and "proposals". There is no example sentence in the interview.`;
+Return JSON with "reply" (what you say to the author), "question" and "why" (guided mode only, null otherwise) and "proposals". There is no example sentence in the interview.
+
+${MEMORY_INSTRUCTIONS}`;
+}
+
+/**
+ * The mode of one turn, sent with the author's last words (not in the system
+ * prompt, which stays the same from call to call: the prompt cache).
+ */
+export function interviewModeText(input: {
+  mode: InterviewMode;
+  section: InterviewSection | null;
+}): string {
+  return input.mode === 'free'
+    ? `MODE: FREE. The author talks freely about their book, as to a friend who knows the craft. Answer what they say or ask, briefly, and put what they tell you about the book in the right section of the Atelier (see PROPOSALS). In "reply", say in a few words where you put what ("I noted Hélène in the characters, and the period in the project."). You may end with one question, if it helps.`
+    : input.section
+      ? `MODE: GUIDED. You lead, one question at a time, on one section of the Atelier. Take what the author just answered into PROPOSALS and acknowledge it briefly in "reply" (where you put what; empty acknowledgement when there was no answer). Then ask ONE next question about this section (what is still missing or only proposed in it) in "question", and say in "why" in one short sentence why it matters for the book. If the author passed on your last question, ask a different one.\n${SECTION_SPECIALISTS[input.section]}`
+      : `MODE: GUIDED. Every section of the Atelier has a first answer. Take the author's last answer into PROPOSALS, say so in "reply", and invite them to review the proposals in the Atelier or to go on freely; "question" and "why" are null.`;
 }
 
 const normalize = (s: string) =>
@@ -286,37 +302,37 @@ export async function interviewTurn(input: {
   });
   const history = threadWindow(thread, memory, HISTORY);
 
+  // From the most stable to the most changing (the prompt cache, phase 6.5):
+  // the system prompt; the thread so far, whose start moves by steps; then,
+  // with the author's last words, what changes at every turn: the Atelier,
+  // the notebook, the mode.
+  const said = (m: (typeof history)[number]) =>
+    m.mode === 'conversation' ? `(in the conversation about the text) ${m.text}` : m.text;
+  const past = authorSpoke ? history.slice(0, -1) : history;
+  const pastTurns = past.map((m) => ({
+    role: m.role === 'author' ? ('user' as const) : ('assistant' as const),
+    content:
+      m.role === 'author'
+        ? said(m)
+        : JSON.stringify({ reply: said(m), question: null, why: null, proposals: [] }),
+  }));
+  const opening = { role: 'user' as const, content: 'The thread with the author so far:' };
+  const before = [...(pastTurns[0]?.role === 'user' ? [] : [opening]), ...pastTurns];
+  const now = [
+    `The author's Atelier as it stands (their own decisions, for reference):\n<atelier>\n${atelierState(root)}\n</atelier>`,
+    memoryContext(memory),
+    interviewModeText({ mode, section }),
+    authorSpoke
+      ? said(history.at(-1) ?? ({ mode: 'interview', text: '' } as (typeof history)[number]))
+      : input.pass
+        ? '[The author passes on this question: ask a different one, same section.]'
+        : '[The author opens the guided interview: ask your question.]',
+  ].join('\n\n');
   const turns = [
-    // Consecutive user messages are merged by the API: the sheets open the first turn.
-    {
-      role: 'user' as const,
-      content: `The author's Atelier as it stands (their own decisions, for reference):\n<atelier>\n${atelierState(root)}\n</atelier>`,
-    },
-    ...history.map((m) => {
-      // A message of the conversation about the text says so.
-      const said =
-        m.mode === 'conversation' ? `(in the conversation about the text) ${m.text}` : m.text;
-      return {
-        role: m.role === 'author' ? ('user' as const) : ('assistant' as const),
-        content:
-          m.role === 'author'
-            ? said
-            : JSON.stringify({ reply: said, question: null, why: null, proposals: [] }),
-      };
-    }),
-    // Guided mode, the Compagnon speaks first (or again): the request is said plainly.
-    ...(!authorSpoke
-      ? [
-          {
-            role: 'user' as const,
-            content: input.pass
-              ? '[The author passes on this question: ask a different one, same section.]'
-              : '[The author opens the guided interview: ask your question.]',
-          },
-        ]
-      : []),
+    ...before.map((m, index) => (index === before.length - 1 ? { ...m, stable: true } : m)),
+    { role: 'user' as const, content: now },
   ];
-  const system = `${interviewSystemPrompt({ language, level, mode, section })}\n\n${memoryInstructions(memory)}`;
+  const system = interviewSystemPrompt({ language, level, mode, section });
 
   let turn: Turn | undefined;
   for (let attempt = 0; attempt < 2 && !turn; attempt++) {

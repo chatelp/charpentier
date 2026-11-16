@@ -52,6 +52,8 @@ const numbered = (text: string) =>
 export interface MemoryStore {
   /** The index the Compagnon reads at every call: each note's path and first line. */
   index(): string;
+  /** Every note, whole, with its path. */
+  whole(): string;
   isEmpty(): boolean;
   /** Runs one command of the memory tool; the text goes back to the model. */
   run(input: Readonly<Record<string, unknown>>): {
@@ -112,6 +114,10 @@ export function projectMemory(input: {
 
   return {
     isEmpty: () => notes().length === 0,
+    whole: () =>
+      notes()
+        .map((n) => `## ${n.path}${n.by === 'author' ? ' (author, read only)' : ''}\n${n.text}`)
+        .join('\n\n'),
     index() {
       const all = notes();
       if (all.length === 0) return '(the notebook is empty)';
@@ -189,27 +195,49 @@ export function projectMemory(input: {
 
 /** The whole thread, at most, that a first reading takes in. */
 const FIRST_READING = 400;
+/** The window moves by steps this long, so that its start stays put between them (prompt cache). */
+const WINDOW_STEP = 20;
 
 /**
- * The part of the thread sent with a call: the last `window` messages; the
+ * The part of the thread sent with a call: about the last `window` messages,
+ * starting at a multiple of WINDOW_STEP so that the start stays the same for
+ * many calls (a sliding start would change the whole prompt every time); the
  * whole of it (up to FIRST_READING) while the notebook is still empty, so
- * that the Compagnon's first call after the update reads everything said
- * before and notes what matters (the transition of D-35: nothing lost).
+ * that the first call after the update reads everything said before and
+ * notes what matters (the transition of D-35: nothing lost).
  */
 export function threadWindow<T>(thread: readonly T[], store: MemoryStore, window: number): T[] {
-  return store.isEmpty() ? thread.slice(-FIRST_READING) : thread.slice(-window);
+  if (store.isEmpty()) return thread.slice(-FIRST_READING);
+  const start = Math.max(0, Math.floor((thread.length - window) / WINDOW_STEP) * WINDOW_STEP);
+  return thread.slice(start);
 }
 
-/** How the Compagnon is told about his notebook, in every mode. */
-export function memoryInstructions(store: MemoryStore): string {
-  return `YOUR NOTEBOOK (memory tool, under ${MEMORY_ROOT}): you keep notes across sessions, one note per fact, in ${PROJECT_DIR}/ for this book and ${AUTHOR_DIR}/ for the author as a writer (how they work, what helps them, what they do not want). Note what you will need later and that the Atelier's sheets do not hold: the author's story and intentions, their decisions and why, their doubts, the questions to come back to, how they want to be accompanied. Keep notes short, dated by their content, and up to date: correct or remove a note that is no longer true rather than adding a contradicting one. Never write lines of the novel, dialogue or secrets in it. Notes marked "author" are the author's: read them, never change them. View a note before relying on its details.
-INDEX OF THE NOTEBOOK:
-${store.index()}${
-    store.isEmpty()
-      ? `\nYOUR NOTEBOOK IS EMPTY: you receive the whole of what was said so far. Before answering, read it and write the notes that matter (a few well-chosen notes, not a transcript).`
-      : ''
-  }`;
+/** A notebook this short goes whole with every call (cheaper than reading notes one by one). */
+const WHOLE_NOTEBOOK = 8000;
+
+/** How the Compagnon is told about his notebook, in every mode: the same at every call. */
+export const MEMORY_INSTRUCTIONS = `YOUR NOTEBOOK (memory tool, under ${MEMORY_ROOT}): you keep notes across sessions, one note per fact, in ${PROJECT_DIR}/ for this book and ${AUTHOR_DIR}/ for the author as a writer (how they work, what helps them, what they do not want). Note what you will need later and that the Atelier's sheets do not hold: the author's story and intentions, their decisions and why, their doubts, the questions to come back to, how they want to be accompanied. Keep notes short, dated by their content, and up to date: correct or remove a note that is no longer true rather than adding a contradicting one. Never write lines of the novel, dialogue or secrets in it. Notes marked "author" are the author's: read them, never change them. The notebook as it stands comes with the author's last words; when only its index comes, view a note before relying on its details.
+PRECEDENCE, when what you know disagrees over time:
+1. What the author validated in the Atelier is their decision: it comes first, before your notebook and before old messages.
+2. A note the author wrote or corrected comes before your own notes.
+3. Between two things the author said, the more recent wins, unless a validated decision says otherwise.
+4. When they contradict each other, do not settle it alone and never touch a validated field: point it out to the author with both sides ("you validated X, but you said yesterday Y: shall we change it?"), and update your own note so that it records how things evolved (what was said, when, and what was decided).`;
+
+/** The notebook as it stands, sent with the author's last words: whole while short, else its index. */
+export function memoryContext(store: MemoryStore): string {
+  const whole = store.whole();
+  const body =
+    whole.length <= WHOLE_NOTEBOOK
+      ? `<notebook>\n${whole || '(empty)'}\n</notebook>`
+      : `<notebook-index>\n${store.index()}\n</notebook-index>`;
+  return store.isEmpty()
+    ? `${body}\nYOUR NOTEBOOK IS EMPTY: you received the whole of what was said so far. Before answering, read it and write the notes that matter (a few well-chosen notes, not a transcript).`
+    : body;
 }
+
+/** @deprecated kept for callers that build one system text: instructions and notebook together. */
+export const memoryInstructions = (store: MemoryStore) =>
+  `${MEMORY_INSTRUCTIONS}\n${memoryContext(store)}`;
 
 /**
  * One answer of the model with its notebook: runs the memory tool's calls
@@ -230,10 +258,14 @@ export async function generateWithMemory(
     const calls: readonly LlmToolCall[] = response.toolCalls ?? [];
     if (calls.length === 0) return response;
     messages = [
-      ...messages,
+      // One cache point in the loop: the latest results (earlier ones are dropped).
+      ...messages.map((m, i) =>
+        i >= request.messages.length && m.stable ? { ...m, stable: false } : m,
+      ),
       { role: 'assistant', content: [{ type: 'provider_turn', turn: response.turn }] },
       {
         role: 'user',
+        stable: true,
         content: calls.map((call) => {
           const result = store.run(call.input);
           return {

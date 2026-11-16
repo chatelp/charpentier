@@ -43,7 +43,8 @@ describe('the Compagnon in conversation', () => {
     const [request] = requests;
     expect(request?.system).toContain('You never write the novel');
     expect(request?.system).toContain('Answer in French');
-    expect(request?.messages[0]?.content).toContain('Il pleuvait sur Nantes.');
+    // The book as it stands comes with the author's last words (after the cached thread).
+    expect(request?.messages.at(-1)?.content).toContain('Il pleuvait sur Nantes.');
     expect(request?.responseSchema).toBeDefined();
   });
 

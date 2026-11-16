@@ -57,7 +57,7 @@ describe('Anthropic LLM service', () => {
     });
     expect(await llm.generate(request)).toEqual({
       text: '{"reply":"Oui."}',
-      usage: { inputTokens: 10, outputTokens: 5 },
+      usage: { inputTokens: 10, outputTokens: 5, cacheReadTokens: 0, cacheWriteTokens: 0 },
     });
     expect(requests[0]).toMatchObject({
       model: OPUS,

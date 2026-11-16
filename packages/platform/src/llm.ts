@@ -26,6 +26,11 @@ export interface LlmMessage {
   readonly role: 'user' | 'assistant';
   /** Text, or blocks when tools are in play. */
   readonly content: string | readonly LlmBlock[];
+  /**
+   * Everything up to this message stays the same from one call to the next:
+   * a host whose provider caches prompts marks a cache point here.
+   */
+  readonly stable?: boolean;
 }
 
 export type LlmBlock =
@@ -77,5 +82,11 @@ export interface LlmResponse {
   readonly toolCalls?: readonly LlmToolCall[];
   /** Its turn as the provider gave it, to send back with the tools' results. */
   readonly turn?: unknown;
-  readonly usage?: { readonly inputTokens: number; readonly outputTokens: number };
+  readonly usage?: {
+    readonly inputTokens: number;
+    readonly outputTokens: number;
+    /** Input read from the provider's prompt cache, and written to it. */
+    readonly cacheReadTokens?: number;
+    readonly cacheWriteTokens?: number;
+  };
 }
