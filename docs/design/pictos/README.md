@@ -1,6 +1,6 @@
 # Pictogrammes gravés
 
-Huit pictogrammes au trait, pour les médaillons des panneaux et des modules (DESIGN.md §4.11). Grille 24 × 24, trait 1,5 px, bouts et angles arrondis, `stroke="currentColor"` : la couleur vient du contexte. Dessinés pour ce projet.
+Neuf pictogrammes au trait, pour les médaillons des panneaux et des modules (DESIGN.md §4.11). Grille 24 × 24, trait 1,5 px, bouts et angles arrondis, `stroke="currentColor"` : la couleur vient du contexte. Dessinés pour ce projet.
 
 | Fichier | Lieu | Dessin |
 |---|---|---|
@@ -12,6 +12,7 @@ Huit pictogrammes au trait, pour les médaillons des panneaux et des modules (DE
 | `structure.svg` | module Structure | ferme de charpente |
 | `regles.svg` | module Règles du monde | fil à plomb |
 | `indices.svg` | module Indices et révélations | loupe |
+| `diapason.svg` | module Style et voix (« donner le ton ») | diapason |
 
 À part, **`equerre.svg`** : la marque du système du X250 (segment `système`, titre des réglages du système, moniteur), en aplat et non au trait. C'est la forme de l'icône de l'app ([`../icon/charpentier-petit.svg`](../icon/charpentier-petit.svg)) : l'équerre en `currentColor`, le point en bleu du Compagnon de la matière du système (`#86aedb`). 13 px dans la ligne, 14 px dans les titres.
 
