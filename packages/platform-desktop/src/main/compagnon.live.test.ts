@@ -3,14 +3,18 @@
 // They cost API credits: run on purpose only, with
 //   CHARPENTIER_LIVE_LLM=1 ANTHROPIC_API_KEY=… pnpm test:llm
 // The interview (D-26) is tested here too: what it files, and what it refuses;
-// and the specialised agents on a whole manuscript (D-27, phase 6.3).
+// the specialised agents on a whole manuscript (D-27, phase 6.3); and the
+// reading of a reference text (phase 6.4).
 import {
   compagnonChat,
   deepWork,
+  echoes,
+  echoIndex,
   estimateDeepWork,
   interviewTurn,
   isOneSentence,
   narrativeProseIn,
+  readReference,
   type ChatContext,
 } from '@charpentier/agents';
 import {
@@ -213,5 +217,32 @@ describe.skipIf(!live)('the specialised agents read the whole manuscript (live, 
     expect(Object.values(helene?.fields ?? {}).some((f) => f.proposal)).toBe(true);
     expect(reviewOf(b.mentorDoc)).toMatch(/^Le point sur Hélène/);
     expect(narrativeProseIn(reviewOf(b.mentorDoc), text)).toEqual([]);
+  }, 300_000);
+});
+
+describe.skipIf(!live)('a reference text gives its style choices (live, phase 6.4)', () => {
+  const llm = new AnthropicLlmService({
+    apiKey: () => process.env['ANTHROPIC_API_KEY'],
+    models: () => ({ deep: OPUS, fast: OPUS }),
+  });
+
+  it('proposes five to ten choices, none repeating a run of the book’s words', async () => {
+    // The manuscript above, read as if it were a book the author admires.
+    const text = {
+      title: 'La batelière',
+      author: 'Essai',
+      chapters: MANUSCRIPT.map(([, scenes]) => scenes.map(([, t]) => t).join('\n\n')),
+    };
+    const root = new Y.Doc({ guid: 'project:live-style' });
+    initProject(root, { id: 'live-style', title: 'Les serres', kind: 'novel' });
+    const mentorDoc = new Y.Doc();
+    const result = await readReference({ llm, root, mentorDoc, text });
+    const choices = listEntities(root, 'style').map((e) => e.fields['choice']?.proposal?.value);
+    console.info('style', result, interviewMessages(mentorDoc).at(-1)?.text, choices);
+    expect(result).not.toBe('nothing-to-read');
+    expect(choices.length).toBeGreaterThanOrEqual(3);
+    expect(choices.length).toBeLessThanOrEqual(10);
+    const index = echoIndex(text);
+    for (const choice of choices) expect(echoes(String(choice), index)).toBe(false);
   }, 300_000);
 });
