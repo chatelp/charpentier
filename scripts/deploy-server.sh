@@ -16,6 +16,8 @@ ssh "$target" "mkdir -p '$dir/server/dist'"
 scp -q infra/docker-compose.yml "$target:$dir/docker-compose.yml"
 scp -q apps/server/Dockerfile "$target:$dir/server/Dockerfile"
 scp -q apps/server/dist/main.js "$target:$dir/server/dist/main.js"
+# The administration page's style and font (phase 4.6).
+scp -q -r apps/server/dist/admin "$target:$dir/server/dist/"
 
 ssh "$target" sh -s -- "$dir" "${CHARPENTIER_HOST:-}" "${BACKUP_ARCHIVE:-}" <<'REMOTE'
 set -eu
