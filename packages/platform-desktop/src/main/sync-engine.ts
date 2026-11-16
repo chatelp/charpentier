@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { HocuspocusProvider, HocuspocusProviderWebsocket } from '@hocuspocus/provider';
 import type { SignInResult, SyncDevice, SyncStatus } from '@charpentier/platform';
-import { guids, names } from '@charpentier/schema';
+import { guids, isPristineProject, listAllScenes, names } from '@charpentier/schema';
 import * as Y from 'yjs';
 import { DocFile } from './doc-file';
 import type { DocStore } from './doc-store';
@@ -45,6 +45,10 @@ export class SyncEngine {
   #libraryFile: DocFile | null = null;
   #status: SyncStatus = 'off';
   #connected = false;
+  /** The account's library heard from the server at least once since starting. */
+  #librarySynced = false;
+  /** This device's untouched starters, kept off an account that has projects. */
+  readonly #withheld = new Set<string>();
   readonly #listeners = new Set<(status: SyncStatus) => void>();
   readonly #stopObservers: (() => void)[] = [];
 
@@ -171,7 +175,10 @@ export class SyncEngine {
     this.#socket = socket;
 
     const libraryProvider = this.#provide(libraryDoc.guid, libraryDoc);
-    libraryProvider.on('synced', () => void this.reconcile());
+    libraryProvider.on('synced', () => {
+      this.#librarySynced = true;
+      void this.reconcile();
+    });
     const projects = libraryDoc.getMap(PROJECTS);
     const onRemote = (_event: unknown, transaction: Y.Transaction) => {
       if (transaction.origin !== null && !transaction.local) void this.reconcile();
@@ -197,6 +204,8 @@ export class SyncEngine {
     this.#libraryDoc = null;
     this.#libraryFile = null;
     this.#account = null;
+    this.#librarySynced = false;
+    this.#withheld.clear();
     if (this.#status !== 'unauthorized') this.#setStatus('off');
   }
 
@@ -223,6 +232,30 @@ export class SyncEngine {
     provider.attach();
     this.#providers.set(guid, provider);
     return provider;
+  }
+
+  /** A project this device made at its first start, still untouched (not for the account). */
+  #pristine(projectId: string): boolean {
+    const { store } = this.deps;
+    const held: string[] = [];
+    const doc = (guid: string) => {
+      held.push(guid);
+      return store.acquire(guid, this);
+    };
+    try {
+      const root = doc(guids.project(projectId));
+      const scenes = new Map(
+        listAllScenes(root).map((s) => [s.id, doc(guids.scene(projectId, s.id))] as const),
+      );
+      return isPristineProject({ root, mentor: doc(guids.mentor(projectId)), scenes });
+    } finally {
+      for (const guid of held) if (!this.#providers.has(guid)) store.release(guid, this);
+    }
+  }
+
+  /** The device's projects kept off the account (untouched starters). */
+  withheld(): readonly string[] {
+    return [...this.#withheld];
   }
 
   /** Syncs a project's documents: root, mentor, and each scene with its history. */
@@ -259,17 +292,27 @@ export class SyncEngine {
       const libraryDoc = this.#libraryDoc;
       if (!libraryDoc) return;
       const projects = libraryDoc.getMap<ProjectRecord>(PROJECTS);
+      // Nothing goes to the account before its library is heard: an empty
+      // copy on the device would look like an account without projects.
+      if (!this.#librarySynced) return;
       const local = new Map((await this.deps.library.all()).map((p) => [p.id, p]));
       const newer = (a: ProjectRecord, b: ProjectRecord | undefined) =>
         !b || a.updatedAt > b.updatedAt || (a.trashedAt ?? '') > (b.trashedAt ?? '');
+      const accountHasProjects = [...projects.values()].some((p) => !p.trashedAt);
+      this.#withheld.clear();
+      for (const record of local.values())
+        if (!projects.has(record.id) && accountHasProjects && this.#pristine(record.id))
+          this.#withheld.add(record.id);
       libraryDoc.transact(() => {
         for (const record of local.values())
-          if (newer(record, projects.get(record.id))) projects.set(record.id, { ...record });
+          if (!this.#withheld.has(record.id) && newer(record, projects.get(record.id)))
+            projects.set(record.id, { ...record });
       });
       for (const [id, remote] of projects)
         if (newer(remote, local.get(id))) await this.deps.library.adopt(remote);
       if (this.#libraryDoc !== libraryDoc) return;
-      for (const id of new Set([...local.keys(), ...projects.keys()])) this.#syncProject(id);
+      for (const id of new Set([...local.keys(), ...projects.keys()]))
+        if (!this.#withheld.has(id)) this.#syncProject(id);
       this.#refreshStatus();
     };
     // One at a time: a reconcile asked meanwhile runs after.

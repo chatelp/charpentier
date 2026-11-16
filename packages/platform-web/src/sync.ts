@@ -8,7 +8,7 @@ import type {
   SyncService,
   SyncStatus,
 } from '@charpentier/platform';
-import { guids, names } from '@charpentier/schema';
+import { guids, isPristineProject, listAllScenes, names } from '@charpentier/schema';
 import type * as Y from 'yjs';
 import type { DocumentLibrary, LibraryRecord } from './library';
 
@@ -56,6 +56,10 @@ export class WebSync implements SyncService {
   #libraryDoc: Y.Doc | null = null;
   #status: SyncStatus = 'off';
   #connected = false;
+  /** The account's library heard from the server at least once since starting. */
+  #librarySynced = false;
+  /** This browser's untouched starters, kept off an account that has projects. */
+  readonly #withheld = new Set<string>();
   readonly #listeners = new Set<(status: SyncStatus) => void>();
   readonly #stops: (() => void)[] = [];
 
@@ -193,7 +197,10 @@ export class WebSync implements SyncService {
     if (this.#socket !== socket) return void libraryHandle.close();
     this.#libraryDoc = libraryHandle.doc;
     const libraryProvider = this.#provide(libraryHandle);
-    libraryProvider.on('synced', () => void this.reconcile());
+    libraryProvider.on('synced', () => {
+      this.#librarySynced = true;
+      void this.reconcile();
+    });
     const projects = libraryHandle.doc.getMap(PROJECTS);
     const onRemote = (_event: unknown, transaction: Y.Transaction) => {
       if (transaction.origin !== null && !transaction.local) void this.reconcile();
@@ -218,6 +225,8 @@ export class WebSync implements SyncService {
     this.#connected = false;
     this.#libraryDoc = null;
     this.#account = null;
+    this.#librarySynced = false;
+    this.#withheld.clear();
     if (this.#status !== 'unauthorized') this.#setStatus('off');
   }
 
@@ -255,6 +264,31 @@ export class WebSync implements SyncService {
     this.#provide(handle);
   }
 
+  /** A project this browser made at its first visit, still untouched (not for the account). */
+  async #pristine(projectId: string): Promise<boolean> {
+    const handles: DocumentHandle[] = [];
+    const open = async (guid: string) => {
+      const handle = await this.deps.documents.open(guid);
+      handles.push(handle);
+      await handle.whenLoaded;
+      return handle.doc;
+    };
+    try {
+      const root = await open(guids.project(projectId));
+      const scenes = new Map<string, Y.Doc>();
+      for (const scene of listAllScenes(root))
+        scenes.set(scene.id, await open(guids.scene(projectId, scene.id)));
+      return isPristineProject({ root, mentor: await open(guids.mentor(projectId)), scenes });
+    } finally {
+      for (const handle of handles) void handle.close();
+    }
+  }
+
+  /** The browser's projects kept off the account (untouched starters). */
+  withheld(): readonly string[] {
+    return [...this.#withheld];
+  }
+
   /** Syncs a project's documents: root, mentor, and each scene with its history. */
   async #syncProject(projectId: string) {
     const rootGuid = guids.project(projectId);
@@ -286,9 +320,15 @@ export class WebSync implements SyncService {
   reconcile(): Promise<void> {
     const run = async () => {
       const libraryDoc = this.#libraryDoc;
-      if (!libraryDoc) return;
+      // Nothing goes to the account before its library is heard.
+      if (!libraryDoc || !this.#librarySynced) return;
       const projects = libraryDoc.getMap<LibraryRecord>(PROJECTS);
       const local = new Map((await this.deps.library.all()).map((p) => [p.id, p]));
+      const accountHasProjects = [...projects.values()].some((p) => !p.trashedAt);
+      this.#withheld.clear();
+      for (const p of local.values())
+        if (!projects.has(p.id) && accountHasProjects && (await this.#pristine(p.id)))
+          this.#withheld.add(p.id);
       const newer = (a: LibraryRecord, b: LibraryRecord | undefined) =>
         !b || a.updatedAt > b.updatedAt || (a.trashedAt ?? '') > (b.trashedAt ?? '');
       const record = (p: LibraryRecord): LibraryRecord => ({
@@ -301,12 +341,14 @@ export class WebSync implements SyncService {
       });
       libraryDoc.transact(() => {
         for (const p of local.values())
-          if (newer(p, projects.get(p.id))) projects.set(p.id, record(p));
+          if (!this.#withheld.has(p.id) && newer(p, projects.get(p.id)))
+            projects.set(p.id, record(p));
       });
       for (const [id, remote] of projects)
         if (newer(remote, local.get(id))) await this.deps.library.adopt(remote);
       if (this.#libraryDoc !== libraryDoc) return;
-      for (const id of new Set([...local.keys(), ...projects.keys()])) await this.#syncProject(id);
+      for (const id of new Set([...local.keys(), ...projects.keys()]))
+        if (!this.#withheld.has(id)) await this.#syncProject(id);
       this.#refreshStatus();
     };
     const previous = this.#reconciling ?? Promise.resolve();

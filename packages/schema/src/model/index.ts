@@ -12,6 +12,7 @@ export * from './mentor-chat';
 export * from './modules';
 export * from './order';
 export * from './origins';
+export * from './pristine';
 export * from './project';
 export * from './scene-content';
 export * from './signals';

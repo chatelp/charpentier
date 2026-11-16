@@ -155,6 +155,49 @@ describe('sync between two desktop apps (step 4.3)', { timeout: 20_000 }, () => 
     expect(getScene(root2, sceneId)?.title).toBe('Le sas');
   });
 
+  it('keeps a new device’s untouched starter off an account that has projects', async () => {
+    const url = await server();
+    const mac = device('Mac');
+    const { id } = await mac.library.create({ title: 'Les serres', kind: 'novel' });
+    const root = mac.doc(guids.project(id));
+    initProject(root, { id, title: 'Les serres', kind: 'novel' });
+    const { sceneId, variantId } = createScene(root, {
+      chapterId: createChapter(root, { title: 'La serre' }),
+      title: 'Le sas',
+    });
+    write(mac.doc(guids.scene(id, sceneId)), variantId, 'Il pleuvait sur Nantes.');
+    expect(await mac.engine.signIn(url, EMAIL, PASSWORD)).toBe('ok');
+    expect(await mac.engine.idle()).toBe(true);
+
+    // The X250's first start made « Mon roman »: one chapter, one empty scene.
+    const x250 = device('X250');
+    const starter = await x250.library.create({ title: 'Mon roman', kind: 'novel' });
+    const starterRoot = x250.doc(guids.project(starter.id));
+    initProject(starterRoot, { id: starter.id, title: 'Mon roman', kind: 'novel' });
+    createScene(starterRoot, {
+      chapterId: createChapter(starterRoot, { title: 'Chapitre 1' }),
+      title: 'Scène 1',
+    });
+    expect(await x250.engine.signIn(url, EMAIL, PASSWORD)).toBe('ok');
+    await until(async () => (await x250.library.list()).some((p) => p.id === id));
+    expect(await x250.engine.idle()).toBe(true);
+    expect(x250.engine.withheld()).toEqual([starter.id]);
+    // The Mac never hears of it.
+    await mac.engine.reconcile();
+    expect((await mac.library.list()).map((p) => p.title)).toEqual(['Les serres']);
+
+    // Once written in, it is a real project: it goes to the account.
+    const [first] = listAllScenes(starterRoot);
+    write(
+      x250.doc(guids.scene(starter.id, first?.id ?? '')),
+      first?.activeVariantId ?? '',
+      'Une idée.',
+    );
+    await x250.library.touch(starter.id);
+    await x250.engine.reconcile();
+    await until(async () => (await mac.library.list()).some((p) => p.id === starter.id));
+  });
+
   it('carries a rename and the trash from one device to the other, without echo', async () => {
     const url = await server();
     const mac = device('Mac');

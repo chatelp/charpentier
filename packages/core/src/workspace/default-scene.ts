@@ -198,10 +198,16 @@ export async function projectFromSync(
   const others = (await platform.library.list()).filter((p) => p.id !== session.projectId);
   if (others.length === 0) return null;
   if (!(await isBlankProject(platform, session.projectId, session.root, titles))) return null;
-  for (const other of others) {
-    if (await isBlankInLibrary(platform, other.id, titles)) continue;
-    await platform.library.trash(session.projectId);
-    return other.id;
-  }
-  return null;
+  // The account's novel first; failing one, its most recent project, even
+  // blank: the device's own blank stays off the account (the sync withholds
+  // it) and goes to this device's trash, so that no « Mon roman » doubles.
+  let chosen = others[0];
+  for (const other of others)
+    if (!(await isBlankInLibrary(platform, other.id, titles))) {
+      chosen = other;
+      break;
+    }
+  if (!chosen) return null;
+  await platform.library.trash(session.projectId);
+  return chosen.id;
 }

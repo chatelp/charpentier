@@ -164,6 +164,20 @@ describe('a new device signed in (phase 5.6)', () => {
     expect((await platform.library.list()).map((p) => p.id)).toContain(stray);
   });
 
+  it('opens the account’s blank start too, rather than doubling it with its own', async () => {
+    const platform = withPreferences();
+    // An account where only blank starts arrived (16 November 2026: three « Mon roman »).
+    const theirs = (await platform.library.create({ title: titles.project, kind: 'novel' })).id;
+    await openProject(platform, theirs, titles);
+    const own = await openProject(
+      platform,
+      (await platform.library.create({ title: titles.project, kind: 'novel' })).id,
+      titles,
+    );
+    expect(await projectFromSync(platform, own, titles)).toBe(theirs);
+    expect((await platform.library.list()).map((p) => p.id)).toEqual([theirs]);
+  });
+
   it('keeps a project already written in, and one alone', async () => {
     const platform = withPreferences();
     const written = await openProject(
