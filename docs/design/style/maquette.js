@@ -232,11 +232,6 @@
   };
 
   // ───── Style et voix ─────
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- kept for the states to come
-  const STYLE_STATES = {
-    // index → state on the page (after the import, before the author has sorted them)
-    0: 'validated',
-  };
   const workBlock = (empty) => `
     <div class="mk-work"><p class="mk-work-label ch-label ch-engraved">Le Compagnon</p>
       <button type="button" class="ch-btn mk-work-btn">${compas()}<span><b>Importer un texte…</b><small>Un livre que vous admirez, ou un des vôtres</small></span></button>
