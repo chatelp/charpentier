@@ -185,3 +185,44 @@ export function addInterviewMessage(
   }, origin);
   return id;
 }
+
+/**
+ * One Compagnon, several modes (D-35): the conversation about the text and
+ * the interview, read as a single thread in the order they were said. Each
+ * keeps its own array in the mentor document, as it always did: nothing
+ * moves, nothing is copied, and a device of an older version still finds its
+ * own; this is a reading of the two.
+ */
+export type ThreadMode = 'conversation' | 'interview';
+
+export interface ThreadMessage {
+  readonly id: string;
+  readonly at: string;
+  readonly mode: ThreadMode;
+  readonly role: 'author' | 'compagnon';
+  readonly text: string;
+  /** What the message is about, for the Compagnon: a work's bilan, a reference text, a question. */
+  readonly note?: string;
+}
+
+export function companionThread(mentorDoc: Y.Doc): ThreadMessage[] {
+  const conversation = chatMessages(mentorDoc).map((m): ThreadMessage => ({
+    id: m.id,
+    at: m.at,
+    mode: 'conversation',
+    role: m.role,
+    text: m.text,
+    ...(m.work && { note: `bilan: ${m.work.task}` }),
+  }));
+  const interview = interviewMessages(mentorDoc).map((m): ThreadMessage => ({
+    id: m.id,
+    at: m.at,
+    mode: 'interview',
+    role: m.role,
+    text: [m.text, m.question].filter(Boolean).join('\n'),
+    ...(m.reference && { note: `reference text: ${m.reference.title}` }),
+  }));
+  return [...conversation, ...interview].sort((a, b) =>
+    a.at < b.at ? -1 : a.at > b.at ? 1 : a.id < b.id ? -1 : 1,
+  );
+}

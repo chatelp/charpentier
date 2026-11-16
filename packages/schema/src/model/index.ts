@@ -10,6 +10,7 @@ export * from './interview';
 export * from './manuscript';
 export * from './mentor-chat';
 export * from './modules';
+export * from './notebook';
 export * from './order';
 export * from './origins';
 export * from './pristine';
