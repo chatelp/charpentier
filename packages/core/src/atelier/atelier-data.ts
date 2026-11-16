@@ -100,6 +100,7 @@ export const RAIL_SOURCES: Readonly<Record<AtelierModule, readonly ModuleName[]>
   structure: ['structure', 'acts', 'arcs'],
   worldRules: ['worldRules'],
   clues: ['clues'],
+  style: ['style'],
 };
 
 /** Proposals waiting for the author in a rail entry (fields and whole entities). */

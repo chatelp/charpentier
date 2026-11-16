@@ -69,6 +69,7 @@ const MODULE_FILES: Record<string, string> = {
   arcs: 'structure.yaml',
   worldRules: 'regles-du-monde.yaml',
   clues: 'indices.yaml',
+  style: 'style-et-voix.yaml',
 };
 
 function fieldForYaml(state: FieldState) {
@@ -77,8 +78,11 @@ function fieldForYaml(state: FieldState) {
     ...(state.value !== undefined && { value: state.value }),
     ...(state.proposal && {
       proposal: state.proposal.value,
-      // A scene's id, or `entretien` for what the author said in the interview (D-26).
-      source: state.proposal.evidence.map((e) => evidenceSceneId(e) ?? 'entretien'),
+      // A scene's id, `entretien` for what the author said in the interview
+      // (D-26), or the title of a reference text (phase 6.4).
+      source: state.proposal.evidence.map(
+        (e) => evidenceSceneId(e) ?? ('reference' in e ? e.reference : 'entretien'),
+      ),
     }),
   };
 }

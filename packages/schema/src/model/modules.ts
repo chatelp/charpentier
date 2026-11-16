@@ -24,7 +24,14 @@ import { AUTHOR, type Origin } from './origins';
  *   which holds the entity's own status keys (`$…`) and its fields.
  */
 export const singletonModules = ['meta', 'structure'] as const;
-export const entityModules = ['characters', 'acts', 'arcs', 'worldRules', 'clues'] as const;
+export const entityModules = [
+  'characters',
+  'acts',
+  'arcs',
+  'worldRules',
+  'clues',
+  'style',
+] as const;
 export type SingletonModule = (typeof singletonModules)[number];
 export type EntityModule = (typeof entityModules)[number];
 export type ModuleName = SingletonModule | EntityModule;
@@ -59,7 +66,23 @@ export const knownFields = {
   worldRules: ['title', 'statement', 'consequences'],
   // Clues also hold `knownBy:<characterId>` and `knownBy:reader` fields (value: { fromSceneId }).
   clues: ['kind', 'title', 'description', 'plantedIn', 'resolvedIn', 'appearsIn'],
+  // Style et voix (phase 6.4): one choice per entity, in the Compagnon's words,
+  // drawn from a reference text that is never kept (`source` is its title).
+  style: ['category', 'choice', 'measure', 'source'],
 } as const satisfies Record<ModuleName, readonly string[]>;
+
+/** What a style choice is about (phase 6.4). */
+export const styleCategories = [
+  'pointOfView',
+  'tense',
+  'sentences',
+  'dialogue',
+  'description',
+  'register',
+  'chapters',
+  'other',
+] as const;
+export type StyleCategory = (typeof styleCategories)[number];
 
 /** The values a choice field accepts (shown as a list in the Atelier, checked for agents). */
 export const fieldChoices = {
@@ -68,6 +91,7 @@ export const fieldChoices = {
   },
   arcs: { kind: ['main', 'secondary'] },
   clues: { kind: ['clue', 'redHerring', 'revelation'] },
+  style: { category: styleCategories },
 } as const satisfies Partial<Record<ModuleName, Readonly<Record<string, readonly string[]>>>>;
 
 export const knownByField = (who: string | 'reader') => `knownBy:${who}`;

@@ -5,7 +5,9 @@ import {
   setField,
   type FieldRef,
   type FieldState,
+  type Evidence,
   type FieldValue,
+  type ReferenceEvidence,
   type Signal,
 } from '@charpentier/schema';
 import { useId, useRef, useState, type KeyboardEvent } from 'react';
@@ -15,6 +17,10 @@ import { playSound } from '../sound/sounds';
 import type { WorkspaceContext } from '../workspace/workspace-context';
 import { shownStatus, shownValue } from './atelier-data';
 import type { FieldDef } from './module-defs';
+
+/** The reference text a proposal was drawn from (phase 6.4), if any. */
+const referenceOf = (evidence: readonly Evidence[] | undefined) =>
+  evidence?.find((e): e is ReferenceEvidence => 'reference' in e)?.reference;
 
 export interface FieldRowProps {
   readonly ctx: WorkspaceContext;
@@ -278,7 +284,11 @@ export function FieldRow({
                 ? t('atelier.proposedFrom', { scenes: evidenceScenes.join(', ') })
                 : state.proposal?.evidence.some((e) => 'messageId' in e)
                   ? t('atelier.proposedFromInterview')
-                  : t('atelier.proposed')}
+                  : referenceOf(state.proposal?.evidence)
+                    ? t('atelier.proposedFromReference', {
+                        title: referenceOf(state.proposal?.evidence),
+                      })
+                    : t('atelier.proposed')}
             </span>
             <button
               type="button"

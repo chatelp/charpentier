@@ -114,6 +114,7 @@ export const MENU_LAYOUT: readonly { readonly menu: string; readonly items: read
       'atelierStructure',
       'atelierWorldRules',
       'atelierClues',
+      'atelierStyle',
       '-',
       'toggleRejected',
       '-',
@@ -122,6 +123,7 @@ export const MENU_LAYOUT: readonly { readonly menu: string; readonly items: read
       'newArc',
       'newWorldRule',
       'newClue',
+      'newStyleChoice',
     ],
   },
   {

@@ -60,6 +60,7 @@ const scenes = (key: string): FieldDef => ({ key, kind: 'scenes' });
 export const NARRATIVE_MODELS = fieldChoices.structure.narrativeModel;
 export const CLUE_KINDS = fieldChoices.clues.kind;
 export const ARC_KINDS = fieldChoices.arcs.kind;
+export const STYLE_CATEGORIES = fieldChoices.style.category;
 
 export const metaDef: SingletonModuleDef = {
   name: 'meta',
@@ -172,8 +173,35 @@ export const cluesDef: EntityModuleDef = {
   ],
 };
 
-/** The Atelier's rail, in order (⌘1…5). Structure gathers acts, arcs and clues. */
-export const ATELIER_MODULES = ['meta', 'characters', 'structure', 'worldRules', 'clues'] as const;
+/** Style et voix (phase 6.4): the choices drawn from reference texts, or entered by hand. */
+export const styleDef: EntityModuleDef = {
+  name: 'style',
+  kind: 'entity',
+  titleField: 'choice',
+  subtitleField: 'category',
+  sections: [
+    {
+      key: 'choice',
+      wide: true,
+      fields: [
+        { key: 'category', kind: 'choice', options: STYLE_CATEGORIES },
+        text('choice'),
+        line('measure'),
+        line('source'),
+      ],
+    },
+  ],
+};
+
+/** The Atelier's rail, in order (⌘1…6). Structure gathers acts and arcs. */
+export const ATELIER_MODULES = [
+  'meta',
+  'characters',
+  'structure',
+  'worldRules',
+  'clues',
+  'style',
+] as const;
 export type AtelierModule = (typeof ATELIER_MODULES)[number];
 
 export const moduleDefs: Readonly<Record<ModuleName, ModuleDef>> = {
@@ -184,4 +212,5 @@ export const moduleDefs: Readonly<Record<ModuleName, ModuleDef>> = {
   arcs: arcsDef,
   worldRules: worldRulesDef,
   clues: cluesDef,
+  style: styleDef,
 };

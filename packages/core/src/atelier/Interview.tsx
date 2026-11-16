@@ -39,6 +39,7 @@ const PICTOS = {
   structure: 'structure',
   worldRules: 'regles',
   clues: 'indices',
+  style: 'manuscrit',
 } as const satisfies Record<AtelierModule, string>;
 
 const railOf = (module: string): AtelierModule =>

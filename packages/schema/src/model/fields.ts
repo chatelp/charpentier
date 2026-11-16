@@ -19,8 +19,11 @@ import { nowIso } from './ids';
 export type FieldValue =
   string | number | boolean | null | readonly FieldValue[] | { readonly [key: string]: FieldValue };
 
-/** Where an agent found support for a proposal: a passage of the text, or the author's words. */
-export type Evidence = SceneEvidence | InterviewEvidence;
+/**
+ * Where an agent found support for a proposal: a passage of the text, the
+ * author's words, or a reference text the author imported (never quoted).
+ */
+export type Evidence = SceneEvidence | InterviewEvidence | ReferenceEvidence;
 
 /** A passage of a scene. */
 export interface SceneEvidence {
@@ -36,6 +39,14 @@ export interface InterviewEvidence {
   readonly messageId: string;
   /** Their words, verbatim. */
   readonly quote: string;
+}
+
+/**
+ * A reference text the author imported (phase 6.4): only its title, since
+ * nothing of the text itself is kept.
+ */
+export interface ReferenceEvidence {
+  readonly reference: string;
 }
 
 /** The scene a piece of evidence comes from, if it comes from the text. */

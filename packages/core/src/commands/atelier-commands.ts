@@ -14,6 +14,7 @@ const RAIL_COMMANDS: Record<AtelierModule, CommandId> = {
   structure: 'atelierStructure',
   worldRules: 'atelierWorldRules',
   clues: 'atelierClues',
+  style: 'atelierStyle',
 };
 
 const NEW_COMMANDS: Record<EntityModule, CommandId> = {
@@ -22,6 +23,7 @@ const NEW_COMMANDS: Record<EntityModule, CommandId> = {
   arcs: 'newArc',
   worldRules: 'newWorldRule',
   clues: 'newClue',
+  style: 'newStyleChoice',
 };
 
 const railOf = (module: EntityModule): AtelierModule =>

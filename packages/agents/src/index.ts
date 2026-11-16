@@ -36,6 +36,25 @@ export {
   type DeepWorkResult,
 } from './deep-work';
 export {
+  applyStyle,
+  drawExtracts,
+  echoes,
+  echoIndex,
+  estimateStyle,
+  MAX_STYLE_CHOICE,
+  measureStyle,
+  readReference,
+  splitChapters,
+  STYLE_AGENT,
+  STYLE_ECHO_WORDS,
+  styleSchema,
+  styleSystemPrompt,
+  type ReferenceText,
+  type StyleEstimate,
+  type StyleMeasures,
+  type StyleResult,
+} from './style-reference';
+export {
   atelierState,
   fileProposals,
   interviewSchema,

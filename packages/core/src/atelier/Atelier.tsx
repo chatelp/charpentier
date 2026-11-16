@@ -97,6 +97,8 @@ export const RAIL_PICTOS: Record<AtelierModule, PictogramName> = {
   structure: 'structure',
   worldRules: 'regles',
   clues: 'indices',
+  // Provisional until the design session draws its own (phase 6.4).
+  style: 'manuscrit',
 };
 
 /** The background works at the foot of a module's list (docs/DESIGN.md §4.5). */
@@ -110,6 +112,7 @@ const NEW_ENTRY: Record<AtelierModule, readonly EntityModule[]> = {
   structure: ['acts', 'arcs'],
   worldRules: ['worldRules'],
   clues: ['clues'],
+  style: ['style'],
 };
 
 /**

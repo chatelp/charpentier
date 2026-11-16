@@ -100,7 +100,8 @@
         "worldRules": "Nouvelle règle du monde posée par le texte.",
         "clues": "Nouvel indice ou révélation repéré dans le texte.",
         "acts": "Nouvel acte proposé.",
-        "arcs": "Nouvel arc proposé."
+        "arcs": "Nouvel arc proposé.",
+        "style": "Nouveau choix de style tiré d’un texte de référence."
       },
       "value": "Nouvelle valeur proposée."
     },
@@ -166,11 +167,13 @@
     "atelierStructure": "Atelier : Structure",
     "atelierWorldRules": "Atelier : Règles du monde",
     "atelierClues": "Atelier : Indices et révélations",
+    "atelierStyle": "Atelier : Style et voix",
     "newCharacter": "Nouveau personnage…",
     "newAct": "Nouvel acte…",
     "newArc": "Nouvel arc…",
     "newWorldRule": "Nouvelle règle du monde…",
     "newClue": "Nouvel indice ou révélation…",
+    "newStyleChoice": "Nouveau choix de style…",
     "toggleOverview": "Vue d’ensemble du manuscrit",
     "openLibrary": "Bibliothèque des projets",
     "newProject": "Nouveau projet (roman ou nouvelle)…",
@@ -303,14 +306,16 @@
       "structure": "Structure",
       "worldRules": "Règles du monde",
       "clues": "Indices et révélations",
-      "interview": "Entretien"
+      "interview": "Entretien",
+      "style": "Style et voix"
     },
     "kind": {
       "characters": "Personnage",
       "acts": "Acte",
       "arcs": "Arc",
       "worldRules": "Règle du monde",
-      "clues": "Indice ou révélation"
+      "clues": "Indice ou révélation",
+      "style": "Choix de style"
     },
     "railHint": "{{toggle}} écrire · {{interview}} entretien · {{modules}} modules · Échap revenir au texte",
     "listHint": "↑↓ parcourir · ↵ fiche · N nouveau · ⌫ corbeille · V valider · X rejeter · / filtrer",
@@ -320,7 +325,8 @@
       "structure": "",
       "worldRules": "Aucune règle du monde pour l’instant. Créez-en une avec « + Nouvelle règle du monde » ou la touche N.",
       "clues": "Aucun indice pour l’instant. Créez-en un avec « + Nouvel indice » ou la touche N.",
-      "meta": ""
+      "meta": "",
+      "style": "Aucun choix de style pour l’instant. Importez un texte que vous admirez depuis l’Entretien, ou créez-en un avec « + Nouveau choix de style » ou la touche N."
     },
     "structureModel": "Modèle narratif",
     "groups": {
@@ -333,21 +339,24 @@
       "acts": "Acte sans titre",
       "arcs": "Arc sans titre",
       "worldRules": "Règle sans titre",
-      "clues": "Élément sans titre"
+      "clues": "Élément sans titre",
+      "style": "Choix sans description"
     },
     "newPrompt": {
       "characters": "Nom du personnage",
       "acts": "Titre de l’acte",
       "arcs": "Titre de l’arc",
       "worldRules": "Titre de la règle",
-      "clues": "Titre de l’indice ou de la révélation"
+      "clues": "Titre de l’indice ou de la révélation",
+      "style": "Le choix, en une phrase"
     },
     "trashed": {
       "characters": "Personnage",
       "acts": "Acte",
       "arcs": "Arc",
       "worldRules": "Règle du monde",
-      "clues": "Indice ou révélation"
+      "clues": "Indice ou révélation",
+      "style": "Choix de style"
     },
     "projectKind": {
       "novel": "Roman",
@@ -360,7 +369,8 @@
       "acts": "Acte",
       "arcs": "Arc",
       "worldRules": "Règle du monde",
-      "clues": "Indice, fausse piste ou révélation"
+      "clues": "Indice, fausse piste ou révélation",
+      "style": "Ce que vous retenez pour votre propre texte : point de vue, temps, phrases, dialogue, registre…"
     },
     "legend": {
       "proposed": "en relief : proposée",
@@ -383,6 +393,7 @@
     "proposed": "Proposée",
     "proposedFrom": "Proposée · d’après la scène {{scenes}}",
     "proposedFromInterview": "Proposée · d’après l’entretien",
+    "proposedFromReference": "Proposée · d’après « {{title}} »",
     "accept": "Valider",
     "reject": "Rejeter",
     "rejectedOn": "Rejetée le {{date}} · conservée pour ne pas être reproposée",
@@ -427,6 +438,9 @@
         "clue": "Élément",
         "path": "Du point de pose à la résolution",
         "knownBy": "Qui sait"
+      },
+      "style": {
+        "choice": "Choix"
       }
     },
     "fields": {
@@ -480,6 +494,12 @@
         "plantedIn": "Posé dans",
         "appearsIn": "Réapparaît dans",
         "resolvedIn": "Résolu dans"
+      },
+      "style": {
+        "category": "Catégorie",
+        "choice": "Le choix",
+        "measure": "Mesure",
+        "source": "D’après"
       }
     },
     "options": {
@@ -496,6 +516,16 @@
         "revelation": "Révélation",
         "main": "Arc principal",
         "secondary": "Arc secondaire"
+      },
+      "category": {
+        "pointOfView": "Point de vue",
+        "tense": "Temps",
+        "sentences": "Phrases et rythme",
+        "dialogue": "Dialogue",
+        "description": "Descriptions",
+        "register": "Registre",
+        "chapters": "Ouvertures et fins de chapitre",
+        "other": "Autre"
       }
     },
     "acceptKey": "V",
@@ -520,7 +550,8 @@
       "acts": "+ Nouvel acte",
       "arcs": "+ Nouvel arc",
       "worldRules": "+ Nouvelle règle du monde",
-      "clues": "+ Nouvel indice"
+      "clues": "+ Nouvel indice",
+      "style": "+ Nouveau choix de style"
     },
     "newKeyHint": "Nouvelle entrée (N)",
     "rejectCount_one": "{{count}} rejet",

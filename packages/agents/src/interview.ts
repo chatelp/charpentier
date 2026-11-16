@@ -35,7 +35,10 @@ import { compagnonSystemPrompt, type MentorLevel } from './prompts';
  * drawn from the author's own words, and never a line of the novel.
  */
 
-/** What the interview may fill: text and choice fields, never scene references. */
+/**
+ * What the interview may fill: text and choice fields, never scene references.
+ * Style et voix is filled from reference texts (phase 6.4), not by talking.
+ */
 export const INTERVIEW_FIELDS = {
   meta: ['pitch', 'summary', 'intention', 'themes', 'tone', 'genres', 'audience'],
   structure: ['narrativeModel'],
@@ -44,7 +47,7 @@ export const INTERVIEW_FIELDS = {
   arcs: ['title', 'kind', 'summary'],
   worldRules: ['title', 'statement', 'consequences'],
   clues: ['title', 'kind', 'description'],
-} as const satisfies Record<SingletonModule | EntityModule, readonly string[]>;
+} as const satisfies Record<Exclude<SingletonModule | EntityModule, 'style'>, readonly string[]>;
 
 type InterviewModule = keyof typeof INTERVIEW_FIELDS;
 const MODULES = Object.keys(INTERVIEW_FIELDS) as InterviewModule[];
