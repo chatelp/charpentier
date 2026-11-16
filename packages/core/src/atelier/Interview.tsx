@@ -512,6 +512,16 @@ function Proposals({
     .filter((l) => l.state !== 'gone');
   if (shown.length === 0) return null;
 
+  /** The other proposals of a new sheet still waiting: rejecting the sheet rejects them too. */
+  const sheetFieldsWaiting = (sheet: Line) =>
+    shown.filter(
+      ({ line, state }) =>
+        line.field &&
+        line.entityId === sheet.entityId &&
+        line.module === sheet.module &&
+        state === 'pending',
+    ).length;
+
   const nameOf = (module: string, entityId: string): string => {
     const entity = [
       ...listEntities(root, module as EntityModule),
@@ -605,7 +615,8 @@ function Proposals({
                   className="ch-btn is-mentor"
                   onClick={() => onDecide(line, true)}
                 >
-                  {t('atelier.accept')} <kbd>{t('atelier.acceptKey')}</kbd>
+                  {line.field ? t('atelier.accept') : t('interview.keepSheet')}{' '}
+                  <kbd>{t('atelier.acceptKey')}</kbd>
                 </button>
                 <button
                   type="button"
@@ -613,7 +624,13 @@ function Proposals({
                   className="ch-btn"
                   onClick={() => onDecide(line, false)}
                 >
-                  {t('atelier.reject')} <kbd>{t('atelier.rejectKey')}</kbd>
+                  {/* A new sheet goes with the fields proposed with it: said on the button. */}
+                  {line.field
+                    ? t('atelier.reject')
+                    : sheetFieldsWaiting(line) > 0
+                      ? t('interview.rejectSheetWith', { count: sheetFieldsWaiting(line) })
+                      : t('interview.rejectSheet')}{' '}
+                  <kbd>{t('atelier.rejectKey')}</kbd>
                 </button>
               </span>
             ) : (

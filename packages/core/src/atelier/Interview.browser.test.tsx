@@ -135,6 +135,9 @@ describe('the interview page of the Atelier (phase 6.2)', () => {
     await screen.findByText('J’ai noté Hélène dans les personnages.');
     expect(asked.at(-1)).toMatchObject({ mode: 'free' });
     screen.getByText('2 propositions');
+    // The new sheet's buttons say what they do: its rejection takes its other proposal along.
+    screen.getByRole('button', { name: /Garder la fiche/ });
+    screen.getByRole('button', { name: /Rejeter la fiche \(et sa proposition\)/ });
     const helene = () => listEntities(root(), 'characters')[0];
     const occupation = () =>
       readFieldRef(root(), {

@@ -832,7 +832,11 @@
       "structure": "Structure",
       "worldRules": "Règles du monde",
       "clues": "Indices"
-    }
+    },
+    "keepSheet": "Garder la fiche",
+    "rejectSheet": "Rejeter la fiche",
+    "rejectSheetWith_one": "Rejeter la fiche (et sa proposition)",
+    "rejectSheetWith_other": "Rejeter la fiche (et ses {{count}} propositions)"
   },
   "close": {
     "panel": "Fermer le panneau",
