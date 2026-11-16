@@ -366,8 +366,6 @@
     log.classList.add('mk-hide');
     page.querySelector('.ch-interview-field').disabled = false;
     for (const b of page.querySelectorAll('.ch-interview-modes button')) b.disabled = false;
-    page.querySelector('.ch-interview-title p').textContent =
-      'Parlez de votre roman : il range dans l’Atelier et se souvient de tout.';
     const mine = document.createElement('div');
     mine.className = 'mk-log';
     mine.innerHTML = `
