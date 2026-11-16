@@ -726,22 +726,21 @@ export function Sheet({
       : undefined;
   const styleProposed = styleEntity?.status === 'proposed';
   const styleCategory = asText(shownValue(fieldState(data, target, 'category')));
-  const styleSource = styleEntity?.fields['choice']?.proposal?.evidence.find(
-    (e) => 'reference' in e,
-  );
   const styleBook = asText(shownValue(fieldState(data, target, 'source')));
+  const styleAuthor = asText(shownValue(fieldState(data, target, 'sourceAuthor')));
   const styleLead = (
     <>
       {styleCategory &&
         `${t(`atelier.options.category.${styleCategory}` as 'atelier.options.category.other', {
           defaultValue: styleCategory,
         })} · `}
-      {styleBook || styleSource ? (
+      {styleBook ? (
         <>
-          {t('atelier.styleFrom')}{' '}
-          <i>{styleSource && 'reference' in styleSource ? styleSource.reference : styleBook}</i>
-          {styleBook.includes(', ') && `, ${styleBook.slice(styleBook.indexOf(', ') + 2)}`}
+          {t('atelier.styleFrom')} <i>{styleBook}</i>
+          {styleAuthor && `, ${styleAuthor}`}
         </>
+      ) : styleCategory ? (
+        t('atelier.styleYoursAfter')
       ) : (
         t('atelier.styleYours')
       )}
@@ -880,7 +879,7 @@ function StyleEmpty({
   const available = ctx.platform.agents.status() !== 'disabled';
   return (
     <article className="ch-sheet-body ch-style-empty">
-      <Medallion name="diapason" size={46} mentor />
+      <Medallion name="diapason" size={46} />
       <h2 className="ch-style-empty-title">{t('atelier.styleEmpty.title')}</h2>
       <p>{t('atelier.styleEmpty.body')}</p>
       <p className="ch-style-empty-kept">{t('atelier.styleEmpty.kept')}</p>

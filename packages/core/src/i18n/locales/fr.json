@@ -327,7 +327,7 @@
       "worldRules": "Aucune règle du monde pour l’instant. Créez-en une avec « + Nouvelle règle du monde » ou la touche N.",
       "clues": "Aucun indice pour l’instant. Créez-en un avec « + Nouvel indice » ou la touche N.",
       "meta": "",
-      "style": "Aucun choix de style pour l’instant. Importez un texte que vous admirez depuis l’Entretien, ou créez-en un avec « + Nouveau choix de style » ou la touche N."
+      "style": "Aucun choix de style pour l’instant. Importez un texte que vous admirez depuis l’Entretien, ou créez-en un avec « + Nouveau choix » ou la touche N."
     },
     "structureModel": "Modèle narratif",
     "groups": {
@@ -566,14 +566,15 @@
     "reconsider": "Reprendre",
     "rejectedEntry": "Rejetée",
     "styleFrom": "d’après",
-    "styleYours": "votre choix",
+    "styleYours": "Votre choix",
     "styleNote": "Le Compagnon s’en sert pour vous relire : il vous dit quand une scène s’en écarte, sans jamais vous corriger d’office.",
     "styleEmpty": {
       "title": "Style et voix",
       "body": "Ici vivent les choix de style de votre livre : le point de vue, le temps, le rythme des phrases, la place du dialogue. Importez un texte que vous admirez pour que le Compagnon en dégage les choix, ou écrivez les vôtres.",
       "kept": "Le texte importé n’est pas gardé, et rien n’en est cité.",
       "newKey": "N"
-    }
+    },
+    "styleYoursAfter": "votre choix"
   },
   "overview": {
     "label": "Vue d’ensemble du manuscrit",
@@ -943,7 +944,7 @@
         "footerDone": "Les choix de style tirés de {{name}} sont dans l’entretien ({{key}}).",
         "busy": "Un travail à la fois : le Compagnon lit {{name}} ({{elapsed}}).",
         "failed": "La lecture n’a pas abouti.",
-        "stopped": "Arrêté à {{elapsed}} : rien n’a été rangé.",
+        "stopped": "Arrêtée à {{elapsed}} : rien n’a été rangé.",
         "never": "Aucun texte lu pour l’instant.",
         "inInterview": "dans l’entretien"
       }

@@ -211,7 +211,7 @@ export function Interview({
     validateEntity(root, module, line.entityId);
     // A style choice is one proposal: V keeps the sheet and all its fields (DESIGN §4.5).
     if (module === 'style') {
-      for (const field of ['category', 'choice', 'measure', 'source']) {
+      for (const field of ['category', 'choice', 'measure', 'source', 'sourceAuthor']) {
         const ref: FieldRef = { module, entityId: line.entityId, field };
         if (readFieldRef(root, ref).status === 'proposed') acceptProposal(root, ref);
       }
@@ -683,7 +683,7 @@ function StyleProposal({
         </p>
         <p className="ch-interview-value">{read('choice')}</p>
         {measure && <p className="ch-interview-measure">{measure}</p>}
-        {before && (
+        {state === 'pending' && before && (
           <p className="ch-interview-measure">
             {t('reference.chose', { choice: String(before.fields['choice']?.value) })}
           </p>

@@ -412,7 +412,8 @@ export function applyStyle(
 ): StyleResult {
   const { root, mentorDoc, text } = target;
   const index = echoIndex(text);
-  const source = text.author ? `${text.title}, ${text.author}` : text.title;
+  // The book's title and its author, apart (a title may hold a comma).
+  const source = { source: text.title, ...(text.author && { sourceAuthor: text.author }) };
   const evidence: ReferenceEvidence[] = [{ reference: text.title }];
   const writer = createAgentWriter(root, STYLE_AGENT);
   const known = new Set(
@@ -445,7 +446,7 @@ export function applyStyle(
     known.add(normalize(choice));
     const entityId = writer.proposeEntity(
       'style',
-      { category: c.category, choice, ...(measure && { measure }), source },
+      { category: c.category, choice, ...(measure && { measure }), ...source },
       evidence,
     );
     placed.push({ module: 'style', entityId });

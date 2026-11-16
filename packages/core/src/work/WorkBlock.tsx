@@ -143,13 +143,13 @@ export function WorkCard({
         {estimate === null && !refused && <p className="ch-work-what">{t('work.empty')}</p>}
         {refused && (
           <>
-            <p className="ch-work-what">
+            <p className="ch-work-what is-problem">
               {t(`reference.refused.${refused.refused}`, {
                 words: (refused.words ?? 0).toLocaleString(ctx.language),
               })}
             </p>
             {refused.refused === 'image-pdf' && (
-              <p className="ch-work-what">{t('reference.refused.image-pdfHint')}</p>
+              <p className="ch-work-what is-help">{t('reference.refused.image-pdfHint')}</p>
             )}
           </>
         )}

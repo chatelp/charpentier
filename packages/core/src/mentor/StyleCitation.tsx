@@ -39,7 +39,6 @@ export function StyleCitation({
   return (
     <button
       type="button"
-      tabIndex={-1}
       className="ch-style-citation"
       aria-label={t('reference.yourChoiceLabel', { category, choice: choice.text })}
       onClick={(event) => {

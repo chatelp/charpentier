@@ -144,7 +144,8 @@ describe('reference texts and style choices (phase 6.4)', () => {
     });
     expect(readFieldRef(root, ref('category')).proposal?.value).toBe('sentences');
     expect(readFieldRef(root, ref('measure')).proposal?.value).toBe('8 mots par phrase en moyenne');
-    expect(readFieldRef(root, ref('source')).proposal?.value).toBe('La péniche, Anne Essai');
+    expect(readFieldRef(root, ref('source')).proposal?.value).toBe('La péniche');
+    expect(readFieldRef(root, ref('sourceAuthor')).proposal?.value).toBe('Anne Essai');
     expect(readFieldRef(root, ref('choice')).proposal?.evidence).toEqual([
       { reference: 'La péniche' },
     ]);

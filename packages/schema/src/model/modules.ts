@@ -68,7 +68,7 @@ export const knownFields = {
   clues: ['kind', 'title', 'description', 'plantedIn', 'resolvedIn', 'appearsIn'],
   // Style et voix (phase 6.4): one choice per entity, in the Compagnon's words,
   // drawn from a reference text that is never kept (`source` is its title).
-  style: ['category', 'choice', 'measure', 'source'],
+  style: ['category', 'choice', 'measure', 'source', 'sourceAuthor'],
 } as const satisfies Record<ModuleName, readonly string[]>;
 
 /** What a style choice is about (phase 6.4). */

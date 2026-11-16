@@ -171,3 +171,21 @@
 .ch-work-card.is-wide .ch-work-doing {
   font-size: 16px;
 }
+
+/* A file refused: the problem in ink, the help muted. */
+.ch-work-what.is-problem {
+  color: var(--ch-ink);
+}
+.ch-work-what.is-help {
+  color: var(--ch-muted);
+}
+/* 6: in the conversation, the cost on one line, the title at 13.5 px. */
+.ch-work-card.is-wide .ch-work-cost {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+}
+.ch-work-card.is-wide .ch-work-head b {
+  font-size: 13.5px;
+}
