@@ -1,8 +1,15 @@
 import type { LlmService } from '@charpentier/platform';
-import { addChatMessage, agentOrigin, chatMessages, readMentorLevel } from '@charpentier/schema';
+import {
+  addChatMessage,
+  agentOrigin,
+  chatMessages,
+  companionThread,
+  readMentorLevel,
+} from '@charpentier/schema';
 import type * as Y from 'yjs';
 import { compagnonChat } from './chat';
 import { sceneContext, sheetsSummary, validatedStyleChoice } from './context';
+import { projectMemory, threadWindow } from './memory';
 
 /** Turns of the conversation sent back to the model (the oldest are left out). */
 const HISTORY = 30;
@@ -24,11 +31,25 @@ export async function answerAuthor(input: {
   const last = messages.at(-1);
   if (!last || last.role !== 'author') return 'nothing-to-answer';
   const context = sceneContext(input.root, input.sceneDoc, input.sceneId);
+  // One Compagnon (D-35): the interview is part of the conversation's thread, with his notebook.
+  const thread = companionThread(input.mentorDoc);
+  const memory = projectMemory({
+    mentorDoc: input.mentorDoc,
+    sources: [last.id],
+    authorText: thread
+      .filter((m) => m.role === 'author')
+      .map((m) => m.text)
+      .join('\n'),
+  });
   const answer = await compagnonChat(
     input.llm,
     { ...context, level: readMentorLevel(input.root), sheets: sheetsSummary(input.root) },
-    messages.slice(-HISTORY).map((m) => ({ role: m.role, text: m.text })),
+    threadWindow(thread, memory, HISTORY).map((m) => ({
+      role: m.role,
+      text: m.mode === 'interview' ? `(in the interview) ${m.text}` : m.text,
+    })),
     input.signal,
+    memory,
   );
   addChatMessage(
     input.mentorDoc,

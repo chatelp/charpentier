@@ -2,6 +2,7 @@ import type { LlmService } from '@charpentier/platform';
 import {
   addInterviewMessage,
   agentOrigin,
+  companionThread,
   createAgentWriter,
   fieldChoices,
   interviewMessages,
@@ -23,6 +24,7 @@ import {
   type SingletonModule,
 } from '@charpentier/schema';
 import type * as Y from 'yjs';
+import { generateWithMemory, memoryInstructions, projectMemory, threadWindow } from './memory';
 import { narrativeProseIn } from './guard';
 import { compagnonSystemPrompt, type MentorLevel } from './prompts';
 
@@ -270,9 +272,19 @@ export async function interviewTurn(input: {
   const section = mode === 'guided' ? (input.section ?? nextSection(root, input.skip)) : null;
   const language = readProjectMeta(root)?.language ?? 'fr';
   const level = readMentorLevel(root);
-  const history = messages.slice(-HISTORY);
+  // One Compagnon (D-35): what was said in the conversation is part of the interview's thread.
+  const thread = companionThread(mentorDoc);
   const authorMessages = messages.filter((m) => m.role === 'author').slice(-QUOTED_MESSAGES);
   const authorText = authorMessages.map((m) => m.text).join('\n');
+  const memory = projectMemory({
+    mentorDoc,
+    ...(last?.role === 'author' && { sources: [last.id] }),
+    authorText: thread
+      .filter((m) => m.role === 'author')
+      .map((m) => m.text)
+      .join('\n'),
+  });
+  const history = threadWindow(thread, memory, HISTORY);
 
   const turns = [
     // Consecutive user messages are merged by the API: the sheets open the first turn.
@@ -280,18 +292,18 @@ export async function interviewTurn(input: {
       role: 'user' as const,
       content: `The author's Atelier as it stands (their own decisions, for reference):\n<atelier>\n${atelierState(root)}\n</atelier>`,
     },
-    ...history.map((m) => ({
-      role: m.role === 'author' ? ('user' as const) : ('assistant' as const),
-      content:
-        m.role === 'author'
-          ? m.text
-          : JSON.stringify({
-              reply: m.text,
-              question: m.question ?? null,
-              why: m.why ?? null,
-              proposals: [],
-            }),
-    })),
+    ...history.map((m) => {
+      // A message of the conversation about the text says so.
+      const said =
+        m.mode === 'conversation' ? `(in the conversation about the text) ${m.text}` : m.text;
+      return {
+        role: m.role === 'author' ? ('user' as const) : ('assistant' as const),
+        content:
+          m.role === 'author'
+            ? said
+            : JSON.stringify({ reply: said, question: null, why: null, proposals: [] }),
+      };
+    }),
     // Guided mode, the Compagnon speaks first (or again): the request is said plainly.
     ...(!authorSpoke
       ? [
@@ -304,11 +316,12 @@ export async function interviewTurn(input: {
         ]
       : []),
   ];
-  const system = interviewSystemPrompt({ language, level, mode, section });
+  const system = `${interviewSystemPrompt({ language, level, mode, section })}\n\n${memoryInstructions(memory)}`;
 
   let turn: Turn | undefined;
   for (let attempt = 0; attempt < 2 && !turn; attempt++) {
-    const response = await llm.generate(
+    const response = await generateWithMemory(
+      llm,
       {
         system,
         messages: attempt === 0 ? turns : [...turns, { role: 'user', content: CORRECTION }],
@@ -316,6 +329,7 @@ export async function interviewTurn(input: {
         maxOutputTokens: 16000,
         tier: 'deep',
       },
+      memory,
       input.signal,
     );
     const parsed = parseTurn(response.text);

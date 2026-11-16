@@ -35,7 +35,7 @@ function fakeLlm(...answers: object[]) {
     generate: async (request) => {
       asked.push({
         system: request.system ?? '',
-        messages: request.messages.map((m) => m.content),
+        messages: request.messages.map((m) => (typeof m.content === 'string' ? m.content : '')),
       });
       return { text: JSON.stringify(answers[Math.min(asked.length - 1, answers.length - 1)]) };
     },

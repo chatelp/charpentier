@@ -4,8 +4,9 @@
 //   CHARPENTIER_LIVE_LLM=1 ANTHROPIC_API_KEY=… pnpm test:llm
 // The interview (D-26) is tested here too: what it files, and what it refuses;
 // the specialised agents on a whole manuscript (D-27, phase 6.3); and the
-// reading of a reference text (phase 6.4).
+// reading of a reference text (phase 6.4); and the Compagnon's memory (6.5).
 import {
+  answerAuthor,
   compagnonChat,
   deepWork,
   echoes,
@@ -18,6 +19,7 @@ import {
   type ChatContext,
 } from '@charpentier/agents';
 import {
+  addChatMessage,
   addInterviewMessage,
   AUTHOR,
   chatMessages,
@@ -27,6 +29,7 @@ import {
   initProject,
   interviewMessages,
   listEntities,
+  listNotes,
   listSignals,
   parseSceneMarkdown,
   variantFragment,
@@ -244,5 +247,44 @@ describe.skipIf(!live)('a reference text gives its style choices (live, phase 6.
     expect(choices.length).toBeLessThanOrEqual(10);
     const index = echoIndex(text);
     for (const choice of choices) expect(echoes(String(choice), index)).toBe(false);
+  }, 300_000);
+});
+
+describe.skipIf(!live)('the Compagnon remembers across his modes (live, phase 6.5)', () => {
+  const llm = new AnthropicLlmService({
+    apiKey: () => process.env['ANTHROPIC_API_KEY'],
+    models: () => ({ deep: OPUS, fast: OPUS }),
+  });
+
+  it('notes what the interview taught him, and recalls it in the conversation', async () => {
+    const root = new Y.Doc({ guid: 'project:live-memory' });
+    initProject(root, { id: 'live-memory', title: 'Saint-Pierre', kind: 'novel' });
+    const mentorDoc = new Y.Doc();
+    addInterviewMessage(
+      mentorDoc,
+      {
+        role: 'author',
+        text: 'Mon grand-père était pêcheur à Saint-Pierre ; c’est pour lui que j’écris ce livre.',
+      },
+      AUTHOR,
+    );
+    await interviewTurn({ llm, root, mentorDoc, mode: 'free' });
+    const notes = listNotes(mentorDoc);
+    console.info(
+      'notes',
+      notes.map((n) => `${n.path}: ${n.text}`),
+    );
+    expect(notes.length).toBeGreaterThan(0);
+    for (const note of notes) expect(narrativeProseIn(note.text, '')).toEqual([]);
+
+    addChatMessage(
+      mentorDoc,
+      { role: 'author', text: 'Pour qui j’écris ce livre, déjà ?' },
+      AUTHOR,
+    );
+    await answerAuthor({ llm, root, mentorDoc });
+    const reply = chatMessages(mentorDoc).at(-1)?.text ?? '';
+    console.info('reply', reply);
+    expect(reply).toMatch(/grand-père/i);
   }, 300_000);
 });

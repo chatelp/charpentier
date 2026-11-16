@@ -1,5 +1,6 @@
 import type { LlmService } from '@charpentier/platform';
 import { isOneSentence, narrativeProseIn } from './guard';
+import { generateWithMemory, memoryInstructions, type MemoryStore } from './memory';
 import { compagnonSystemPrompt, chatAnswerSchema, type MentorLevel } from './prompts';
 
 export interface ChatContext {
@@ -75,6 +76,8 @@ export async function compagnonChat(
   context: ChatContext,
   history: readonly ChatTurn[],
   signal?: AbortSignal,
+  /** His notebook (phase 6.5): read at every call, written as he goes. */
+  memory?: MemoryStore,
 ): Promise<ChatAnswer> {
   const authorText = [
     context.scene?.text ?? '',
@@ -91,19 +94,22 @@ export async function compagnonChat(
           : JSON.stringify({ reply: t.text, example: null, styleChoiceId: null }),
     })),
   ];
-  const system = compagnonSystemPrompt(context);
+  const system = memory
+    ? `${compagnonSystemPrompt(context)}\n\n${memoryInstructions(memory)}`
+    : compagnonSystemPrompt(context);
 
   for (let attempt = 0; attempt < 2; attempt++) {
-    const response = await llm.generate(
-      {
-        system,
-        messages: attempt === 0 ? messages : [...messages, { role: 'user', content: CORRECTION }],
-        responseSchema: chatAnswerSchema,
-        maxOutputTokens: 16000,
-        tier: 'deep',
-      },
-      signal,
-    );
+    const request = {
+      system,
+      messages:
+        attempt === 0 ? messages : [...messages, { role: 'user' as const, content: CORRECTION }],
+      responseSchema: chatAnswerSchema,
+      maxOutputTokens: 16000,
+      tier: 'deep' as const,
+    };
+    const response = memory
+      ? await generateWithMemory(llm, request, memory, signal)
+      : await llm.generate(request, signal);
     const answer = parseAnswer(response.text);
     if (!answer) continue;
     const exampleOk = answer.example === null || isOneSentence(answer.example);

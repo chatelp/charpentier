@@ -1,5 +1,11 @@
 import Anthropic from '@anthropic-ai/sdk';
-import type { LlmRequest, LlmResponse, LlmService, LlmStatus } from '@charpentier/platform';
+import type {
+  LlmMessage,
+  LlmRequest,
+  LlmResponse,
+  LlmService,
+  LlmStatus,
+} from '@charpentier/platform';
 
 /** The model behind each tier (D-20): Opus everywhere; Haiku for light work when chosen. */
 export interface ModelChoice {
@@ -20,6 +26,28 @@ export class LlmUnconfiguredError extends Error {}
  * Anthropic's official SDK, the author's own key (BYOK). The status follows
  * the network and the key; the author's writing never depends on it.
  */
+/**
+ * A message's content for the Messages API: text, a tool's results, or the
+ * model's own turn sent back exactly as it came (its thinking included,
+ * which the API checks).
+ */
+function anthropicContent(content: LlmMessage['content']): unknown {
+  if (typeof content === 'string') return content;
+  return content.flatMap((block) => {
+    if (block.type === 'text') return [{ type: 'text', text: block.text }];
+    if (block.type === 'tool_result')
+      return [
+        {
+          type: 'tool_result',
+          tool_use_id: block.callId,
+          content: block.content,
+          ...(block.isError && { is_error: true }),
+        },
+      ];
+    return Array.isArray(block.turn) ? (block.turn as unknown[]) : [];
+  });
+}
+
 export class AnthropicLlmService implements LlmService {
   #status: LlmStatus;
   #client: Anthropic | undefined;
@@ -105,7 +133,14 @@ export class AnthropicLlmService implements LlmService {
           max_tokens: request.maxOutputTokens,
           // The system prompt is stable: cached across calls.
           system: [{ type: 'text', text: request.system, cache_control: { type: 'ephemeral' } }],
-          messages: request.messages.map((m) => ({ role: m.role, content: m.content })),
+          messages: request.messages.map((m) => ({
+            role: m.role,
+            content: anthropicContent(m.content),
+          })) as Anthropic.Beta.Messages.BetaMessageParam[],
+          // The notebook (phase 6.5): Claude's own memory tool, run by the caller.
+          ...(request.tools?.some((t) => t.kind === 'memory') && {
+            tools: [{ type: 'memory_20250818' as const, name: 'memory' as const }],
+          }),
           output_config: {
             effort: request.tier === 'deep' ? 'high' : 'low',
             ...(request.responseSchema && {
@@ -118,11 +153,24 @@ export class AnthropicLlmService implements LlmService {
       );
       this.#setStatus('available');
       if (message.stop_reason === 'refusal') throw new LlmRefusalError('The model declined');
-      const text = message.content
-        .map((block) => (block.type === 'text' ? block.text : ''))
-        .join('');
+      const toolCalls = message.content.flatMap((block) =>
+        block.type === 'tool_use' && block.name === 'memory'
+          ? [
+              {
+                id: block.id,
+                name: 'memory' as const,
+                input: block.input as Record<string, unknown>,
+              },
+            ]
+          : [],
+      );
+      const text =
+        toolCalls.length > 0
+          ? ''
+          : message.content.map((block) => (block.type === 'text' ? block.text : '')).join('');
       return {
         text,
+        ...(toolCalls.length > 0 && { toolCalls, turn: message.content }),
         usage: {
           inputTokens: message.usage.input_tokens,
           outputTokens: message.usage.output_tokens,

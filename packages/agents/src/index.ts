@@ -12,6 +12,13 @@ export {
 } from './guard';
 export { chatAnswerSchema, compagnonSystemPrompt, type MentorLevel } from './prompts';
 export { answerAuthor } from './conversation';
+export {
+  generateWithMemory,
+  MAX_NOTE,
+  memoryInstructions,
+  projectMemory,
+  type MemoryStore,
+} from './memory';
 export { sceneContext, sheetsSummary } from './context';
 export {
   analysisSchema,
