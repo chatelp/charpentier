@@ -437,7 +437,7 @@ describe('desktop app', () => {
     syncServers.push(server);
     const url = `http://127.0.0.1:${server.address.port}`;
 
-    const signIn = async (window: Page) => {
+    const signIn = async (window: Page, { newDevice = false } = {}) => {
       await window.keyboard.press('ControlOrMeta+K');
       await window.keyboard.type('connecter serveur');
       await window.keyboard.press('Enter');
@@ -451,7 +451,10 @@ describe('desktop app', () => {
       await window.getByLabel('Mot de passe').waitFor();
       await window.keyboard.type('une serre sous la glace');
       await window.keyboard.press('Enter');
-      await window.getByText('Synchronisé').waitFor({ timeout: 15_000 });
+      // A new device opens the library once the account's projects have come.
+      if (newDevice)
+        await window.getByRole('heading', { name: 'Bibliothèque' }).waitFor({ timeout: 15_000 });
+      else await window.getByText('Synchronisé').waitFor({ timeout: 15_000 });
     };
 
     // The Mac: a first sentence, then signing in.
@@ -464,8 +467,10 @@ describe('desktop app', () => {
     // mirrored in Markdown in its library.
     const secondDirs = folders();
     const second = await launch(secondDirs);
-    await signIn(second.window);
-    // It opens on the novel, not on the blank project it started with (phase 5.6).
+    await signIn(second.window, { newDevice: true });
+    // The library offers the novel; ⏎ opens it, not the blank project it started with.
+    await second.window.getByText('Mon roman').first().waitFor();
+    await second.window.keyboard.press('Enter');
     await expect
       .poll(() => second.editor.textContent(), { timeout: 20_000 })
       .toContain('Il pleuvait sur Nantes.');
