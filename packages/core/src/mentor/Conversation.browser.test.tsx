@@ -46,6 +46,9 @@ describe('conversation with the Compagnon', () => {
         estimateDeepWork: async () => null,
         deepWork: async () => 'unavailable',
         stopDeepWork: async () => {},
+        chooseReference: async () => 'cancelled',
+        readReference: async () => 'empty',
+        dropReference: async () => {},
         interview: async () => 'unavailable',
         // What the main process does: answer in the mentor document.
         ask: async ({ projectId }) => {

@@ -4,6 +4,7 @@ import path from 'node:path';
 import type Anthropic from '@anthropic-ai/sdk';
 import {
   chatMessages,
+  interviewMessages,
   createChapter,
   createScene,
   guids,
@@ -124,5 +125,50 @@ describe('the specialised agents in the main process (D-27)', () => {
         characterId: 'nobody',
       }),
     ).toBeNull();
+  });
+});
+
+describe('reference texts in the main process (phase 6.4)', () => {
+  const book = (words: number) =>
+    `Chapitre 1\n\n${'La péniche glissait sous les saules du canal. '.repeat(Math.ceil(words / 7))}`;
+  const save = (name: string, content: string) => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'charpentier-ref-'));
+    dirs.push(dir);
+    fs.writeFileSync(path.join(dir, name), content);
+    return path.join(dir, name);
+  };
+
+  it('holds a chosen text with its cost, reads it once, then lets it go', async () => {
+    const { host, store, projectId, seen } = await setUp();
+    const chosen = await host.openReference(projectId, save('La péniche.txt', book(2500)));
+    if (typeof chosen === 'string') throw new Error(chosen);
+    expect(chosen).toMatchObject({ title: 'La péniche', format: 'txt', usd: expect.any(Number) });
+    expect(chosen.words).toBeGreaterThanOrEqual(2500);
+    expect(seen.calls).toBe(0); // Choosing costs nothing.
+    expect(
+      await host.handle({ type: 'agents.readReference', projectId, token: chosen.token }),
+    ).toBe('answered');
+    expect(seen.prompts[0]).toContain('BOOK: La péniche');
+    const mentor = store.acquire(guids.mentor(projectId), 'test');
+    expect(interviewMessages(mentor)).toHaveLength(1);
+    // The text was let go: the same token reads nothing again.
+    expect(
+      await host.handle({ type: 'agents.readReference', projectId, token: chosen.token }),
+    ).toBe('empty');
+  });
+
+  it('says why a file will not do, and drops a text the author leaves', async () => {
+    const { host, projectId, seen } = await setUp();
+    expect(await host.openReference(projectId, save('court.txt', book(300)))).toBe('too-short');
+    expect(await host.openReference(projectId, save('abime.epub', 'pas un zip'))).toBe(
+      'unreadable',
+    );
+    const chosen = await host.openReference(projectId, save('long.md', book(2500)));
+    if (typeof chosen === 'string') throw new Error(chosen);
+    await host.handle({ type: 'agents.dropReference', token: chosen.token });
+    expect(
+      await host.handle({ type: 'agents.readReference', projectId, token: chosen.token }),
+    ).toBe('empty');
+    expect(seen.calls).toBe(0);
   });
 });

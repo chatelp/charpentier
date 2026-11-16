@@ -8,6 +8,7 @@ export { SyncEngine, type SyncAccount, type SyncCredentials } from './sync-engin
 export { toAccelerator } from './accelerator';
 export { SpellClient } from './spell-client';
 export { AgentHost, API_KEY_SECRET } from './agent-host';
+export { REFERENCE_EXTENSIONS } from './reference-file';
 export { AnthropicLlmService, HAIKU, OPUS, type ModelChoice } from './anthropic-llm';
 export { SecretStore, type Encryption } from './secret-store';
 export { ProjectMirror, type ImportResult, type MirrorStrings } from './project-mirror';

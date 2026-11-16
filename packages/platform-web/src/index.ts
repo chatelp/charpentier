@@ -25,6 +25,9 @@ const disabledAgents: AgentsService = {
   estimateDeepWork: async () => null,
   deepWork: async () => 'unavailable',
   stopDeepWork: async () => {},
+  chooseReference: async () => 'cancelled',
+  readReference: async () => 'empty',
+  dropReference: async () => {},
   lightModel: async () => 'opus',
   setLightModel: async () => {},
 };

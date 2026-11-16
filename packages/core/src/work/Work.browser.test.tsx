@@ -113,6 +113,9 @@ async function start() {
         stopped = true;
         finish?.('stopped');
       },
+      chooseReference: async () => 'cancelled',
+      readReference: async () => 'empty',
+      dropReference: async () => {},
     },
   });
   render(<App platform={platform} i18n={await createI18n('fr')} />);

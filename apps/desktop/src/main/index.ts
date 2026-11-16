@@ -21,6 +21,7 @@ import {
   PreferencesFile,
   ProjectMirror,
   AgentHost,
+  REFERENCE_EXTENSIONS,
   AnthropicLlmService,
   API_KEY_SECRET,
   HAIKU,
@@ -391,6 +392,21 @@ ipcMain.handle(IPC_INVOKE, async (event, request: Request) => {
     case 'host.revealLibraryFolder':
       await shell.openPath(libraryFolder);
       return null;
+    case 'agents.chooseReference': {
+      // « Importer un texte de référence… » (phase 6.4): the system's dialog,
+      // then the main process reads and holds the text.
+      const window = BrowserWindow.fromWebContents(event.sender);
+      const options = {
+        properties: ['openFile'] as 'openFile'[],
+        filters: [{ name: 'Texte', extensions: [...REFERENCE_EXTENSIONS] }],
+      };
+      const result = window
+        ? await dialog.showOpenDialog(window, options)
+        : await dialog.showOpenDialog(options);
+      const chosen = result.filePaths[0];
+      if (result.canceled || !chosen) return 'cancelled';
+      return agents.openReference(request.projectId, chosen);
+    }
     case 'host.chooseLibraryFolder': {
       const window = BrowserWindow.fromWebContents(event.sender);
       const options = {

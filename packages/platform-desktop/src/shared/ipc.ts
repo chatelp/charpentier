@@ -4,6 +4,7 @@ import type {
   DeepTask,
   DeepWorkEstimate,
   DeepWorkOutcome,
+  ReferenceChoiceResult,
   LlmStatus,
   MenuModel,
   SignInResult,
@@ -82,6 +83,9 @@ export type Request =
       readonly characterId?: string;
     }
   | { readonly type: 'agents.stopDeepWork'; readonly projectId: string }
+  | { readonly type: 'agents.chooseReference'; readonly projectId: string }
+  | { readonly type: 'agents.readReference'; readonly projectId: string; readonly token: string }
+  | { readonly type: 'agents.dropReference'; readonly token: string }
   | { readonly type: 'sync.status' }
   | { readonly type: 'sync.account' }
   | {
@@ -134,6 +138,9 @@ export interface Responses {
   'agents.estimateDeepWork': DeepWorkEstimate | null;
   'agents.deepWork': DeepWorkOutcome;
   'agents.stopDeepWork': null;
+  'agents.chooseReference': ReferenceChoiceResult;
+  'agents.readReference': DeepWorkOutcome;
+  'agents.dropReference': null;
   'agents.lightModel': 'opus' | 'haiku';
   'sync.status': SyncStatus;
   'sync.account': SyncAccountInfo | null;

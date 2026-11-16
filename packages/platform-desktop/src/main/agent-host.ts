@@ -1,11 +1,16 @@
+import { randomUUID } from 'node:crypto';
 import Anthropic from '@anthropic-ai/sdk';
 import {
   analyzeScene,
   answerAuthor,
   deepWork,
   estimateDeepWork,
+  estimateStyle,
   interviewTurn,
+  readReference,
   reviewChapter,
+  sceneContext,
+  type ReferenceText,
 } from '@charpentier/agents';
 import type {
   ApiKeyResult,
@@ -14,6 +19,7 @@ import type {
   DeepWorkEstimate,
   DeepWorkOutcome,
   LlmStatus,
+  ReferenceChoiceResult,
 } from '@charpentier/platform';
 import {
   agentOrigin,
@@ -31,9 +37,15 @@ import type * as Y from 'yjs';
 import type { Request } from '../shared/ipc';
 import { LlmRefusalError, LlmUnconfiguredError, type AnthropicLlmService } from './anthropic-llm';
 import type { DocStore } from './doc-store';
+import { readReferenceFile, UnreadableReferenceError } from './reference-file';
 import type { SecretStore } from './secret-store';
 
 export const API_KEY_SECRET = 'anthropic.apiKey';
+
+/** Under this, a text says too little of a style (DESIGN §4.5, « trop court »). */
+const REFERENCE_MIN_WORDS = 2000;
+/** A reference text chosen and left on its confirmation is let go after this. */
+const REFERENCE_HELD_MS = 30 * 60 * 1000;
 
 type AgentRequest = Extract<Request, { type: `agents.${string}` }>;
 
@@ -318,6 +330,97 @@ export class AgentHost {
   /** The background work of each project, to stop it (« Arrêter »). */
   readonly #works = new Map<string, AbortController>();
 
+  /**
+   * The reference texts chosen and not read yet (docs/PLAN.md §6.4), in
+   * memory only; one the author leaves on the confirmation is let go after
+   * REFERENCE_HELD_MS.
+   */
+  readonly #references = new Map<
+    string,
+    { projectId: string; text: ReferenceText; timer: ReturnType<typeof setTimeout> }
+  >();
+
+  #dropReference(token: string) {
+    const held = this.#references.get(token);
+    if (held) clearTimeout(held.timer);
+    this.#references.delete(token);
+  }
+
+  /** A file the author chose: read, held, its reading's cost estimated. */
+  async openReference(projectId: string, file: string): Promise<ReferenceChoiceResult> {
+    let text: ReferenceText & { format: 'txt' | 'md' | 'epub' | 'pdf' };
+    try {
+      text = await readReferenceFile(file);
+    } catch (error) {
+      if (error instanceof UnreadableReferenceError) return error.reason;
+      console.error('Charpentier: a reference text could not be read', error);
+      return 'unreadable';
+    }
+    const rootGuid = guids.project(projectId);
+    const language = await this.#withDocs([rootGuid], async (docs) => {
+      const root = docs.get(rootGuid);
+      return root ? sceneContext(root, undefined, undefined).language : 'fr';
+    });
+    const estimate = estimateStyle(text, language);
+    if (estimate.words < REFERENCE_MIN_WORDS) return 'too-short';
+    const token = randomUUID();
+    const timer = setTimeout(() => this.#dropReference(token), REFERENCE_HELD_MS);
+    timer.unref?.();
+    this.#references.set(token, { projectId, text, timer });
+    return {
+      token,
+      title: text.title,
+      ...(text.author && { author: text.author }),
+      format: text.format,
+      ...estimate,
+    };
+  }
+
+  /** Reads a held text (queued with the project's other works), then lets it go. */
+  async #readReference(projectId: string, token: string): Promise<DeepWorkOutcome> {
+    const held = this.#references.get(token);
+    if (!held || held.projectId !== projectId) return 'empty';
+    if (this.llm.status() === 'unconfigured') return 'unavailable';
+    this.#dropReference(token);
+    const previous = this.#running.get(projectId) ?? Promise.resolve();
+    const controller = new AbortController();
+    this.#works.set(projectId, controller);
+    const rootGuid = guids.project(projectId);
+    const mentorGuid = guids.mentor(projectId);
+    const run = previous.then(async (): Promise<DeepWorkOutcome> => {
+      if (controller.signal.aborted) return 'stopped';
+      try {
+        return await this.#withDocs([rootGuid, mentorGuid], async (docs) => {
+          const root = docs.get(rootGuid);
+          const mentorDoc = docs.get(mentorGuid);
+          if (!root || !mentorDoc) throw new Error('Documents missing');
+          const result = await readReference({
+            llm: this.llm,
+            root,
+            mentorDoc,
+            text: held.text,
+            signal: controller.signal,
+          });
+          return result === 'nothing-to-read' ? 'empty' : 'answered';
+        });
+      } catch (error) {
+        if (controller.signal.aborted) return 'stopped';
+        if (error instanceof LlmUnconfiguredError) return 'unavailable';
+        if (error instanceof LlmRefusalError) return 'refused';
+        if (error instanceof Anthropic.APIConnectionError) return 'offline';
+        console.error('Charpentier: the reading of a reference text failed', error);
+        return 'failed';
+      }
+    });
+    this.#running.set(
+      projectId,
+      run.catch(() => {}),
+    );
+    return run.finally(() => {
+      if (this.#works.get(projectId) === controller) this.#works.delete(projectId);
+    });
+  }
+
   /** Holds the documents an agent needs for the time of its work. */
   async #withDocs<T>(
     guidsNeeded: readonly string[],
@@ -399,6 +502,15 @@ export class AgentHost {
         return this.#estimateDeepWork(request.projectId, request.task, request.characterId);
       case 'agents.deepWork':
         return this.#deepWork(request.projectId, request.task, request.characterId);
+      case 'agents.chooseReference':
+        // The system's file dialog belongs to the window: apps/desktop opens
+        // it, then hands the file to openReference.
+        throw new Error('A reference text is chosen through the window');
+      case 'agents.readReference':
+        return this.#readReference(request.projectId, request.token);
+      case 'agents.dropReference':
+        this.#dropReference(request.token);
+        return null;
       case 'agents.stopDeepWork':
         this.#works.get(request.projectId)?.abort();
         return null;

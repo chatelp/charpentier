@@ -62,6 +62,9 @@ async function start() {
       estimateDeepWork: async () => null,
       deepWork: async () => 'unavailable',
       stopDeepWork: async () => {},
+      chooseReference: async () => 'cancelled',
+      readReference: async () => 'empty',
+      dropReference: async () => {},
       interview: async (input) => {
         asked.push(input);
         const root = doc(guids.project(input.projectId));

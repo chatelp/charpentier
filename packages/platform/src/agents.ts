@@ -27,6 +27,35 @@ export interface DeepWorkEstimate {
   readonly unchangedSince?: string;
 }
 
+/**
+ * A reference text the author chose (docs/PLAN.md §6.4), held by the host
+ * until it is read or dropped: what it is, and what reading it will cost.
+ * The text itself never reaches the interface, nor the project.
+ */
+export interface ReferenceChoice {
+  /** To read it, or drop it. */
+  readonly token: string;
+  readonly title: string;
+  readonly author?: string;
+  readonly format: 'txt' | 'md' | 'epub' | 'pdf';
+  readonly words: number;
+  readonly chapters: number;
+  readonly inputTokens: number;
+  readonly outputTokens: number;
+  /** In US dollars: the usual cost, and at most. */
+  readonly usd: number;
+  readonly usdMax: number;
+  readonly seconds: readonly [number, number];
+}
+
+/**
+ * Choosing a file: the text, or why not: the author closed the dialog, a
+ * file the host cannot read, a book locked by a DRM or a password, a PDF of
+ * scanned pages, a text too short to say much (REFERENCE_MIN_WORDS).
+ */
+export type ReferenceChoiceResult =
+  ReferenceChoice | 'cancelled' | 'unreadable' | 'protected' | 'image-pdf' | 'too-short';
+
 /** How a background work ended: `stopped` by the author, `empty` with nothing to read. */
 export type DeepWorkOutcome = AskResult | 'stopped' | 'empty';
 
@@ -102,6 +131,22 @@ export interface AgentsService {
   }): Promise<DeepWorkOutcome>;
   /** « Arrêter »: the running work stops, and nothing it found is filed. */
   stopDeepWork(input: { readonly projectId: string }): Promise<void>;
+  /**
+   * « Importer un texte de référence… » (docs/PLAN.md §6.4): the system's
+   * file dialog, then the text read and held by the host, its cost estimated.
+   */
+  chooseReference(input: { readonly projectId: string }): Promise<ReferenceChoiceResult>;
+  /**
+   * Reads the chosen text: style choices proposed in Style et voix, the
+   * Compagnon's message in the interview; then the text is dropped. Queued
+   * with the other works of the project; « Arrêter » is `stopDeepWork`.
+   */
+  readReference(input: {
+    readonly projectId: string;
+    readonly token: string;
+  }): Promise<DeepWorkOutcome>;
+  /** The author changed their mind: the text is dropped unread. */
+  dropReference(input: { readonly token: string }): Promise<void>;
   /** D-20: the model of the light, frequent work. */
   lightModel(): Promise<'opus' | 'haiku'>;
   setLightModel(model: 'opus' | 'haiku'): Promise<void>;

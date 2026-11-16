@@ -84,6 +84,18 @@ export class IpcAgentsService implements AgentsService {
     await this.bridge.invoke({ type: 'agents.stopDeepWork', ...input });
   }
 
+  chooseReference(input: { readonly projectId: string }) {
+    return this.bridge.invoke({ type: 'agents.chooseReference', ...input });
+  }
+
+  readReference(input: { readonly projectId: string; readonly token: string }) {
+    return this.bridge.invoke({ type: 'agents.readReference', ...input });
+  }
+
+  async dropReference(input: { readonly token: string }) {
+    await this.bridge.invoke({ type: 'agents.dropReference', ...input });
+  }
+
   lightModel() {
     return this.bridge.invoke({ type: 'agents.lightModel' });
   }

@@ -60,6 +60,9 @@ describe('the Compagnon reads a scene', () => {
         estimateDeepWork: async () => null,
         deepWork: async () => 'unavailable',
         stopDeepWork: async () => {},
+        chooseReference: async () => 'cancelled',
+        readReference: async () => 'empty',
+        dropReference: async () => {},
         interview: async () => 'unavailable',
         reviewChapter: async () => 'answered',
         // What the main process's analysis does on this scene.
@@ -170,6 +173,9 @@ describe('the Compagnon reads a scene', () => {
         estimateDeepWork: async () => null,
         deepWork: async () => 'unavailable',
         stopDeepWork: async () => {},
+        chooseReference: async () => 'cancelled',
+        readReference: async () => 'empty',
+        dropReference: async () => {},
         interview: async () => 'unavailable',
         analyze: async ({ sceneIds, automatic }) => (
           analyses.push({ sceneIds, automatic }),
