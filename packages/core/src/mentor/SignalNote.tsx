@@ -2,6 +2,7 @@ import { dismissSignal, resolveSignal, type FieldRef, type Signal } from '@charp
 import { useEffect, useRef, type CSSProperties, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { playSound } from '../sound/sounds';
+import { StyleCitation } from './StyleCitation';
 import type * as Y from 'yjs';
 
 export interface SignalNoteActions {
@@ -23,6 +24,8 @@ export interface SignalNoteProps extends SignalNoteActions {
   /** Take the focus (opened from the keyboard) so that its keys act on it. */
   readonly focus: boolean;
   readonly onClose: (backToText: boolean) => void;
+  /** The style choice the remark relies on, opened beside the text (phase 6.4). */
+  readonly onOpenStyleChoice?: (entityId: string) => void;
 }
 
 interface Action {
@@ -149,6 +152,13 @@ export function SignalNote(props: SignalNoteProps) {
           </p>
           <p className="ch-example-text">{suggestion.text}</p>
         </div>
+      )}
+      {props.onOpenStyleChoice && (
+        <StyleCitation
+          root={root}
+          choiceId={signal.styleChoiceId}
+          onOpen={props.onOpenStyleChoice}
+        />
       )}
       {signal.principle && <p className="ch-note-why">{signal.principle}</p>}
       <p className="ch-note-actions">

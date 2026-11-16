@@ -2,7 +2,7 @@ import type { LlmService } from '@charpentier/platform';
 import { addChatMessage, agentOrigin, chatMessages, readMentorLevel } from '@charpentier/schema';
 import type * as Y from 'yjs';
 import { compagnonChat } from './chat';
-import { sceneContext, sheetsSummary } from './context';
+import { sceneContext, sheetsSummary, validatedStyleChoice } from './context';
 
 /** Turns of the conversation sent back to the model (the oldest are left out). */
 const HISTORY = 30;
@@ -37,6 +37,10 @@ export async function answerAuthor(input: {
       text: answer.reply,
       ...(answer.example !== undefined && { example: answer.example }),
       ...(input.sceneId !== undefined && { sceneId: input.sceneId }),
+      // Only a choice the author validated; an invented id is dropped.
+      ...(validatedStyleChoice(input.root, answer.styleChoiceId) && {
+        styleChoiceId: answer.styleChoiceId,
+      }),
     },
     agentOrigin('chat'),
   );

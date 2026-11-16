@@ -3,7 +3,7 @@ import { CloseButton } from './CloseButton';
 import './icons.css';
 
 /**
- * The eight engraved pictograms (docs/design/pictos, docs/DESIGN.md §4.11):
+ * The nine engraved pictograms (docs/design/pictos, docs/DESIGN.md §4.11):
  * 24 × 24, a 1.5 px stroke in the current colour. Never alone: always next
  * to their label, so they are hidden from assistive technologies.
  */
@@ -33,6 +33,8 @@ const DRAWINGS = {
       <path d="m15 15 5 5" />
     </>
   ),
+  // Style et voix: the tuning fork, « donner le ton » (phase 6.4).
+  diapason: <path d="M8.5 3v6.5a3.5 3.5 0 0 0 7 0V3M12 13v8M10 21h4" />,
 } satisfies Record<string, ReactNode>;
 
 export type PictogramName = keyof typeof DRAWINGS;

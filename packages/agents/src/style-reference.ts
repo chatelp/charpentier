@@ -9,6 +9,7 @@ import {
   type InterviewPlacement,
   type ReferenceEvidence,
   type StyleCategory,
+  writeWorkRecord,
 } from '@charpentier/schema';
 import type * as Y from 'yjs';
 import { sceneContext } from './context';
@@ -319,6 +320,8 @@ const SLOW_TOKENS_PER_SECOND = 45;
 export interface StyleEstimate {
   readonly words: number;
   readonly chapters: number;
+  /** The passages the model reads (drawn at random). */
+  readonly passages: number;
   readonly inputTokens: number;
   readonly outputTokens: number;
   readonly usd: number;
@@ -341,6 +344,7 @@ export function estimateStyle(text: ReferenceText, language: string): StyleEstim
   return {
     words: measures.words,
     chapters: measures.chapters,
+    passages: extracts.length,
     inputTokens,
     outputTokens: STYLE_EXPECTED_OUTPUT,
     usd: cost(STYLE_EXPECTED_OUTPUT),
@@ -455,9 +459,24 @@ export function applyStyle(
     narrativeProseIn(intro, '').length === 0
       ? intro
       : fallbackIntro(language, text.title);
-  addInterviewMessage(
+  const reference = { title: text.title, ...(text.author && { author: text.author }) };
+  const messageId = addInterviewMessage(
     mentorDoc,
-    { role: 'compagnon', text: safeIntro, mode: 'free', placed },
+    { role: 'compagnon', text: safeIntro, mode: 'free', placed, reference },
+    agentOrigin(STYLE_AGENT),
+  );
+  writeWorkRecord(
+    mentorDoc,
+    { task: 'style' },
+    {
+      at: new Date().toISOString(),
+      digest: '',
+      proposals: placed.length,
+      signalIds: [],
+      fingerprints: [],
+      reviewId: messageId,
+      title: text.title,
+    },
     agentOrigin(STYLE_AGENT),
   );
   return { proposals: placed.length, dropped };

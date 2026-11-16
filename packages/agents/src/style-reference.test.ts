@@ -1,5 +1,8 @@
 import type { LlmService } from '@charpentier/platform';
 import {
+  addChatMessage,
+  AUTHOR,
+  chatMessages,
   createEntity,
   initProject,
   interviewMessages,
@@ -8,6 +11,8 @@ import {
 } from '@charpentier/schema';
 import { describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
+import { sheetsSummary } from './context';
+import { answerAuthor } from './conversation';
 import {
   drawExtracts,
   echoes,
@@ -133,7 +138,8 @@ describe('reference texts and style choices (phase 6.4)', () => {
     expect(sheets.map((s) => s.status)).toEqual(['proposed', 'proposed']);
     const ref = (field: string) => ({
       module: 'style' as const,
-      entityId: sheets[1]?.id ?? '',
+      // Created in the same millisecond: found by its category, not its rank.
+      entityId: sheets.find((e) => e.fields['category']?.proposal?.value === 'sentences')?.id ?? '',
       field,
     });
     expect(readFieldRef(root, ref('category')).proposal?.value).toBe('sentences');
@@ -144,7 +150,9 @@ describe('reference texts and style choices (phase 6.4)', () => {
     ]);
     const [message] = interviewMessages(mentorDoc);
     expect(message?.text).toMatch(/^J’ai lu La péniche/);
-    expect(message?.placed).toEqual(sheets.map((s) => ({ module: 'style', entityId: s.id })));
+    expect(message?.placed).toEqual(
+      expect.arrayContaining(sheets.map((s) => ({ module: 'style', entityId: s.id }))),
+    );
     // The model read extracts and measures, and was told never to quote.
     expect(asked[0]?.user).toContain('MEASURES');
     expect(asked[0]?.system).toMatch(/Never quote the book/);
@@ -194,5 +202,35 @@ describe('reference texts and style choices (phase 6.4)', () => {
       await readReference({ llm, root, mentorDoc, text: { title: 'Vide', chapters: [] } }),
     ).toBe('nothing-to-read');
     expect(asked).toHaveLength(0);
+  });
+});
+
+describe('the Compagnon relies on a validated style choice (phase 6.4)', () => {
+  it('keeps the id of a validated choice under an answer, never an invented or proposed one', async () => {
+    const { root, mentorDoc } = project();
+    const present = createEntity(root, 'style', {
+      category: 'tense',
+      choice: 'le présent de narration',
+    });
+    const answers = [present, 'invente', null];
+    const llm: LlmService = {
+      status: () => 'available',
+      onStatusChange: () => () => {},
+      generate: async () => ({
+        text: JSON.stringify({
+          reply: 'Vous aviez choisi le présent : pourquoi le passé ici ?',
+          example: null,
+          styleChoiceId: answers.shift() ?? null,
+        }),
+      }),
+    };
+    for (let i = 0; i < 3; i++) {
+      addChatMessage(mentorDoc, { role: 'author', text: 'Et ce passage ?' }, AUTHOR);
+      await answerAuthor({ llm, root, mentorDoc });
+    }
+    const replies = chatMessages(mentorDoc).filter((m) => m.role === 'compagnon');
+    expect(replies.map((m) => m.styleChoiceId)).toEqual([present, undefined, undefined]);
+    // The choices go to the Compagnon with their ids.
+    expect(sheetsSummary(root)).toContain(`style [${present}]`);
   });
 });

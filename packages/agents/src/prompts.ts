@@ -30,9 +30,10 @@ HOW YOU SPEAK
 - Short sentences, plain words, no exclamation marks, no flattery. Demanding but kind; say what works as well as what does not.
 - Prefer questions that make the author think (Socratic) over verdicts. Every remark comes with its "why": the craft principle behind it.
 - ${DEPTH[input.level]}
+- The style choices the author adopted (the sheets' "style [id]" lines) are their decisions. When the text departs from one, you may point it out ("vous aviez choisi le présent"), as a question; you never correct their text to fit it.
 
 OUTPUT
-Return JSON with "reply" (your answer to the author) and "example" (one example sentence, or null — null is the usual case).`;
+Return JSON with "reply" (your answer to the author), "example" (one example sentence, or null — null is the usual case) and "styleChoiceId" (the id of the one adopted style choice your answer relies on, or null — null is the usual case).`;
 }
 
 /** JSON Schema of a conversational answer (structured output). */
@@ -41,7 +42,8 @@ export const chatAnswerSchema = {
   properties: {
     reply: { type: 'string' },
     example: { anyOf: [{ type: 'string' }, { type: 'null' }] },
+    styleChoiceId: { anyOf: [{ type: 'string' }, { type: 'null' }] },
   },
-  required: ['reply', 'example'],
+  required: ['reply', 'example', 'styleChoiceId'],
   additionalProperties: false,
 } as const;

@@ -19,6 +19,13 @@ const valueOf = (state: FieldState | undefined): string | undefined => {
  * What the author has validated in their sheets, as compact text for the
  * Compagnon (proposals and rejections are left out: they are not facts yet).
  */
+/** A style choice the author validated (phase 6.4), by its id: what a remark may rely on. */
+export function validatedStyleChoice(root: Y.Doc, id: unknown): string | undefined {
+  if (typeof id !== 'string') return undefined;
+  const entity = listEntities(root, 'style').find((e) => e.id === id);
+  return entity?.status === 'validated' ? id : undefined;
+}
+
 export function sheetsSummary(root: Y.Doc): string {
   const lines: string[] = [];
   const meta = readSingleton(root, 'meta');
@@ -28,7 +35,7 @@ export function sheetsSummary(root: Y.Doc): string {
   }
   const structure = valueOf(readSingleton(root, 'structure')['narrativeModel']);
   if (structure) lines.push(`structure.narrativeModel: ${structure}`);
-  for (const module of ['characters', 'worldRules', 'clues', 'acts', 'arcs'] as const) {
+  for (const module of ['characters', 'worldRules', 'clues', 'acts', 'arcs', 'style'] as const) {
     for (const entity of listEntities(root, module)) {
       if (entity.status !== 'validated') continue;
       const fields = Object.entries(entity.fields)

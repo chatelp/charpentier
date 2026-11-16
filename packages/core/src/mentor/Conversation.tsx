@@ -5,6 +5,7 @@ import * as Y from 'yjs';
 import { usePlatform } from '../app/platform-context';
 import { useDocSnapshot } from '../hooks/use-doc-snapshot';
 import { BilanHeading, BilanLinks } from '../work/Bilan';
+import { StyleCitation } from './StyleCitation';
 import type { WorkspaceContext } from '../workspace/workspace-context';
 
 export interface ConversationProps {
@@ -105,7 +106,19 @@ export function Conversation({
             {ctx && message.work && (
               <BilanHeading ctx={ctx} message={message} work={message.work} />
             )}
-            <Turn message={message} onInsert={onInsertExample}>
+            <Turn
+              message={message}
+              onInsert={onInsertExample}
+              citation={
+                ctx && (
+                  <StyleCitation
+                    root={ctx.root}
+                    choiceId={message.styleChoiceId}
+                    onOpen={(entityId) => ctx.openSheet({ module: 'style', entityId })}
+                  />
+                )
+              }
+            >
               {ctx && message.work && mentorDoc && (
                 <BilanLinks ctx={ctx} mentorDoc={mentorDoc} message={message} work={message.work} />
               )}
@@ -134,10 +147,13 @@ export function Conversation({
 function Turn({
   message,
   onInsert,
+  citation,
   children,
 }: {
   readonly message: ChatMessage;
   readonly onInsert: (text: string) => void;
+  /** The style choice the answer relies on (phase 6.4). */
+  readonly citation?: ReactNode;
   readonly children?: ReactNode;
 }) {
   const { t } = useTranslation();
@@ -146,6 +162,7 @@ function Turn({
     <div className={`ch-turn${compagnon ? ' is-compagnon' : ''}`}>
       <p className="ch-turn-who ch-label">{compagnon ? t('mentor.name') : t('mentor.you')}</p>
       <p className="ch-turn-text">{message.text}</p>
+      {citation}
       {message.example && (
         <div className="ch-example">
           <p className="ch-example-label ch-label">{t('mentor.exampleLabel')}</p>

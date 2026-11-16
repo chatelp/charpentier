@@ -540,3 +540,42 @@
 .ch-sheet {
   padding-bottom: 48px;
 }
+
+/* Style et voix (DESIGN §4.5 1.16): the choice is the sheet's title, a sentence. */
+.ch-sheet-title.is-sentence {
+  font: 400 27px / 1.25 var(--ch-font-text);
+}
+.ch-sheet-title.is-sentence.is-proposed {
+  color: var(--ch-mentor);
+  font-style: italic;
+}
+
+/* No monogram in its list: the choice on two lines at most. */
+.ch-atl-entry.is-plain .ch-atl-entry-title {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  white-space: normal;
+}
+
+/* Before any choice: a fixed note in the sheet's column. */
+.ch-style-empty {
+  max-width: 34rem;
+  color: var(--ch-ink-2);
+  font: 15px / 1.55 var(--ch-font-text);
+}
+.ch-style-empty-title {
+  margin: 12px 0 8px;
+  color: var(--ch-ink);
+  font: 400 30px / 1.2 var(--ch-font-text);
+}
+.ch-style-empty-kept {
+  color: var(--ch-muted);
+  font: 12.5px / 1.5 var(--ch-font-ui);
+}
+.ch-style-empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

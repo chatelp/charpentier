@@ -40,6 +40,8 @@ export interface ReferenceChoice {
   readonly format: 'txt' | 'md' | 'epub' | 'pdf';
   readonly words: number;
   readonly chapters: number;
+  /** The passages drawn at random that go to the model; the rest is measured on the device. */
+  readonly passages: number;
   readonly inputTokens: number;
   readonly outputTokens: number;
   /** In US dollars: the usual cost, and at most. */
@@ -53,8 +55,13 @@ export interface ReferenceChoice {
  * file the host cannot read, a book locked by a DRM or a password, a PDF of
  * scanned pages, a text too short to say much (REFERENCE_MIN_WORDS).
  */
-export type ReferenceChoiceResult =
-  ReferenceChoice | 'cancelled' | 'unreadable' | 'protected' | 'image-pdf' | 'too-short';
+export type ReferenceChoiceResult = ReferenceChoice | 'cancelled' | ReferenceRefusal;
+
+export interface ReferenceRefusal {
+  readonly refused: 'unreadable' | 'protected' | 'image-pdf' | 'too-short';
+  /** For `too-short`: how many words it has. */
+  readonly words?: number;
+}
 
 /** How a background work ended: `stopped` by the author, `empty` with nothing to read. */
 export type DeepWorkOutcome = AskResult | 'stopped' | 'empty';

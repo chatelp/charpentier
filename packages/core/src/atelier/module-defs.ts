@@ -178,7 +178,6 @@ export const styleDef: EntityModuleDef = {
   name: 'style',
   kind: 'entity',
   titleField: 'choice',
-  subtitleField: 'category',
   sections: [
     {
       key: 'choice',
@@ -187,7 +186,6 @@ export const styleDef: EntityModuleDef = {
         { key: 'category', kind: 'choice', options: STYLE_CATEGORIES },
         text('choice'),
         line('measure'),
-        line('source'),
       ],
     },
   ],

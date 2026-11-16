@@ -255,6 +255,48 @@
   max-height: 10rem;
 }
 
+/* The field and, at its left, the reference text (DESIGN §4.5 1.16: where one gives the Compagnon something). */
+.ch-interview-entry {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.ch-interview-entry .ch-interview-field {
+  flex: 1;
+}
+
+.ch-btn.ch-interview-import {
+  flex: none;
+  color: var(--ch-mentor);
+  font: 12.5px / 1.2 var(--ch-font-ui);
+}
+
+.ch-btn.ch-interview-import[aria-disabled='true'] {
+  box-shadow: none;
+  color: var(--ch-faint);
+  cursor: default;
+}
+
+/* The file the author gave, in their hollow frame. */
+.ch-interview-reference .ch-label {
+  margin: 0;
+  color: var(--ch-muted);
+}
+
+.ch-interview-reference-title {
+  margin: 2px 0 0;
+  color: var(--ch-ink);
+  font: 17px / 1.35 var(--ch-font-text);
+}
+
+.ch-interview-reference-meta,
+.ch-interview-measure {
+  margin: 2px 0 0;
+  color: var(--ch-muted);
+  font: 11.5px / 1.45 var(--ch-font-ui);
+}
+
 .ch-interview-hint {
   margin: 0;
   color: var(--ch-faint);

@@ -22,6 +22,7 @@ import { moduleDefs, type AtelierModule } from '../atelier/module-defs';
 import { useDocSnapshot } from '../hooks/use-doc-snapshot';
 import { toRoman } from '../workspace/roman';
 import { signalLevel } from './signal-decorations';
+import { StyleCitation } from './StyleCitation';
 import { PanelTitle } from '../icons/Pictogram';
 
 export interface MentorPanelProps {
@@ -37,6 +38,8 @@ export interface MentorPanelProps {
   readonly onGoTo: (signal: Signal) => void;
   /** Opens a sheet in the Atelier. */
   readonly onOpenSheet: (rail: AtelierModule, target: SheetTarget) => void;
+  /** The style choice a remark relies on, opened beside the text (phase 6.4). */
+  readonly onOpenStyleChoice?: (entityId: string) => void;
   readonly onClose: () => void;
   readonly conversation?: ReactNode;
   readonly header?: ReactNode;
@@ -353,6 +356,13 @@ export function MentorPanel(props: MentorPanelProps) {
                             <span className="ch-point-title">{point.signal.title}</span>
                           )}
                           <span className="ch-point-message">{point.signal.message}</span>
+                          {props.onOpenStyleChoice && (
+                            <StyleCitation
+                              root={root}
+                              choiceId={point.signal.styleChoiceId}
+                              onOpen={props.onOpenStyleChoice}
+                            />
+                          )}
                         </>
                       ) : (
                         <>

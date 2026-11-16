@@ -212,6 +212,13 @@ export const languageCommands: readonly LanguageCommand[] = [
     run: (ctx) => ctx.askWork({ task: 'structure' }),
   },
   {
+    // « Importer un texte de référence… » (phase 6.4): no shortcut, a paid work starts from no key.
+    id: 'importReference',
+    scope: 'global',
+    isEnabled: (ctx) => ctx.platform.agents.status() !== 'disabled' && !ctx.work.running,
+    run: (ctx) => ctx.askWork({ task: 'style' }),
+  },
+  {
     id: 'trackClues',
     scope: 'global',
     isEnabled: (ctx) => ctx.platform.agents.status() !== 'disabled' && !ctx.work.running,

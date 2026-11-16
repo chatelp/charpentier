@@ -36,6 +36,8 @@ export interface Signal {
   readonly textAnchor?: TextAnchor;
   readonly fieldRef?: FieldRef;
   readonly suggestion?: { readonly kind: 'correction' | 'example'; readonly text: string };
+  /** The author's validated style choice this remark relies on (phase 6.4), shown under it. */
+  readonly styleChoiceId?: string;
   /**
    * Identity of the remark across analyses (kind, passage, sheet field):
    * the same remark is not raised twice, and never again once dismissed.

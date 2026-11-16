@@ -17,6 +17,7 @@ import {
   type FieldValue,
   type InterviewMessage,
   type InterviewPlacement,
+  type InterviewReference,
   type InterviewSection,
 } from '@charpentier/schema';
 import { useEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent } from 'react';
@@ -31,7 +32,14 @@ import { acceptAndKeep, hasKeptField, rejectSheet } from './atelier-actions';
 import { readAtelier } from './atelier-data';
 import { askInterview, interviewState, subscribeInterview } from './interview-requests';
 import { moduleDefs, type AtelierModule } from './module-defs';
+import { sameWork } from '../work/use-background-work';
+import { WorkCard } from '../work/WorkBlock';
+import { formatWhen } from '../work/work-format';
 import './interview.css';
+import '../work/work.css';
+
+/** The reading of a reference text (phase 6.4), as a work. */
+const STYLE_WORK = { task: 'style' } as const;
 
 const PICTOS = {
   meta: 'meta',
@@ -39,7 +47,7 @@ const PICTOS = {
   structure: 'structure',
   worldRules: 'regles',
   clues: 'indices',
-  style: 'manuscrit',
+  style: 'diapason',
 } as const satisfies Record<AtelierModule, string>;
 
 const railOf = (module: string): AtelierModule =>
@@ -200,8 +208,16 @@ export function Interview({
       rejectSheet(root, module, line.entityId);
       return;
     }
-    // A new sheet is taken with its name; its other fields wait for the author, one by one.
     validateEntity(root, module, line.entityId);
+    // A style choice is one proposal: V keeps the sheet and all its fields (DESIGN §4.5).
+    if (module === 'style') {
+      for (const field of ['category', 'choice', 'measure', 'source']) {
+        const ref: FieldRef = { module, entityId: line.entityId, field };
+        if (readFieldRef(root, ref).status === 'proposed') acceptProposal(root, ref);
+      }
+      return;
+    }
+    // A new sheet is taken with its name; its other fields wait for the author, one by one.
     const titleRef: FieldRef = { module, entityId: line.entityId, field: titleFieldOf(module) };
     if (readFieldRef(root, titleRef).status === 'proposed') acceptProposal(root, titleRef);
   };
@@ -250,6 +266,18 @@ export function Interview({
   };
 
   const modeKey = ctx.shortcutLabel('toggleInterviewMode') ?? '';
+  const importButton = useRef<HTMLButtonElement>(null);
+  const { confirm, running } = ctx.work;
+  const styleWork = sameWork(confirm?.ref, STYLE_WORK) || sameWork(running?.ref, STYLE_WORK);
+  const chosen = sameWork(confirm?.ref, STYLE_WORK) ? confirm?.reference : undefined;
+  const confirmingReference: InterviewReference | undefined = chosen && {
+    title: chosen.title,
+    ...(chosen.author && { author: chosen.author }),
+    format: chosen.format,
+    words: chosen.words,
+  };
+  // One work at a time: the import waits while one runs.
+  const importInert = !!running || !available;
   const states = sectionStates(root);
   const progress = sectionProgress(root);
 
@@ -303,12 +331,22 @@ export function Interview({
         )}
         {messages.map((message) =>
           message.role === 'author' ? (
-            <p key={message.id} className="ch-interview-author">
-              {message.text}
-            </p>
+            message.reference ? (
+              <ReferenceFrame key={message.id} reference={message.reference} />
+            ) : (
+              <p key={message.id} className="ch-interview-author">
+                {message.text}
+              </p>
+            )
           ) : (
             (message.text || !message.question || message !== question) && (
               <div key={message.id} className="ch-interview-turn is-compagnon">
+                {message.reference && (
+                  <p className="ch-bilan-head ch-label ch-engraved">
+                    {t('work.task.style.bilan', { name: message.reference.title })}{' '}
+                    <small>{formatWhen(t, message.at, ctx.language, new Date(), true)}</small>
+                  </p>
+                )}
                 <p className="ch-label ch-interview-who">{t('mentor.name')}</p>
                 {message.text && <p className="ch-interview-say">{message.text}</p>}
                 {message.question && message !== question && (
@@ -324,6 +362,19 @@ export function Interview({
               </div>
             )
           ),
+        )}
+        {/* A reference text being confirmed or read: the Compagnon's answer, in the conversation. */}
+        {confirmingReference && <ReferenceFrame reference={confirmingReference} />}
+        {styleWork && (
+          <div className="ch-interview-turn is-compagnon">
+            <p className="ch-label ch-interview-who">{t('mentor.name')}</p>
+            <WorkCard
+              ctx={ctx}
+              work={STYLE_WORK}
+              wide
+              onCancelled={() => importButton.current?.focus()}
+            />
+          </div>
         )}
         {waiting && <p className="ch-transcript-waiting">{t('mentor.thinking')}</p>}
         {request.problem && (
@@ -378,17 +429,64 @@ export function Interview({
         </div>
       )}
 
-      <textarea
-        ref={field}
-        className="ch-field ch-interview-field"
-        rows={1}
-        value={draft}
-        disabled={!available}
-        placeholder={guided ? t('interview.guidedPlaceholder') : t('interview.freePlaceholder')}
-        aria-label={guided ? t('interview.guidedPlaceholder') : t('interview.freePlaceholder')}
-        onChange={(e) => setDraft(e.target.value)}
-      />
+      <div className="ch-interview-entry">
+        {available && (
+          <button
+            ref={importButton}
+            type="button"
+            className="ch-btn ch-interview-import"
+            title={t('reference.import')}
+            aria-disabled={importInert || undefined}
+            onClick={() => {
+              if (!importInert) ctx.askWork(STYLE_WORK);
+            }}
+          >
+            {t('reference.button')}
+          </button>
+        )}
+        <textarea
+          ref={field}
+          className="ch-field ch-interview-field"
+          rows={1}
+          value={draft}
+          disabled={!available}
+          placeholder={guided ? t('interview.guidedPlaceholder') : t('interview.freePlaceholder')}
+          aria-label={guided ? t('interview.guidedPlaceholder') : t('interview.freePlaceholder')}
+          onChange={(e) => setDraft(e.target.value)}
+        />
+      </div>
       {available && <p className="ch-interview-hint">{t('interview.hint', { mode: modeKey })}</p>}
+    </div>
+  );
+}
+
+/** The file the author gave, as their own words in the conversation (DESIGN §4.5, 1.16). */
+function ReferenceFrame({ reference }: { readonly reference: InterviewReference }) {
+  const { t, i18n } = useTranslation();
+  const format = reference.format
+    ? t(`reference.format.${reference.format}` as 'reference.format.epub', {
+        defaultValue: reference.format.toUpperCase(),
+      })
+    : '';
+  const words = (reference.words ?? 0).toLocaleString(i18n.language);
+  const meta = reference.author
+    ? t('reference.meta', { author: reference.author, format, words })
+    : t('reference.metaNoAuthor', { format, words });
+  return (
+    <div
+      className="ch-interview-author ch-interview-reference"
+      role="group"
+      aria-label={t('reference.frameLabel', { title: reference.title, meta })}
+    >
+      <p className="ch-label" aria-hidden="true">
+        {t('reference.frame')}
+      </p>
+      <p className="ch-interview-reference-title" aria-hidden="true">
+        {reference.title}
+      </p>
+      <p className="ch-interview-reference-meta" aria-hidden="true">
+        {meta}
+      </p>
     </div>
   );
 }
@@ -445,6 +543,18 @@ function Proposals({
         const sheet = line.entityId
           ? { rail, target: { module: line.module, entityId: line.entityId } }
           : { rail, target: { module: line.module } };
+        if (line.module === 'style' && line.entityId && !line.field)
+          return (
+            <StyleProposal
+              key={line.key}
+              ctx={ctx}
+              line={line}
+              state={state}
+              text={text}
+              onDecide={onDecide}
+              onOpen={() => onOpen(sheet as AtelierLocation)}
+            />
+          );
         return (
           <div
             key={line.key}
@@ -514,6 +624,95 @@ function Proposals({
           </div>
         );
       })}
+    </div>
+  );
+}
+
+/** A style choice drawn from a reference text: one whole sheet, validated or rejected at once. */
+function StyleProposal({
+  ctx,
+  line,
+  state,
+  text,
+  onDecide,
+  onOpen,
+}: {
+  readonly ctx: WorkspaceContext;
+  readonly line: Line;
+  readonly state: LineState;
+  readonly text: (key: string, options?: Record<string, unknown>) => string;
+  readonly onDecide: (line: Line, accept: boolean) => void;
+  readonly onOpen: () => void;
+}) {
+  const { t } = useTranslation();
+  const entity = [
+    ...listEntities(ctx.root, 'style'),
+    ...listTrashedEntities(ctx.root, 'style'),
+  ].find((e) => e.id === line.entityId);
+  const read = (field: string) => {
+    const f = entity?.fields[field];
+    const v = f?.value ?? f?.proposal?.value ?? f?.rejected.at(-1)?.value;
+    return typeof v === 'string' ? v : '';
+  };
+  const category = read('category');
+  const measure = read('measure');
+  // The author's validated choice in the same category, if any.
+  const before = listEntities(ctx.root, 'style').find(
+    (e) =>
+      e.id !== line.entityId &&
+      e.status === 'validated' &&
+      e.fields['category']?.value === category &&
+      typeof e.fields['choice']?.value === 'string',
+  );
+  return (
+    <div className={`ch-interview-proposal is-${state}`} data-line={line.key} tabIndex={-1}>
+      <Medallion name="diapason" size={30} />
+      <div className="ch-interview-proposal-body">
+        <p className="ch-interview-path">
+          <button type="button" tabIndex={-1} onClick={onOpen}>
+            {t('atelier.modules.style')}
+          </button>
+          {category && (
+            <>
+              {' › '}
+              <button type="button" tabIndex={-1} onClick={onOpen}>
+                {text(`atelier.options.category.${category}`, { defaultValue: category })}
+              </button>
+            </>
+          )}
+        </p>
+        <p className="ch-interview-value">{read('choice')}</p>
+        {measure && <p className="ch-interview-measure">{measure}</p>}
+        {before && (
+          <p className="ch-interview-measure">
+            {t('reference.chose', { choice: String(before.fields['choice']?.value) })}
+          </p>
+        )}
+      </div>
+      {state === 'pending' ? (
+        <span className="ch-interview-proposal-actions">
+          <button
+            type="button"
+            tabIndex={-1}
+            className="ch-btn is-mentor"
+            onClick={() => onDecide(line, true)}
+          >
+            {t('atelier.accept')} <kbd>{t('atelier.acceptKey')}</kbd>
+          </button>
+          <button
+            type="button"
+            tabIndex={-1}
+            className="ch-btn"
+            onClick={() => onDecide(line, false)}
+          >
+            {t('atelier.reject')} <kbd>{t('atelier.rejectKey')}</kbd>
+          </button>
+        </span>
+      ) : (
+        <span className="ch-interview-proposal-state">
+          {state === 'validated' ? t('interview.validated') : t('interview.rejected')}
+        </span>
+      )}
     </div>
   );
 }

@@ -22,6 +22,8 @@ export interface ChatAnswer {
   readonly reply: string;
   /** One example sentence the author may insert by an explicit action (D-11). */
   readonly example?: string;
+  /** The id the model gave of a style choice its answer relies on (checked by the caller). */
+  readonly styleChoiceId?: string;
   /** True when the model's answers broke the rule twice and a refusal was given instead. */
   readonly guarded?: boolean;
 }
@@ -42,14 +44,21 @@ function contextMessage(context: ChatContext): string {
   return `Context of the author's book (their own text, for reference only):\n${parts.join('\n')}`;
 }
 
-function parseAnswer(text: string): { reply: string; example: string | null } | undefined {
+function parseAnswer(
+  text: string,
+): { reply: string; example: string | null; styleChoiceId: string | null } | undefined {
   try {
-    const value = JSON.parse(text) as { reply?: unknown; example?: unknown };
+    const value = JSON.parse(text) as {
+      reply?: unknown;
+      example?: unknown;
+      styleChoiceId?: unknown;
+    };
     if (typeof value.reply !== 'string' || !value.reply.trim()) return undefined;
     return {
       reply: value.reply.trim(),
       example:
         typeof value.example === 'string' && value.example.trim() ? value.example.trim() : null,
+      styleChoiceId: typeof value.styleChoiceId === 'string' ? value.styleChoiceId : null,
     };
   } catch {
     return undefined;
@@ -76,7 +85,10 @@ export async function compagnonChat(
     { role: 'user' as const, content: contextMessage(context) },
     ...history.map((t) => ({
       role: t.role === 'author' ? ('user' as const) : ('assistant' as const),
-      content: t.role === 'author' ? t.text : JSON.stringify({ reply: t.text, example: null }),
+      content:
+        t.role === 'author'
+          ? t.text
+          : JSON.stringify({ reply: t.text, example: null, styleChoiceId: null }),
     })),
   ];
   const system = compagnonSystemPrompt(context);
@@ -100,7 +112,11 @@ export async function compagnonChat(
       (answer.example === null ||
         narrativeProseIn(answer.example, authorText).every((v) => v.kind !== 'quote'));
     if (exampleOk && proseFree)
-      return { reply: answer.reply, ...(answer.example !== null && { example: answer.example }) };
+      return {
+        reply: answer.reply,
+        ...(answer.example !== null && { example: answer.example }),
+        ...(answer.styleChoiceId !== null && { styleChoiceId: answer.styleChoiceId }),
+      };
   }
   return { reply: FALLBACK[context.language.slice(0, 2)] ?? FALLBACK['fr'] ?? '', guarded: true };
 }

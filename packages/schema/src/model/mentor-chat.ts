@@ -17,11 +17,16 @@ export interface ChatMessage {
   readonly sceneId?: string;
   /** The review of a background work (D-27): the interface names and dates it. */
   readonly work?: WorkRef;
+  /** The author's validated style choice the answer relies on (phase 6.4). */
+  readonly styleChoiceId?: string;
   readonly at: string;
 }
 
-/** Background work on the whole manuscript (D-27), as the mentor document records it. */
-export type WorkTask = 'structure' | 'clues' | 'character';
+/**
+ * Background work (D-27), as the mentor document records it: on the whole
+ * manuscript, or the reading of a reference text (`style`, phase 6.4).
+ */
+export type WorkTask = 'structure' | 'clues' | 'character' | 'style';
 export interface WorkRef {
   readonly task: WorkTask;
   readonly characterId?: string;
@@ -41,8 +46,10 @@ export interface WorkRecord {
   readonly signalIds: readonly string[];
   /** The fingerprints of every remark it made, to resolve those it no longer makes. */
   readonly fingerprints: readonly string[];
-  /** Its review in the conversation. */
+  /** Its review in the conversation (for `style`, its message in the interview). */
   readonly reviewId?: string;
+  /** The reference text it read (`style`), by its title. */
+  readonly title?: string;
 }
 
 const works = (mentorDoc: Y.Doc) => mentorDoc.getMap<WorkRecord>('works');
@@ -57,7 +64,7 @@ export function listWorkRecords(mentorDoc: Y.Doc): (readonly [WorkRef, WorkRecor
     .map(([key, record]): readonly [WorkRef, WorkRecord] => [
       key.startsWith('character:')
         ? { task: 'character', characterId: key.slice('character:'.length) }
-        : { task: key === 'clues' ? 'clues' : 'structure' },
+        : { task: key === 'clues' || key === 'style' ? key : 'structure' },
       record,
     ])
     .sort((a, b) => (a[1].at < b[1].at ? 1 : -1));
@@ -94,6 +101,7 @@ export function addChatMessage(
         ...(message.example !== undefined && { example: message.example }),
         ...(message.sceneId !== undefined && { sceneId: message.sceneId }),
         ...(message.work !== undefined && { work: { ...message.work } }),
+        ...(message.styleChoiceId !== undefined && { styleChoiceId: message.styleChoiceId }),
       },
     ]);
   }, origin);
@@ -115,6 +123,18 @@ export interface InterviewMessage extends Omit<ChatMessage, 'example' | 'sceneId
   readonly why?: string;
   /** What this answer proposed in the Atelier (the field, or the new sheet). */
   readonly placed?: readonly InterviewPlacement[];
+  /**
+   * A reference text (phase 6.4): on the author's message, the file they
+   * gave; on the Compagnon's, the book his style choices come from.
+   */
+  readonly reference?: InterviewReference;
+}
+
+export interface InterviewReference {
+  readonly title: string;
+  readonly author?: string;
+  readonly format?: string;
+  readonly words?: number;
 }
 
 export type InterviewMode = 'free' | 'guided';
@@ -159,6 +179,7 @@ export function addInterviewMessage(
         ...(message.question !== undefined && { question: message.question }),
         ...(message.why !== undefined && { why: message.why }),
         ...(message.placed !== undefined && { placed: message.placed }),
+        ...(message.reference !== undefined && { reference: { ...message.reference } }),
       },
     ]);
   }, origin);

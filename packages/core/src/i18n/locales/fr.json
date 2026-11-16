@@ -205,7 +205,8 @@
     "openSettings": "Ouvrir les réglages",
     "checkStructure": "Vérifier la structure",
     "trackClues": "Suivre les indices",
-    "characterReport": "Faire le point sur un personnage…"
+    "characterReport": "Faire le point sur un personnage…",
+    "importReference": "Importer un texte de référence…"
   },
   "palette": {
     "label": "Ligne de commande",
@@ -551,7 +552,7 @@
       "arcs": "+ Nouvel arc",
       "worldRules": "+ Nouvelle règle du monde",
       "clues": "+ Nouvel indice",
-      "style": "+ Nouveau choix de style"
+      "style": "+ Nouveau choix"
     },
     "newKeyHint": "Nouvelle entrée (N)",
     "rejectCount_one": "{{count}} rejet",
@@ -563,7 +564,16 @@
     "rejectedEntries_other": "{{count}} propositions rejetées",
     "showRejected": "Afficher",
     "reconsider": "Reprendre",
-    "rejectedEntry": "Rejetée"
+    "rejectedEntry": "Rejetée",
+    "styleFrom": "d’après",
+    "styleYours": "votre choix",
+    "styleNote": "Le Compagnon s’en sert pour vous relire : il vous dit quand une scène s’en écarte, sans jamais vous corriger d’office.",
+    "styleEmpty": {
+      "title": "Style et voix",
+      "body": "Ici vivent les choix de style de votre livre : le point de vue, le temps, le rythme des phrases, la place du dialogue. Importez un texte que vous admirez pour que le Compagnon en dégage les choix, ou écrivez les vôtres.",
+      "kept": "Le texte importé n’est pas gardé, et rien n’en est cité.",
+      "newKey": "N"
+    }
   },
   "overview": {
     "label": "Vue d’ensemble du manuscrit",
@@ -918,7 +928,53 @@
         "busy": "Un travail à la fois : le Compagnon fait le point sur {{name}} ({{elapsed}}).",
         "failed": "Le point sur {{name}} n’a pas abouti.",
         "stopped": "Arrêté à {{elapsed}} : rien n’a été rangé."
+      },
+      "style": {
+        "name": "Importer un texte…",
+        "sub": "Un livre que vous admirez, ou un des vôtres",
+        "title": "Dégager les choix de style",
+        "what": "Le Compagnon mesure tout le livre sur cet appareil (longueur des phrases, part du dialogue, temps, personne), puis lit {{passages}} passages tirés au hasard pour le registre, les descriptions, les débuts et les fins de chapitre. Il propose, vous décidez.",
+        "leaves": "Seuls ces {{passages}} passages partent vers le Compagnon. Le livre n’est pas gardé dans votre projet, et rien n’en sera cité : il ne reste que des choix, dits avec ses mots.",
+        "reading": "Lecture du fichier…",
+        "doing": "Le Compagnon lit {{name}}…",
+        "measured": "Mesures faites · {{passages}} passages en lecture",
+        "done": "Lu {{when}} : {{name}}",
+        "bilan": "Style · d’après {{name}}",
+        "footerDone": "Les choix de style tirés de {{name}} sont dans l’entretien ({{key}}).",
+        "busy": "Un travail à la fois : le Compagnon lit {{name}} ({{elapsed}}).",
+        "failed": "La lecture n’a pas abouti.",
+        "stopped": "Arrêté à {{elapsed}} : rien n’a été rangé.",
+        "never": "Aucun texte lu pour l’instant.",
+        "inInterview": "dans l’entretien"
       }
     }
+  },
+  "reference": {
+    "button": "Texte de référence…",
+    "import": "Importer un texte de référence…",
+    "frame": "Texte de référence",
+    "meta": "{{author}} · {{format}} · {{words}} mots",
+    "metaNoAuthor": "{{format}} · {{words}} mots",
+    "frameLabel": "Texte de référence : {{title}}, {{meta}}.",
+    "format": {
+      "txt": "Texte",
+      "md": "Markdown",
+      "epub": "EPUB",
+      "pdf": "PDF"
+    },
+    "otherFile": "Autre fichier…",
+    "otherFileKey": "⏎",
+    "close": "Fermer",
+    "closeKey": "Échap",
+    "refused": {
+      "image-pdf": "Ce PDF ne contient que des images de pages : il n’y a pas de texte à lire.",
+      "image-pdfHint": "C’est le cas d’un livre scanné. Essayez plutôt l’EPUB, ou un PDF dont on peut sélectionner le texte.",
+      "protected": "Ce livre est protégé contre la copie : Charpentier ne peut pas l’ouvrir.",
+      "too-short": "Trop court pour y voir un style : il faut au moins 2 000 mots (celui-ci en a {{words}}).",
+      "unreadable": "Ce fichier ne se lit pas comme un texte."
+    },
+    "chose": "Vous aviez choisi : « {{choice}} »",
+    "yourChoice": "Votre choix · {{category}}",
+    "yourChoiceLabel": "Votre choix, {{category}} : {{choice}}. Ouvrir la fiche."
   }
 }

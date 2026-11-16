@@ -157,3 +157,17 @@
 .ch-bilan-links .ch-btn {
   color: var(--ch-mentor);
 }
+
+/* In the interview's conversation (a reference text, DESIGN §4.5 1.16): wider, its texts 1.5 px larger. */
+.ch-work-card.is-wide {
+  padding: 16px 18px;
+}
+.ch-work-card.is-wide .ch-work-what {
+  font-size: 13px;
+}
+.ch-work-card.is-wide .ch-work-cost span {
+  font-size: 12.5px;
+}
+.ch-work-card.is-wide .ch-work-doing {
+  font-size: 16px;
+}

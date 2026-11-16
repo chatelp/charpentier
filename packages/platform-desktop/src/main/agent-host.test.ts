@@ -141,7 +141,7 @@ describe('reference texts in the main process (phase 6.4)', () => {
   it('holds a chosen text with its cost, reads it once, then lets it go', async () => {
     const { host, store, projectId, seen } = await setUp();
     const chosen = await host.openReference(projectId, save('La péniche.txt', book(2500)));
-    if (typeof chosen === 'string') throw new Error(chosen);
+    if (typeof chosen === 'string' || 'refused' in chosen) throw new Error('not chosen');
     expect(chosen).toMatchObject({ title: 'La péniche', format: 'txt', usd: expect.any(Number) });
     expect(chosen.words).toBeGreaterThanOrEqual(2500);
     expect(seen.calls).toBe(0); // Choosing costs nothing.
@@ -159,12 +159,15 @@ describe('reference texts in the main process (phase 6.4)', () => {
 
   it('says why a file will not do, and drops a text the author leaves', async () => {
     const { host, projectId, seen } = await setUp();
-    expect(await host.openReference(projectId, save('court.txt', book(300)))).toBe('too-short');
-    expect(await host.openReference(projectId, save('abime.epub', 'pas un zip'))).toBe(
-      'unreadable',
-    );
+    expect(await host.openReference(projectId, save('court.txt', book(300)))).toEqual({
+      refused: 'too-short',
+      words: expect.any(Number),
+    });
+    expect(await host.openReference(projectId, save('abime.epub', 'pas un zip'))).toEqual({
+      refused: 'unreadable',
+    });
     const chosen = await host.openReference(projectId, save('long.md', book(2500)));
-    if (typeof chosen === 'string') throw new Error(chosen);
+    if (typeof chosen === 'string' || 'refused' in chosen) throw new Error('not chosen');
     await host.handle({ type: 'agents.dropReference', token: chosen.token });
     expect(
       await host.handle({ type: 'agents.readReference', projectId, token: chosen.token }),

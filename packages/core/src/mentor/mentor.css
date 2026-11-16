@@ -457,3 +457,27 @@
 [data-mentor-level='1'] .ch-pastille {
   display: none;
 }
+
+/* The author's style choice under a remark (phase 6.4, DESIGN §4.5 1.16): their hollow, their vermilion rule. */
+.ch-style-citation {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  margin: 8px 0;
+  padding: 8px 12px;
+  border: 0;
+  border-left: 2px solid var(--ch-author);
+  border-radius: var(--ch-radius-sm);
+  background: transparent;
+  box-shadow: var(--ch-inset);
+  text-align: left;
+  cursor: pointer;
+}
+.ch-style-citation .ch-label {
+  color: var(--ch-muted);
+}
+.ch-style-citation-text {
+  color: var(--ch-ink);
+  font: 13.5px / 1.4 var(--ch-font-text);
+}

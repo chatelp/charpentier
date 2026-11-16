@@ -34,7 +34,13 @@ import { playSound } from '../sound/sounds';
 import { Medallion, Monogram, type PictogramName } from '../icons/Pictogram';
 import { FieldRow } from './FieldRow';
 import { Interview } from './Interview';
-import { ATELIER_MODULES, moduleDefs, type AtelierModule, type FieldDef } from './module-defs';
+import {
+  ATELIER_MODULES,
+  moduleDefs,
+  STYLE_CATEGORIES,
+  type AtelierModule,
+  type FieldDef,
+} from './module-defs';
 import './atelier.css';
 import { WorkBlock } from '../work/WorkBlock';
 
@@ -68,6 +74,8 @@ interface Entry {
   /** Rejected by the author, listed only with « Afficher les rejets ». */
   readonly rejected?: boolean;
   readonly group?: string;
+  /** No monogram: the title is a sentence (Style et voix, DESIGN §4.5 1.16). */
+  readonly plain?: boolean;
 }
 
 const asText = (v: unknown) => (typeof v === 'string' ? v : '');
@@ -97,13 +105,13 @@ export const RAIL_PICTOS: Record<AtelierModule, PictogramName> = {
   structure: 'structure',
   worldRules: 'regles',
   clues: 'indices',
-  // Provisional until the design session draws its own (phase 6.4).
-  style: 'manuscrit',
+  style: 'diapason',
 };
 
 /** The background works at the foot of a module's list (docs/DESIGN.md §4.5). */
 const STRUCTURE_WORK = { task: 'structure' } as const;
 const CLUES_WORK = { task: 'clues' } as const;
+const STYLE_WORK = { task: 'style' } as const;
 
 /** The « + New » buttons under the filter, by rail (docs/DESIGN.md §4.5). */
 const NEW_ENTRY: Record<AtelierModule, readonly EntityModule[]> = {
@@ -410,6 +418,7 @@ export function Atelier({
           )}
           {rail === 'structure' && <WorkBlock ctx={ctx} work={STRUCTURE_WORK} />}
           {rail === 'clues' && <WorkBlock ctx={ctx} work={CLUES_WORK} />}
+          {rail === 'style' && <WorkBlock ctx={ctx} work={STYLE_WORK} />}
           {rail === 'characters' &&
             selected?.target.module === 'characters' &&
             selected.target.entityId &&
@@ -434,6 +443,16 @@ export function Atelier({
       )}
 
       <div ref={sheetRef} className="ch-sheet" hidden={interview} onKeyDown={onSheetKeyDown}>
+        {rail === 'style' && !interview && entries.length === 0 && (
+          <StyleEmpty
+            ctx={ctx}
+            onNew={() =>
+              createEntityPrompt(ctx, 'style', (id) =>
+                onLocation({ rail, target: { module: 'style', entityId: id } }, true),
+              )
+            }
+          />
+        )}
         {selected && !interview && (
           <Sheet
             ctx={ctx}
@@ -479,14 +498,16 @@ function EntryItem({
         aria-selected={selected}
         tabIndex={selected ? 0 : -1}
         data-atl-focus=""
-        className={`ch-atl-entry${entry.proposed ? ' is-proposed' : ''}${entry.rejected ? ' is-rejected' : ''}`}
+        className={`ch-atl-entry${entry.proposed ? ' is-proposed' : ''}${entry.rejected ? ' is-rejected' : ''}${entry.plain ? ' is-plain' : ''}`}
         onClick={onSelect}
       >
-        <Monogram
-          title={entry.title}
-          size={30}
-          state={selected ? 'active' : entry.proposed ? 'proposed' : 'rest'}
-        />
+        {!entry.plain && (
+          <Monogram
+            title={entry.title}
+            size={30}
+            state={selected ? 'active' : entry.proposed ? 'proposed' : 'rest'}
+          />
+        )}
         <span className="ch-atl-entry-text">
           <span className="ch-atl-entry-title">{entry.title}</span>
           {entry.subtitle && <span className="ch-atl-sub">{entry.subtitle}</span>}
@@ -593,6 +614,29 @@ function useEntries(
         ...entityEntries('acts', t('atelier.groups.acts')),
         ...entityEntries('arcs', t('atelier.groups.arcs')),
       ];
+    case 'style': {
+      // Grouped by category in a fixed order, the empty ones left out.
+      const category = (entry: Entry) => {
+        const entity = [...data.entities.style, ...data.rejectedEntities.style].find(
+          (e) => e.id === entry.target.entityId,
+        );
+        const value = asText(shownValue(entity?.fields['category'] ?? EMPTY));
+        return (STYLE_CATEGORIES as readonly string[]).includes(value) ? value : 'other';
+      };
+      return entityEntries('style')
+        .map((entry, index) => ({ entry, index, category: category(entry) }))
+        .sort(
+          (a, b) =>
+            STYLE_CATEGORIES.indexOf(a.category as (typeof STYLE_CATEGORIES)[number]) -
+              STYLE_CATEGORIES.indexOf(b.category as (typeof STYLE_CATEGORIES)[number]) ||
+            a.index - b.index,
+        )
+        .map(({ entry, category: c }) => ({
+          ...entry,
+          plain: true,
+          group: t(`atelier.options.category.${c}` as 'atelier.options.category.other'),
+        }));
+    }
     default:
       return entityEntries(rail);
   }
@@ -673,6 +717,36 @@ export function Sheet({
     target.module === 'characters'
       ? asText(shownValue(fieldState(data, target, 'occupation')))
       : '';
+  // Style et voix: « Phrases · d'après <i>Les Eaux basses</i>, Marthe Delorme », or « votre choix ».
+  const styleEntity =
+    target.module === 'style'
+      ? [...data.entities.style, ...data.rejectedEntities.style].find(
+          (e) => e.id === target.entityId,
+        )
+      : undefined;
+  const styleProposed = styleEntity?.status === 'proposed';
+  const styleCategory = asText(shownValue(fieldState(data, target, 'category')));
+  const styleSource = styleEntity?.fields['choice']?.proposal?.evidence.find(
+    (e) => 'reference' in e,
+  );
+  const styleBook = asText(shownValue(fieldState(data, target, 'source')));
+  const styleLead = (
+    <>
+      {styleCategory &&
+        `${t(`atelier.options.category.${styleCategory}` as 'atelier.options.category.other', {
+          defaultValue: styleCategory,
+        })} · `}
+      {styleBook || styleSource ? (
+        <>
+          {t('atelier.styleFrom')}{' '}
+          <i>{styleSource && 'reference' in styleSource ? styleSource.reference : styleBook}</i>
+          {styleBook.includes(', ') && `, ${styleBook.slice(styleBook.indexOf(', ') + 2)}`}
+        </>
+      ) : (
+        t('atelier.styleYours')
+      )}
+    </>
+  );
   const lead =
     target.module === 'meta'
       ? t(`atelier.projectKind.${data.project?.kind ?? 'novel'}`)
@@ -689,10 +763,18 @@ export function Sheet({
   return (
     <article className="ch-sheet-body" aria-label={title}>
       <div className="ch-sheet-head">
-        <Monogram title={title} size={62} />
-        <h2 className="ch-sheet-title">{title}</h2>
+        {target.module === 'style' ? (
+          <Medallion name="diapason" size={46} mentor={styleProposed} />
+        ) : (
+          <Monogram title={title} size={62} />
+        )}
+        <h2
+          className={`ch-sheet-title${target.module === 'style' ? ' is-sentence' : ''}${styleProposed ? ' is-proposed' : ''}`}
+        >
+          {title}
+        </h2>
       </div>
-      <p className="ch-sheet-lead">{lead}</p>
+      <p className="ch-sheet-lead">{target.module === 'style' ? styleLead : lead}</p>
       <p className="ch-legend">
         <span aria-hidden="true">
           <i className="is-proposed" />
@@ -738,6 +820,9 @@ export function Sheet({
                 `atelier.sections.${target.module}.${section.key}` as 'atelier.sections.meta.story',
               )}
             </h3>
+            {target.module === 'style' && (
+              <p className="ch-section-note">{t('atelier.styleNote')}</p>
+            )}
             {section.fields.map((f) => row(f))}
           </section>
         ))}
@@ -779,6 +864,41 @@ export function Sheet({
           </section>
         )}
       </div>
+    </article>
+  );
+}
+
+/** Style et voix before any choice: what lives here, and the two ways in (DESIGN §4.5 1.16). */
+function StyleEmpty({
+  ctx,
+  onNew,
+}: {
+  readonly ctx: WorkspaceContext;
+  readonly onNew: () => void;
+}) {
+  const { t } = useTranslation();
+  const available = ctx.platform.agents.status() !== 'disabled';
+  return (
+    <article className="ch-sheet-body ch-style-empty">
+      <Medallion name="diapason" size={46} mentor />
+      <h2 className="ch-style-empty-title">{t('atelier.styleEmpty.title')}</h2>
+      <p>{t('atelier.styleEmpty.body')}</p>
+      <p className="ch-style-empty-kept">{t('atelier.styleEmpty.kept')}</p>
+      <p className="ch-style-empty-actions">
+        {available && (
+          <button
+            type="button"
+            className="ch-btn is-mentor"
+            disabled={!!ctx.work.running}
+            onClick={() => ctx.askWork({ task: 'style' })}
+          >
+            {t('reference.import')}
+          </button>
+        )}
+        <button type="button" className="ch-btn" onClick={onNew}>
+          {t('atelier.newEntry.style')} <kbd>{t('atelier.styleEmpty.newKey')}</kbd>
+        </button>
+      </p>
     </article>
   );
 }

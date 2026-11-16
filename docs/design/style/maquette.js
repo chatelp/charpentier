@@ -232,6 +232,7 @@
   };
 
   // ───── Style et voix ─────
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- kept for the states to come
   const STYLE_STATES = {
     // index → state on the page (after the import, before the author has sorted them)
     0: 'validated',

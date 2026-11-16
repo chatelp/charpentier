@@ -1,4 +1,6 @@
 import {
+  addInterviewMessage,
+  AUTHOR,
   listEntities,
   listWorkRecords,
   readMentorLevel,
@@ -259,32 +261,61 @@ export function ProjectWorkspace({
   const chapter = outline[chapterIndex];
   const sceneDocs = useSceneDocs(platform, projectId, sceneId, scene?.activeVariantId ?? '');
   const [status, setStatus] = useState<{ key: number; text: string } | null>(null);
-  const work = useBackgroundWork(platform, projectId, (ref, outcome) => {
-    if (outcome === 'answered')
-      setStatus({
-        key: ++paletteSequence,
-        text: t(`work.task.${ref.task}.footerDone`, {
-          name: workName(root, ref),
-          key: registry.shortcutLabel('talkToMentor') ?? '',
-        }),
-      });
-  });
   // The remarks of each background work, at the head of the points.
   const mentorDoc = useMentorDoc(projectId);
+  const work = useBackgroundWork(
+    platform,
+    projectId,
+    (ref, outcome, reference) => {
+      if (outcome === 'answered')
+        setStatus({
+          key: ++paletteSequence,
+          text: t(`work.task.${ref.task}.footerDone`, {
+            name: reference?.title ?? workName(root, ref),
+            key:
+              registry.shortcutLabel(ref.task === 'style' ? 'atelierInterview' : 'talkToMentor') ??
+              '',
+          }),
+        });
+    },
+    // The file the author gave enters the interview as their own message (phase 6.4).
+    (reference) =>
+      addInterviewMessage(
+        mentorDoc,
+        {
+          role: 'author',
+          text: '',
+          mode: 'free',
+          reference: {
+            title: reference.title,
+            ...(reference.author && { author: reference.author }),
+            format: reference.format,
+            words: reference.words,
+          },
+        },
+        AUTHOR,
+      ),
+  );
   const workRecords = useDocSnapshot(mentorDoc, listWorkRecords);
   const workGroups = useMemo(
     () =>
-      workRecords.map(([ref, record]) => {
-        const today = new Date(record.at).toDateString() === new Date().toDateString();
-        const when = today
-          ? new Date(record.at).toLocaleTimeString(language, { hour: '2-digit', minute: '2-digit' })
-          : formatWhen(t, record.at, language, new Date(), true);
-        return {
-          key: workKey(ref),
-          label: `${t(`work.task.${ref.task}.bilan`, { name: workName(root, ref) })} · ${when}`,
-          signalIds: record.signalIds,
-        };
-      }),
+      // A reading of a reference text leaves no remark: no group of its own.
+      workRecords
+        .filter(([ref]) => ref.task !== 'style')
+        .map(([ref, record]) => {
+          const today = new Date(record.at).toDateString() === new Date().toDateString();
+          const when = today
+            ? new Date(record.at).toLocaleTimeString(language, {
+                hour: '2-digit',
+                minute: '2-digit',
+              })
+            : formatWhen(t, record.at, language, new Date(), true);
+          return {
+            key: workKey(ref),
+            label: `${t(`work.task.${ref.task}.bilan`, { name: workName(root, ref) })} · ${when}`,
+            signalIds: record.signalIds,
+          };
+        }),
     [workRecords, language, root, t],
   );
   // Leaving the module (or the character) where a work waits for « Lancer » cancels it.
@@ -295,7 +326,8 @@ export function ProjectWorkspace({
     const here = workLocation(confirming);
     const same =
       view === 'atelier' &&
-      atelierLocation.rail === here.rail &&
+      (atelierLocation.rail === here.rail ||
+        (confirming.task === 'style' && atelierLocation.rail === 'style')) &&
       (confirming.task !== 'character' ||
         atelierLocation.target?.entityId === confirming.characterId);
     if (!same) cancelWork(confirming);
@@ -554,7 +586,9 @@ export function ProjectWorkspace({
     work: work.state,
     askWork: (ref) => {
       work.ask(ref);
-      setAtelierLocation(workLocation(ref));
+      // A reference text asked from Style et voix is confirmed there, in its block.
+      const onStylePage = view === 'atelier' && atelierLocation.rail === 'style';
+      if (!(ref.task === 'style' && onStylePage)) setAtelierLocation(workLocation(ref));
       setView('atelier');
       setNavigatorOpen(false);
     },
@@ -785,6 +819,7 @@ export function ProjectWorkspace({
     <SignalNote
       root={root}
       signal={marks.noteSignal}
+      onOpenStyleChoice={(entityId) => ctx.openSheet({ module: 'style', entityId })}
       style={narrow ? {} : { top: marks.noteTop ?? 0 }}
       focus={marks.note?.focus ?? false}
       onFixText={() => {
@@ -985,6 +1020,7 @@ export function ProjectWorkspace({
             }
           }}
           onOpenSheet={(rail, target) => ctx.openAtelier({ rail, target })}
+          onOpenStyleChoice={(entityId) => ctx.openSheet({ module: 'style', entityId })}
           {...(agentsStatus !== 'disabled' && {
             onAnalyze: () => void registry.execute('analyzeScene', ctx),
             analyzeShortcut: registry.shortcutLabel('analyzeScene'),
@@ -1058,7 +1094,7 @@ export function ProjectWorkspace({
         work={
           work.state.running && {
             text: t(`work.task.${work.state.running.ref.task}.doing`, {
-              name: workName(root, work.state.running.ref),
+              name: work.state.running.reference?.title ?? workName(root, work.state.running.ref),
             }),
             onClick: () => {
               const ref = work.state.running?.ref;

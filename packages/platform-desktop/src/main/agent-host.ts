@@ -352,9 +352,9 @@ export class AgentHost {
     try {
       text = await readReferenceFile(file);
     } catch (error) {
-      if (error instanceof UnreadableReferenceError) return error.reason;
+      if (error instanceof UnreadableReferenceError) return { refused: error.reason };
       console.error('Charpentier: a reference text could not be read', error);
-      return 'unreadable';
+      return { refused: 'unreadable' };
     }
     const rootGuid = guids.project(projectId);
     const language = await this.#withDocs([rootGuid], async (docs) => {
@@ -362,7 +362,8 @@ export class AgentHost {
       return root ? sceneContext(root, undefined, undefined).language : 'fr';
     });
     const estimate = estimateStyle(text, language);
-    if (estimate.words < REFERENCE_MIN_WORDS) return 'too-short';
+    if (estimate.words < REFERENCE_MIN_WORDS)
+      return { refused: 'too-short', words: estimate.words };
     const token = randomUUID();
     const timer = setTimeout(() => this.#dropReference(token), REFERENCE_HELD_MS);
     timer.unref?.();
