@@ -71,6 +71,7 @@ async function start(sync: SyncService) {
   render(<App platform={platform} i18n={await createI18n('fr')} />);
   const editor = await screen.findByRole('textbox', { name: 'Texte de la scène' });
   await waitFor(() => expect(document.activeElement).toBe(editor));
+  return platform;
 }
 
 const command = async (words: string) => {
@@ -134,5 +135,19 @@ describe('signing in to the sync server (step 4.4)', () => {
     await command('administrer le serveur');
     await waitFor(() => expect(calls).toContain('openAdmin'));
     await screen.findByText('La page d’administration s’ouvre.');
+  });
+
+  it('offers the account’s projects after signing in on a new device', async () => {
+    const { service, setStatus } = fakeSync();
+    const platform = await start(service);
+    // Signing in: the account's novel arrives in the library.
+    setStatus('connecting');
+    await platform.library.create({ title: 'Les Eaux basses', kind: 'novel' });
+    setStatus('synced');
+    // The library opens, to open it or start another; the device's blank start is in its trash.
+    await screen.findByRole('heading', { name: 'Bibliothèque' });
+    await screen.findByText('Les Eaux basses');
+    expect((await platform.library.list()).map((p) => p.title)).toEqual(['Les Eaux basses']);
+    expect((await platform.library.listTrashed()).map((p) => p.title)).toEqual(['Mon roman']);
   });
 });

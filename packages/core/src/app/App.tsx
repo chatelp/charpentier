@@ -107,8 +107,9 @@ function Root() {
     };
   }, [platform, projectId, titles]);
 
-  // Signed in on a new device: once the novel has come from the sync, it opens
-  // in place of the blank project the device started with (phase 5.6).
+  // Signed in on a new device: once the account's projects have come, its
+  // blank start goes to the trash and the library opens, to open one of them
+  // or start a new one (the most recent behind it, should the author close it).
   const current = useRef<ProjectSession | null>(null);
   useEffect(() => {
     current.current = opening.state === 'ready' ? opening.session : null;
@@ -125,7 +126,11 @@ function Root() {
       if (!signingIn || status !== 'synced' || !session) return;
       signingIn = false;
       projectFromSync(platform, session, titles).then(
-        (id) => id && setProjectId(id),
+        (id) => {
+          if (!id) return;
+          setProjectId(id);
+          setLibrary({ creating: false });
+        },
         (error: unknown) => console.error(error),
       );
     });
