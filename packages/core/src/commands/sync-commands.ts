@@ -21,33 +21,37 @@ export const syncCommands: readonly SyncCommand[] = [
       const sync = ctx.platform.sync;
       if (!sync) return;
       const account = await sync.account();
+      const askAccount = (server: string) =>
+        ctx.openPalette({
+          kind: 'input',
+          placeholder: ctx.t('sync.emailPrompt'),
+          initial: account?.email ?? '',
+          onSubmit: (email) => {
+            if (!email.includes('@')) return ctx.notify(ctx.t('sync.badEmail'));
+            ctx.openPalette({
+              kind: 'input',
+              placeholder: ctx.t('sync.passwordPrompt'),
+              initial: '',
+              secret: true,
+              onSubmit: (password) => {
+                if (!password) return;
+                ctx.notify(ctx.t('sync.signingIn'));
+                void sync
+                  .signIn({ server, email: email.trim(), password })
+                  .then((result) => ctx.notify(ctx.t(`sync.signIn.${result}`)));
+              },
+            });
+          },
+        });
+      // The app in a browser syncs with the server that served it: no address to ask.
+      if (sync.server) return askAccount(sync.server);
       ctx.openPalette({
         kind: 'input',
         placeholder: ctx.t('sync.serverPrompt'),
         initial: account?.server ?? 'https://',
         onSubmit: (server) => {
           if (!/^https?:\/\/\S+$/.test(server.trim())) return ctx.notify(ctx.t('sync.badServer'));
-          ctx.openPalette({
-            kind: 'input',
-            placeholder: ctx.t('sync.emailPrompt'),
-            initial: account?.email ?? '',
-            onSubmit: (email) => {
-              if (!email.includes('@')) return ctx.notify(ctx.t('sync.badEmail'));
-              ctx.openPalette({
-                kind: 'input',
-                placeholder: ctx.t('sync.passwordPrompt'),
-                initial: '',
-                secret: true,
-                onSubmit: (password) => {
-                  if (!password) return;
-                  ctx.notify(ctx.t('sync.signingIn'));
-                  void sync
-                    .signIn({ server: server.trim(), email: email.trim(), password })
-                    .then((result) => ctx.notify(ctx.t(`sync.signIn.${result}`)));
-                },
-              });
-            },
-          });
+          askAccount(server.trim());
         },
       });
     },

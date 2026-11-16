@@ -6,7 +6,7 @@
   "license": "SEE LICENSE IN ../../LICENSE.md",
   "type": "module",
   "scripts": {
-    "typecheck": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.browser-test.json",
     "build": "esbuild src/main.ts --bundle --platform=node --format=esm --target=node24 --external:pg-native --banner:js=\"import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);\" --outfile=dist/main.js && node scripts/copy-admin-assets.mjs",
     "start": "node dist/main.js"
   },
@@ -18,6 +18,7 @@
     "yjs": "^13.6.33"
   },
   "devDependencies": {
+    "@charpentier/platform-web": "workspace:*",
     "@electric-sql/pglite": "^0.5.16",
     "@hocuspocus/provider": "^4.8.0",
     "@types/node": "^26.6.6",

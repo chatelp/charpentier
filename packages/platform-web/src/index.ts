@@ -7,10 +7,12 @@ import {
 import { IndexedDbDocumentService, MemoryDocumentService } from './documents';
 import { DocumentLibrary } from './library';
 import { LocalStoragePreferences } from './preferences';
+import { WebSync } from './sync';
 
 export { IndexedDbDocumentService, MemoryDocumentService } from './documents';
 export { DocumentLibrary, LIBRARY_GUID } from './library';
 export { LocalStoragePreferences } from './preferences';
+export { WebSync, type WebSyncDeps } from './sync';
 
 /** No AI on the web host until the server proxy exists (step 4). */
 const disabledAgents: AgentsService = {
@@ -66,24 +68,75 @@ export function createWebKeybindings(userAgent: string): KeybindingsService {
  * (`?x250=premier`): a device just installed, its first start ahead (5.6);
  * `'update'` (`?x250=maj`): an update ready, waiting for the next start (5.12).
  */
+/** The browser, as the account's list of devices names it (« Navigateur · Firefox »). */
+export function browserName(userAgent: string): string {
+  const name = /Firefox\//.test(userAgent)
+    ? 'Firefox'
+    : /Edg\//.test(userAgent)
+      ? 'Edge'
+      : /Chrome\//.test(userAgent)
+        ? 'Chrome'
+        : /Safari\//.test(userAgent)
+          ? 'Safari'
+          : '';
+  return name ? `Navigateur · ${name}` : 'Navigateur';
+}
+
+/** Every document this browser keeps (« Se déconnecter »): the next page starts empty. */
+async function forgetDocuments(prefix: string): Promise<void> {
+  const databases = (await indexedDB.databases?.()) ?? [];
+  await Promise.all(
+    databases
+      .filter((db) => db.name?.startsWith(prefix))
+      .map(
+        (db) =>
+          new Promise<void>((resolve) => {
+            const request = indexedDB.deleteDatabase(db.name ?? '');
+            request.onsuccess = request.onerror = request.onblocked = () => resolve();
+          }),
+      ),
+  );
+  globalThis.location?.reload();
+}
+
+/**
+ * `sync`: the app was served by the author's server (phase 4.7 a), its
+ * account syncs with it; elsewhere (development, a copy), no sync.
+ */
 export function createWebPlatform(
-  options: { readonly simulateSystem?: boolean | 'first-start' | 'update' } = {},
+  options: {
+    readonly simulateSystem?: boolean | 'first-start' | 'update';
+    readonly sync?: boolean;
+  } = {},
 ): Platform {
   const system = options.simulateSystem
     ? createSimulatedSystem({ firstStart: options.simulateSystem === 'first-start' })
     : null;
   if (options.simulateSystem === 'update') system?.simulate.updateReady();
-  const documents =
-    typeof indexedDB === 'undefined' ? new MemoryDocumentService() : new IndexedDbDocumentService();
+  const persistent = typeof indexedDB !== 'undefined';
+  const documents = persistent ? new IndexedDbDocumentService() : new MemoryDocumentService();
+  const library = new DocumentLibrary(documents);
+  const sync =
+    options.sync && persistent
+      ? new WebSync({
+          documents,
+          library,
+          origin: globalThis.location.origin,
+          device: browserName(globalThis.navigator?.userAgent ?? ''),
+          storage: globalThis.localStorage ?? null,
+          forgetDocuments: () => forgetDocuments('charpentier:'),
+        })
+      : null;
+  void sync?.start();
   return {
     host: 'web',
     documents,
-    library: new DocumentLibrary(documents),
+    library,
     libraryFolder: null,
     preferences: new LocalStoragePreferences(),
     keybindings: createWebKeybindings(globalThis.navigator?.userAgent ?? ''),
     agents: disabledAgents,
-    sync: null,
+    sync,
     llm: null,
     fileMirror: null,
     secrets: null,

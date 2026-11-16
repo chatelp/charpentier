@@ -1,7 +1,7 @@
 /**
  * Sync with the author's own server (step 4, D-21): signing a device in and
  * out, the devices of the account, and where the sync stands. Writing never
- * depends on it. `null` on a host without sync (the web, for now).
+ * depends on it. `null` on a host without sync (the web app outside its server).
  */
 
 /**
@@ -28,6 +28,8 @@ export interface SyncDevice {
 }
 
 export interface SyncService {
+  /** The one server this host syncs with (the app in a browser: the server that served it); not asked. */
+  readonly server?: string;
   status(): SyncStatus;
   onStatusChange(listener: (status: SyncStatus) => void): () => void;
   account(): Promise<SyncAccountInfo | null>;

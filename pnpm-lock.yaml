@@ -108,6 +108,9 @@ importers:
         specifier: ^13.6.33
         version: 13.6.33
     devDependencies:
+      '@charpentier/platform-web':
+        specifier: workspace:*
+        version: link:../../packages/platform-web
       '@electric-sql/pglite':
         specifier: ^0.5.16
         version: 0.5.16
@@ -327,6 +330,12 @@ importers:
       '@charpentier/platform':
         specifier: workspace:*
         version: link:../platform
+      '@charpentier/schema':
+        specifier: workspace:*
+        version: link:../schema
+      '@hocuspocus/provider':
+        specifier: ^4.8.0
+        version: 4.8.0(y-protocols@1.0.7(yjs@13.6.33))(yjs@13.6.33)
       y-indexeddb:
         specifier: ^9.0.12
         version: 9.0.12(yjs@13.6.33)

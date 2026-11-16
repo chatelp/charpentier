@@ -12,6 +12,14 @@ export const LIBRARY_GUID = 'library';
 
 type Entry = Y.Map<unknown>;
 
+/** A project as the account's library keeps it (the same shape as the desktop's). */
+export interface LibraryRecord extends ProjectSummary {
+  readonly createdAt: string;
+}
+
+/** Origin of the changes that come from the account (not to be sent back). */
+const ADOPTED = Symbol('adopted');
+
 const now = () => new Date().toISOString();
 
 function toSummary(id: string, entry: Entry): ProjectSummary {
@@ -51,6 +59,43 @@ export class DocumentLibrary implements LibraryService {
     const entry = projects.get(projectId);
     if (!entry) throw new Error(`Unknown project: ${projectId}`);
     projects.doc?.transact(() => change(entry));
+  }
+
+  /** Every project with its dates, trashed or not: what the sync compares (phase 4.7 a). */
+  async all(): Promise<readonly LibraryRecord[]> {
+    const projects = await this.#projects();
+    return [...projects.entries()].map(([id, entry]) => ({
+      ...toSummary(id, entry),
+      createdAt: String(entry.get('createdAt') ?? ''),
+    }));
+  }
+
+  /** A project created or changed on another device, with exactly its dates (not sent back). */
+  async adopt(record: LibraryRecord): Promise<void> {
+    const projects = await this.#projects();
+    projects.doc?.transact(() => {
+      let entry = projects.get(record.id);
+      if (!entry) {
+        entry = new Y.Map<unknown>();
+        projects.set(record.id, entry);
+      }
+      entry.set('title', record.title);
+      entry.set('kind', record.kind);
+      entry.set('createdAt', record.createdAt);
+      entry.set('updatedAt', record.updatedAt);
+      if (record.trashedAt) entry.set('trashedAt', record.trashedAt);
+      else entry.delete('trashedAt');
+    }, ADOPTED);
+  }
+
+  /** Called when the library changes here (not by `adopt`). */
+  async onLocalChange(listener: () => void): Promise<() => void> {
+    const projects = await this.#projects();
+    const observer = (_events: unknown, transaction: Y.Transaction) => {
+      if (transaction.origin !== ADOPTED) listener();
+    };
+    projects.observeDeep(observer);
+    return () => projects.unobserveDeep(observer);
   }
 
   async list(): Promise<readonly ProjectSummary[]> {

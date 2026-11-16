@@ -28,6 +28,14 @@ document.documentElement.lang = i18n.language;
 
 createRoot(container).render(
   <StrictMode>
-    <App platform={createWebPlatform({ simulateSystem: x250 })} i18n={i18n} features={features} />
+    <App
+      platform={createWebPlatform({
+        simulateSystem: x250,
+        // Served by the author's server (its build): the account syncs with it (phase 4.7 a).
+        sync: import.meta.env.PROD,
+      })}
+      i18n={i18n}
+      features={features}
+    />
   </StrictMode>,
 );
