@@ -119,12 +119,21 @@ function Root() {
     if (!sync) return;
     let signingIn = false;
     let previous = sync.status();
+    // A device already signed in when the app starts is not signing in: its
+    // sync merely resumes (16 November 2026, an empty project trashed at a
+    // plain relaunch). Only a sign-in after being signed out counts.
+    let signedOut: boolean | undefined;
+    void sync.account().then((account) => {
+      signedOut ??= account === null;
+    });
     return sync.onStatusChange((status) => {
+      if (status === 'off') signedOut = true;
       if (previous === 'off' && status !== 'off') signingIn = true;
       previous = status;
       const session = current.current;
       if (!signingIn || status !== 'synced' || !session) return;
       signingIn = false;
+      if (!signedOut) return;
       projectFromSync(platform, session, titles).then(
         (id) => {
           if (!id) return;

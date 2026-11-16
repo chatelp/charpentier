@@ -13,7 +13,7 @@ const isMac = /Mac/.test(navigator.platform);
 const mod = (keys: string) => `{ControlOrMeta>}${keys}{/ControlOrMeta}`;
 
 /** A sync service as the desktop host gives it, the server played by the test. */
-function fakeSync() {
+function fakeSync({ signedIn = false } = {}) {
   let status: SyncStatus = 'off';
   const listeners = new Set<(s: SyncStatus) => void>();
   const calls: string[] = [];
@@ -29,7 +29,9 @@ function fakeSync() {
     status: () => status,
     onStatusChange: (l) => (listeners.add(l), () => listeners.delete(l)),
     account: async () =>
-      status === 'off' ? null : { server: 'https://ecrire.example.org', email: 'p@example.org' },
+      status === 'off' && !signedIn
+        ? null
+        : { server: 'https://ecrire.example.org', email: 'p@example.org' },
     signIn: async ({ server, email, password }): Promise<SignInResult> => {
       calls.push(`signIn ${server} ${email} ${password}`);
       if (password !== 'bon mot de passe') return 'invalid';
@@ -149,5 +151,16 @@ describe('signing in to the sync server (step 4.4)', () => {
     await screen.findByText('Les Eaux basses');
     expect((await platform.library.list()).map((p) => p.title)).toEqual(['Les Eaux basses']);
     expect((await platform.library.listTrashed()).map((p) => p.title)).toEqual(['Mon roman']);
+  });
+
+  it('keeps the open project when a signed-in device merely starts again', async () => {
+    const { service, setStatus } = fakeSync({ signedIn: true });
+    const platform = await start(service);
+    setStatus('connecting');
+    await platform.library.create({ title: 'Les Eaux basses', kind: 'novel' });
+    setStatus('synced');
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    expect(screen.queryByRole('heading', { name: 'Bibliothèque' })).toBeNull();
+    expect(await platform.library.listTrashed()).toEqual([]);
   });
 });
