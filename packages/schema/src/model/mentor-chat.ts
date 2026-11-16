@@ -19,6 +19,8 @@ export interface ChatMessage {
   readonly work?: WorkRef;
   /** The author's validated style choice the answer relies on (phase 6.4). */
   readonly styleChoiceId?: string;
+  /** What the answer wrote in the notebook (« Noté au carnet », phase 6.5). */
+  readonly noted?: readonly NotedChange[];
   readonly at: string;
 }
 
@@ -102,6 +104,7 @@ export function addChatMessage(
         ...(message.sceneId !== undefined && { sceneId: message.sceneId }),
         ...(message.work !== undefined && { work: { ...message.work } }),
         ...(message.styleChoiceId !== undefined && { styleChoiceId: message.styleChoiceId }),
+        ...(message.noted?.length && { noted: message.noted.map((n) => ({ ...n })) }),
       },
     ]);
   }, origin);
@@ -113,6 +116,12 @@ export function addChatMessage(
  * document, apart from the conversation about the text. The Compagnon's
  * messages say which section they are about and what they proposed.
  */
+/** A note an answer wrote, corrected or removed. */
+export interface NotedChange {
+  readonly path: string;
+  readonly change: 'created' | 'updated' | 'removed';
+}
+
 export interface InterviewMessage extends Omit<ChatMessage, 'example' | 'sceneId'> {
   /** Free conversation, or questions section by section. */
   readonly mode?: InterviewMode;
@@ -180,6 +189,7 @@ export function addInterviewMessage(
         ...(message.why !== undefined && { why: message.why }),
         ...(message.placed !== undefined && { placed: message.placed }),
         ...(message.reference !== undefined && { reference: { ...message.reference } }),
+        ...(message.noted?.length && { noted: message.noted.map((n) => ({ ...n })) }),
       },
     ]);
   }, origin);

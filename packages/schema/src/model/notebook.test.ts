@@ -2,6 +2,11 @@ import { describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
 import { addInterviewMessage, addChatMessage, companionThread } from './mentor-chat';
 import {
+  authorKeepNote,
+  authorRestoreNote,
+  authorTrashNote,
+  notePath,
+  noteParts,
   agentRenameNote,
   agentTrashNote,
   agentWriteNote,
@@ -56,6 +61,47 @@ describe('the Compagnon’s notebook (phase 6.5)', () => {
     agentTrashNote(doc, '/memories/projet/a.md', COMPAGNON);
     expect(listNotes(doc)).toEqual([]);
     expect(listTrashedNotes(doc).map((n) => n.text)).toEqual(['A']);
+  });
+});
+
+describe('what the Carnet page shows of a note (DESIGN §4.5)', () => {
+  it('reads its notebook, nature and title from its file', () => {
+    expect(
+      noteParts({
+        path: '/memories/projet/decisions/fin.md',
+        text: '# La fin reste ouverte\nPas d’épilogue.',
+      }),
+    ).toEqual({
+      book: 'projet',
+      nature: 'decisions',
+      title: 'La fin reste ouverte',
+      body: 'Pas d’épilogue.',
+    });
+    expect(noteParts({ path: '/memories/auteur/matin.md', text: 'Écrit le matin.' })).toMatchObject(
+      {
+        book: 'auteur',
+        nature: 'accompagnement',
+        title: 'Matin',
+      },
+    );
+    expect(notePath('projet', 'doutes', 'Le rythme du début ?')).toBe(
+      '/memories/projet/doutes/le-rythme-du-debut.md',
+    );
+  });
+
+  it('keeps a note the author put in the trash from being written again', () => {
+    const doc = new Y.Doc();
+    const id = agentWriteNote(doc, { path: '/memories/projet/a.md', text: 'A' }, COMPAGNON);
+    authorTrashNote(doc, id, AUTHOR);
+    expect(() =>
+      agentWriteNote(doc, { path: '/memories/projet/a.md', text: 'A' }, COMPAGNON),
+    ).toThrow(NoteRefused);
+    authorRestoreNote(doc, id, AUTHOR);
+    authorKeepNote(doc, id, AUTHOR);
+    expect(findNote(doc, '/memories/projet/a.md')).toMatchObject({
+      by: 'author',
+      authorship: 'kept',
+    });
   });
 });
 

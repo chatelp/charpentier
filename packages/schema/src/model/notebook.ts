@@ -17,6 +17,21 @@ import { AUTHOR, type Origin } from './origins';
  * field). Nothing is deleted: a removed note goes to the trash.
  */
 
+/** The seven natures of a note (DESIGN §4.5, Carnet), in the page's order, by their folder. */
+export const noteNatures = [
+  'a-reprendre',
+  'decisions',
+  'intentions',
+  'histoire',
+  'doutes',
+  'accompagnement',
+  'facon-d-ecrire',
+] as const;
+export type NoteNature = (typeof noteNatures)[number];
+
+/** The two notebooks: this book's, and the author's across their books. */
+export type NoteBook = 'projet' | 'auteur';
+
 export interface Note {
   readonly id: string;
   readonly path: string;
@@ -27,6 +42,53 @@ export interface Note {
   readonly createdAt: string;
   readonly updatedAt: string;
   readonly trashedAt?: string;
+  /** Who put it in the trash: the author's refusal, which the Compagnon respects. */
+  readonly trashedBy?: 'compagnon' | 'author';
+  /** How an author's note became theirs: written, corrected, or kept as it was. */
+  readonly authorship?: 'written' | 'corrected' | 'kept';
+}
+
+/**
+ * What the page shows of a note, read from its file: its notebook and nature
+ * from the folders (`/memories/projet/decisions/…`), its title from its first
+ * line (`# La fin reste ouverte`), else from its name.
+ */
+export function noteParts(note: Pick<Note, 'path' | 'text'>): {
+  readonly book: NoteBook;
+  readonly nature: NoteNature;
+  readonly title: string;
+  readonly body: string;
+} {
+  const parts = note.path.split('/').filter(Boolean);
+  const book: NoteBook = parts[1] === 'auteur' ? 'auteur' : 'projet';
+  const folder = parts[2] ?? '';
+  const nature = (noteNatures as readonly string[]).includes(folder)
+    ? (folder as NoteNature)
+    : book === 'auteur'
+      ? 'accompagnement'
+      : 'histoire';
+  const lines = note.text.split('\n');
+  const heading = /^#\s+(.+)$/.exec(lines[0]?.trim() ?? '')?.[1];
+  const name = (parts.at(-1) ?? '').replace(/\.md$/, '').replace(/-/g, ' ');
+  return {
+    book,
+    nature,
+    title: heading ?? name.charAt(0).toUpperCase() + name.slice(1),
+    body: (heading ? lines.slice(1) : lines).join('\n').trim(),
+  };
+}
+
+/** The path of a note of this notebook and nature, from its title. */
+export function notePath(book: NoteBook, nature: NoteNature, title: string): string {
+  const slug =
+    title
+      .normalize('NFD')
+      .replace(/\p{Diacritic}/gu, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+      .slice(0, 60) || 'note';
+  return `/memories/${book}/${nature}/${slug}.md`;
 }
 
 /** The top-level map of a document holding a notebook. */
@@ -36,6 +98,8 @@ const notebook = (doc: Y.Doc) => doc.getMap<Y.Map<unknown>>(NOTEBOOK);
 
 const toNote = (id: string, m: Y.Map<unknown>): Note => {
   const trashedAt = m.get('trashedAt');
+  const trashedBy = m.get('trashedBy');
+  const authorship = m.get('authorship');
   const sources = m.get('sources');
   return {
     id,
@@ -46,6 +110,12 @@ const toNote = (id: string, m: Y.Map<unknown>): Note => {
     createdAt: String(m.get('createdAt') ?? ''),
     updatedAt: String(m.get('updatedAt') ?? ''),
     ...(typeof trashedAt === 'string' && { trashedAt }),
+    ...((authorship === 'written' || authorship === 'corrected' || authorship === 'kept') && {
+      authorship,
+    }),
+    ...(typeof trashedAt === 'string' && {
+      trashedBy: trashedBy === 'author' ? 'author' : 'compagnon',
+    }),
   };
 };
 
@@ -88,7 +158,13 @@ const mapOf = (doc: Y.Doc, id: string) => notebook(doc).get(id);
 
 function write(
   doc: Y.Doc,
-  input: { path: string; text: string; by: Note['by']; sources?: readonly string[] },
+  input: {
+    path: string;
+    text: string;
+    by: Note['by'];
+    sources?: readonly string[];
+    authorship?: Note['authorship'];
+  },
   origin: Origin,
   existing?: Note,
 ): string {
@@ -103,6 +179,7 @@ function write(
     m.set('path', input.path);
     m.set('text', input.text);
     m.set('by', input.by);
+    if (input.authorship) m.set('authorship', input.authorship);
     m.set('updatedAt', nowIso());
     if (input.sources?.length) {
       const before = existing?.sources ?? [];
@@ -123,6 +200,12 @@ export function agentWriteNote(
   const existing = findNote(doc, input.path);
   if (existing?.by === 'author')
     throw new NoteRefused('author', `${input.path} is the author's note: read only.`);
+  // A note the author put in the trash is their refusal: not written again.
+  if (
+    !existing &&
+    listTrashedNotes(doc).some((n) => n.path === input.path && n.trashedBy === 'author')
+  )
+    throw new NoteRefused('author', `the author removed ${input.path}: do not write it again.`);
   return write(doc, { ...input, by: 'compagnon' }, origin, existing);
 }
 
@@ -143,7 +226,11 @@ export function agentTrashNote(doc: Y.Doc, path: string, origin: Origin): void {
   const note = findNote(doc, path);
   if (!note) throw new NoteRefused('missing', `${path} does not exist.`);
   if (note.by === 'author') throw new NoteRefused('author', `${path} is the author's note.`);
-  doc.transact(() => mapOf(doc, note.id)?.set('trashedAt', nowIso()), origin);
+  doc.transact(() => {
+    const m = mapOf(doc, note.id);
+    m?.set('trashedAt', nowIso());
+    m?.set('trashedBy', 'compagnon');
+  }, origin);
 }
 
 // ─── The author's (the note becomes theirs) ───
@@ -153,7 +240,12 @@ export function authorWriteNote(
   input: { path: string; text: string },
   origin: Origin = AUTHOR,
 ): string {
-  return write(doc, { ...input, by: 'author' }, origin, findNote(doc, input.path));
+  return write(
+    doc,
+    { ...input, by: 'author', authorship: 'written' },
+    origin,
+    findNote(doc, input.path),
+  );
 }
 
 export function authorEditNote(doc: Y.Doc, id: string, text: string, origin: Origin = AUTHOR) {
@@ -162,14 +254,45 @@ export function authorEditNote(doc: Y.Doc, id: string, text: string, origin: Ori
   doc.transact(() => {
     m.set('text', text);
     m.set('by', 'author');
+    m.set('authorship', 'corrected');
     m.set('updatedAt', nowIso());
   }, origin);
 }
 
 export function authorTrashNote(doc: Y.Doc, id: string, origin: Origin = AUTHOR) {
-  doc.transact(() => mapOf(doc, id)?.set('trashedAt', nowIso()), origin);
+  doc.transact(() => {
+    const m = mapOf(doc, id);
+    m?.set('trashedAt', nowIso());
+    m?.set('trashedBy', 'author');
+  }, origin);
 }
 
 export function authorRestoreNote(doc: Y.Doc, id: string, origin: Origin = AUTHOR) {
-  doc.transact(() => mapOf(doc, id)?.delete('trashedAt'), origin);
+  doc.transact(() => {
+    const m = mapOf(doc, id);
+    m?.delete('trashedAt');
+    m?.delete('trashedBy');
+  }, origin);
+}
+
+/** « Garder » : the note becomes the author's as it is; the Compagnon no longer rewrites it. */
+export function authorKeepNote(doc: Y.Doc, id: string, origin: Origin = AUTHOR) {
+  doc.transact(() => {
+    const m = mapOf(doc, id);
+    if (!m) return;
+    m.set('by', 'author');
+    m.set('authorship', 'kept');
+    m.set('updatedAt', nowIso());
+  }, origin);
+}
+
+/** Moves a note (another nature, the other notebook), keeping its id and history. */
+export function authorMoveNote(doc: Y.Doc, id: string, path: string, origin: Origin = AUTHOR) {
+  doc.transact(() => {
+    const m = mapOf(doc, id);
+    if (!m) return;
+    m.set('path', path);
+    m.set('by', 'author');
+    m.set('updatedAt', nowIso());
+  }, origin);
 }

@@ -7,7 +7,9 @@ import {
   findNote,
   listNotes,
   NoteRefused,
+  noteNatures,
   type Note,
+  type NotedChange,
 } from '@charpentier/schema';
 import type * as Y from 'yjs';
 import { ATELIER_DIR, atelierFiles } from './atelier-files';
@@ -58,6 +60,8 @@ export interface MemoryStore {
   /** The Atelier's files, whole, and their index (empty without the Atelier). */
   atelierWhole(): string;
   atelierIndex(): string;
+  /** What this call wrote, corrected or removed (« Noté au carnet »). */
+  changes(): readonly NotedChange[];
   isEmpty(): boolean;
   /** Runs one command of the memory tool; the text goes back to the model. */
   run(input: Readonly<Record<string, unknown>>): {
@@ -79,6 +83,9 @@ export function projectMemory(input: {
   readonly authorText?: string;
 }): MemoryStore {
   const { mentorDoc, root } = input;
+  const changes = new Map<string, NotedChange['change']>();
+  const changed = (path: string, change: NotedChange['change']) =>
+    changes.set(path, changes.get(path) === 'created' && change === 'updated' ? 'created' : change);
   const atelier = () => (root ? atelierFiles(root) : new Map<string, string>());
   const inAtelier = (path: string) => path === ATELIER_DIR || path.startsWith(`${ATELIER_DIR}/`);
   const origin = agentOrigin(MEMORY_AGENT);
@@ -150,6 +157,7 @@ export function projectMemory(input: {
         .join('\n');
     },
 
+    changes: () => [...changes].map(([path, change]) => ({ path, change })),
     atelierWhole: () => [...atelier()].map(([path, text]) => `## ${path}\n${text}`).join('\n\n'),
     atelierIndex: () =>
       [...atelier()]
@@ -173,9 +181,11 @@ export function projectMemory(input: {
               return fail('the path must be a file under /memories');
             const problem = checkText(command['file_text']);
             if (problem) return fail(problem);
-            if (!findNote(mentorDoc, path) && notes().length >= MAX_NOTES)
+            const exists = !!findNote(mentorDoc, path);
+            if (!exists && notes().length >= MAX_NOTES)
               return fail('the notebook is full: merge or remove notes first');
             write(path, String(command['file_text']));
+            changed(path, exists ? 'updated' : 'created');
             return ok(`File created successfully at: ${path}`);
           }
           case 'str_replace': {
@@ -189,6 +199,7 @@ export function projectMemory(input: {
             const problem = checkText(text);
             if (problem) return fail(problem);
             write(path, text);
+            changed(path, 'updated');
             return ok('The memory file has been edited.');
           }
           case 'insert': {
@@ -201,17 +212,21 @@ export function projectMemory(input: {
             const problem = checkText(text);
             if (problem) return fail(problem);
             write(path, text);
+            changed(path, 'updated');
             return ok(`The file ${path} has been edited.`);
           }
           case 'delete':
             if (!path) return fail('the path must be under /memories');
             agentTrashNote(mentorDoc, path, origin);
+            changed(path, 'removed');
             return ok(`File deleted: ${path}`);
           case 'rename': {
             const from = normalizePath(command['old_path']);
             const to = normalizePath(command['new_path']);
             if (!from || !to) return fail('both paths must be under /memories');
             agentRenameNote(mentorDoc, from, to, origin);
+            changes.delete(from);
+            changed(to, 'updated');
             return ok(`File renamed from ${from} to ${to}`);
           }
           default:
@@ -249,7 +264,7 @@ const WHOLE_NOTEBOOK = 8000;
 
 /** How the Compagnon is told about his notebook, in every mode: the same at every call. */
 export const MEMORY_INSTRUCTIONS = `WHAT YOU KNOW lies in one tree under ${MEMORY_ROOT}, read with the memory tool: ${ATELIER_DIR}/ is the author's Atelier (their sheets, each field with its status; read only: you change it only through proposals they validate); ${PROJECT_DIR}/ and ${AUTHOR_DIR}/ are your notebook.
-YOUR NOTEBOOK: you keep notes across sessions, one note per fact, in ${PROJECT_DIR}/ for this book and ${AUTHOR_DIR}/ for the author as a writer (how they work, what helps them, what they do not want). Note what you will need later and that the Atelier's sheets do not hold: the author's story and intentions, their decisions and why, their doubts, the questions to come back to, how they want to be accompanied. Keep notes short, dated by their content, and up to date: correct or remove a note that is no longer true rather than adding a contradicting one. Never write lines of the novel, dialogue or secrets in it. Notes marked "author" are the author's: read them, never change them. The notebook as it stands comes with the author's last words; when only its index comes, view a note before relying on its details.
+YOUR NOTEBOOK: each note is a file in a folder of its nature: ${PROJECT_DIR}/<nature>/<name>.md for this book, ${AUTHOR_DIR}/<nature>/<name>.md for the author; natures: ${noteNatures.join(', ')} ("a-reprendre": what to come back to with the author; "histoire": what the author tells of themselves and where the book comes from; "accompagnement" and "facon-d-ecrire" usually about the author). Its first line is a short title, "# La fin reste ouverte". You keep notes across sessions, one note per fact, in ${PROJECT_DIR}/ for this book and ${AUTHOR_DIR}/ for the author as a writer (how they work, what helps them, what they do not want). Note what you will need later and that the Atelier's sheets do not hold: the author's story and intentions, their decisions and why, their doubts, the questions to come back to, how they want to be accompanied. Keep notes short, dated by their content, and up to date: correct or remove a note that is no longer true rather than adding a contradicting one. Never write lines of the novel, dialogue or secrets in it. Notes marked "author" are the author's: read them, never change them. The notebook as it stands comes with the author's last words; when only its index comes, view a note before relying on its details.
 PRECEDENCE, when what you know disagrees over time:
 1. What the author validated in the Atelier is their decision: it comes first, before your notebook and before old messages.
 2. A note the author wrote or corrected comes before your own notes.

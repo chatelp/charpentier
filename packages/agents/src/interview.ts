@@ -389,6 +389,7 @@ export async function interviewTurn(input: {
       ...(turn.question && { question: turn.question }),
       ...(turn.why && { why: turn.why }),
       ...(placed.length > 0 && { placed }),
+      ...(memory.changes().length > 0 && { noted: memory.changes() }),
     },
     agentOrigin('interview'),
   );

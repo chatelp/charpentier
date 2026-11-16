@@ -60,6 +60,7 @@ export async function answerAuthor(input: {
       text: answer.reply,
       ...(answer.example !== undefined && { example: answer.example }),
       ...(input.sceneId !== undefined && { sceneId: input.sceneId }),
+      ...(memory.changes().length > 0 && { noted: memory.changes() }),
       // Only a choice the author validated; an invented id is dropped.
       ...(validatedStyleChoice(input.root, answer.styleChoiceId) && {
         styleChoiceId: answer.styleChoiceId,
