@@ -8,7 +8,7 @@ import {
 } from '@charpentier/schema';
 import type * as Y from 'yjs';
 import { compagnonChat } from './chat';
-import { sceneContext, sheetsSummary, validatedStyleChoice } from './context';
+import { sceneContext, validatedStyleChoice } from './context';
 import { projectMemory, threadWindow } from './memory';
 
 /** Turns of the conversation sent back to the model (the oldest are left out). */
@@ -35,6 +35,7 @@ export async function answerAuthor(input: {
   const thread = companionThread(input.mentorDoc);
   const memory = projectMemory({
     mentorDoc: input.mentorDoc,
+    root: input.root,
     sources: [last.id],
     authorText: thread
       .filter((m) => m.role === 'author')
@@ -43,7 +44,8 @@ export async function answerAuthor(input: {
   });
   const answer = await compagnonChat(
     input.llm,
-    { ...context, level: readMentorLevel(input.root), sheets: sheetsSummary(input.root) },
+    // The Atelier comes through the Compagnon's tree, whole with its statuses.
+    { ...context, level: readMentorLevel(input.root) },
     threadWindow(thread, memory, HISTORY).map((m) => ({
       role: m.role,
       text: m.mode === 'interview' ? `(in the interview) ${m.text}` : m.text,

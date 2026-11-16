@@ -25,6 +25,7 @@ import {
 } from '@charpentier/schema';
 import type * as Y from 'yjs';
 import {
+  atelierContext,
   generateWithMemory,
   MEMORY_INSTRUCTIONS,
   memoryContext,
@@ -294,6 +295,7 @@ export async function interviewTurn(input: {
   const authorText = authorMessages.map((m) => m.text).join('\n');
   const memory = projectMemory({
     mentorDoc,
+    root,
     ...(last?.role === 'author' && { sources: [last.id] }),
     authorText: thread
       .filter((m) => m.role === 'author')
@@ -319,7 +321,7 @@ export async function interviewTurn(input: {
   const opening = { role: 'user' as const, content: 'The thread with the author so far:' };
   const before = [...(pastTurns[0]?.role === 'user' ? [] : [opening]), ...pastTurns];
   const now = [
-    `The author's Atelier as it stands (their own decisions, for reference):\n<atelier>\n${atelierState(root)}\n</atelier>`,
+    atelierContext(memory),
     memoryContext(memory),
     interviewModeText({ mode, section }),
     authorSpoke

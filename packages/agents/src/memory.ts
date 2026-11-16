@@ -10,6 +10,7 @@ import {
   type Note,
 } from '@charpentier/schema';
 import type * as Y from 'yjs';
+import { ATELIER_DIR, atelierFiles } from './atelier-files';
 import { narrativeProseIn } from './guard';
 
 /**
@@ -54,6 +55,9 @@ export interface MemoryStore {
   index(): string;
   /** Every note, whole, with its path. */
   whole(): string;
+  /** The Atelier's files, whole, and their index (empty without the Atelier). */
+  atelierWhole(): string;
+  atelierIndex(): string;
   isEmpty(): boolean;
   /** Runs one command of the memory tool; the text goes back to the model. */
   run(input: Readonly<Record<string, unknown>>): {
@@ -68,11 +72,15 @@ export interface MemoryStore {
  */
 export function projectMemory(input: {
   readonly mentorDoc: Y.Doc;
+  /** The Atelier, read only under /memories/atelier (a source like the notebook). */
+  readonly root?: Y.Doc;
   readonly sources?: readonly string[];
   /** The author's own words, which a note may quote. */
   readonly authorText?: string;
 }): MemoryStore {
-  const { mentorDoc } = input;
+  const { mentorDoc, root } = input;
+  const atelier = () => (root ? atelierFiles(root) : new Map<string, string>());
+  const inAtelier = (path: string) => path === ATELIER_DIR || path.startsWith(`${ATELIER_DIR}/`);
   const origin = agentOrigin(MEMORY_AGENT);
   const notes = () => listNotes(mentorDoc);
   const ok = (text: string) => ({ text, isError: false });
@@ -95,6 +103,15 @@ export function projectMemory(input: {
     );
 
   const view = (path: string) => {
+    if (inAtelier(path)) {
+      const files = atelier();
+      const file = files.get(path);
+      if (file !== undefined) return ok(`(the author's Atelier: read only)\n${numbered(file)}`);
+      const below = [...files.keys()].filter((p) => p.startsWith(`${path}/`));
+      return below.length
+        ? ok([`Files in ${path} (read only):`, ...below].join('\n'))
+        : fail(`${path} does not exist`);
+    }
     const note = findNote(mentorDoc, path);
     if (note)
       return ok(
@@ -105,6 +122,9 @@ export function projectMemory(input: {
       return ok(
         [
           `Files in ${path}:`,
+          ...(path === MEMORY_ROOT && root
+            ? [`${ATELIER_DIR}/ (the author's Atelier, read only)`]
+            : []),
           ...below.map((n) => `${n.text.length}\t${n.path}${n.by === 'author' ? ' (author)' : ''}`),
           ...(below.length === 0 ? ['(empty)'] : []),
         ].join('\n'),
@@ -130,8 +150,20 @@ export function projectMemory(input: {
         .join('\n');
     },
 
+    atelierWhole: () => [...atelier()].map(([path, text]) => `## ${path}\n${text}`).join('\n\n'),
+    atelierIndex: () =>
+      [...atelier()]
+        .map(([path, text]) => `${path}: ${text.split('\n').slice(1).join(' · ').slice(0, 140)}`)
+        .join('\n'),
+
     run(command) {
       const path = normalizePath(command['path']);
+      // The Atelier is read here, changed only through proposals the author validates.
+      const target = path ?? normalizePath(command['old_path']);
+      if (command['command'] !== 'view' && target && inAtelier(target))
+        return fail(
+          "the Atelier is the author's, read only: propose a change instead (in the interview, PROPOSALS)",
+        );
       try {
         switch (command['command']) {
           case 'view':
@@ -216,12 +248,27 @@ export function threadWindow<T>(thread: readonly T[], store: MemoryStore, window
 const WHOLE_NOTEBOOK = 8000;
 
 /** How the Compagnon is told about his notebook, in every mode: the same at every call. */
-export const MEMORY_INSTRUCTIONS = `YOUR NOTEBOOK (memory tool, under ${MEMORY_ROOT}): you keep notes across sessions, one note per fact, in ${PROJECT_DIR}/ for this book and ${AUTHOR_DIR}/ for the author as a writer (how they work, what helps them, what they do not want). Note what you will need later and that the Atelier's sheets do not hold: the author's story and intentions, their decisions and why, their doubts, the questions to come back to, how they want to be accompanied. Keep notes short, dated by their content, and up to date: correct or remove a note that is no longer true rather than adding a contradicting one. Never write lines of the novel, dialogue or secrets in it. Notes marked "author" are the author's: read them, never change them. The notebook as it stands comes with the author's last words; when only its index comes, view a note before relying on its details.
+export const MEMORY_INSTRUCTIONS = `WHAT YOU KNOW lies in one tree under ${MEMORY_ROOT}, read with the memory tool: ${ATELIER_DIR}/ is the author's Atelier (their sheets, each field with its status; read only: you change it only through proposals they validate); ${PROJECT_DIR}/ and ${AUTHOR_DIR}/ are your notebook.
+YOUR NOTEBOOK: you keep notes across sessions, one note per fact, in ${PROJECT_DIR}/ for this book and ${AUTHOR_DIR}/ for the author as a writer (how they work, what helps them, what they do not want). Note what you will need later and that the Atelier's sheets do not hold: the author's story and intentions, their decisions and why, their doubts, the questions to come back to, how they want to be accompanied. Keep notes short, dated by their content, and up to date: correct or remove a note that is no longer true rather than adding a contradicting one. Never write lines of the novel, dialogue or secrets in it. Notes marked "author" are the author's: read them, never change them. The notebook as it stands comes with the author's last words; when only its index comes, view a note before relying on its details.
 PRECEDENCE, when what you know disagrees over time:
 1. What the author validated in the Atelier is their decision: it comes first, before your notebook and before old messages.
 2. A note the author wrote or corrected comes before your own notes.
 3. Between two things the author said, the more recent wins, unless a validated decision says otherwise.
 4. When they contradict each other, do not settle it alone and never touch a validated field: point it out to the author with both sides ("you validated X, but you said yesterday Y: shall we change it?"), and update your own note so that it records how things evolved (what was said, when, and what was decided).`;
+
+/** An Atelier this short goes whole with every call; beyond, its index (and the tool). */
+const WHOLE_ATELIER = 16000;
+
+/**
+ * The Atelier as it stands, sent with the author's last words: a source like
+ * the notebook, whole while short, else its index (each sheet read as needed).
+ */
+export function atelierContext(store: MemoryStore): string {
+  const whole = store.atelierWhole();
+  return whole.length <= WHOLE_ATELIER
+    ? `The author's Atelier as it stands (their decisions and what waits for them), ${ATELIER_DIR}:\n<atelier>\n${whole}\n</atelier>`
+    : `The author's Atelier, its index (view a sheet under ${ATELIER_DIR} for its fields):\n<atelier-index>\n${store.atelierIndex()}\n</atelier-index>`;
+}
 
 /** The notebook as it stands, sent with the author's last words: whole while short, else its index. */
 export function memoryContext(store: MemoryStore): string {

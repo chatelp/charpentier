@@ -5,6 +5,7 @@ import {
   AUTHOR,
   authorEditNote,
   chatMessages,
+  createEntity,
   findNote,
   initProject,
   listNotes,
@@ -13,7 +14,7 @@ import { describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
 import { answerAuthor } from './conversation';
 import { interviewTurn } from './interview';
-import { generateWithMemory, projectMemory, threadWindow } from './memory';
+import { atelierContext, generateWithMemory, projectMemory, threadWindow } from './memory';
 
 function project() {
   const root = new Y.Doc({ guid: 'project:p' });
@@ -245,5 +246,19 @@ describe('one Compagnon: each mode knows what was said in the other (D-35)', () 
         30,
       )[0],
     ).toBe(40);
+  });
+
+  it('reads the Atelier in the same tree, read only', () => {
+    const { root, mentorDoc } = project();
+    createEntity(root, 'characters', { name: 'Hélène', occupation: 'batelière' });
+    const memory = projectMemory({ mentorDoc, root });
+    expect(memory.run({ command: 'view', path: '/memories' }).text).toContain('/memories/atelier/');
+    expect(
+      memory.run({ command: 'view', path: '/memories/atelier/personnages/helene.md' }).text,
+    ).toContain('occupation (validated): batelière');
+    expect(
+      memory.run({ command: 'create', path: '/memories/atelier/personnages/x.md', file_text: 'x' }),
+    ).toMatchObject({ isError: true });
+    expect(atelierContext(memory)).toContain('name (validated): Hélène');
   });
 });

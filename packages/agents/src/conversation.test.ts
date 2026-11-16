@@ -16,7 +16,7 @@ import * as Y from 'yjs';
 import { answerAuthor } from './conversation';
 
 describe('conversation with the Compagnon', () => {
-  it('answers the author’s last message with the scene and the validated sheets as context', async () => {
+  it('answers the author’s last message with the scene and the Atelier as context', async () => {
     const root = new Y.Doc({ guid: 'project:p1' });
     initProject(root, { id: 'p1', title: 'Les serres', kind: 'novel' });
     const chapterId = createChapter(root, { title: 'Un' });
@@ -50,7 +50,8 @@ describe('conversation with the Compagnon', () => {
     };
     expect(await answerAuthor({ llm, root, mentorDoc, sceneDoc, sceneId })).toBe('answered');
     expect(asked).toContain('Il pleuvait sur Nantes.');
-    expect(asked).toContain('name: Hélène');
+    // The Atelier through the Compagnon's tree: each field with its status.
+    expect(asked).toContain('name (validated): Hélène');
     expect(asked).toContain('Ma scène est-elle trop lente ?');
     expect(chatMessages(mentorDoc).map((m) => `${m.role}: ${m.text}`)).toEqual([
       'author: Ma scène est-elle trop lente ?',

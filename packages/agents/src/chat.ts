@@ -1,6 +1,12 @@
 import type { LlmService } from '@charpentier/platform';
 import { isOneSentence, narrativeProseIn } from './guard';
-import { generateWithMemory, MEMORY_INSTRUCTIONS, memoryContext, type MemoryStore } from './memory';
+import {
+  atelierContext,
+  generateWithMemory,
+  MEMORY_INSTRUCTIONS,
+  memoryContext,
+  type MemoryStore,
+} from './memory';
 import { compagnonSystemPrompt, chatAnswerSchema, type MentorLevel } from './prompts';
 
 export interface ChatContext {
@@ -104,7 +110,12 @@ export async function compagnonChat(
     ...before.map((m, index) => (index === before.length - 1 ? { ...m, stable: true } : m)),
     {
       role: 'user' as const,
-      content: [contextMessage(context), memory && memoryContext(memory), lastAuthor?.text ?? '']
+      content: [
+        contextMessage(context),
+        memory && atelierContext(memory),
+        memory && memoryContext(memory),
+        lastAuthor?.text ?? '',
+      ]
         .filter(Boolean)
         .join('\n\n'),
     },
