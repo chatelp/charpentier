@@ -14,6 +14,10 @@ services:
       NETBOOT_MACS: ${NETBOOT_MACS:-}
       # The administration page (phase 4.6) reports on the backups, read-only.
       BACKUP_DIR: /backups
+      # The networks that reach /admin, named one by one: never Docker's own
+      # ranges, since an IPv6 client comes through Docker's proxy with the
+      # address of the bridge (infra/README.md, Administration).
+      ADMIN_NETWORKS: ${ADMIN_NETWORKS:?set ADMIN_NETWORKS in .env}
     # The X250's binary cache (D-31): rebuilt by the CI if lost, so not backed up.
     volumes:
       - cache:/data/nix-cache
