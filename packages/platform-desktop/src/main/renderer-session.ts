@@ -125,6 +125,8 @@ export class RendererSession {
         return (await this.services.sync?.devices()) ?? null;
       case 'sync.revokeDevice':
         return (await this.services.sync?.revokeDevice(request.id)) ?? false;
+      case 'sync.adminPage':
+        return (await this.services.sync?.adminPage()) ?? null;
       case 'system.snapshot': {
         const system = this.services.system;
         if (!system) return null;

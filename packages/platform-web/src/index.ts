@@ -142,5 +142,11 @@ export function createWebPlatform(
     secrets: null,
     spellcheck: null,
     system,
+    // No browser to open on the simulated X250.
+    ...(!system && {
+      openExternal: (url: string) => {
+        if (/^https?:\/\//.test(url)) globalThis.open?.(url, '_blank', 'noopener,noreferrer');
+      },
+    }),
   };
 }

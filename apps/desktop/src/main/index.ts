@@ -389,6 +389,10 @@ ipcMain.handle(IPC_INVOKE, async (event, request: Request) => {
         return (system as LinuxSystem).printPdf(pdf, job);
       }
       return sessionOf(event.sender).handle(request);
+    case 'host.openExternal':
+      // An http(s) address in the system's browser (« Administrer le serveur… »), nothing else.
+      if (/^https?:\/\//.test(request.url)) await shell.openExternal(request.url);
+      return null;
     case 'host.revealLibraryFolder':
       await shell.openPath(libraryFolder);
       return null;

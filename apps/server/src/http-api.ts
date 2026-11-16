@@ -9,7 +9,7 @@ import type { Database } from './database';
  *                               with `cookie: true` (the browser, phase 4.7 a): the token goes
  *                               in a cookie the page cannot read, never in the body
  *   POST   /api/logout         signs this device out
- *   GET    /api/account        { userId, email } of the signed-in device
+ *   GET    /api/account        { userId, email, admin } of the signed-in device
  *   GET    /api/devices        the devices signed in to the account
  *   DELETE /api/devices/:id    signs a device out
  *   GET    /api/health         « ok », for the container's health check
@@ -208,10 +208,16 @@ export async function handleApi(
     if (!bearer(request)) response.setHeader('Set-Cookie', webCookie('', 0));
     send(response, 204);
   } else if (route === 'GET /api/account') {
-    const { rows } = await db.query<{ email: string }>('select email from users where id = $1', [
-      session.userId,
-    ]);
-    send(response, 200, { userId: session.userId, email: rows[0]?.email ?? '' });
+    const { rows } = await db.query<{ email: string; is_admin: boolean }>(
+      'select email, is_admin from users where id = $1',
+      [session.userId],
+    );
+    send(response, 200, {
+      userId: session.userId,
+      email: rows[0]?.email ?? '',
+      // The app offers « Administrer le serveur… » to an administrator (phase 4.6).
+      admin: rows[0]?.is_admin === true,
+    });
   } else if (route === 'GET /api/devices') {
     const devices = await listSessions(db, session.userId);
     send(response, 200, {

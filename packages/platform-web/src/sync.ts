@@ -387,6 +387,19 @@ export class WebSync implements SyncService {
     }
   }
 
+  /** The administration page, when the account administers the server. */
+  async adminPage(): Promise<string | null> {
+    if (!this.#stored()) return null;
+    try {
+      const response = await this.#fetch('/api/account');
+      if (!response.ok) return null;
+      const body = (await response.json()) as { admin?: unknown };
+      return body.admin === true ? `${this.deps.origin}/admin` : null;
+    } catch {
+      return null;
+    }
+  }
+
   /** Waits until everything is sent and received (signing out, tests). */
   async idle(timeoutMs = 10_000): Promise<boolean> {
     const deadline = Date.now() + timeoutMs;

@@ -360,6 +360,22 @@ export class SyncEngine {
     }
   }
 
+  /** The administration page, when the account administers the server. */
+  async adminPage(): Promise<string | null> {
+    const account = this.deps.credentials.load();
+    if (!account) return null;
+    try {
+      const response = await (this.deps.fetch ?? fetch)(`${account.server}/api/account`, {
+        headers: { Authorization: `Bearer ${account.token}` },
+      });
+      if (!response.ok) return null;
+      const body = (await response.json()) as { admin?: unknown };
+      return body.admin === true ? `${account.server}/admin` : null;
+    } catch {
+      return null;
+    }
+  }
+
   /** Waits until everything is sent and received (tests, quitting). */
   async idle(timeoutMs = 10_000): Promise<boolean> {
     const deadline = Date.now() + timeoutMs;

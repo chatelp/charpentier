@@ -40,7 +40,8 @@ describe('the browser’s session (phase 4.7 a)', () => {
     );
     const jar = cookie.split(';')[0] ?? '';
     const me = await fetch(`${base}/api/account`, { headers: { Cookie: jar } });
-    expect(await me.json()).toEqual({ userId: helene.userId, email: helene.email });
+    // The first account of a server is its administrator.
+    expect(await me.json()).toEqual({ userId: helene.userId, email: helene.email, admin: true });
     // From another site, the cookie opens nothing.
     const elsewhere = await fetch(`${base}/api/account`, {
       headers: { Cookie: jar, 'Sec-Fetch-Site': 'cross-site' },

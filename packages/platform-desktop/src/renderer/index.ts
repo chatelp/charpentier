@@ -97,8 +97,9 @@ export function createDesktopPlatform(
     system: options.system ?? null,
     // docs/DESIGN.md §4.1: a 34 px title bar merged with the background (none on a device).
     titleBarHeight: bridge.platform === 'darwin' && !appliance ? 34 : 0,
-    // A device has no menu bar: the command zone stands in for it.
+    // A device has no menu bar (the command zone stands in for it), nor a browser.
     ...(!appliance && {
+      openExternal: (url: string) => void bridge.invoke({ type: 'host.openExternal', url }),
       menu: {
         set: (model) => void bridge.invoke({ type: 'host.setMenu', model }),
         onCommand: (listener) =>

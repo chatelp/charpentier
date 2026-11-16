@@ -202,6 +202,7 @@
     "syncSignIn": "Se connecter à un serveur de synchro…",
     "syncSignOut": "Se déconnecter du serveur",
     "syncDevices": "Appareils connectés…",
+    "adminPage": "Administrer le serveur…",
     "openSettings": "Ouvrir les réglages",
     "checkStructure": "Vérifier la structure",
     "trackClues": "Suivre les indices",
@@ -787,7 +788,9 @@
       "synced": "Synchronisé",
       "offline": "Hors ligne",
       "unauthorized": "Synchro en pause : se reconnecter"
-    }
+    },
+    "notAdmin": "Ce compte n’administre pas le serveur, ou le serveur ne répond pas.",
+    "adminOpened": "La page d’administration s’ouvre dans votre navigateur. Elle ne répond que depuis la maison ou par Tailscale."
   },
   "interview": {
     "label": "Entretien",

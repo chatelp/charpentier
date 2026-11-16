@@ -44,6 +44,10 @@ export class IpcSyncService implements SyncService {
     return this.bridge.invoke({ type: 'sync.devices' });
   }
 
+  adminPage() {
+    return this.bridge.invoke({ type: 'sync.adminPage' });
+  }
+
   revokeDevice(id: string) {
     return this.bridge.invoke({ type: 'sync.revokeDevice', id });
   }

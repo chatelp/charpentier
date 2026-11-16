@@ -57,6 +57,18 @@ export const syncCommands: readonly SyncCommand[] = [
     },
   },
   {
+    // The server's administration page (phase 4.6), in the browser; none on the X250.
+    id: 'adminPage',
+    scope: 'global',
+    isEnabled: (ctx) => signedIn(ctx) && !!ctx.platform.openExternal && !ctx.platform.system,
+    run: async (ctx) => {
+      const page = await ctx.platform.sync?.adminPage();
+      if (!page) return ctx.notify(ctx.t('sync.notAdmin'));
+      ctx.platform.openExternal?.(page);
+      ctx.notify(ctx.t('sync.adminOpened'));
+    },
+  },
+  {
     id: 'syncSignOut',
     scope: 'global',
     isEnabled: signedIn,

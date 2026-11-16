@@ -44,4 +44,9 @@ export interface SyncService {
   devices(): Promise<readonly SyncDevice[] | null>;
   /** Signs another device out. */
   revokeDevice(id: string): Promise<boolean>;
+  /**
+   * The address of the server's administration page (`…/admin`, phase 4.6)
+   * when the account administers the server; null otherwise, or unreachable.
+   */
+  adminPage(): Promise<string | null>;
 }
