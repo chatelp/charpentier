@@ -1,7 +1,9 @@
 // Mock (DESIGN §4.5 « Carnet du Compagnon », phase 6.5): the Compagnon's notebook page in
 // the Atelier, a note being corrected, the empty page, the quiet line under a reply in the
 // Entretien and the way back to a note's message. Injected into the real app.
-// window.CARNET = { screen: 'page' | 'corriger' | 'vide' | 'entretien' | 'origine' }.
+// window.CARNET = { screen: 'page' | 'corriger' | 'vide' | 'entretien' | 'origine' | 'fil' |
+// 'fil-panneau' }: the last two show the single thread (1.18), the Entretien and the
+// conversation as two views of it, each folding what was said in the other mode.
 (() => {
   const S = Object.assign({ screen: 'page' }, window.CARNET);
   const css = `
@@ -65,6 +67,29 @@
   .mk-back b{color:var(--ch-mentor);font-weight:500}
   .mk-back .ch-btn{padding:3px 9px;font-size:12px}
   .mk-back kbd{margin-left:4px;color:var(--ch-faint);font:inherit}
+
+  /* The single thread (1.18): what was said in the other mode, folded */
+  .mk-fold{display:flex;align-items:center;gap:8px;width:100%;margin:18px 0;padding:5px 8px;border:0;border-radius:var(--ch-radius-sm);background:transparent;color:var(--ch-muted);font:12px/1.4 var(--ch-font-ui);text-align:left;cursor:pointer}
+  .mk-fold:hover{box-shadow:var(--ch-raise-s)}
+  .mk-fold svg{flex:none;color:var(--ch-faint)}
+  .mk-fold small{color:var(--ch-faint);font:inherit}
+  .mk-fold::after{content:'';flex:1;height:0;margin-left:6px;border-top:1px solid var(--ch-shade);border-bottom:1px solid var(--ch-highlight)}
+  .mk-fold .mk-chev{color:var(--ch-faint)}
+  .mk-open{margin:18px 0}
+  .mk-open .mk-fold{margin:0 0 8px}
+  .mk-open .mk-fold::after{display:none}
+  .mk-open .mk-fold .mk-go{margin-left:auto;color:var(--ch-ink-2)}
+  .mk-open .mk-fold .mk-go kbd{margin-left:4px;color:var(--ch-faint);font:inherit}
+  .mk-open-body{margin-left:15px;padding:2px 0 2px 16px;border-left:1px solid var(--ch-shade);box-shadow:-1px 0 0 var(--ch-highlight)}
+  .mk-open-body .ch-turn-text{color:var(--ch-ink-2)}
+  .mk-open-body .mk-cond{margin:2px 0 0;color:var(--ch-muted);font:11.5px/1.4 var(--ch-font-ui)}
+  .mk-go-line{margin:0 0 4px!important}
+  .mk-go-line .ch-link{color:var(--ch-ink-2);font:inherit}
+  .mk-go-line kbd{color:var(--ch-faint);font:inherit}
+  .ch-transcript .mk-fold{margin:12px 0;font-size:11.5px}
+  .ch-transcript .mk-open{margin:12px 0}
+  .ch-transcript .mk-open-body{margin-left:12px;padding-left:12px}
+  .ch-transcript .mk-open-body .ch-turn-text{font-size:13px}
   `;
   const style = document.createElement('style');
   style.textContent = css;
@@ -287,7 +312,7 @@
     li.classList.add('mk-rail');
     li.querySelector('.ch-medallion').outerHTML = med(30);
     li.querySelector('.ch-atl-module-name').textContent = 'Carnet';
-    const onCarnet = !['entretien', 'origine'].includes(S.screen);
+    const onCarnet = !['entretien', 'origine', 'fil'].includes(S.screen);
     li.setAttribute('aria-selected', String(onCarnet));
     first.setAttribute('aria-selected', String(!onCarnet));
     first.after(li);
@@ -326,9 +351,66 @@
     log.after(mine);
   };
 
+  // ───── The single thread: each view folds the other mode's exchanges ─────
+  const COMPAS =
+    '<circle cx="12" cy="5" r="1.7"/><path d="M11.3 6.6 6 20M12.7 6.6 18 20M8.3 14.5h7.4"/>';
+  const BULLE = '<path d="M4 5h16v11H10l-4 4v-4H4z"/><path d="M8 9.5h8M8 12.5h5"/>';
+  const fold = (picto, label, when, open = false, go = '') =>
+    `<button type="button" class="mk-fold" aria-expanded="${open}">${svg(picto, 14)}<span>${label} <small>· ${when}</small></span><span class="mk-chev" aria-hidden="true">${open ? '⌄' : '›'}</span>${go}</button>`;
+  const turn = (me, text, extra = '') =>
+    `<div class="ch-turn${me ? '' : ' is-compagnon'}"><p class="ch-turn-who ch-label">${me ? 'Vous' : 'Le Compagnon'}</p><p class="ch-turn-text">${text}</p>${extra}</div>`;
+  const fil = () => {
+    const page = document.querySelector('.ch-interview');
+    if (!page || page.querySelector('.mk-log')) return;
+    const log = page.querySelector('.ch-interview-log');
+    log.classList.add('mk-hide');
+    page.querySelector('.ch-interview-field').disabled = false;
+    for (const b of page.querySelectorAll('.ch-interview-modes button')) b.disabled = false;
+    page.querySelector('.ch-interview-title p').textContent =
+      'Parlez de votre roman : il range dans l’Atelier et se souvient de tout.';
+    const mine = document.createElement('div');
+    mine.className = 'mk-log';
+    mine.innerHTML = `
+      <p class="ch-interview-author">L’idée vient de mon grand-père. Il a été marinier sur la Loire jusqu’en 1930, j’ai encore son livret. Mais Hélène n’est pas lui : je lui prête son métier, pas sa vie.</p>
+      <div class="ch-interview-turn is-compagnon">${whoLabel}<p class="ch-interview-say">Je range le métier de marinier dans Personnages, sur la fiche d’Hélène. Et d’elle-même, qu’a-t-elle gardé de son père ?</p></div>
+      ${fold(COMPAS, '5 échanges dans la conversation', 'le 15 nov., scènes II.1 et II.2')}
+      ${fold(COMPAS, 'Bilan de la structure', 'hier à 17:10')}
+      <div class="mk-open">${fold(COMPAS, '2 échanges dans la conversation', 'hier, scène III.1', true, '<span class="mk-go">Ouvrir dans la conversation <kbd>⌘L</kbd></span>')}
+        <div class="mk-open-body">
+          ${turn(true, 'Je me demande si elle ne devrait pas arriver à Nantes, finalement. Une dernière scène sur le quai de la Fosse, face à l’acheteur.')}
+          ${turn(false, 'C’est possible, mais vous m’aviez dit vouloir une fin ouverte : on ne saura pas si elle vend le bateau. Une arrivée sur le quai trancherait la question. Voulez-vous la trancher ?', noted(['Une arrivée à Nantes ?']))}
+        </div></div>
+      <p class="ch-interview-author">Je garde la fin ouverte. Mais je ne sais pas encore ce qui l’attend à Nantes : un acheteur, ou son frère Paul.</p>
+      <div class="ch-interview-turn is-compagnon">${whoLabel}<p class="ch-interview-say">Alors la question peut attendre le troisième acte, et la fin reste ouverte comme vous le disiez hier dans la conversation. Qu’est-ce qui pourrait arrêter Hélène avant Nantes ?</p>${noted(['Ce qui attend Hélène à Nantes'])}</div>`;
+    log.after(mine);
+    mine.scrollTop = mine.scrollHeight;
+  };
+  const filPanneau = () => {
+    const tr = document.querySelector('.ch-transcript');
+    if (!tr || tr.querySelector('.mk-fold')) return;
+    tr.querySelector('.ch-transcript-empty')?.classList.add('mk-hide');
+    const field = document.querySelector('.ch-chat-field');
+    if (field) field.disabled = false;
+    tr.insertAdjacentHTML(
+      'beforeend',
+      `${fold(BULLE, '9 échanges dans l’entretien', 'du 12 au 14 nov.')}
+      <div class="mk-open">${fold(BULLE, '2 échanges dans l’entretien', 'aujourd’hui', true)}
+        <div class="mk-open-body">
+          ${turn(true, 'Je garde la fin ouverte. Mais je ne sais pas encore ce qui l’attend à Nantes : un acheteur, ou son frère Paul.')}
+          ${turn(false, 'Alors la question peut attendre le troisième acte, et la fin reste ouverte comme vous le disiez hier dans la conversation. Qu’est-ce qui pourrait arrêter Hélène avant Nantes ?', '<p class="mk-cond">1 proposition rangée dans Structure ›</p>')}
+          <p class="mk-cond mk-go-line"><button type="button" class="ch-link">Ouvrir dans l’entretien</button> <kbd>⌘0</kbd></p>
+        </div></div>
+      ${turn(true, 'Et ici, la scène de l’écluse : elle peut l’arrêter ?')}
+      ${turn(false, 'Oui, et c’est ce que vous cherchiez tout à l’heure dans l’entretien : un obstacle avant Nantes. L’éclusier fermé par la crue l’arrête une nuit entière ; la scène peut porter ce retard.')}`,
+    );
+    tr.scrollTop = tr.scrollHeight;
+  };
+
   const apply = () => {
     rail();
-    if (['entretien', 'origine'].includes(S.screen)) entretien();
+    if (S.screen === 'fil') fil();
+    else if (S.screen === 'fil-panneau') filPanneau();
+    else if (['entretien', 'origine'].includes(S.screen)) entretien();
     else carnet();
   };
   apply();
