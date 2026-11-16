@@ -15,6 +15,8 @@ type Entry = Y.Map<unknown>;
 /** A project as the account's library keeps it (the same shape as the desktop's). */
 export interface LibraryRecord extends ProjectSummary {
   readonly createdAt: string;
+  /** When the title last changed: a title travels by this date, never by an opening's. */
+  readonly titleAt?: string;
 }
 
 /** Origin of the changes that come from the account (not to be sent back). */
@@ -64,10 +66,14 @@ export class DocumentLibrary implements LibraryService {
   /** Every project with its dates, trashed or not: what the sync compares (phase 4.7 a). */
   async all(): Promise<readonly LibraryRecord[]> {
     const projects = await this.#projects();
-    return [...projects.entries()].map(([id, entry]) => ({
-      ...toSummary(id, entry),
-      createdAt: String(entry.get('createdAt') ?? ''),
-    }));
+    return [...projects.entries()].map(([id, entry]) => {
+      const titleAt = entry.get('titleAt');
+      return {
+        ...toSummary(id, entry),
+        createdAt: String(entry.get('createdAt') ?? ''),
+        ...(typeof titleAt === 'string' && { titleAt }),
+      };
+    });
   }
 
   /** A project created or changed on another device, with exactly its dates (not sent back). */
@@ -83,6 +89,7 @@ export class DocumentLibrary implements LibraryService {
       entry.set('kind', record.kind);
       entry.set('createdAt', record.createdAt);
       entry.set('updatedAt', record.updatedAt);
+      if (record.titleAt) entry.set('titleAt', record.titleAt);
       if (record.trashedAt) entry.set('trashedAt', record.trashedAt);
       else entry.delete('trashedAt');
     }, ADOPTED);
@@ -132,8 +139,10 @@ export class DocumentLibrary implements LibraryService {
 
   rename(projectId: string, title: string): Promise<void> {
     return this.#update(projectId, (entry) => {
+      const at = now();
       entry.set('title', title);
-      entry.set('updatedAt', now());
+      entry.set('updatedAt', at);
+      entry.set('titleAt', at);
     });
   }
 

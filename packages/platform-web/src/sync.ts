@@ -332,23 +332,46 @@ export class WebSync implements SyncService {
       for (const p of local.values())
         if (!projects.has(p.id) && accountHasProjects && (await this.#pristine(p.id)))
           this.#withheld.add(p.id);
-      const newer = (a: LibraryRecord, b: LibraryRecord | undefined) =>
-        !b || a.updatedAt > b.updatedAt || (a.trashedAt ?? '') > (b.trashedAt ?? '');
+      // Each part by its own date, as on the desktop: the title by its own.
+      const merged = (a: LibraryRecord, b: LibraryRecord | undefined): LibraryRecord => {
+        if (!b) return record(a);
+        const latest = a.updatedAt >= b.updatedAt ? a : b;
+        const titled = (a.titleAt ?? a.createdAt) >= (b.titleAt ?? b.createdAt) ? a : b;
+        const trashed = (a.trashedAt ?? '') >= (b.trashedAt ?? '') ? a : b;
+        return {
+          id: latest.id,
+          kind: latest.kind,
+          createdAt: latest.createdAt,
+          updatedAt: latest.updatedAt,
+          title: titled.title,
+          ...(titled.titleAt && { titleAt: titled.titleAt }),
+          ...(trashed.trashedAt && { trashedAt: trashed.trashedAt }),
+        };
+      };
       const record = (p: LibraryRecord): LibraryRecord => ({
         id: p.id,
         title: p.title,
         kind: p.kind,
         createdAt: p.createdAt,
         updatedAt: p.updatedAt,
+        ...(p.titleAt && { titleAt: p.titleAt }),
         ...(p.trashedAt && { trashedAt: p.trashedAt }),
       });
+      const same = (a: LibraryRecord, b: LibraryRecord | undefined) =>
+        !!b &&
+        a.title === b.title &&
+        a.updatedAt === b.updatedAt &&
+        (a.titleAt ?? '') === (b.titleAt ?? '') &&
+        (a.trashedAt ?? '') === (b.trashedAt ?? '');
+      const newer = (a: LibraryRecord, b: LibraryRecord | undefined) => !same(merged(a, b), b);
       libraryDoc.transact(() => {
         for (const p of local.values())
           if (!this.#withheld.has(p.id) && newer(p, projects.get(p.id)))
-            projects.set(p.id, record(p));
+            projects.set(p.id, merged(p, projects.get(p.id)));
       });
       for (const [id, remote] of projects)
-        if (newer(remote, local.get(id))) await this.deps.library.adopt(remote);
+        if (newer(remote, local.get(id)))
+          await this.deps.library.adopt(merged(remote, local.get(id)));
       if (this.#libraryDoc !== libraryDoc) return;
       for (const id of new Set([...local.keys(), ...projects.keys()]))
         if (!this.#withheld.has(id)) await this.#syncProject(id);

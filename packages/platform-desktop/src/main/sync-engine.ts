@@ -296,8 +296,30 @@ export class SyncEngine {
       // copy on the device would look like an account without projects.
       if (!this.#librarySynced) return;
       const local = new Map((await this.deps.library.all()).map((p) => [p.id, p]));
-      const newer = (a: ProjectRecord, b: ProjectRecord | undefined) =>
-        !b || a.updatedAt > b.updatedAt || (a.trashedAt ?? '') > (b.trashedAt ?? '');
+      // Each part by its own date: the dates and the trash by the latest, the
+      // title by its own (an opening moves `updatedAt`, never the title).
+      const merged = (a: ProjectRecord, b: ProjectRecord | undefined): ProjectRecord => {
+        if (!b) return a;
+        const latest = a.updatedAt >= b.updatedAt ? a : b;
+        const titled = (a.titleAt ?? a.createdAt) >= (b.titleAt ?? b.createdAt) ? a : b;
+        const trashed = (a.trashedAt ?? '') >= (b.trashedAt ?? '') ? a : b;
+        return {
+          id: latest.id,
+          kind: latest.kind,
+          createdAt: latest.createdAt,
+          updatedAt: latest.updatedAt,
+          title: titled.title,
+          ...(titled.titleAt && { titleAt: titled.titleAt }),
+          ...(trashed.trashedAt && { trashedAt: trashed.trashedAt }),
+        };
+      };
+      const same = (a: ProjectRecord, b: ProjectRecord | undefined) =>
+        !!b &&
+        a.title === b.title &&
+        a.updatedAt === b.updatedAt &&
+        (a.titleAt ?? '') === (b.titleAt ?? '') &&
+        (a.trashedAt ?? '') === (b.trashedAt ?? '');
+      const newer = (a: ProjectRecord, b: ProjectRecord | undefined) => !same(merged(a, b), b);
       const accountHasProjects = [...projects.values()].some((p) => !p.trashedAt);
       this.#withheld.clear();
       for (const record of local.values())
@@ -306,10 +328,11 @@ export class SyncEngine {
       libraryDoc.transact(() => {
         for (const record of local.values())
           if (!this.#withheld.has(record.id) && newer(record, projects.get(record.id)))
-            projects.set(record.id, { ...record });
+            projects.set(record.id, { ...merged(record, projects.get(record.id)) });
       });
       for (const [id, remote] of projects)
-        if (newer(remote, local.get(id))) await this.deps.library.adopt(remote);
+        if (newer(remote, local.get(id)))
+          await this.deps.library.adopt(merged(remote, local.get(id)));
       if (this.#libraryDoc !== libraryDoc) return;
       for (const id of new Set([...local.keys(), ...projects.keys()]))
         if (!this.#withheld.has(id)) this.#syncProject(id);

@@ -155,6 +155,37 @@ describe('sync between two desktop apps (step 4.3)', { timeout: 20_000 }, () => 
     expect(getScene(root2, sceneId)?.title).toBe('Le sas');
   });
 
+  it('never brings back an old title from a device that opened the novel offline', async () => {
+    const url = await server();
+    const mac = device('Mac');
+    const x250 = device('X250');
+    const { id } = await mac.library.create({ title: 'Mon roman', kind: 'novel' });
+    const root = mac.doc(guids.project(id));
+    initProject(root, { id, title: 'Mon roman', kind: 'novel' });
+    expect(await mac.engine.signIn(url, EMAIL, PASSWORD)).toBe('ok');
+    expect(await mac.engine.idle()).toBe(true);
+    expect(await x250.engine.signIn(url, EMAIL, PASSWORD)).toBe('ok');
+    await until(async () => (await x250.library.list()).some((p) => p.id === id));
+    expect(await x250.engine.idle()).toBe(true);
+
+    // The X250 goes offline; the Mac renames the novel; then the X250 opens it.
+    x250.engine.stop();
+    await mac.library.rename(id, 'Avant Nantes');
+    await mac.engine.reconcile();
+    expect(await mac.engine.idle()).toBe(true);
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    await x250.library.touch(id);
+
+    // Back online: the newer opening travels, never the old title.
+    x250.engine.start();
+    await until(
+      async () => (await x250.library.list()).find((p) => p.id === id)?.title === 'Avant Nantes',
+    );
+    expect(await x250.engine.idle()).toBe(true);
+    await mac.engine.reconcile();
+    expect((await mac.library.list()).find((p) => p.id === id)?.title).toBe('Avant Nantes');
+  });
+
   it('keeps a new device’s untouched starter off an account that has projects', async () => {
     const url = await server();
     const mac = device('Mac');

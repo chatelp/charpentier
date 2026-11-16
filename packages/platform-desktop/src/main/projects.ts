@@ -12,6 +12,12 @@ interface ProjectFile {
   kind: ProjectKind;
   createdAt: string;
   updatedAt: string;
+  /**
+   * When the title last changed (its creation, a rename): a title travels by
+   * this date, not by `updatedAt`, which an opening also moves (a device
+   * that opens an old copy offline must not bring back the old title).
+   */
+  titleAt?: string;
   trashedAt?: string;
 }
 
@@ -121,7 +127,8 @@ export class FolderLibrary implements LibraryService {
   }
 
   async rename(projectId: string, title: string): Promise<void> {
-    this.#update(projectId, (p) => ({ ...p, title, updatedAt: new Date().toISOString() }));
+    const now = new Date().toISOString();
+    this.#update(projectId, (p) => ({ ...p, title, updatedAt: now, titleAt: now }));
   }
 
   async touch(projectId: string): Promise<void> {
@@ -152,6 +159,7 @@ export class FolderLibrary implements LibraryService {
         kind: record.kind,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
+        ...(record.titleAt && { titleAt: record.titleAt }),
       };
       if (record.trashedAt) next.trashedAt = record.trashedAt;
       else delete next.trashedAt;
