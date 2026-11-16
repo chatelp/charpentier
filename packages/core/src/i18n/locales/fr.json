@@ -159,9 +159,9 @@
     "cycleTheme": "Changer de thème (système, clair, sombre)",
     "toggleReducedMotion": "Réduire les animations",
     "toggleAtelier": "Basculer entre Écrire et l’Atelier",
-    "atelierInterview": "Atelier : Entretien",
-    "toggleInterviewMode": "Entretien : libre / dirigé",
-    "interviewOtherSection": "Entretien : autre section…",
+    "atelierInterview": "Atelier : le Compagnon, mode entretien",
+    "toggleInterviewMode": "Compagnon : entretien libre / dirigé",
+    "interviewOtherSection": "Compagnon : entretien, autre section…",
     "atelierMeta": "Atelier : Le projet",
     "atelierCharacters": "Atelier : Personnages",
     "atelierStructure": "Atelier : Structure",
@@ -308,7 +308,7 @@
       "structure": "Structure",
       "worldRules": "Règles du monde",
       "clues": "Indices et révélations",
-      "interview": "Entretien",
+      "interview": "Le Compagnon",
       "style": "Style et voix"
     },
     "kind": {
@@ -328,7 +328,7 @@
       "worldRules": "Aucune règle du monde pour l’instant. Créez-en une avec « + Nouvelle règle du monde » ou la touche N.",
       "clues": "Aucun indice pour l’instant. Créez-en un avec « + Nouvel indice » ou la touche N.",
       "meta": "",
-      "style": "Aucun choix de style pour l’instant. Importez un texte que vous admirez depuis l’Entretien, ou créez-en un avec « + Nouveau choix » ou la touche N."
+      "style": "Aucun choix de style pour l’instant. Importez un texte que vous admirez depuis la page du Compagnon, ou créez-en un avec « + Nouveau choix » ou la touche N."
     },
     "structureModel": "Modèle narratif",
     "groups": {
@@ -797,12 +797,12 @@
     }
   },
   "interview": {
-    "label": "Entretien",
+    "label": "Le Compagnon",
     "free": "Libre",
     "guided": "Dirigé",
     "modesLabel": "Mode de l’entretien",
-    "freeLine": "Parlez de votre roman : il range ce que vous dites dans l’Atelier.",
-    "guidedLine": "Il vous pose ses questions une à une, en commençant par ce qui est vide.",
+    "freeLine": "Mode entretien · parlez de votre roman : il range ce que vous dites dans l’Atelier et se souvient de tout.",
+    "guidedLine": "Mode entretien dirigé · il vous pose ses questions une à une, en commençant par ce qui est vide.",
     "you": "Vous",
     "freePlaceholder": "Parlez de votre roman…",
     "guidedPlaceholder": "Votre réponse…",

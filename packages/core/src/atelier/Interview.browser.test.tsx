@@ -125,7 +125,7 @@ describe('the interview page of the Atelier (phase 6.2)', () => {
     await userEvent.keyboard(mod('0'));
     const field = await screen.findByRole('textbox', { name: 'Parlez de votre roman…' });
     await waitFor(() => expect(document.activeElement).toBe(field));
-    expect(screen.getByRole('option', { name: 'Entretien' }).getAttribute('aria-selected')).toBe(
+    expect(screen.getByRole('option', { name: 'Le Compagnon' }).getAttribute('aria-selected')).toBe(
       'true',
     );
     screen.getByText(/Racontez-moi votre roman/);
