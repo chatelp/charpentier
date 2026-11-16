@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import * as Y from 'yjs';
 import { usePlatform } from '../app/platform-context';
 import { useDocSnapshot } from '../hooks/use-doc-snapshot';
+import { NotedLine } from '../atelier/NotedLine';
 import { BilanHeading, BilanLinks } from '../work/Bilan';
 import { StyleCitation } from './StyleCitation';
 import type { WorkspaceContext } from '../workspace/workspace-context';
@@ -109,6 +110,18 @@ export function Conversation({
             <Turn
               message={message}
               onInsert={onInsertExample}
+              noted={
+                mentorDoc && (
+                  <NotedLine
+                    doc={mentorDoc}
+                    noted={message.noted}
+                    compact
+                    {...(ctx && {
+                      onOpen: (note: string) => ctx.openAtelier({ rail: 'notebook', note }),
+                    })}
+                  />
+                )
+              }
               citation={
                 ctx && (
                   <StyleCitation
@@ -147,11 +160,14 @@ export function Conversation({
 function Turn({
   message,
   onInsert,
+  noted,
   citation,
   children,
 }: {
   readonly message: ChatMessage;
   readonly onInsert: (text: string) => void;
+  /** What the answer wrote in the Compagnon's notebook (« Noté au carnet »). */
+  readonly noted?: ReactNode;
   /** The style choice the answer relies on (phase 6.4). */
   readonly citation?: ReactNode;
   readonly children?: ReactNode;
@@ -162,6 +178,7 @@ function Turn({
     <div className={`ch-turn${compagnon ? ' is-compagnon' : ''}`}>
       <p className="ch-turn-who ch-label">{compagnon ? t('mentor.name') : t('mentor.you')}</p>
       <p className="ch-turn-text">{message.text}</p>
+      {noted}
       {citation}
       {message.example && (
         <div className="ch-example">

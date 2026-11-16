@@ -34,6 +34,7 @@ import { playSound } from '../sound/sounds';
 import { Medallion, Monogram, type PictogramName } from '../icons/Pictogram';
 import { FieldRow } from './FieldRow';
 import { Interview } from './Interview';
+import { Notebook } from './Notebook';
 import {
   ATELIER_MODULES,
   moduleDefs,
@@ -44,13 +45,17 @@ import {
 import './atelier.css';
 import { WorkBlock } from '../work/WorkBlock';
 
-/** The rail: the interview with the Compagnon (D-26), then the modules. */
-export type AtelierRail = 'interview' | AtelierModule;
-const RAIL: readonly AtelierRail[] = ['interview', ...ATELIER_MODULES];
+/** The rail: the interview with the Compagnon (D-26), his notebook (phase 6.5), then the modules. */
+export type AtelierRail = 'interview' | 'notebook' | AtelierModule;
+const RAIL: readonly AtelierRail[] = ['interview', 'notebook', ...ATELIER_MODULES];
 
 export interface AtelierLocation {
   readonly rail: AtelierRail;
   readonly target?: SheetTarget;
+  /** The Carnet: the note to give the focus to. */
+  readonly note?: string;
+  /** The interview: the message this note (by id) comes from, shown with a way back. */
+  readonly fromNote?: string;
 }
 
 export interface AtelierProps {
@@ -146,15 +151,19 @@ export function Atelier({
   const showRejected = ctx.prefs.showRejected;
   const toggleRejected = () => ctx.updatePrefs((p) => ({ showRejected: !p.showRejected }));
   const interview = location.rail === 'interview';
-  // (On the interview's page, the module hooks read « Le projet » and show nothing.)
-  const rail: AtelierModule = location.rail === 'interview' ? 'meta' : location.rail;
+  const notebook = location.rail === 'notebook';
+  /** A page of the Compagnon's own (the interview, the Carnet): one column, no list, no sheet. */
+  const page = interview || notebook;
+  // (On those pages, the module hooks read « Le projet » and show nothing.)
+  const rail: AtelierModule =
+    location.rail === 'interview' || location.rail === 'notebook' ? 'meta' : location.rail;
   const [interviewFocus, setInterviewFocus] = useState(0);
   const entries = useEntries(data, rail, numbers, showRejected);
   const rejectedEntries = RAIL_SOURCES[rail].reduce(
     (n, m) => n + (data.rejectedEntities[m as EntityModule]?.length ?? 0),
     0,
   );
-  const hasList = !interview && rail !== 'meta';
+  const hasList = !page && rail !== 'meta';
   const shown = filterByQuery(entries, query, (e) => `${e.title} ${e.subtitle ?? ''}`);
   const selected =
     entries.find(
@@ -168,8 +177,8 @@ export function Atelier({
   // Focus: on the list (or the sheet when there is none) when asked.
   useEffect(() => {
     if (!active) return;
-    // (The interview takes the focus itself, on the same request.)
-    if (interview) return;
+    // (The interview and the Carnet take the focus themselves, on the same request.)
+    if (page) return;
     if (hasList && selected) focusWithin(listRef);
     else if (hasList) focusWithin(railRef);
     else sheetRef.current?.querySelector<HTMLElement>('[data-field-value]')?.focus();
@@ -195,8 +204,8 @@ export function Atelier({
       !event.altKey &&
       !(event.target instanceof HTMLElement && event.target.hasAttribute('data-field-value'))
     ) {
-      // N: a new entry, from the rail or the list.
-      if (interview) return;
+      // N: a new entry, from the rail or the list (the Carnet makes its own notes).
+      if (page) return;
       const module = newEntityModule(rail, selected);
       if (!module) return;
       event.preventDefault();
@@ -219,7 +228,7 @@ export function Atelier({
       }
     } else if (event.key === 'Enter' || event.key === 'ArrowRight') {
       event.preventDefault();
-      if (interview) setInterviewFocus((n) => n + 1);
+      if (page) setInterviewFocus((n) => n + 1);
       else if (hasList) focusWithin(listRef);
       else sheetRef.current?.querySelector<HTMLElement>('[data-field-value]')?.focus();
     }
@@ -312,6 +321,18 @@ export function Atelier({
             <Medallion name="entretien" size={30} mentor />
             <span className="ch-atl-module-name">{t('atelier.modules.interview')}</span>
           </li>
+          {/* His notebook, in his ink too; no counter: a note waits for nothing (DESIGN §4.5). */}
+          <li
+            role="option"
+            aria-selected={notebook}
+            tabIndex={notebook ? 0 : -1}
+            data-atl-focus=""
+            className="ch-atl-module is-interview"
+            onClick={() => onLocation({ rail: 'notebook' })}
+          >
+            <Medallion name="carnet" size={30} mentor />
+            <span className="ch-atl-module-name">{t('atelier.modules.notebook')}</span>
+          </li>
           <li role="separator" className="ch-atl-rail-rule" aria-hidden="true" />
           {ATELIER_MODULES.map((m) => {
             const pending = pendingCount(data, m);
@@ -346,6 +367,7 @@ export function Atelier({
           {t('atelier.railHint', {
             toggle: ctx.shortcutLabel('toggleAtelier') ?? '',
             interview: ctx.shortcutLabel('atelierInterview') ?? '',
+            notebook: ctx.shortcutLabel('atelierNotebook') ?? '',
             // ⌘1 or ⌥⌘1 (where a browser keeps ⌘1…9) → ⌘1…5
             modules: `${ctx.shortcutLabel('atelierMeta') ?? ''}…${ATELIER_MODULES.length}`,
           })}
@@ -438,12 +460,23 @@ export function Atelier({
           ctx={ctx}
           active={active}
           focusRequest={focusRequest + interviewFocus}
+          {...(location.fromNote && { fromNote: location.fromNote })}
           onOpen={(location) => onLocation(location, true)}
         />
       )}
 
-      <div ref={sheetRef} className="ch-sheet" hidden={interview} onKeyDown={onSheetKeyDown}>
-        {rail === 'style' && !interview && entries.length === 0 && (
+      {notebook && (
+        <Notebook
+          ctx={ctx}
+          active={active}
+          focusRequest={focusRequest + interviewFocus}
+          {...(location.note && { focusNote: location.note })}
+          onOpen={(location) => onLocation(location, true)}
+        />
+      )}
+
+      <div ref={sheetRef} className="ch-sheet" hidden={page} onKeyDown={onSheetKeyDown}>
+        {rail === 'style' && !page && entries.length === 0 && (
           <StyleEmpty
             ctx={ctx}
             onNew={() =>
@@ -453,7 +486,7 @@ export function Atelier({
             }
           />
         )}
-        {selected && !interview && (
+        {selected && !page && (
           <Sheet
             ctx={ctx}
             data={data}

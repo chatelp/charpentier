@@ -51,6 +51,13 @@ export const atelierCommands: readonly AtelierCommand[] = [
     run: (ctx) => ctx.openAtelier({ rail: 'interview' }),
   },
   {
+    // The Compagnon's notebook, under the interview; numbered after the modules so ⌘1…6 stay (phase 6.5).
+    id: 'atelierNotebook',
+    scope: 'global',
+    keybinding: ['Mod-7', 'Mod-Alt-7'],
+    run: (ctx) => ctx.openAtelier({ rail: 'notebook' }),
+  },
+  {
     id: 'toggleInterviewMode',
     scope: 'global',
     keybinding: 'Mod-Shift-m',

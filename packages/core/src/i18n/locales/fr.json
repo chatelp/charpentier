@@ -162,6 +162,7 @@
     "atelierInterview": "Atelier : le Compagnon, mode entretien",
     "toggleInterviewMode": "Compagnon : entretien libre / dirigé",
     "interviewOtherSection": "Compagnon : entretien, autre section…",
+    "atelierNotebook": "Atelier : le carnet du Compagnon",
     "atelierMeta": "Atelier : Le projet",
     "atelierCharacters": "Atelier : Personnages",
     "atelierStructure": "Atelier : Structure",
@@ -309,6 +310,7 @@
       "worldRules": "Règles du monde",
       "clues": "Indices et révélations",
       "interview": "Le Compagnon",
+      "notebook": "Carnet",
       "style": "Style et voix"
     },
     "kind": {
@@ -319,7 +321,7 @@
       "clues": "Indice ou révélation",
       "style": "Choix de style"
     },
-    "railHint": "{{toggle}} écrire · {{interview}} entretien · {{modules}} modules · Échap revenir au texte",
+    "railHint": "{{toggle}} écrire · {{interview}} entretien · {{notebook}} carnet · {{modules}} modules · Échap revenir au texte",
     "listHint": "↑↓ parcourir · ↵ fiche · N nouveau · ⌫ corbeille · V valider · X rejeter · / filtrer",
     "filter": "Filtrer…",
     "emptyList": {
@@ -837,6 +839,105 @@
     "rejectSheet": "Rejeter la fiche",
     "rejectSheetWith_one": "Rejeter la fiche (et sa proposition)",
     "rejectSheetWith_other": "Rejeter la fiche (et ses {{count}} propositions)"
+  },
+  "notebook": {
+    "label": "Carnet",
+    "line": "Ce que le Compagnon retient de vos échanges. Il le relit avant chaque réponse.",
+    "lineUnavailable": "Le Compagnon n’écrit pas dans cette version ; vous pouvez lire et corriger son carnet.",
+    "new": "+ Nouvelle note",
+    "newKey": "N",
+    "filter": "Chercher dans le carnet…",
+    "filterKey": "/",
+    "books": {
+      "projet": "Ce roman",
+      "auteur": "Vous"
+    },
+    "count_one": "{{count}} note",
+    "count_other": "{{count}} notes",
+    "readIn": "relu dans {{title}}",
+    "readEverywhere": "relu dans tous vos romans",
+    "emptyBook": {
+      "projet": "Rien encore.",
+      "auteur": "Ce qui vous suit d’un roman à l’autre : votre façon d’écrire, d’être accompagné."
+    },
+    "noMatch": "Aucune note ne contient « {{query}} ».",
+    "natures": {
+      "a-reprendre": "À reprendre",
+      "decisions": "Décisions",
+      "intentions": "Intentions",
+      "histoire": "Histoire",
+      "doutes": "Doutes",
+      "accompagnement": "Accompagnement",
+      "facon-d-ecrire": "Façon d’écrire"
+    },
+    "nature": {
+      "a-reprendre": "À reprendre",
+      "decisions": "Décision",
+      "intentions": "Intention",
+      "histoire": "Histoire",
+      "doutes": "Doute",
+      "accompagnement": "Accompagnement",
+      "facon-d-ecrire": "Façon d’écrire"
+    },
+    "by": {
+      "compagnon": "Le Compagnon · {{when}}",
+      "corrected": "Corrigée par vous · {{when}}",
+      "kept": "Gardée par vous · {{when}}",
+      "written": "Écrite par vous · {{when}}"
+    },
+    "from": "d’après {{source}}",
+    "source": {
+      "interview": "l’entretien",
+      "conversation": "la conversation",
+      "interviewMany": "{{count}} messages de l’entretien",
+      "conversationMany": "{{count}} messages de la conversation"
+    },
+    "fresh": {
+      "created": "nouvelle",
+      "updated": "mise à jour"
+    },
+    "noteLabel": {
+      "compagnon": "Note du Compagnon, {{nature}} : {{title}}",
+      "author": "Votre note, {{nature}} : {{title}}"
+    },
+    "correct": "Corriger",
+    "correctKey": "⏎",
+    "keep": "Garder",
+    "keepKey": "V",
+    "trash": "Corbeille",
+    "trashKey": "⌫",
+    "save": "Enregistrer",
+    "saveKey": "⌘⏎",
+    "cancel": "Annuler",
+    "cancelKey": "Échap",
+    "natureLabel": "Nature",
+    "bookLabel": "Carnet",
+    "titleField": "Titre de la note",
+    "textField": "Texte de la note",
+    "correctLabel": "Corriger la note",
+    "newLabel": "Nouvelle note",
+    "becomesYours": "Corrigée, cette note devient la vôtre : le Compagnon la lit, il ne la réécrit plus.",
+    "trashLink": "Corbeille ({{count}})",
+    "trashLine": "notes que le Compagnon ne relit plus et ne réécrira pas",
+    "trashedByAuthor": "Mise à la corbeille par vous {{when}}",
+    "trashedByCompagnon": "Retirée par le Compagnon {{when}}",
+    "restore": "Remettre",
+    "trashed": "Note mise à la corbeille : {{title}}",
+    "noted": {
+      "created": "Noté au carnet :",
+      "updated": "Carnet mis à jour :",
+      "removed": "Retiré du carnet :"
+    },
+    "and": "et",
+    "others_one": "et {{count}} autre",
+    "others_other": "et {{count}} autres",
+    "origin": "La note {{title}} vient de ce message, {{when}}.",
+    "backToNotebook": "Revenir au carnet",
+    "emptyIntro": "Le Compagnon note ici ce qu’il retient de vos échanges : votre histoire, vos décisions, vos doutes, ce qu’il faudra reprendre, la façon dont vous aimez être accompagné. Il relit ce carnet avant chaque réponse, dans l’entretien comme dans la conversation.",
+    "emptyQuiet": "Corrigez ou mettez à la corbeille ce qui ne vous ressemble pas : une note que vous corrigez devient la vôtre, et il ne la réécrit plus. Ce qui vous suit d’un roman à l’autre va dans le carnet « Vous ».",
+    "openInterview": "Ouvrir l’entretien",
+    "hint": "J K parcourir · ↵ corriger · V garder telle quelle · ⌫ corbeille · O voir l’échange · N nouvelle note · / chercher · Échap revenir au texte",
+    "editHint": "⌘↵ enregistrer · Échap annuler"
   },
   "close": {
     "panel": "Fermer le panneau",

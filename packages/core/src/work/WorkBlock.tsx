@@ -46,6 +46,11 @@ const empty = new Y.Doc();
 
 /** The project's mentor document, open for as long as the component is. */
 export function useMentorDoc(projectId: string): Y.Doc {
+  return useLoadedMentorDoc(projectId) ?? empty;
+}
+
+/** The same, null until loaded: for a view that writes in it (the Carnet). */
+export function useLoadedMentorDoc(projectId: string): Y.Doc | null {
   const platform = usePlatform();
   const [doc, setDoc] = useState<Y.Doc | null>(null);
   useEffect(() => {
@@ -62,7 +67,7 @@ export function useMentorDoc(projectId: string): Y.Doc {
       void close?.();
     };
   }, [platform, projectId]);
-  return doc ?? empty;
+  return doc;
 }
 
 /** Seconds since `since`, ticking while `on`. */

@@ -3,7 +3,7 @@ import { CloseButton } from './CloseButton';
 import './icons.css';
 
 /**
- * The nine engraved pictograms (docs/design/pictos, docs/DESIGN.md §4.11):
+ * The ten engraved pictograms (docs/design/pictos, docs/DESIGN.md §4.11):
  * 24 × 24, a 1.5 px stroke in the current colour. Never alone: always next
  * to their label, so they are hidden from assistive technologies.
  */
@@ -19,6 +19,10 @@ const DRAWINGS = {
   ),
   meta: <path d="M6 3h9l4 4v14H6zM15 3v4h4M9 12h7M9 16h5" />,
   entretien: <path d="M4 5h16v11H10l-4 4v-4H4zM8 9.5h8M8 12.5h5" />,
+  // The Compagnon's notebook, held shut by its elastic band (phase 6.5).
+  carnet: (
+    <path d="M6.5 3.5h10a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2h-10A1.5 1.5 0 0 1 5 19V5a1.5 1.5 0 0 1 1.5-1.5zM15 3.5v17M8 8.5h4M8 11.5h4" />
+  ),
   personnages: (
     <>
       <circle cx="12" cy="8" r="3.5" />

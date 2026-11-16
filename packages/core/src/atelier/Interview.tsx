@@ -6,7 +6,10 @@ import {
   interviewMessages,
   interviewSections,
   listEntities,
+  listNotes,
   listTrashedEntities,
+  listTrashedNotes,
+  noteParts,
   readFieldRef,
   rejectProposal,
   sectionProgress,
@@ -35,6 +38,7 @@ import { moduleDefs, type AtelierModule } from './module-defs';
 import { sameWork } from '../work/use-background-work';
 import { WorkCard } from '../work/WorkBlock';
 import { formatWhen } from '../work/work-format';
+import { NotedLine, SLOT, withSlot } from './NotedLine';
 import './interview.css';
 import '../work/work.css';
 
@@ -113,11 +117,14 @@ export function Interview({
   ctx,
   active,
   focusRequest,
+  fromNote,
   onOpen,
 }: {
   readonly ctx: WorkspaceContext;
   readonly active: boolean;
   readonly focusRequest: number;
+  /** Opened from the Carnet (« O »): the note (by id) whose message to show. */
+  readonly fromNote?: string;
   readonly onOpen: (location: AtelierLocation) => void;
 }) {
   const { t } = useTranslation();
@@ -159,6 +166,25 @@ export function Interview({
   useEffect(() => {
     transcript.current?.scrollTo({ top: transcript.current.scrollHeight });
   }, [messages.length, waiting]);
+
+  // Back to a note's message (DESIGN §4.5, « Retour au message »): washed blue, a band on top,
+  // until the author goes back to the Carnet or starts writing.
+  const [originSeen, setOriginSeen] = useState<string | undefined>(undefined);
+  const originNote =
+    fromNote && fromNote !== originSeen && mentorDoc
+      ? [...listNotes(mentorDoc), ...listTrashedNotes(mentorDoc)].find((n) => n.id === fromNote)
+      : undefined;
+  const originMessage = originNote && messages.find((m) => originNote.sources.includes(m.id));
+  const backToNotebook = () => fromNote && onOpen({ rail: 'notebook', note: fromNote });
+  const backButton = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!originMessage) return;
+    transcript.current
+      ?.querySelector(`[data-message="${CSS.escape(originMessage.id)}"]`)
+      ?.scrollIntoView({ block: 'center' });
+    // Without a Compagnon the field is inert: the way back has the focus.
+    if (!available) backButton.current?.focus();
+  }, [originMessage?.id]); // eslint-disable-line react-hooks/exhaustive-deps -- once per message
 
   const last = messages.at(-1);
   const question = guided && last?.role === 'compagnon' && last.question ? last : undefined;
@@ -234,6 +260,11 @@ export function Interview({
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+    if (event.key === 'Escape' && originMessage) {
+      event.preventDefault();
+      backToNotebook();
+      return;
+    }
     const inField = event.target === field.current;
     const line = focusedLine(event.target);
     // V, X, ⌘↑ ⌘↓ act on the proposals when the field is empty or a proposal has the focus.
@@ -311,6 +342,23 @@ export function Interview({
         </div>
       </header>
 
+      {originNote && originMessage && (
+        <div className="ch-nb-back">
+          <span>
+            {withSlot(
+              t('notebook.origin', {
+                title: SLOT,
+                when: formatWhen(t, originMessage.at, ctx.language),
+              }),
+              <b>{noteParts(originNote).title}</b>,
+            )}
+          </span>
+          <button ref={backButton} type="button" className="ch-btn" onClick={backToNotebook}>
+            {t('notebook.backToNotebook')} <kbd>{t('notebook.cancelKey')}</kbd>
+          </button>
+        </div>
+      )}
+
       <div ref={transcript} className="ch-interview-log" role="log" aria-live="polite">
         {messages.length === 0 && (
           <div className="ch-interview-turn is-compagnon">
@@ -334,13 +382,21 @@ export function Interview({
             message.reference ? (
               <ReferenceFrame key={message.id} reference={message.reference} />
             ) : (
-              <p key={message.id} className="ch-interview-author">
+              <p
+                key={message.id}
+                data-message={message.id}
+                className={`ch-interview-author${message === originMessage ? ' is-origin' : ''}`}
+              >
                 {message.text}
               </p>
             )
           ) : (
             (message.text || !message.question || message !== question) && (
-              <div key={message.id} className="ch-interview-turn is-compagnon">
+              <div
+                key={message.id}
+                data-message={message.id}
+                className={`ch-interview-turn is-compagnon${message === originMessage ? ' is-origin' : ''}`}
+              >
                 {message.reference && (
                   <p className="ch-bilan-head ch-label ch-engraved">
                     {t('work.task.style.bilan', { name: message.reference.title })}{' '}
@@ -351,6 +407,13 @@ export function Interview({
                 {message.text && <p className="ch-interview-say">{message.text}</p>}
                 {message.question && message !== question && (
                   <p className="ch-interview-say is-question">{message.question}</p>
+                )}
+                {mentorDoc && (
+                  <NotedLine
+                    doc={mentorDoc}
+                    noted={message.noted}
+                    onOpen={(note) => onOpen({ rail: 'notebook', note })}
+                  />
                 )}
                 <Proposals
                   ctx={ctx}
@@ -452,7 +515,11 @@ export function Interview({
           disabled={!available}
           placeholder={guided ? t('interview.guidedPlaceholder') : t('interview.freePlaceholder')}
           aria-label={guided ? t('interview.guidedPlaceholder') : t('interview.freePlaceholder')}
-          onChange={(e) => setDraft(e.target.value)}
+          onChange={(e) => {
+            setDraft(e.target.value);
+            // The way back to the Carnet goes once the author writes.
+            if (fromNote) setOriginSeen(fromNote);
+          }}
         />
       </div>
       {available && <p className="ch-interview-hint">{t('interview.hint', { mode: modeKey })}</p>}
