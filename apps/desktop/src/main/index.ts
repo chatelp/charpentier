@@ -516,6 +516,9 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
 
+// Stopped by its session loop (the X250) or a terminal: the same way out as quitting.
+for (const signal of ['SIGTERM', 'SIGINT'] as const) process.on(signal, () => app.quit());
+
 // Every document is compacted on the way out (the journal already holds everything).
 app.on('will-quit', () => {
   sync.stop();

@@ -1,5 +1,6 @@
 import { execFile, spawn } from 'node:child_process';
 import fs from 'node:fs';
+import path from 'node:path';
 
 /** What a program said and how it ended (`code` -1: it could not be started). */
 export interface RunResult {
@@ -34,7 +35,39 @@ export interface SystemTools {
 
 const TIMEOUT = 30_000;
 
+/**
+ * A long-running program dies with the app (essais du 16 novembre 2026 sur
+ * le X250) : killed by its session loop, the app never reaches its own
+ * cleanup, and a `nmcli monitor` left behind kept the app's sockets open
+ * (the test port among them), a `swayidle` stayed orphaned. On Linux,
+ * `setpriv --pdeathsig KILL` (util-linux) has the kernel kill it when the
+ * app goes. Elsewhere, or without setpriv, it starts as it is.
+ */
+export function guardedCommand(
+  command: string,
+  args: readonly string[],
+  setpriv: string | null,
+): readonly [string, readonly string[]] {
+  return setpriv ? [setpriv, ['--pdeathsig', 'KILL', '--', command, ...args]] : [command, args];
+}
+
+/** Where setpriv is on this Linux system, or null. */
+function findSetpriv(): string | null {
+  if (process.platform !== 'linux') return null;
+  for (const dir of (process.env['PATH'] ?? '').split(path.delimiter)) {
+    const candidate = path.join(dir, 'setpriv');
+    try {
+      fs.accessSync(candidate, fs.constants.X_OK);
+      return candidate;
+    } catch {
+      // Not in this directory.
+    }
+  }
+  return null;
+}
+
 export function nodeTools(): SystemTools {
+  const setpriv = findSetpriv();
   return {
     run: (command, args) =>
       new Promise((resolve) => {
@@ -96,7 +129,8 @@ export function nodeTools(): SystemTools {
     },
     daemon: (command, args, onLine) => {
       let stopped = false;
-      const child = spawn(command, [...args], {
+      const [program, argv] = guardedCommand(command, args, setpriv);
+      const child = spawn(program, [...argv], {
         stdio: ['ignore', onLine ? 'pipe' : 'ignore', 'ignore'],
         env: { ...process.env, LC_ALL: 'C' },
       });
