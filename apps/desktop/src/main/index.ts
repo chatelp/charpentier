@@ -11,6 +11,7 @@ import {
   shell,
   type WebContents,
 } from 'electron';
+import { openAdminWindow } from './admin-window';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -389,10 +390,13 @@ ipcMain.handle(IPC_INVOKE, async (event, request: Request) => {
         return (system as LinuxSystem).printPdf(pdf, job);
       }
       return sessionOf(event.sender).handle(request);
-    case 'host.openExternal':
-      // An http(s) address in the system's browser (« Administrer le serveur… »), nothing else.
-      if (/^https?:\/\//.test(request.url)) await shell.openExternal(request.url);
-      return null;
+    case 'sync.openAdmin': {
+      // « Administrer le serveur… »: for an administrator, where the page answers.
+      const page = await sync.adminPage();
+      if ('refused' in page) return page.refused;
+      openAdminWindow(page.url, appliance);
+      return 'opened';
+    }
     case 'host.revealLibraryFolder':
       await shell.openPath(libraryFolder);
       return null;

@@ -8,6 +8,7 @@ import type {
   LlmStatus,
   MenuModel,
   SignInResult,
+  AdminOpening,
   SyncAccountInfo,
   SyncDevice,
   SyncStatus,
@@ -97,8 +98,7 @@ export type Request =
   | { readonly type: 'sync.signOut' }
   | { readonly type: 'sync.devices' }
   | { readonly type: 'sync.revokeDevice'; readonly id: string }
-  | { readonly type: 'sync.adminPage' }
-  | { readonly type: 'host.openExternal'; readonly url: string }
+  | { readonly type: 'sync.openAdmin' }
   | { readonly type: 'system.snapshot' }
   | { readonly type: 'system.post'; readonly text: string }
   | { readonly type: 'system.monitorOpen' }
@@ -147,8 +147,7 @@ export interface Responses {
   'sync.status': SyncStatus;
   'sync.account': SyncAccountInfo | null;
   'sync.signIn': SignInResult;
-  'sync.adminPage': string | null;
-  'host.openExternal': null;
+  'sync.openAdmin': AdminOpening;
   'sync.signOut': null;
   'sync.devices': readonly SyncDevice[] | null;
   'sync.revokeDevice': boolean;

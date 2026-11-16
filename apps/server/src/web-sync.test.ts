@@ -35,6 +35,14 @@ function browser(origin: string) {
     }
   }
   const store = new Map<string, string>();
+  const tab = {
+    opener: {} as unknown,
+    location: { href: 'about:blank' },
+    closed: false,
+    close() {
+      this.closed = true;
+    },
+  };
   const documents = new MemoryDocumentService();
   const library = new DocumentLibrary(documents);
   let forgotten = false;
@@ -53,9 +61,10 @@ function browser(origin: string) {
     forgetDocuments: async () => {
       forgotten = true;
     },
+    openTab: () => tab,
   });
   syncs.push(sync);
-  return { sync, documents, library, jar, forgotten: () => forgotten };
+  return { sync, documents, library, jar, tab, forgotten: () => forgotten };
 }
 
 describe('the app in a browser syncs with its server (phase 4.7 a)', () => {
@@ -90,6 +99,11 @@ describe('the app in a browser syncs with its server (phase 4.7 a)', () => {
     await expect
       .poll(() => root.doc.getMap('meta').get('title'), { timeout: 5000 })
       .toBe('La batelière de Loire');
+
+    // The first account administers the server; from here (127.0.0.1) the page answers.
+    expect(await two.sync.openAdmin()).toBe('opened');
+    expect(two.tab.location.href).toBe(`${origin}/admin`);
+    expect(two.tab.opener).toBeNull();
 
     await two.sync.signOut();
     expect(two.forgotten()).toBe(true);

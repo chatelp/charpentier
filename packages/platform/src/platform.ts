@@ -45,9 +45,4 @@ export interface Platform {
   onFullScreenChange?(listener: (fullScreen: boolean) => void): () => void;
   /** The application menu (macOS menu bar); absent where the host has none. */
   readonly menu?: MenuService;
-  /**
-   * Opens an http(s) address in the system's browser (a new tab on the
-   * web); absent where there is no browser (the X250).
-   */
-  openExternal?(url: string): void;
 }

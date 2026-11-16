@@ -360,19 +360,27 @@ export class SyncEngine {
     }
   }
 
-  /** The administration page, when the account administers the server. */
-  async adminPage(): Promise<string | null> {
+  /**
+   * The administration page, when the account administers the server and
+   * the page answers from here (the server hides it elsewhere: 404).
+   */
+  async adminPage(): Promise<
+    { readonly url: string } | { readonly refused: 'not-admin' | 'out-of-reach' | 'unreachable' }
+  > {
     const account = this.deps.credentials.load();
-    if (!account) return null;
+    if (!account) return { refused: 'not-admin' };
+    const fetchImpl = this.deps.fetch ?? fetch;
     try {
-      const response = await (this.deps.fetch ?? fetch)(`${account.server}/api/account`, {
+      const response = await fetchImpl(`${account.server}/api/account`, {
         headers: { Authorization: `Bearer ${account.token}` },
       });
-      if (!response.ok) return null;
+      if (!response.ok) return { refused: 'unreachable' };
       const body = (await response.json()) as { admin?: unknown };
-      return body.admin === true ? `${account.server}/admin` : null;
+      if (body.admin !== true) return { refused: 'not-admin' };
+      const page = await fetchImpl(`${account.server}/admin/connexion`, { redirect: 'manual' });
+      return page.status === 200 ? { url: `${account.server}/admin` } : { refused: 'out-of-reach' };
     } catch {
-      return null;
+      return { refused: 'unreachable' };
     }
   }
 

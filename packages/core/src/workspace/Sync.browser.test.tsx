@@ -42,12 +42,15 @@ function fakeSync() {
     },
     devices: async () => devices,
     revokeDevice: async (id) => (calls.push(`revoke ${id}`), true),
-    adminPage: async () => (status === 'off' ? null : 'https://ecrire.example.org/admin'),
+    openAdmin: async () => {
+      calls.push('openAdmin');
+      return status === 'off' ? 'not-admin' : 'opened';
+    },
   };
   return { service, calls, setStatus };
 }
 
-async function start(sync: SyncService, opened: string[] = []) {
+async function start(sync: SyncService) {
   const prefs = new Map<string, unknown>([['welcomed', true]]);
   const docs = new Map<string, Y.Doc>();
   const platform = createTestPlatform({
@@ -64,7 +67,6 @@ async function start(sync: SyncService, opened: string[] = []) {
       },
     },
     sync,
-    openExternal: (url) => void opened.push(url),
   });
   render(<App platform={platform} i18n={await createI18n('fr')} />);
   const editor = await screen.findByRole('textbox', { name: 'Texte de la scène' });
@@ -125,13 +127,12 @@ describe('signing in to the sync server (step 4.4)', () => {
     expect(screen.queryByText('Synchronisé')).toBeNull();
   });
 
-  it('opens the administration page in the browser, for a signed-in account', async () => {
-    const { service, setStatus } = fakeSync();
-    const opened: string[] = [];
-    await start(service, opened);
+  it('opens the administration page from the command line', async () => {
+    const { service, calls, setStatus } = fakeSync();
+    await start(service);
     setStatus('synced');
     await command('administrer le serveur');
-    await waitFor(() => expect(opened).toEqual(['https://ecrire.example.org/admin']));
-    await screen.findByText(/La page d’administration s’ouvre dans votre navigateur/);
+    await waitFor(() => expect(calls).toContain('openAdmin'));
+    await screen.findByText('La page d’administration s’ouvre.');
   });
 });

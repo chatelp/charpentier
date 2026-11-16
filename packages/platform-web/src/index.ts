@@ -125,6 +125,7 @@ export function createWebPlatform(
           device: browserName(globalThis.navigator?.userAgent ?? ''),
           storage: globalThis.localStorage ?? null,
           forgetDocuments: () => forgetDocuments('charpentier:'),
+          openTab: () => globalThis.open?.('about:blank', '_blank') ?? null,
         })
       : null;
   void sync?.start();
@@ -142,11 +143,5 @@ export function createWebPlatform(
     secrets: null,
     spellcheck: null,
     system,
-    // No browser to open on the simulated X250.
-    ...(!system && {
-      openExternal: (url: string) => {
-        if (/^https?:\/\//.test(url)) globalThis.open?.(url, '_blank', 'noopener,noreferrer');
-      },
-    }),
   };
 }

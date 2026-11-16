@@ -789,8 +789,12 @@
       "offline": "Hors ligne",
       "unauthorized": "Synchro en pause : se reconnecter"
     },
-    "notAdmin": "Ce compte n’administre pas le serveur, ou le serveur ne répond pas.",
-    "adminOpened": "La page d’administration s’ouvre dans votre navigateur. Elle ne répond que depuis la maison ou par Tailscale."
+    "admin": {
+      "opened": "La page d’administration s’ouvre.",
+      "not-admin": "Ce compte n’administre pas le serveur.",
+      "out-of-reach": "La page d’administration ne répond que depuis la maison ou par Tailscale.",
+      "unreachable": "Le serveur ne répond pas."
+    }
   },
   "interview": {
     "label": "Entretien",

@@ -182,6 +182,8 @@ describe('sync between two desktop apps (step 4.3)', { timeout: 20_000 }, () => 
     await until(async () => (await x250.library.list()).some((p) => p.id === id));
     expect(await x250.engine.idle()).toBe(true);
     expect(x250.engine.withheld()).toEqual([starter.id]);
+    // The first account administers the server, whose page answers from here (127.0.0.1).
+    expect(await x250.engine.adminPage()).toEqual({ url: `${url}/admin` });
     // The Mac never hears of it.
     await mac.engine.reconcile();
     expect((await mac.library.list()).map((p) => p.title)).toEqual(['Les serres']);

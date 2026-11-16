@@ -14,6 +14,9 @@ export type SyncStatus = 'off' | 'connecting' | 'synced' | 'syncing' | 'offline'
 /** `no-keychain`: signed in, but this system has nowhere to keep the connection safely. */
 export type SignInResult = 'ok' | 'invalid' | 'too-many-attempts' | 'unreachable' | 'no-keychain';
 
+/** `out-of-reach`: the page does not answer from here (away from home, without Tailscale). */
+export type AdminOpening = 'opened' | 'not-admin' | 'out-of-reach' | 'unreachable';
+
 export interface SyncAccountInfo {
   readonly server: string;
   readonly email: string;
@@ -45,8 +48,10 @@ export interface SyncService {
   /** Signs another device out. */
   revokeDevice(id: string): Promise<boolean>;
   /**
-   * The address of the server's administration page (`…/admin`, phase 4.6)
-   * when the account administers the server; null otherwise, or unreachable.
+   * Opens the server's administration page (`…/admin`, phase 4.6): in a
+   * window of the app (desktop, X250), a new tab (web). Only for an account
+   * that administers the server, and where the page answers (the home
+   * network, Tailscale); otherwise, why not.
    */
-  adminPage(): Promise<string | null>;
+  openAdmin(): Promise<AdminOpening>;
 }

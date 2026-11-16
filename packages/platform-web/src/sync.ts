@@ -1,5 +1,6 @@
 import { HocuspocusProvider, HocuspocusProviderWebsocket } from '@hocuspocus/provider';
 import type {
+  AdminOpening,
   DocumentHandle,
   DocumentService,
   SignInResult,
@@ -43,6 +44,8 @@ export interface WebSyncDeps {
   readonly fetch?: typeof fetch;
   /** For a test outside a browser. */
   readonly WebSocket?: unknown;
+  /** A new tab, opened on the author's gesture (« Administrer le serveur… »). */
+  readonly openTab?: () => { opener: unknown; location: { href: string }; close(): void } | null;
   /** Forgets every document the browser keeps (« Se déconnecter »). */
   readonly forgetDocuments?: () => Promise<void>;
 }
@@ -387,16 +390,31 @@ export class WebSync implements SyncService {
     }
   }
 
-  /** The administration page, when the account administers the server. */
-  async adminPage(): Promise<string | null> {
-    if (!this.#stored()) return null;
+  /**
+   * The administration page in a new tab, for an administrator, where it
+   * answers. The tab opens at once (a browser lets a page open one only on
+   * the author's gesture), then goes to the page, or closes.
+   */
+  async openAdmin(): Promise<AdminOpening> {
+    const tab = this.deps.openTab?.() ?? null;
+    const done = (result: AdminOpening, url?: string) => {
+      if (tab && url) {
+        tab.opener = null;
+        tab.location.href = url;
+      } else tab?.close();
+      return result;
+    };
+    if (!this.#stored()) return done('not-admin');
     try {
       const response = await this.#fetch('/api/account');
-      if (!response.ok) return null;
+      if (!response.ok) return done('unreachable');
       const body = (await response.json()) as { admin?: unknown };
-      return body.admin === true ? `${this.deps.origin}/admin` : null;
+      if (body.admin !== true) return done('not-admin');
+      const page = await this.#fetch('/admin/connexion', { redirect: 'manual' });
+      if (page.status !== 200) return done('out-of-reach');
+      return done('opened', `${this.deps.origin}/admin`);
     } catch {
-      return null;
+      return done('unreachable');
     }
   }
 
