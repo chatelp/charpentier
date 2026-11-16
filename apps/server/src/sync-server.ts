@@ -6,6 +6,7 @@ import { DEFAULT_ADMIN_NETWORKS, networkList } from './admin/network';
 import { loadDocument, storeDocument, type Database } from './database';
 import { documentOwner } from './document-names';
 import { handleApi, LoginLimiter } from './http-api';
+import { createWebApp } from './web-app';
 import { handleInstaller } from './installer';
 import { handleCache } from './nix-cache';
 import { handleNetboot, type NetbootOptions } from './netboot';
@@ -19,6 +20,8 @@ export interface SyncServerOptions {
   readonly cacheDir?: string | null;
   /** The network boot of the X250 (phase 5.9 ter); without a secret, none. */
   readonly netboot?: NetbootOptions;
+  /** The built app for the browser (phase 4.7 a); without it, none. */
+  readonly webDir?: string | null;
   /** The administration page (phase 4.6). */
   readonly admin?: {
     /** CIDRs allowed to reach /admin (default: the home network and Tailscale). */
@@ -52,6 +55,7 @@ export function createSyncServer(options: SyncServerOptions): Server<ConnectionC
   const cacheDir = options.cacheDir ?? null;
   const netboot = options.netboot ?? { secret: null, macs: [] };
   const limiter = new LoginLimiter();
+  const web = createWebApp(options.webDir ?? null);
   const admin = createAdmin(db, {
     networks: networkList(options.admin?.networks ?? DEFAULT_ADMIN_NETWORKS),
     backupsDir: options.admin?.backupsDir ?? null,
@@ -98,7 +102,8 @@ export function createSyncServer(options: SyncServerOptions): Server<ConnectionC
         (await handleInstaller(db, cacheDir, request, response)) ||
         (await handleNetboot(db, cacheDir, netboot, request, response)) ||
         (await admin.handle(request, response)) ||
-        (await handleApi(db, limiter, request, response))
+        (await handleApi(db, limiter, request, response)) ||
+        (await web.handle(request, response))
       )
         return Promise.reject();
     },

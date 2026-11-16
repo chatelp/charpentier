@@ -1,6 +1,7 @@
 import pg from 'pg';
 import { COMMANDS, runCommand } from './cli';
 import { migrate } from './database';
+import { defaultWebDir } from './web-app';
 import { createSyncServer } from './sync-server';
 
 /**
@@ -42,6 +43,8 @@ const admin = {
   backupsDir: process.env['BACKUP_DIR'] || null,
   timeZone: process.env['ADMIN_TIMEZONE'] || 'Europe/Paris',
 };
-const server = createSyncServer({ db, port, address: '0.0.0.0', cacheDir, netboot, admin });
+// The app for the browser (phase 4.7 a): next to main.js in the image, or WEB_DIR.
+const webDir = process.env['WEB_DIR'] || defaultWebDir();
+const server = createSyncServer({ db, port, address: '0.0.0.0', cacheDir, netboot, admin, webDir });
 await server.listen();
 console.log(`Charpentier sync server listening on port ${port}.`);
