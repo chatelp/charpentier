@@ -61,8 +61,22 @@ export async function account(db: Database, email = 'helene@example.org') {
 }
 
 /** A device's copy of a document, connected to the server with a token. */
-export function connect(url: string, name: string, token: string, doc = new Y.Doc()) {
-  const socket = new HocuspocusProviderWebsocket({ url, WebSocketPolyfill: WebSocket });
+export function connect(
+  url: string,
+  name: string,
+  token: string,
+  doc = new Y.Doc(),
+  /** What a browser's handshake carries (its cookie, its origin). */
+  headers?: Record<string, string>,
+) {
+  const Polyfill = headers
+    ? class extends WebSocket {
+        constructor(address: string, protocols?: string | string[]) {
+          super(address, protocols, { headers });
+        }
+      }
+    : WebSocket;
+  const socket = new HocuspocusProviderWebsocket({ url, WebSocketPolyfill: Polyfill });
   sockets.push(socket);
   const provider = new HocuspocusProvider({
     websocketProvider: socket,

@@ -5,7 +5,7 @@ import { createAdmin } from './admin/routes';
 import { DEFAULT_ADMIN_NETWORKS, networkList } from './admin/network';
 import { loadDocument, storeDocument, type Database } from './database';
 import { documentOwner } from './document-names';
-import { handleApi, LoginLimiter } from './http-api';
+import { cookieToken, COOKIE_TOKEN, handleApi, LoginLimiter, sameOrigin } from './http-api';
 import { createWebApp } from './web-app';
 import { handleInstaller } from './installer';
 import { handleCache } from './nix-cache';
@@ -82,10 +82,21 @@ export function createSyncServer(options: SyncServerOptions): Server<ConnectionC
         store: ({ documentName, state }) => storeDocument(db, documentName, state),
       }),
     ],
-    async onAuthenticate({ documentName, token }): Promise<ConnectionContext> {
+    async onAuthenticate({ documentName, token, requestHeaders }): Promise<ConnectionContext> {
       const owner = documentOwner(documentName);
       if (!owner) throw new Error('Unknown document');
-      const session = await sessionFor(db, token);
+      // The browser (phase 4.7 a) sends no token: its cookie, from the app's own pages only.
+      const fromCookie =
+        token === COOKIE_TOKEN &&
+        sameOrigin({
+          origin: requestHeaders.get('origin'),
+          host: requestHeaders.get('host'),
+          site: requestHeaders.get('sec-fetch-site'),
+        });
+      const session = await sessionFor(
+        db,
+        fromCookie ? cookieToken(requestHeaders.get('cookie')) : token,
+      );
       if (!session) throw new Error('Not signed in');
       const allowed =
         owner.kind === 'library'
