@@ -153,6 +153,8 @@ export function NovelSheet({
   // A new version's name, or a version renamed on its line.
   const [creating, setCreating] = useState(mode === 'version');
   const [renamingVersion, setRenamingVersion] = useState<string | null>(null);
+  // A version's line has the focus: R and the sheet's foot speak of the version.
+  const [versionFocused, setVersionFocused] = useState(false);
   const editing = renaming || creating || renamingVersion !== null;
   const focusLater = (selector: string) =>
     requestAnimationFrame(() => ref.current?.querySelector<HTMLElement>(selector)?.focus());
@@ -299,7 +301,8 @@ export function NovelSheet({
               onClick={() => setRenaming(true)}
             >
               {t('novel.rename')}
-              <kbd>{t('novel.renameKey')}</kbd>
+              {/* On a version's line, R renames the version: the key is not the title's then. */}
+              {!versionFocused && <kbd>{t('novel.renameKey')}</kbd>}
             </button>
             <CloseButton purpose="generic" onClose={() => onClose(true)} />
           </div>
@@ -350,6 +353,8 @@ export function NovelSheet({
                 className={`ch-novel-version${on ? ' is-on' : ''}`}
                 data-novel-row
                 data-version={v.id}
+                onFocus={() => setVersionFocused(true)}
+                onBlur={() => setVersionFocused(false)}
                 onClick={go}
                 onKeyDown={(event) => {
                   if (event.key !== 'Enter' && event.key !== ' ') return;
@@ -462,7 +467,7 @@ export function NovelSheet({
         </button>
       </div>
       {!editing && (
-        <p className="ch-novel-hint">{t(several ? 'novel.hintVersions' : 'novel.hint')}</p>
+        <p className="ch-novel-hint">{t(versionFocused ? 'novel.hintVersion' : 'novel.hint')}</p>
       )}
     </div>
   );

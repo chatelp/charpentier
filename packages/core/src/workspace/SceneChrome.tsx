@@ -185,7 +185,9 @@ export function WritingFooter({
             {t('footer.enterKey')}
           </button>
         ) : (
-          mentorNote && (
+          // One state message at a time, whole: the most recent (a confirmation) wins.
+          mentorNote &&
+          !status && (
             <span className="ch-footer-fit" title={mentorNote}>
               {mentorNote}
             </span>

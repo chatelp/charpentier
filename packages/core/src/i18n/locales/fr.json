@@ -283,13 +283,13 @@
     "new": "+ Nouvelle version…",
     "single": "Essayez une autre fin sans toucher au roman : une version de travail choisit, pour chaque scène, quelle variante lire.",
     "nameField": "Nom de la version",
-    "from": "Elle part de « {{version}} », telle qu’elle est. Rien n’est copié : chaque scène reste commune, jusqu’à ce que vous lui donniez une variante pour cette version, par « Nouvelle variante »{{shortcut}}.",
+    "from": "Elle part de « {{version}} », telle qu’elle est. Rien n’est copié : chaque scène reste commune, jusqu’à ce que vous lui donniez une variante pour cette version, par « Nouvelle variante »{{shortcut}}.",
     "create": "Créer",
     "rename": "Renommer",
     "renameKey": "R",
     "trash": "Corbeille",
     "trashKey": "⌫",
-    "stats": "Version « {{version}} »",
+    "stats": "Version « {{version}} »",
     "common": "commune",
     "commonTitle": "Scène commune : ce que vous écrivez vaut pour toutes les versions qui la partagent",
     "commonLabel": "scène commune",
@@ -302,9 +302,9 @@
     "addHere": "Ajouter à cette version",
     "firstTypingTwo": "Cette scène est commune à 2 versions : ce que vous écrivez vaut pour les deux. Pour la changer ici seulement : Nouvelle variante{{shortcut}}.",
     "firstTypingMany": "Cette scène est commune à {{count}} versions : ce que vous écrivez vaut pour toutes. Pour la changer ici seulement : Nouvelle variante{{shortcut}}.",
-    "switched": "Version « {{version}} ».",
-    "removed": "Scène retirée de « {{version}} ».",
-    "trashed": "Version « {{version}} » mise à la corbeille."
+    "switched": "Version « {{version}} ».",
+    "removed": "Scène retirée de « {{version}} ».",
+    "trashed": "Version « {{version}} » mise à la corbeille."
   },
   "history": {
     "today": "Aujourd’hui, {{time}}",
@@ -721,7 +721,7 @@
     "new": "+ Nouveau roman",
     "titleField": "Titre du roman",
     "hint": "↑↓ choisir · ↵ ouvrir · R renommer · Échap fermer",
-    "hintVersions": "↑↓ choisir · ↵ ouvrir ou passer à la version · R renommer · Échap fermer",
+    "hintVersion": "↑↓ · ↵ passer · R renommer la version · Échap fermer",
     "today": "aujourd’hui",
     "yesterday": "hier",
     "on": "le {{date}}"

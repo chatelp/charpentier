@@ -407,3 +407,30 @@
   color: var(--ch-author);
   font: italic 11px var(--ch-font-text);
 }
+
+/* The drawer's context with a version active: the title shortens, the version stays whole. */
+.ch-panel-title-novel-line {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: baseline;
+  white-space: pre;
+}
+
+.ch-panel-title-novel-line .ch-panel-title-novel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ch-panel-title-novel-line i {
+  flex: none;
+  color: var(--ch-author);
+  font-family: var(--ch-font-text);
+}
+
+/* The overview's line under the title: the version as in the title button. */
+.ch-overview-version {
+  color: var(--ch-author);
+  font: italic 1.05em var(--ch-font-text);
+}

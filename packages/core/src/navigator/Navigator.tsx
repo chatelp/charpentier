@@ -251,26 +251,37 @@ export function Navigator({ ctx, outline, active, onClose, signals }: NavigatorP
         onClose={onClose}
         name={t('navigator.title')}
         context={
-          <>
-            {/* The novel's title opens its sheet (docs/DESIGN.md §4.8, 1.19). */}
-            <button
-              type="button"
-              tabIndex={-1}
-              className="ch-panel-title-novel"
-              title={t('novel.button')}
-              onClick={() => ctx.toggleNovel()}
-            >
-              {readProjectMeta(ctx.root)?.title}
-            </button>
-            {versionName && (
-              <>
-                {' · '}
-                <i>{versionName}</i>
-              </>
-            )}
-            {' · '}
-            {t('footer.words', { count: [...words.values()].reduce((a, b) => a + b, 0) })}
-          </>
+          versionName ? (
+            // A version active (DESIGN 1.20): no word count, and the novel's title is cut, not the version.
+            <span className="ch-panel-title-novel-line">
+              <button
+                type="button"
+                tabIndex={-1}
+                className="ch-panel-title-novel"
+                title={t('novel.buttonVersions')}
+                onClick={() => ctx.toggleNovel()}
+              >
+                {readProjectMeta(ctx.root)?.title}
+              </button>
+              <span aria-hidden="true">{' · '}</span>
+              <i>{versionName}</i>
+            </span>
+          ) : (
+            <>
+              {/* The novel's title opens its sheet (docs/DESIGN.md §4.8, 1.19). */}
+              <button
+                type="button"
+                tabIndex={-1}
+                className="ch-panel-title-novel"
+                title={t('novel.button')}
+                onClick={() => ctx.toggleNovel()}
+              >
+                {readProjectMeta(ctx.root)?.title}
+              </button>
+              {' · '}
+              {t('footer.words', { count: [...words.values()].reduce((a, b) => a + b, 0) })}
+            </>
+          )
         }
       />
       <div className="ch-seg ch-nav-seg" role="group">

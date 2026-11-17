@@ -187,6 +187,16 @@
   text-overflow: ellipsis;
 }
 
+/* A state message is read whole: a long one (a common scene's warning) wraps, right-aligned. */
+.ch-footer-right > .ch-footer-fit[role='status']:not(:empty) {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  white-space: normal;
+  text-align: right;
+  line-height: 1.35;
+}
+
 /* The command zone is centred under the text column, whatever is on either side. */
 .ch-footer-middle {
   display: flex;

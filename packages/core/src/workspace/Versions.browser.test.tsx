@@ -52,7 +52,9 @@ describe('working versions (DESIGN 1.20)', () => {
     expect(novelButton().textContent).not.toContain('·');
     within(sheet).getByRole('button', { name: '+ Nouvelle version…' }).click();
     const field = await within(sheet).findByRole('textbox', { name: 'Nom de la version' });
-    expect(sheet.textContent).toContain('Elle part de « Principale », telle qu’elle est.');
+    expect(sheet.textContent).toContain(
+      'Elle part de «\u00a0Principale\u00a0», telle qu’elle est.',
+    );
     await userEvent.type(field, 'Fin à Nantes{Enter}');
 
     // The new version is the active one: in the title, in the sheet, checked.
@@ -64,7 +66,7 @@ describe('working versions (DESIGN 1.20)', () => {
       'Fin à Nantes',
     ]);
     expect(lines[1]?.getAttribute('aria-checked')).toBe('true');
-    expect(sheet.textContent).toContain('Version « Fin à Nantes »');
+    expect(sheet.textContent).toContain('Version «\u00a0Fin à Nantes\u00a0»');
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(document.activeElement).toBe(editor()));
 

@@ -245,8 +245,14 @@ export function Overview({ ctx, active, onOpen, onClose }: OverviewProps) {
         )}
       </h2>
       <p className="ch-overview-sub">
+        {/* The active version as in the title button: Literata italic, the author's ink (1.20). */}
+        {versionName && (
+          <>
+            <span className="ch-overview-version">{versionName}</span>
+            {' · '}
+          </>
+        )}
         {[
-          ...(versionName ? [t('versions.stats', { version: versionName })] : []),
           t('overview.chapters', { count: outline.length }),
           t('overview.scenes', { count: all.length }),
           t('overview.words', { count: total, formatted: number.format(total) }),
