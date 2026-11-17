@@ -22,6 +22,8 @@ import {
   type InterviewPlacement,
   type InterviewReference,
   type InterviewSection,
+  bornIn,
+  bornInName,
 } from '@charpentier/schema';
 import { useEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -208,7 +210,7 @@ export function Interview({
     if (!said || !mentorDoc || waiting || !available) return;
     addInterviewMessage(
       mentorDoc,
-      { role: 'author', text: said, mode: guided ? 'guided' : 'free' },
+      { role: 'author', text: said, mode: guided ? 'guided' : 'free', ...bornIn(ctx.root) },
       AUTHOR,
     );
     setDraft('');
@@ -403,7 +405,13 @@ export function Interview({
                     <small>{formatWhen(t, message.at, ctx.language, new Date(), true)}</small>
                   </p>
                 )}
-                <p className="ch-label ch-interview-who">{t('mentor.name')}</p>
+                <p className="ch-label ch-interview-who">
+                  {t('mentor.name')}
+                  {/* Born in a working version: its line of origin names it (DESIGN 1.20). */}
+                  {bornInName(ctx.root, message.version) && (
+                    <span className="ch-born-in"> · {bornInName(ctx.root, message.version)}</span>
+                  )}
+                </p>
                 {message.text && <p className="ch-interview-say">{message.text}</p>}
                 {message.question && message !== question && (
                   <p className="ch-interview-say is-question">{message.question}</p>

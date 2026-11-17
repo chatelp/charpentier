@@ -21,6 +21,8 @@ export interface ChatMessage {
   readonly styleChoiceId?: string;
   /** What the answer wrote in the notebook (« Noté au carnet », phase 6.5). */
   readonly noted?: readonly NotedChange[];
+  /** The working version it was born in, outside Principale (DESIGN 1.20): see bornIn. */
+  readonly version?: string;
   readonly at: string;
 }
 
@@ -105,6 +107,7 @@ export function addChatMessage(
         ...(message.work !== undefined && { work: { ...message.work } }),
         ...(message.styleChoiceId !== undefined && { styleChoiceId: message.styleChoiceId }),
         ...(message.noted?.length && { noted: message.noted.map((n) => ({ ...n })) }),
+        ...(message.version !== undefined && { version: message.version }),
       },
     ]);
   }, origin);
@@ -190,6 +193,7 @@ export function addInterviewMessage(
         ...(message.placed !== undefined && { placed: message.placed }),
         ...(message.reference !== undefined && { reference: { ...message.reference } }),
         ...(message.noted?.length && { noted: message.noted.map((n) => ({ ...n })) }),
+        ...(message.version !== undefined && { version: message.version }),
       },
     ]);
   }, origin);

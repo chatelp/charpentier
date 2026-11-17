@@ -22,6 +22,7 @@ import {
   type InterviewSection,
   nextSection,
   type SingletonModule,
+  bornIn,
 } from '@charpentier/schema';
 import type * as Y from 'yjs';
 import {
@@ -382,6 +383,7 @@ export async function interviewTurn(input: {
         text: FALLBACK[language.slice(0, 2)] ?? FALLBACK['fr'] ?? '',
         mode,
         ...(section && { section }),
+        ...bornIn(root),
       },
       agentOrigin('interview'),
     );
@@ -405,6 +407,7 @@ export async function interviewTurn(input: {
       ...(turn.why && { why: turn.why }),
       ...(placed.length > 0 && { placed }),
       ...(memory.changes().length > 0 && { noted: memory.changes() }),
+      ...bornIn(root),
     },
     agentOrigin('interview'),
   );

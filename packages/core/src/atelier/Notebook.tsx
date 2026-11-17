@@ -13,6 +13,7 @@ import {
   type Note,
   type NoteBook,
   type NoteNature,
+  bornInName,
 } from '@charpentier/schema';
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -341,6 +342,10 @@ export function Notebook({
               <button type="button" tabIndex={-1} className="ch-link" onClick={() => openOrigin(s)}>
                 {label}
               </button>,
+            )}
+            {/* Born in a working version: « d'après la conversation · Fin à Nantes » (DESIGN 1.20). */}
+            {bornInName(root, source?.version) && (
+              <span className="ch-born-in"> · {bornInName(root, source?.version)}</span>
             )}
           </>
         )}

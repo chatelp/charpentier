@@ -10,6 +10,7 @@ import {
   sceneIsCommon,
   versionsSharingScene,
   workKey,
+  bornIn,
 } from '@charpentier/schema';
 import type * as Y from 'yjs';
 import type { Editor } from '@tiptap/core';
@@ -306,6 +307,7 @@ export function ProjectWorkspace({
           role: 'author',
           text: '',
           mode: 'free',
+          ...bornIn(root),
           reference: {
             title: reference.title,
             ...(reference.author && { author: reference.author }),

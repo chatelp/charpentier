@@ -24,6 +24,7 @@ import {
   type EntityModule,
   type FieldRef,
   type SceneEvidence,
+  bornIn,
 } from '@charpentier/schema';
 import type * as Y from 'yjs';
 import { sceneContext, sheetsSummary } from './context';
@@ -610,7 +611,11 @@ export function applyDeepWork(
   mentorDoc.transact(() => {
     const reviewId =
       review && narrativeProseIn(review, authorText).length === 0
-        ? addChatMessage(mentorDoc, { role: 'compagnon', text: review, work }, origin)
+        ? addChatMessage(
+            mentorDoc,
+            { role: 'compagnon', text: review, work, ...bornIn(root) },
+            origin,
+          )
         : undefined;
     writeWorkRecord(
       mentorDoc,

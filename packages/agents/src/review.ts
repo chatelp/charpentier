@@ -5,6 +5,7 @@ import {
   hashEvidence,
   readMentorLevel,
   readOutline,
+  bornIn,
 } from '@charpentier/schema';
 import type * as Y from 'yjs';
 import { compagnonChat } from './chat';
@@ -75,6 +76,7 @@ export async function reviewChapter(input: {
         role: 'compagnon',
         text: `${heading}\n\n${answer.reply}`,
         ...(answer.example !== undefined && { example: answer.example }),
+        ...bornIn(root),
       },
       agentOrigin('chapter-review'),
     );

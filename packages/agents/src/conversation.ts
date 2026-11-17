@@ -5,6 +5,7 @@ import {
   chatMessages,
   companionThread,
   readMentorLevel,
+  bornIn,
 } from '@charpentier/schema';
 import type * as Y from 'yjs';
 import { bookContext } from './book-context';
@@ -81,6 +82,7 @@ export async function answerAuthor(input: {
       ...(answer.example !== undefined && { example: answer.example }),
       ...(input.sceneId !== undefined && { sceneId: input.sceneId }),
       ...(memory.changes().length > 0 && { noted: memory.changes() }),
+      ...bornIn(input.root),
       // Only a choice the author validated; an invented id is dropped.
       ...(validatedStyleChoice(input.root, answer.styleChoiceId) && {
         styleChoiceId: answer.styleChoiceId,

@@ -4,6 +4,10 @@ import path from 'node:path';
 import {
   createChapter,
   createScene,
+  createVariant,
+  createVersion,
+  MAIN_VERSION,
+  switchVersion,
   fragmentPlainText,
   getScene,
   guids,
@@ -54,7 +58,36 @@ async function setup() {
   return { store, root, folder, sceneId, variantId, sceneDoc, write, mirror, file, text };
 }
 
+const settle = () => new Promise((resolve) => setTimeout(resolve, 60));
+
 describe('Markdown mirror', () => {
+  it('follows the active working version, and loses nothing going back (DESIGN 1.20)', async () => {
+    const { root, folder, sceneDoc, sceneId, file, mirror } = await setup();
+    const principal = fs.readFileSync(file(), 'utf8');
+    // A version, the scene's own variant there, and a scene of its own.
+    createVersion(root, 'Fin à Nantes');
+    const own = createVariant(root, sceneDoc, sceneId, { name: 'Fin à Nantes', activate: true });
+    sceneDoc.transact(() =>
+      writeSceneDocToFragment(
+        parseSceneMarkdown('Hélène reste à Nantes.'),
+        variantFragment(sceneDoc, own),
+      ),
+    );
+    const chapterId = getScene(root, sceneId)?.chapterId ?? '';
+    createScene(root, { chapterId, title: 'La lettre' });
+    await settle();
+    const chapter = path.join(folder, 'manuscrit', '01-le-depart');
+    expect(parseSceneFile(fs.readFileSync(file(), 'utf8'))?.body).toBe('Hélène reste à Nantes.\n');
+    expect(fs.readdirSync(chapter).sort()).toEqual(['01-il-pleut.md', '02-la-lettre.md']);
+
+    // Back to Principale: its text, and none of the version's own scene.
+    switchVersion(root, MAIN_VERSION);
+    await settle();
+    expect(fs.readFileSync(file(), 'utf8')).toBe(principal);
+    expect(fs.readdirSync(chapter)).toEqual(['01-il-pleut.md']);
+    mirror.stop();
+  });
+
   it('writes a readable file per scene and the modules in YAML', async () => {
     const { folder, file, sceneId, variantId, mirror } = await setup();
     const content = fs.readFileSync(file(), 'utf8');

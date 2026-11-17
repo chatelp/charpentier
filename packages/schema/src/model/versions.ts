@@ -297,3 +297,21 @@ export function ownerVersion(doc: Y.Doc): string | undefined {
   const active = activeVersionId(doc);
   return active === MAIN_VERSION ? undefined : active;
 }
+
+/** What a message or a note born now records of the version (nothing in Principale). */
+export function bornIn(doc: Y.Doc): { readonly version?: string } {
+  const version = ownerVersion(doc);
+  return version ? { version } : {};
+}
+
+/**
+ * The name of the version something was born in, to say so beside its
+ * provenance: none for Principale or an unknown version; a trashed one keeps
+ * its name.
+ */
+export function bornInName(doc: Y.Doc, versionId: string | undefined): string | undefined {
+  if (!versionId || versionId === MAIN_VERSION) return undefined;
+  const entry = versionsMap(doc).get(versionId);
+  const name = entry?.get('name');
+  return typeof name === 'string' && name ? name : undefined;
+}

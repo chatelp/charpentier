@@ -18,6 +18,8 @@ export interface NotebookData {
   readonly trashed: readonly Note[];
   readonly interviewIds: ReadonlySet<string>;
   readonly chat: ReadonlyMap<string, ChatMessage>;
+  /** The working version each message was born in, outside Principale (DESIGN 1.20). */
+  readonly versions: ReadonlyMap<string, string>;
 }
 
 export function readNotebook(doc: Y.Doc): NotebookData {
@@ -26,6 +28,11 @@ export function readNotebook(doc: Y.Doc): NotebookData {
     trashed: listTrashedNotes(doc),
     interviewIds: new Set(interviewMessages(doc).map((m) => m.id)),
     chat: new Map(chatMessages(doc).map((m) => [m.id, m])),
+    versions: new Map(
+      [...interviewMessages(doc), ...chatMessages(doc)].flatMap((m) =>
+        m.version ? [[m.id, m.version] as const] : [],
+      ),
+    ),
   };
 }
 
@@ -36,17 +43,21 @@ export interface NoteSource {
   readonly count: number;
   /** A background work's bilan (« d'après Bilan de la structure »). */
   readonly work?: WorkRef;
+  /** The working version its first message was born in, outside Principale. */
+  readonly version?: string;
 }
 
 export function sourceOf(note: Note, data: NotebookData): NoteSource | undefined {
   const known = note.sources.filter((id) => data.interviewIds.has(id) || data.chat.has(id));
   const first = known[0];
   if (!first) return undefined;
+  const version = data.versions.get(first);
   if (data.interviewIds.has(first))
     return {
       mode: 'interview',
       messageId: first,
       count: known.filter((id) => data.interviewIds.has(id)).length,
+      ...(version && { version }),
     };
   const work = data.chat.get(first)?.work;
   return {
@@ -54,6 +65,7 @@ export function sourceOf(note: Note, data: NotebookData): NoteSource | undefined
     messageId: first,
     count: known.filter((id) => data.chat.has(id)).length,
     ...(work && { work }),
+    ...(version && { version }),
   };
 }
 

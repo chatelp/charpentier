@@ -13,9 +13,14 @@ import {
 } from './manuscript';
 import { initProject } from './project';
 import { addSignal, listVersionSignals } from './signals';
+import { createAgentWriter } from './agent-writer';
+import { readFieldRef } from './modules';
+import { addChatMessage, chatMessages } from './mentor-chat';
 import { SYSTEM } from './origins';
 import {
   activeVersionId,
+  bornIn,
+  bornInName,
   createVersion,
   listTrashedVersions,
   listVersions,
@@ -32,7 +37,7 @@ import {
 
 /** A novel of one chapter and three scenes, as the author has it before any version. */
 function novel() {
-  const doc = new Y.Doc();
+  const doc = new Y.Doc({ guid: 'project:p' });
   initProject(doc, { id: 'p', title: 'Avant Nantes', kind: 'novel' });
   const chapterId = createChapter(doc, { title: 'Le fleuve' });
   const scenes = ['La nuit sur l’eau', 'L’estuaire', 'Le quai de la Fosse'].map(
@@ -217,5 +222,29 @@ describe('working versions (DESIGN 1.20)', () => {
     expect(listVersionSignals(doc).map((s) => s.message)).toEqual(['Après']);
     switchVersion(doc, MAIN_VERSION);
     expect(listVersionSignals(doc).map((s) => s.message)).toEqual(['Avant']);
+  });
+
+  it('names the version a message or a proposal was born in, Principale never', () => {
+    const { doc } = novel();
+    const mentor = new Y.Doc();
+    const pitch = { module: 'meta', field: 'pitch' } as const;
+    const evidence = [{ sceneId: 's', variantId: 'v', quote: 'Nantes' }];
+    expect(bornIn(doc)).toEqual({});
+    addChatMessage(mentor, { role: 'author', text: 'Avant.', ...bornIn(doc) }, SYSTEM);
+    createAgentWriter(doc, 'bottom-up').proposeField(pitch, 'Un retour.', evidence);
+    expect(readFieldRef(doc, pitch).proposal?.version).toBeUndefined();
+
+    const version = createVersion(doc, 'Fin à Nantes');
+    addChatMessage(mentor, { role: 'author', text: 'Après.', ...bornIn(doc) }, SYSTEM);
+    createAgentWriter(doc, 'bottom-up').proposeField(pitch, 'Une fin à Nantes.', evidence);
+    expect(chatMessages(mentor).map((m) => bornInName(doc, m.version))).toEqual([
+      undefined,
+      'Fin à Nantes',
+    ]);
+    expect(bornInName(doc, readFieldRef(doc, pitch).proposal?.version)).toBe('Fin à Nantes');
+    // Renamed, then trashed: the name follows, and stays.
+    renameVersion(doc, version, 'Fin au Croisic');
+    trashVersion(doc, version);
+    expect(bornInName(doc, chatMessages(mentor)[1]?.version)).toBe('Fin au Croisic');
   });
 });

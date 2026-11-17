@@ -1,4 +1,12 @@
-import { addChatMessage, AUTHOR, chatMessages, guids, type ChatMessage } from '@charpentier/schema';
+import {
+  addChatMessage,
+  AUTHOR,
+  chatMessages,
+  guids,
+  type ChatMessage,
+  bornIn,
+  bornInName,
+} from '@charpentier/schema';
 import { Fragment, useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import * as Y from 'yjs';
@@ -74,7 +82,11 @@ export function Conversation({
   const send = async () => {
     const text = draft.trim();
     if (!text || !mentorDoc || waiting) return;
-    addChatMessage(mentorDoc, { role: 'author', text, sceneId }, AUTHOR);
+    addChatMessage(
+      mentorDoc,
+      { role: 'author', text, sceneId, ...(ctx && bornIn(ctx.root)) },
+      AUTHOR,
+    );
     setDraft('');
     setProblem(null);
     setWaiting(true);
@@ -109,6 +121,7 @@ export function Conversation({
             )}
             <Turn
               message={message}
+              bornIn={ctx && bornInName(ctx.root, message.version)}
               onInsert={onInsertExample}
               noted={
                 mentorDoc && (
@@ -159,12 +172,15 @@ export function Conversation({
 
 function Turn({
   message,
+  bornIn: version,
   onInsert,
   noted,
   citation,
   children,
 }: {
   readonly message: ChatMessage;
+  /** The working version it was born in, outside Principale (DESIGN 1.20). */
+  readonly bornIn?: string | undefined;
   readonly onInsert: (text: string) => void;
   /** What the answer wrote in the Compagnon's notebook (« Noté au carnet »). */
   readonly noted?: ReactNode;
@@ -176,7 +192,10 @@ function Turn({
   const compagnon = message.role === 'compagnon';
   return (
     <div className={`ch-turn${compagnon ? ' is-compagnon' : ''}`}>
-      <p className="ch-turn-who ch-label">{compagnon ? t('mentor.name') : t('mentor.you')}</p>
+      <p className="ch-turn-who ch-label">
+        {compagnon ? t('mentor.name') : t('mentor.you')}
+        {version && <span className="ch-born-in"> · {version}</span>}
+      </p>
       <p className="ch-turn-text">{message.text}</p>
       {noted}
       {citation}

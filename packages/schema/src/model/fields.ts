@@ -1,5 +1,6 @@
 import type * as Y from 'yjs';
 import { nowIso } from './ids';
+import { ownerVersion } from './versions';
 
 /**
  * A field of a module (docs/SPEC.md §7.1, §15.2) is stored in three slots of
@@ -59,6 +60,8 @@ export interface Proposal {
   readonly at: string;
   readonly evidence: readonly Evidence[];
   readonly evidenceHash: string;
+  /** The working version it was drawn from, outside Principale (DESIGN 1.20). */
+  readonly version?: string;
 }
 
 export interface Rejection {
@@ -189,10 +192,13 @@ export function agentProposeField(
   ) {
     return { ok: false, reason: 'unchanged' };
   }
+  // Drawn from a working version: its provenance names it (« … · Fin à Nantes »).
+  const version = container.doc ? ownerVersion(container.doc) : undefined;
   container.set(slot.proposal(field), {
     ...proposal,
     evidenceHash,
     at: nowIso(),
+    ...(version && { version }),
   } satisfies Proposal);
   return { ok: true };
 }

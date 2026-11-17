@@ -10,6 +10,7 @@ import {
   type ReferenceEvidence,
   type StyleCategory,
   writeWorkRecord,
+  bornIn,
 } from '@charpentier/schema';
 import type * as Y from 'yjs';
 import { sceneContext } from './context';
@@ -463,7 +464,7 @@ export function applyStyle(
   const reference = { title: text.title, ...(text.author && { author: text.author }) };
   const messageId = addInterviewMessage(
     mentorDoc,
-    { role: 'compagnon', text: safeIntro, mode: 'free', placed, reference },
+    { role: 'compagnon', text: safeIntro, mode: 'free', placed, reference, ...bornIn(root) },
     agentOrigin(STYLE_AGENT),
   );
   writeWorkRecord(

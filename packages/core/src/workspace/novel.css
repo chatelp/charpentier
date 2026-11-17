@@ -434,3 +434,13 @@
   color: var(--ch-author);
   font: italic 1.05em var(--ch-font-text);
 }
+
+/* What was born in a working version names it on its line of origin (DESIGN 1.20). */
+.ch-born-in {
+  font-family: var(--ch-font-text);
+  font-style: italic;
+  font-variant-caps: normal;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--ch-author);
+}

@@ -9,6 +9,7 @@ import {
   type FieldValue,
   type ReferenceEvidence,
   type Signal,
+  bornInName,
 } from '@charpentier/schema';
 import { useId, useRef, useState, type KeyboardEvent } from 'react';
 import { acceptAndKeep, keepSheetOf } from './atelier-actions';
@@ -280,15 +281,21 @@ export function FieldRow({
         {status === 'proposed' && (
           <>
             <span>
-              {evidenceScenes.length
-                ? t('atelier.proposedFrom', { scenes: evidenceScenes.join(', ') })
-                : state.proposal?.evidence.some((e) => 'messageId' in e)
-                  ? t('atelier.proposedFromInterview')
-                  : referenceOf(state.proposal?.evidence)
-                    ? t('atelier.proposedFromReference', {
-                        title: referenceOf(state.proposal?.evidence),
-                      })
-                    : t('atelier.proposed')}
+              {[
+                evidenceScenes.length
+                  ? t('atelier.proposedFrom', { scenes: evidenceScenes.join(', ') })
+                  : state.proposal?.evidence.some((e) => 'messageId' in e)
+                    ? t('atelier.proposedFromInterview')
+                    : referenceOf(state.proposal?.evidence)
+                      ? t('atelier.proposedFromReference', {
+                          title: referenceOf(state.proposal?.evidence),
+                        })
+                      : t('atelier.proposed'),
+                // Drawn from a working version: named after the provenance (DESIGN 1.20).
+                bornInName(ctx.root, state.proposal?.version),
+              ]
+                .filter(Boolean)
+                .join(' · ')}
             </span>
             <button
               type="button"
