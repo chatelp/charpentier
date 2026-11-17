@@ -106,7 +106,8 @@ describe('desktop app', () => {
   it('opens the same app as the web, with a sandboxed renderer', async () => {
     const dirs = folders();
     const { app, window } = await launch(dirs);
-    expect(await window.title()).toContain('Charpentier');
+    // The window's title: the novel, then the scene (DESIGN §4.8, 1.19).
+    await expect.poll(() => window.title()).toBe('Mon roman — Scène 1');
     expect(await window.evaluate(() => typeof (globalThis as { require?: unknown }).require)).toBe(
       'undefined',
     );
