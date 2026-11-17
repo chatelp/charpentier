@@ -537,7 +537,7 @@
             `<div class="sys panel" style="width:420px">
             <div class="ph">charpentier 0.1.1<span>nixos 26.11 · x250</span></div>
             <div class="grp">${row('réglages du système', '', { k: '⊞,' })}${row('réglages de l’app', '', { k: '⌘,' })}${row('terminal', '', { k: '⊞T' })}</div>
-            <div class="grp">${row('imprimer…', '', { k: '⊞P' })}${row('copier mes textes sur une clé', '', { k: '⊞U' })}${row('verrouiller', '', { k: '⊞L' })}</div>
+            <div class="grp">${row('imprimer…', '', { k: '⊞P' })}${row('relire sur le téléphone…')}${row('copier mes textes sur une clé', '', { k: '⊞U' })}${row('verrouiller', '', { k: '⊞L' })}</div>
             <div class="grp">
               <div class="row sel"><span>mettre en veille</span>${lead()}<span class="k">⊞⏎</span></div>
               <div class="help">instantané · l’écran revient d’une touche, tel quel</div>
@@ -673,6 +673,127 @@
               </div>
             </div>
           </div>`,
+        moniteur: () =>
+          line({ open: 'cpu', msg: '' }) +
+          `<div class="sys full" style="padding:18px 28px">
+            <div style="display:flex;align-items:center;gap:10px;padding-bottom:12px;border-bottom:1px solid var(--sys-rule)">${SQ}<span style="color:var(--ch-ink)">moniteur</span><span class="f">x250 · i5-5300U · 8 Go · allumé depuis 3 h 12</span><span style="margin-left:auto" class="f">1 min · <span style="color:var(--ch-ink)">[10 min]</span> · 1 h · échap ×</span></div>
+            <div style="display:grid;grid-template-columns:2fr 1fr;gap:0;border-bottom:1px solid var(--sys-rule)">
+              <div style="padding:14px 20px 16px 0;border-right:1px solid var(--sys-rule)">
+                <div class="row" style="padding:0"><span style="color:var(--ch-ink)">écriture</span>${lead()}<span class="sub">compté sur cet appareil seulement</span></div>
+                <div style="display:flex;gap:56px;align-items:flex-end;margin:12px 0 16px">
+                  <div><div class="f">frappes depuis l’installation</div><div style="display:flex;gap:3px;margin-top:6px">${'0412873'
+                    .split('')
+                    .map(
+                      (d, i) =>
+                        `<span style="display:inline-block;width:30px;height:42px;border:1px solid var(--sys-rule);text-align:center;font:300 30px/42px var(--ch-font-sys);color:var(--ch-ink)${i === 3 ? ';margin-left:8px' : ''}">${d}</span>`,
+                    )
+                    .join('')}</div></div>
+                  <div><div class="f">mots par minute</div><div style="font:300 30px/42px var(--ch-font-sys);color:var(--ch-ink);margin-top:6px">38 <span style="font-size:13px" class="sub">en ce moment · 31 en moyenne</span></div></div>
+                  <div><div class="f">aujourd’hui</div><div style="font:300 30px/42px var(--ch-font-sys);color:var(--ch-ink);margin-top:6px">1 214 <span style="font-size:13px" class="sub">mots · 1 h 48</span></div></div>
+                </div>
+                <div class="f" style="margin-bottom:6px">2026 · mots par jour</div>
+                <div id="year" style="display:grid;grid-template-rows:repeat(7,11px);grid-auto-flow:column;grid-auto-columns:11px;gap:3px"></div>
+                <div style="display:flex;gap:6px;align-items:center;margin-top:8px" class="f">moins ${[0, 1, 2, 3, 4].map((l) => `<i style="display:inline-block;width:11px;height:11px;background:${['#20242a', '#3a404a', '#5f6773', '#8f97a3', '#c9ced6'][l]}"></i>`).join('')} plus · 214 jours d’écriture · plus longue série 23 jours</div>
+              </div>
+              <div style="padding:14px 0 16px 20px;min-width:0;overflow:hidden">
+                <div class="row" style="padding:0"><span style="color:var(--ch-ink)">processeur</span>${lead()}<span class="val">12 %</span></div>
+                <svg viewBox="0 0 300 70" width="340" height="84" style="display:block;margin:8px 0"><path d="M0 60 L20 58 40 61 60 50 80 55 100 40 120 52 140 57 160 30 180 48 200 55 220 59 240 45 260 52 280 57 300 54" fill="none" stroke="#dfe3ea" stroke-width="1.4"/><path d="M0 60 L20 58 40 61 60 50 80 55 100 40 120 52 140 57 160 30 180 48 200 55 220 59 240 45 260 52 280 57 300 54 V70 H0Z" fill="rgb(223 227 234 / .08)"/></svg>
+                ${row('fréquence', '1,2 GHz')}${row('charge 1, 5, 15 min', '0,42 · 0,51 · 0,48')}
+              </div>
+            </div>
+          </div>`,
+        fetch: () =>
+          page() +
+          line({ msg: '' }) +
+          `<div class="sys" style="position:absolute;inset:30px 0 auto;height:432px;z-index:4;border-bottom:1px solid var(--sys-rule);font-size:13px;line-height:20px">
+            <div style="display:flex;justify-content:space-between;padding:4px 14px;border-bottom:1px solid var(--sys-rule);font-size:12px;line-height:22px"><span style="display:flex;gap:9px;align-items:center;color:var(--ch-ink)">${SQ}terminal <span style="color:var(--ch-faint)">pierre@x250 · ~</span></span><span style="color:var(--ch-faint)">⊞↑ ⊞↓ hauteur · ⊞⇧T plein cadre · ⊞T fermer</span></div>
+            <div style="padding:10px 14px"><span style="color:var(--ch-muted)">~ $</span> :fetch</div>
+            <div style="display:flex;gap:42px;padding:6px 14px 0 30px">
+<pre style="margin:0;font:inherit;line-height:14px;color:var(--ch-ink)">████
+████
+████
+████           <span style="color:#e0a040">▄██▄</span>
+████           <span style="color:#e0a040">▀██▀</span>
+████
+████
+██████████████████████
+██████████████████████
+██████████████████████</pre>
+              <div style="min-width:520px">
+                <div style="color:var(--ch-ink)">pierre<span class="f">@</span>x250</div><div class="f">────────────────────────</div>
+                ${[
+                  ['charpentier', '0.1.1 · installée le 14 nov.'],
+                  ['système', 'nixos 26.11 · génération 42'],
+                  ['machine', 'thinkpad x250 · i5-5300U · 8 Go'],
+                  ['écran', '1920 × 1080 · 100 %'],
+                  ['disque', '118 Go chiffrés · 21 % occupés'],
+                  ['batteries', '74 % + 90 % · usure 12 %, 21 %'],
+                  ['allumé depuis', '3 h 12'],
+                  ['frappes', '412 873 depuis l’installation'],
+                  ['aujourd’hui', '1 214 mots'],
+                ]
+                  .map(
+                    ([k, v]) =>
+                      `<div><span style="color:var(--ch-muted);display:inline-block;width:150px">${k}</span><span style="color:var(--ch-ink-2)">${v}</span></div>`,
+                  )
+                  .join('')}
+                <div style="display:flex;gap:0;margin-top:10px">${['#14161a', '#d26a5c', '#8fb58a', '#c8a86a', '#7d9cc0', '#b48ab8', '#7fb3b0', '#b9c0ca'].map((c) => `<i style="display:block;width:28px;height:14px;background:${c};border:1px solid var(--sys-rule)"></i>`).join('')}</div>
+                <div style="display:flex;gap:0">${['#555b66', '#e08575', '#a8cba3', '#dcc488', '#9db8d8', '#c9a3cc', '#9ccbc8', '#dfe3ea'].map((c) => `<i style="display:block;width:28px;height:14px;background:${c};border:1px solid var(--sys-rule)"></i>`).join('')}</div>
+              </div>
+            </div>
+            <div style="padding:10px 14px"><span style="color:var(--ch-muted)">~ $</span> <span style="background:#e0a040;color:#14161a">&nbsp;</span></div>
+          </div>`,
+        apropos: () =>
+          line({ msg: '' }) +
+          `<div class="sys full">
+          <div class="rail"><div class="t">${SQ}réglages du système</div><div style="padding-top:8px">
+            ${row('réseau', 'maison')}${row('bluetooth', '1')}${row('écran', '100 %')}${row('son', '40')}${row('clavier', 'azerty')}${row('énergie', '82 %')}${row('verrouillage', 'au réveil')}${row('impression', 'brother')}${row('clé usb', '—')}${row('date et heure', 'paris')}${row('terminal', 'visible')}
+            <div class="row sel"><span>à propos</span>${lead()}<span>0.1.1</span></div></div>
+            <div class="last">${row('réglages de l’app', '', { k: '⌘,' })}</div></div>
+          <div class="sec"><div class="xclose">échap ×</div><div class="path">réglages du système /</div><h1>à propos</h1>
+            <div class="grp"><div class="gt">charpentier</div>${row('version', '0.1.1 · installée le 14 nov. 2026')}${row('système', 'nixos 26.11 · génération 42')}${row('mise à jour', 'à jour · vérifiée à 14:05')}</div>
+            <div class="grp"><div class="gt">carnet d’entretien</div>
+              ${row('bat0 · interne', 'usure 12 % · 214 cycles · 23,1 Wh sur 26,3')}
+              ${row('bat1 · arrière', 'usure 21 % · 389 cycles · 19,0 Wh sur 24,0')}
+              ${row('disque · smart', 'bon · 6 412 h · 0 secteur réalloué')}
+              ${row('températures', 'max 71° ce mois · ventilateur 3 200 tr/min')}
+              <div class="gt" style="margin-top:8px">notes</div>
+              ${row('<span class="sub">12 oct. 2026</span>&nbsp;&nbsp;pâte thermique refaite', '')}
+              ${row('<span class="sub">3 sept. 2026</span>&nbsp;&nbsp;batterie arrière changée (Green Cell)', '')}
+              <div class="row"><span class="btn">ajouter une note<kbd>N</kbd></span></div>
+            </div>
+            <div class="grp"><div class="gt">réparer</div>
+              <div class="row sel"><span>réparer le système…</span>${lead()}<span>⏎</span></div>
+              <div class="help" style="padding-left:0">vérifie chaque fichier du système et remplace ce qui est abîmé, depuis le serveur ; reconstruit le menu de démarrage. ne touche ni à vos projets, ni aux réseaux, au verrou, à la synchronisation, à la clé ou aux réglages.</div>
+            </div>
+            <div class="foot" style="border:0;padding:12px 0 0">↑↓ choisir · ⏎ ouvrir · N note · échap revenir au texte</div>
+          </div></div>`,
+        reparer: () =>
+          line({ msg: 'réparation · 1 284 fichiers sur 3 902' }) +
+          `<div class="sys full"><div class="sec" style="left:0;padding:22px 48px 0 389px"><div class="path">réglages du système / à propos /</div><h1>réparer le système</h1>
+            <div class="grp"><div class="row"><span>vérification des fichiers</span>${lead()}<span class="val">1 284 / 3 902</span></div>
+            <div style="display:flex;gap:2px;margin:6px 0 10px">${Array.from({ length: 40 }, (_, i) => `<i style="width:6px;height:10px;background:${i < 13 ? '#b9c0ca' : '#2c313a'}"></i>`).join('')}</div>
+            ${row('remplacés', '2 · depuis sync.exemple.org')}${row('menu de démarrage', '<span class="sub">à reconstruire ensuite</span>')}
+            <div class="help" style="padding-left:0">vous pouvez continuer d’écrire. rien n’est redémarré sans vous le demander.</div></div>
+            <div class="grp" style="padding-top:12px"><span class="btn">arrêter<kbd>échap</kbd></span></div>
+          </div></div>`,
+        telephone: () =>
+          page() +
+          line({ open: 'sys', msg: '' }) +
+          under(
+            'sys',
+            `<div class="sys panel" style="width:420px">
+            <div class="ph">relire sur le téléphone<span>lecture seule</span></div>
+            <div class="grp" style="display:flex;gap:16px;padding:14px 12px">
+              <div id="qr" style="flex:none;width:148px;height:148px;background:#dfe3ea;padding:8px;box-sizing:border-box"></div>
+              <div style="line-height:20px"><div style="color:var(--ch-ink)">visez ce code avec le téléphone</div>
+                <div class="sub" style="margin-top:6px">même réseau que le x250 :</div><div style="color:var(--ch-ink-2)">maison</div>
+                <div class="sub" style="margin-top:6px">ou ouvrez :</div><div style="color:var(--ch-ink-2)">192.168.1.24:8443</div><div class="sub">code <span style="color:var(--ch-ink)">K7Q-42M</span></div></div>
+            </div>
+            <div class="grp">${row('roman', 'Avant Nantes')}${row('à partir de', 'III.4 · Le quai de la Fosse')}</div>
+            <div class="foot">ouvert tant que ce panneau l’est · échap coupe l’accès</div>
+          </div>`,
+          ),
         echelle: () =>
           page() +
           line({ msg: 'clé branchée · <span class="acc">⊞U copier</span>', batLow: false }),
@@ -685,6 +806,58 @@
           }),
       };
       frame.innerHTML = (screens[ecran] || screens.ligne)();
+      // La carte de l'année (moniteur) et un faux code QR (téléphone), tirés d'un hasard fixe.
+      let seed = 7;
+      const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+      const year = document.getElementById('year');
+      if (year) {
+        const tones = ['#20242a', '#3a404a', '#5f6773', '#8f97a3', '#c9ced6'];
+        year.innerHTML = Array.from({ length: 53 * 7 }, (_, i) => {
+          const future = i > 46 * 7 + 1;
+          const r = rnd();
+          const l = future ? -1 : r < 0.35 ? 0 : r < 0.55 ? 1 : r < 0.78 ? 2 : r < 0.93 ? 3 : 4;
+          return `<i style="background:${l < 0 ? 'transparent;outline:1px solid #20242a' : tones[l]}"></i>`;
+        }).join('');
+      }
+      const qr = document.getElementById('qr');
+      if (qr) {
+        const n = 25;
+        const finder = (x, y) =>
+          [
+            [0, 0],
+            [n - 7, 0],
+            [0, n - 7],
+          ].some(([a, b]) => x >= a && x < a + 7 && y >= b && y < b + 7);
+        const fin = (x, y) => {
+          for (const [a, b] of [
+            [0, 0],
+            [n - 7, 0],
+            [0, n - 7],
+          ]) {
+            if (x >= a && x < a + 7 && y >= b && y < b + 7) {
+              const dx = x - a,
+                dy = y - b;
+              return (
+                dx === 0 ||
+                dy === 0 ||
+                dx === 6 ||
+                dy === 6 ||
+                (dx >= 2 && dx <= 4 && dy >= 2 && dy <= 4)
+              );
+            }
+          }
+          return false;
+        };
+        qr.innerHTML = `<svg viewBox="0 0 ${n} ${n}" width="132" height="132" shape-rendering="crispEdges">${Array.from(
+          { length: n * n },
+          (_, i) => {
+            const x = i % n,
+              y = Math.floor(i / n);
+            const on = finder(x, y) ? fin(x, y) : rnd() < 0.5;
+            return on ? `<rect x="${x}" y="${y}" width="1" height="1" fill="#14161a"/>` : '';
+          },
+        ).join('')}</svg>`;
+      }
     </script>
   </body>
 </html>
