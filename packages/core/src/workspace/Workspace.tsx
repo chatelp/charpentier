@@ -4,6 +4,7 @@ import {
   listEntities,
   listWorkRecords,
   readMentorLevel,
+  readProjectMeta,
   readOutline,
   workKey,
 } from '@charpentier/schema';
@@ -735,12 +736,17 @@ export function ProjectWorkspace({
     previousView.current = view;
   }, [view, focusTextIfIdle]);
 
+  const projectTitle = useDocSnapshot(root, readProjectMeta)?.title ?? '';
   useEffect(() => {
     if (!scene) return;
     const variant =
       scene.variants.length > 1 ? ` (${variantLabel(t, scene, scene.activeVariantId)})` : '';
-    document.title = `${scene.title}${variant} · ${t('app.name')}`;
-  }, [scene, t]);
+    // The novel first (docs/DESIGN.md §4.8, 1.19): what the window list and Mission Control show.
+    document.title = t('app.windowTitle', {
+      novel: projectTitle || t('app.name'),
+      scene: `${scene.title}${variant}`,
+    });
+  }, [scene, t, projectTitle]);
 
   // Confirmations fade after a few seconds.
   useEffect(() => {

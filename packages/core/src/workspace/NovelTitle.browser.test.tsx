@@ -87,6 +87,8 @@ describe('the novel’s title (docs/DESIGN.md §4.8, 1.19)', () => {
     expect(screen.getByRole('button', { name: /^Renommer/ })).toHaveProperty('disabled', true);
     await userEvent.type(field, 'Avant Nantes, 1910{Enter}');
     await waitFor(() => expect(button().textContent).toContain('Avant Nantes, 1910'));
+    // The window's title too (the window list, Mission Control).
+    await waitFor(() => expect(document.title).toBe('Avant Nantes, 1910 — Scène 1'));
     const all = await platform.library.list();
     expect(all.find((p) => p.title === 'Avant Nantes, 1910')).toBeDefined();
     // Back to the sheet, not closed.

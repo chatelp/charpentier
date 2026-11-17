@@ -1,6 +1,7 @@
 {
   "app": {
     "name": "Charpentier",
+    "windowTitle": "{{novel}} — {{scene}}",
     "loading": "Ouverture…",
     "openError": "Impossible d'ouvrir le projet."
   },

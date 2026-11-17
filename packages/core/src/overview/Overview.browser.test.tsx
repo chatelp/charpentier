@@ -64,7 +64,7 @@ describe('overview of the manuscript', () => {
       expect(document.activeElement).toBe(screen.getByRole('article', { name: 'I.2 C' })),
     );
     await userEvent.keyboard('{Enter}');
-    await waitFor(() => expect(document.title).toBe('C · Charpentier'));
+    await waitFor(() => expect(document.title).toBe('Mon roman — C'));
     expect(screen.queryByRole('region', { name: 'Vue d’ensemble du manuscrit' })).toBeNull();
   });
 

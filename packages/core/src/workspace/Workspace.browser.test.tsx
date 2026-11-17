@@ -105,14 +105,14 @@ describe('workspace, keyboard only', () => {
     await userEvent.keyboard('Texte de la deuxième.');
 
     await press('mod+alt+ArrowUp'); // previous scene
-    await waitFor(() => expect(document.title).toBe('Scène 1 · Charpentier'));
+    await waitFor(() => expect(document.title).toBe('Mon roman — Scène 1'));
     expect(screen.getByRole('textbox', { name: 'Texte de la scène' }).textContent).toBe(
       'Texte de la première scène.',
     );
 
     await press('mod+p'); // go to scene…
     await userEvent.keyboard('deuxieme{Enter}');
-    await waitFor(() => expect(document.title).toBe('Deuxième · Charpentier'));
+    await waitFor(() => expect(document.title).toBe('Mon roman — Deuxième'));
     expect(screen.getByRole('textbox', { name: 'Texte de la scène' }).textContent).toBe(
       'Texte de la deuxième.',
     );
@@ -125,13 +125,13 @@ describe('workspace, keyboard only', () => {
     await press('mod+k');
     await userEvent.keyboard('scene corbeille{Enter}');
     expect(outline()).toEqual(['Chapitre 1: Scène 1']);
-    await waitFor(() => expect(document.title).toBe('Scène 1 · Charpentier'));
+    await waitFor(() => expect(document.title).toBe('Mon roman — Scène 1'));
 
     await press('mod+k');
     await userEvent.keyboard('restaurer{Enter}');
     await userEvent.keyboard('{Enter}');
     expect(outline()).toEqual(['Chapitre 1: Scène 1, Éphémère']);
-    await waitFor(() => expect(document.title).toBe('Éphémère · Charpentier'));
+    await waitFor(() => expect(document.title).toBe('Mon roman — Éphémère'));
   });
 
   it('reorders scenes and chapters by drag and drop', async () => {
