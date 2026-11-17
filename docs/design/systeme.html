@@ -620,7 +620,7 @@
           page() +
           line({ msg: '<span class="f">journal</span>' }) +
           `<div class="sys" style="position:absolute;inset:30px 0 auto;height:${P.has('poignee') ? 640 : 432}px;z-index:4;border-bottom:1px solid ${P.has('poignee') ? 'var(--ch-ink-2)' : 'var(--sys-rule)'};font-size:13px;line-height:20px">
-            <div title="hauteur du terminal" style="position:absolute;left:50%;bottom:-11px;transform:translateX(-50%);width:64px;height:10px;display:grid;place-items:center;background:var(--ch-bg);border:1px solid ${P.has('poignee') ? 'var(--ch-ink-2)' : 'var(--sys-rule)'};border-top:0;cursor:row-resize;z-index:2"><i style="display:block;width:28px;height:2px;background:${P.has('poignee') ? 'var(--ch-ink)' : 'var(--ch-muted)'}"></i></div>
+            <div title="hauteur du terminal" style="position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:120px;height:18px;display:grid;place-items:center;cursor:row-resize;z-index:2"><i style="display:block;width:72px;height:5px;border-radius:3px;background:${P.has('poignee') ? 'var(--ch-ink)' : 'var(--ch-muted)'}"></i></div>
             <div style="display:flex;justify-content:space-between;padding:4px 14px;border-bottom:1px solid var(--sys-rule);font-size:12px;line-height:22px">
               <span style="display:flex;gap:9px;align-items:center;color:var(--ch-ink)">${SQ}terminal <span style="color:var(--ch-faint)">pierre@x250 · ~</span></span>
               <span style="color:var(--ch-faint)">${P.has('poignee') ? '<span style="color:var(--ch-ink)">60 %</span> · ' : ''}⊞↑ ⊞↓ hauteur · ⊞⇧T plein cadre · ⊞T fermer</span></div>
