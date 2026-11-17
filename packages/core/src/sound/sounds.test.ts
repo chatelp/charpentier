@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { keySoundOf, playKeySound, playSound, setSoundSettings } from './sounds';
+import { keySoundOf, MASTER, playKeySound, playSound, setSoundSettings } from './sounds';
 
 const key = (key: string, extra: Partial<KeyboardEvent> = {}) =>
   ({
@@ -59,6 +59,14 @@ describe('sounds (docs/DESIGN.md §3.4)', () => {
         getChannelData: () => new Float32Array(length),
       });
       createBufferSource = () => node({ buffer: null, start() {} });
+      createDynamicsCompressor = () =>
+        node({
+          threshold: param([]),
+          knee: param([]),
+          ratio: param([]),
+          attack: param([]),
+          release: param([]),
+        });
     }
     vi.stubGlobal('AudioContext', FakeContext);
     setSoundSettings({ ui: true, typing: true });
@@ -69,7 +77,8 @@ describe('sounds (docs/DESIGN.md §3.4)', () => {
       playKeySound(kind, 10_000 + i * 100),
     );
     expect(Math.min(...frequencies)).toBeGreaterThanOrEqual(300);
-    expect(Math.max(...gains)).toBeLessThan(0.5);
+    // Each sound under 0.5 before the bus (its gain, MASTER, is recorded too; a limiter follows).
+    expect(Math.max(...gains.filter((g) => g !== MASTER))).toBeLessThan(0.5);
     // Every sound reaches a gain a laptop's speakers render (the first ones peaked at 0.02).
     expect(Math.max(...gains)).toBeGreaterThan(0.2);
   });

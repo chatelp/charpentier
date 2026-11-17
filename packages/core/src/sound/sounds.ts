@@ -19,11 +19,40 @@ export function setSoundSettings(settings: { readonly ui: boolean; readonly typi
   enabled = { ...settings };
 }
 
+let output: AudioNode | undefined;
+
+/**
+ * Every sound goes through one bus: a gain of 2 (+6 dB, the X250's speakers
+ * at half volume still found them faint, 17 November 2026), then a limiter,
+ * so that two sounds at once never clip.
+ */
 function audio(): AudioContext | undefined {
   if (typeof AudioContext === 'undefined') return undefined;
   context ??= new AudioContext();
+  // A context made before any gesture waits to be resumed.
+  if (context.state === 'suspended') void context.resume?.();
   return context;
 }
+
+function out(a: AudioContext): AudioNode {
+  if (output) return output;
+  const bus = a.createGain();
+  bus.gain.value = MASTER;
+  const limiter = a.createDynamicsCompressor?.();
+  if (limiter) {
+    limiter.threshold.value = -3;
+    limiter.knee.value = 0;
+    limiter.ratio.value = 20;
+    limiter.attack.value = 0.001;
+    limiter.release.value = 0.05;
+    bus.connect(limiter).connect(a.destination);
+  } else bus.connect(a.destination);
+  output = bus;
+  return bus;
+}
+
+/** The bus's gain: +6 dB over the design's recipes. */
+export const MASTER = 2;
 
 function envelope(gain: GainNode, t: number, peak: number, attack: number, end: number) {
   gain.gain.setValueAtTime(0.0001, t);
@@ -45,7 +74,7 @@ function tone(
   oscillator.frequency.setValueAtTime(f0, t);
   if (f1 !== f0) oscillator.frequency.exponentialRampToValueAtTime(f1, t + ramp);
   envelope(gain, t, peak, attack, end);
-  oscillator.connect(gain).connect(a.destination);
+  oscillator.connect(gain).connect(out(a));
   oscillator.start(t);
   oscillator.stop(t + end + 0.01);
 }
@@ -64,7 +93,7 @@ function noise(a: AudioContext, ms: number, frequency: number, q: number, peak: 
   filter.Q.value = q;
   const gain = a.createGain();
   envelope(gain, t, peak, 0.001, ms / 1000);
-  source.connect(filter).connect(gain).connect(a.destination);
+  source.connect(filter).connect(gain).connect(out(a));
   source.start(t);
 }
 
@@ -101,7 +130,7 @@ export function playKeySound(kind: KeySound, now = performance.now()): void {
   if (kind === 'enter') return toc(a, 0.5);
   if (kind === 'back') return noise(a, 10, 3000, 0.8, 0.05);
   const space = kind === 'space';
-  noise(a, space ? 18 : 12, jitter(space ? 1400 : 2200, 0.15), 0.8, jitter(0.08, 0.2));
+  noise(a, space ? 18 : 12, jitter(space ? 1400 : 2200, 0.15), 0.8, jitter(0.11, 0.2));
   tone(a, 'sine', [360, 360, 0], [0.06, 0.001, 0.02]);
 }
 
