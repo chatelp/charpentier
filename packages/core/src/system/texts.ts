@@ -564,7 +564,7 @@ export const systemTexts: TextTree = {
         },
         back: 'revenir à la version précédente',
         backHelp:
-          '{{version}} reste au menu de démarrage. Si l’appareil ne démarre plus, maintenez Espace à l’allumage et choisissez-la.',
+          '{{version}} reste au menu de démarrage. si l’appareil ne démarre plus, maintenez espace à l’allumage et choisissez-la.',
         backArmed:
           'l’appareil redémarre sur {{version}}. vos textes ne bougent pas : ils sont dans vos projets, pas dans la version. la {{installed}} restera ici pour y repasser.',
         backUnreadable:
