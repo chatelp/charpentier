@@ -30,6 +30,7 @@ import {
 } from './atelier-data';
 import { createEntityPrompt, trashEntityAndNotify } from './atelier-actions';
 import { CommandZone, ModeSwitch } from '../workspace/EntryPoints';
+import { NovelButton } from '../workspace/NovelTitle';
 import { playSound } from '../sound/sounds';
 import { Medallion, Monogram, type PictogramName } from '../icons/Pictogram';
 import { FieldRow } from './FieldRow';
@@ -296,6 +297,7 @@ export function Atelier({
   return (
     <section className="ch-atelier" aria-label={t('atelier.label')} onKeyDown={onRootKeyDown}>
       <nav className="ch-atl-rail ch-raised ch-tool">
+        <NovelButton ctx={ctx} className="is-inline" />
         <ModeSwitch
           view="atelier"
           className="is-inline"

@@ -54,6 +54,7 @@ import { lastScenePref, type ProjectSession } from './default-scene';
 import { panelsPref, readPanels, type StoredPanels } from './panels-pref';
 import { projectStatsPref } from '../library/project-stats';
 import { CommandZone, DisplaySheet, EdgeHandle, ModeSwitch } from './EntryPoints';
+import { NovelButton, NovelSheet } from './NovelTitle';
 import { GuidedTour, WELCOMED_PREF, WelcomeNote } from './Onboarding';
 import { SceneHeader, SceneOpener, WritingFooter } from './SceneChrome';
 import { useSceneDocs } from './use-scene-docs';
@@ -109,10 +110,16 @@ const readKnownNames = (doc: Y.Doc): KnownName[] =>
 export function ProjectWorkspace({
   session,
   onLibrary,
+  onOpenProject,
+  titleSlot = null,
 }: {
   readonly session: ProjectSession;
   /** Shows the library of projects (`creating`: with the new project form open). */
   readonly onLibrary: (creating: boolean) => void;
+  /** Opens another project (from the novel's sheet). */
+  readonly onOpenProject?: (projectId: string) => void;
+  /** The Mac's title bar, where the novel's button goes (null: at the top left of the page). */
+  readonly titleSlot?: HTMLElement | null;
 }) {
   const { t } = useTranslation();
   const platform = usePlatform();
@@ -122,6 +129,8 @@ export function ProjectWorkspace({
   const [editor, setEditor] = useState<Editor | null>(null);
   const [palette, setPalette] = useState<{ key: number; request: PaletteRequest } | null>(null);
   const [navigatorOpen, setNavigatorOpen] = useState(false);
+  // The novel's sheet (docs/DESIGN.md §4.8, 1.19): open, and on its title field or not.
+  const [novel, setNovel] = useState<{ renaming: boolean } | null>(null);
   const [view, setView] = useState<WorkspaceContext['view']>('write');
   const [atelierLocation, setAtelierLocation] = useState<AtelierLocation>({ rail: 'meta' });
   const [atelierFocus, setAtelierFocus] = useState(0);
@@ -557,6 +566,15 @@ export function ProjectWorkspace({
     },
     runCommand: (commandId) => registry.execute(commandId, ctx),
     openLibrary: (creating = false) => onLibrary(creating),
+    openProject: (id) => {
+      if (id !== projectId) onOpenProject?.(id);
+    },
+    novelOpen: novel !== null,
+    toggleNovel: (renaming = false) => {
+      playSound(novel && !renaming ? 'toc' : 'tic');
+      setNavigatorOpen(false);
+      setNovel(novel && !renaming ? null : { renaming });
+    },
     openOverview: () => {
       setNavigatorOpen(false);
       setView('overview');
@@ -870,8 +888,25 @@ export function ProjectWorkspace({
       data-navigator={navigatorOpen || undefined}
       data-narrow={narrow || undefined}
       data-mentor-level={mentorLevel}
+      data-titlebar-novel={titleSlot ? '' : undefined}
     >
       <FeatureTopZones ctx={ctx} />
+      {/* The novel's title (docs/DESIGN.md §4.8, 1.19): in the Mac's title bar, else top left of the page. */}
+      {titleSlot
+        ? createPortal(<NovelButton ctx={ctx} />, titleSlot)
+        : view === 'write' && !navigatorOpen && <NovelButton ctx={ctx} />}
+      {novel && (
+        <NovelSheet
+          key={novel.renaming ? 'renaming' : 'sheet'}
+          ctx={ctx}
+          renaming={novel.renaming}
+          onClose={(backToText) => {
+            playSound('toc');
+            setNovel(null);
+            if (backToText && view === 'write') focusTextIfIdle();
+          }}
+        />
+      )}
       {/* Entry points (docs/DESIGN.md §4.8), in the order of the tab key. */}
       {view === 'write' && !navigatorOpen && (
         <EdgeHandle

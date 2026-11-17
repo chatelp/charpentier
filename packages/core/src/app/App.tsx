@@ -163,8 +163,14 @@ function Root() {
     style.setProperty('--ch-top-offset', `${titleBarHeight + zonesHeight}px`);
   }, [titleBarHeight, zonesHeight]);
 
+  // In the workspace, the title bar holds the novel's button (docs/DESIGN.md §4.8, 1.19).
+  const [titleSlot, setTitleSlot] = useState<HTMLDivElement | null>(null);
+  const inWorkspace = !library && shown.state === 'ready';
   const titleBar = titleBarHeight ? (
-    <TitleBar root={shown.state === 'ready' ? shown.session.root : undefined} />
+    <TitleBar
+      root={shown.state === 'ready' ? shown.session.root : undefined}
+      slot={inWorkspace ? setTitleSlot : undefined}
+    />
   ) : null;
 
   if (library)
@@ -192,6 +198,8 @@ function Root() {
           key={shown.session.projectId}
           session={shown.session}
           onLibrary={(creating) => setLibrary({ creating })}
+          onOpenProject={setProjectId}
+          titleSlot={titleBarHeight ? titleSlot : null}
         />
       )}
       {shown.state === 'error' && <p role="alert">{t('app.openError')}</p>}

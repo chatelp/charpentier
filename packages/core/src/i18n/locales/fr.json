@@ -658,6 +658,25 @@
     "fixedSpelling_one": "{{count}} correction d’orthographe appliquée.",
     "fixedSpelling_other": "{{count}} corrections d’orthographe appliquées."
   },
+  "novel": {
+    "button": "Le roman : renommer, changer de roman",
+    "buttonLabel": "{{title}}, le roman : renommer, changer de roman",
+    "sheet": "Le roman",
+    "rename": "Renommer",
+    "renameKey": "R",
+    "cancel": "Annuler",
+    "novel": "Roman",
+    "shortStory": "Nouvelle",
+    "others": "Vos autres romans",
+    "alone": "C’est votre seul roman pour l’instant.",
+    "all": "Tous les romans…",
+    "new": "+ Nouveau roman",
+    "titleField": "Titre du roman",
+    "hint": "↑↓ choisir · ↵ ouvrir · R renommer · Échap fermer",
+    "today": "aujourd’hui",
+    "yesterday": "hier",
+    "on": "le {{date}}"
+  },
   "header": {
     "chapter": "{{numeral}} · {{title}}",
     "scene": "{{rank}} · {{title}}",

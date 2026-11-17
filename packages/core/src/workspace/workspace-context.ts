@@ -76,6 +76,12 @@ export interface WorkspaceContext {
   openOverview(): void;
   /** The library of projects; `creating` opens the new project form. */
   openLibrary(creating?: boolean): void;
+  /** Opens another project of the library, where the author left it. */
+  openProject(projectId: string): void;
+  /** The novel's sheet (docs/DESIGN.md §4.8 « Le titre du roman »): open or not. */
+  readonly novelOpen: boolean;
+  /** Opens or closes the novel's sheet; `renaming`: opens it with the title as a field. */
+  toggleNovel(renaming?: boolean): void;
   /** Words written today in this project (the date panel of the system line). */
   readonly wordsToday: number;
   /** The author is typing (the entry points fade, the cpu curve stands still). */

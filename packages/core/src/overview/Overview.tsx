@@ -23,6 +23,8 @@ import type { WorkspaceContext } from '../workspace/workspace-context';
 import { useSceneHistory } from './use-scene-history';
 import './overview.css';
 import { CloseButton } from '../icons/CloseButton';
+import { renameProjectEverywhere } from '../workspace/default-scene';
+import '../workspace/novel.css';
 
 const readCheckpoints = (doc: Y.Doc) => listCheckpoints(doc);
 /** Restore points shown in the strip; the others through « Tous (N)… ». */
@@ -63,12 +65,17 @@ export function Overview({ ctx, active, onOpen, onClose }: OverviewProps) {
   const all = outline.flatMap((c, ci) => c.scenes.map((s, si) => ({ scene: s, ci, si })));
   const selected = all.find((x) => x.scene.id === selectedId) ?? all[0];
 
-  useEffect(() => {
-    if (active && selected) cards.current.get(selected.scene.id)?.focus();
-  }, [active, selected]);
-
   const total = [...words.values()].reduce((a, b) => a + b, 0);
-  const project = readProjectMeta(ctx.root);
+  const title = useDocSnapshot(ctx.root, readProjectMeta)?.title ?? '';
+  // The title renamed in place (docs/DESIGN.md §4.8, 1.19): R, or « Renommer ».
+  const [renaming, setRenaming] = useState(false);
+  useEffect(() => {
+    if (active && selected && !renaming) cards.current.get(selected.scene.id)?.focus();
+  }, [active, selected, renaming]);
+  const doneRenaming = (next: string | null) => {
+    setRenaming(false);
+    if (next) void renameProjectEverywhere(ctx.platform, ctx.projectId, next, ctx.root);
+  };
 
   // ─── The strip: variants and restore points of the selected scene (docs/DESIGN.md §4.4) ───
   const history = useSceneHistory(ctx.platform, ctx.projectId, selected?.scene.id);
@@ -145,8 +152,20 @@ export function Overview({ ctx, active, onOpen, onClose }: OverviewProps) {
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if ((event.target as HTMLElement).closest('.ch-overview-strip, input')) return;
+    if (
+      event.key.toLowerCase() === 'r' &&
+      !event.metaKey &&
+      !event.ctrlKey &&
+      !event.altKey &&
+      !renaming
+    ) {
+      event.preventDefault();
+      event.stopPropagation();
+      setRenaming(true);
+      return;
+    }
     if (!selected) return;
-    if ((event.target as HTMLElement).closest('.ch-overview-strip')) return;
     const { ci, si, scene } = selected;
     const handled = () => {
       event.preventDefault();
@@ -199,7 +218,25 @@ export function Overview({ ctx, active, onOpen, onClose }: OverviewProps) {
   return (
     <section className="ch-overview" aria-label={t('overview.label')} onKeyDown={onKeyDown}>
       <CloseButton purpose="toText" onClose={onClose} corner />
-      <h2 className="ch-overview-title">{project?.title}</h2>
+      <h2 className="ch-overview-title">
+        {renaming ? (
+          <TitleField title={title} onDone={doneRenaming} />
+        ) : (
+          <>
+            {title}
+            <span className="ch-overview-tools">
+              <button type="button" className="ch-btn" onClick={() => setRenaming(true)}>
+                {t('novel.rename')}
+                <kbd>{t('novel.renameKey')}</kbd>
+              </button>
+              <button type="button" className="ch-btn" onClick={() => ctx.openLibrary()}>
+                {t('novel.all')}
+                {ctx.shortcutLabel('openLibrary') && <kbd>{ctx.shortcutLabel('openLibrary')}</kbd>}
+              </button>
+            </span>
+          </>
+        )}
+      </h2>
       <p className="ch-overview-sub">
         {[
           t('overview.chapters', { count: outline.length }),
@@ -441,5 +478,43 @@ function CheckpointPreview({
         </button>
       </p>
     </div>
+  );
+}
+
+/** The overview's title as a field: ⏎ renames, Échap cancels; an empty title is not saved. */
+function TitleField({
+  title,
+  onDone,
+}: {
+  readonly title: string;
+  readonly onDone: (title: string | null) => void;
+}) {
+  const { t } = useTranslation();
+  const [value, setValue] = useState(title);
+  const input = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    input.current?.focus();
+    input.current?.select();
+  }, []);
+  return (
+    <input
+      ref={input}
+      className="ch-overview-title-field"
+      value={value}
+      aria-label={t('novel.titleField')}
+      onChange={(event) => setValue(event.target.value)}
+      onBlur={() => onDone(null)}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          const next = value.trim();
+          onDone(next && next !== title ? next : null);
+        } else if (event.key === 'Escape') {
+          event.preventDefault();
+          event.stopPropagation();
+          onDone(null);
+        }
+      }}
+    />
   );
 }

@@ -126,7 +126,7 @@ export function PanelTitle({
 }: {
   readonly picto: PictogramName;
   readonly name: string;
-  readonly context: string;
+  readonly context: ReactNode;
   readonly variant: 'mentor' | 'manuscript';
   readonly onClose?: () => void;
 }) {

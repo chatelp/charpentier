@@ -379,18 +379,37 @@ describe('desktop app', () => {
     expect(layout.note?.right).toBeLessThanOrEqual(1536);
   });
 
-  it.runIf(process.platform === 'darwin')('has no title bar in full screen', async () => {
-    const { app, window } = await launch(folders());
-    await expect.poll(() => window.locator('.ch-titlebar').count()).toBe(1);
-    await app.evaluate(({ BrowserWindow }) =>
-      BrowserWindow.getAllWindows()[0]?.setFullScreen(true),
-    );
-    await expect.poll(() => window.locator('.ch-titlebar').count(), { timeout: 10_000 }).toBe(0);
-    await app.evaluate(({ BrowserWindow }) =>
-      BrowserWindow.getAllWindows()[0]?.setFullScreen(false),
-    );
-    await expect.poll(() => window.locator('.ch-titlebar').count(), { timeout: 10_000 }).toBe(1);
-  });
+  it.runIf(process.platform === 'darwin')(
+    "has no title bar in full screen; in a window, the novel's title sits in it",
+    async () => {
+      const { app, window } = await launch(folders());
+      await expect.poll(() => window.locator('.ch-titlebar').count()).toBe(1);
+      // DESIGN 1.19: the novel's button in place of the centred title, after the traffic lights.
+      await window.locator('.ch-titlebar .ch-novel').waitFor();
+      expect(await window.locator('.ch-titlebar-title').count()).toBe(0);
+      await app.evaluate(({ BrowserWindow }) =>
+        BrowserWindow.getAllWindows()[0]?.setFullScreen(true),
+      );
+      await expect.poll(() => window.locator('.ch-titlebar').count(), { timeout: 10_000 }).toBe(0);
+      // In full screen, the button comes back at the top left of the page.
+      await window.locator('.ch-app > .ch-novel').waitFor();
+      await app.evaluate(({ BrowserWindow }) =>
+        BrowserWindow.getAllWindows()[0]?.setFullScreen(false),
+      );
+      await expect.poll(() => window.locator('.ch-titlebar').count(), { timeout: 10_000 }).toBe(1);
+      const button = window.locator('.ch-titlebar .ch-novel');
+      await button.waitFor();
+      expect((await button.boundingBox())?.x).toBeGreaterThanOrEqual(80);
+      await button.click();
+      await window.getByRole('dialog', { name: 'Le roman' }).waitFor();
+      if (process.env['CHARPENTIER_E2E_SHOTS']) {
+        await window.waitForTimeout(500);
+        await window.screenshot({
+          path: `${process.env['CHARPENTIER_E2E_SHOTS']}/mac-feuille.png`,
+        });
+      }
+    },
+  );
 
   it.runIf(process.platform === 'darwin')(
     'has a full menu bar whose items run the commands',

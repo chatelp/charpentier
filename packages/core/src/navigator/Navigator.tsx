@@ -240,14 +240,22 @@ export function Navigator({ ctx, outline, active, onClose, signals }: NavigatorP
         variant="manuscript"
         onClose={onClose}
         name={t('navigator.title')}
-        context={[
-          readProjectMeta(ctx.root)?.title,
-          t('footer.words', {
-            count: [...words.values()].reduce((a, b) => a + b, 0),
-          }),
-        ]
-          .filter(Boolean)
-          .join(' · ')}
+        context={
+          <>
+            {/* The novel's title opens its sheet (docs/DESIGN.md §4.8, 1.19). */}
+            <button
+              type="button"
+              tabIndex={-1}
+              className="ch-panel-title-novel"
+              title={t('novel.button')}
+              onClick={() => ctx.toggleNovel()}
+            >
+              {readProjectMeta(ctx.root)?.title}
+            </button>
+            {' · '}
+            {t('footer.words', { count: [...words.values()].reduce((a, b) => a + b, 0) })}
+          </>
+        }
       />
       <div className="ch-seg ch-nav-seg" role="group">
         <button type="button" tabIndex={-1} className="is-on" aria-pressed="true">
