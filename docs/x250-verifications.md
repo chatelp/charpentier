@@ -113,7 +113,7 @@ La v0.1.1 est publiée depuis le 15 novembre 2026 à 21:34 : c'est la release at
 
 ## 5.10 et 5.10 bis · Depuis le Yoga L13
 
-- [x] Une mise à jour du X250 depuis le Yoga L13 (version développement), sans le toucher. Fait le 16 novembre 2026 (app a6b1421 puis c93bf0d, `switch` en 70 à 79 s).
+- [x] Une mise à jour du X250 depuis le Yoga L13 (version développement), sans le toucher. Fait le 16 novembre 2026 (app a6b1421 puis c93bf0d, `switch` en 70 à 79 s), puis le 17 novembre (app 8df8efb en 57 s, puis 244f4ae en 59 s ; 4 essais sur 4 chaque fois).
 - [x] Les essais automatiques passent sur le vrai X250, avec le compte rendu et les captures ; le temps de démarrage relevé. Le 16 novembre 2026 : 4 sur 4 (plein écran, ligne système, panneaux, Wi-Fi et Bluetooth) ; démarrage 1 min 03 dont 37 s pour l'écran du disque (saisie comprise), l'app seule en 3 s environ. Ils ont trouvé deux défauts de l'app (programmes de surveillance qui survivaient à l'app et gardaient son port d'essai, `swayidle` orphelins), corrigés dans c93bf0d et revérifiés sur le X250 ; et un du système (l'ancienne boucle de session survit à une mise à jour), à corriger dans `charpentier-os`.
 - [ ] La version d'écriture réinstallée ensuite : plus aucun accès par le réseau (SSH refusé).
 
