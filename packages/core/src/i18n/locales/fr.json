@@ -363,13 +363,14 @@
       "reveal": "Afficher dans le Finder",
       "all": "Tous vos romans",
       "allHelp": "La bibliothèque : ouvrir, renommer, la corbeille.",
+      "novelsTitle": "Romans",
       "novels_one": "{{count}} roman",
       "novels_other": "{{count}} romans"
     },
     "about": {
       "intro": "La version de l’app et le commit dont elle est construite.",
       "version": "Version",
-      "help": "Une version de développement garde le numéro de la dernière release ; le commit dit laquelle c’est."
+      "help": "Une version de développement garde le numéro de la dernière version publiée ; le commit dit laquelle c’est."
     }
   },
   "navigator": {

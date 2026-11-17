@@ -9,7 +9,7 @@ import {
 import { useEffect, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePlatform } from '../app/platform-context';
-import { featureText, type SettingsSection, type WorkspaceProps } from '../features/feature';
+import { featureText, type SettingsSection } from '../features/feature';
 import { Gauge, Keys, Slider } from './controls';
 import { postSoon, shortDate } from './panels';
 import { beforeRestart } from './restart';
@@ -268,7 +268,7 @@ function Display() {
   );
 }
 
-function Sound({ ctx }: WorkspaceProps) {
+function Sound() {
   const { system, state, s, yesNo } = useSettings();
   return (
     <>
@@ -286,24 +286,6 @@ function Sound({ ctx }: WorkspaceProps) {
             value={state.muted}
             label={s('rows.mute')}
             onChange={(m) => void system.setMuted(m)}
-          />
-        </Row>
-      </Group>
-      <Group title={s('groups.appSounds')}>
-        <Row label={s('rows.uiSounds')}>
-          <Keys
-            options={yesNo}
-            value={ctx.prefs.uiSounds}
-            label={s('rows.uiSounds')}
-            onChange={(on) => ctx.updatePrefs({ uiSounds: on })}
-          />
-        </Row>
-        <Row label={s('rows.typingSounds')}>
-          <Keys
-            options={yesNo}
-            value={ctx.prefs.typingSounds}
-            label={s('rows.typingSounds')}
-            onChange={(on) => ctx.updatePrefs({ typingSounds: on })}
           />
         </Row>
       </Group>

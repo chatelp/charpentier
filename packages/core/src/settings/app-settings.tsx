@@ -39,7 +39,7 @@ function Line({
   sunk = false,
   children,
 }: {
-  readonly label: string;
+  readonly label: ReactNode;
   readonly help?: string | undefined;
   readonly sunk?: boolean;
   readonly children?: ReactNode;
@@ -465,7 +465,7 @@ function Library({ ctx }: { readonly ctx: Ctx }) {
   const { folder } = useLibrary(ctx);
   const service = ctx.platform.libraryFolder;
   return (
-    <Group title={t('appSettings.library.folder')}>
+    <Group title={t(service ? 'appSettings.library.folder' : 'appSettings.library.novelsTitle')}>
       {service && (
         <Line label={folder ?? '…'} help={t('appSettings.library.folderHelp')} sunk>
           <button type="button" className="ch-btn" onClick={() => void service.choose()}>
@@ -492,13 +492,35 @@ function Library({ ctx }: { readonly ctx: Ctx }) {
 export const aboutVersion = (about: { readonly version: string; readonly commit?: string }) =>
   about.commit ? `${about.version} (${about.commit})` : about.version;
 
+/** The same, the commit in retreat (muted), as in the system line. */
+function VersionText({
+  about,
+}: {
+  readonly about: { readonly version: string; readonly commit?: string };
+}) {
+  return (
+    <>
+      {about.version}
+      {about.commit && <span className="ch-aset-commit"> ({about.commit})</span>}
+    </>
+  );
+}
+
 function About({ ctx }: { readonly ctx: Ctx }) {
   const { t } = useTranslation();
   const about = ctx.platform.about;
   if (!about) return null;
   return (
     <Group title={t('appSettings.about.version')}>
-      <Line label={`Charpentier ${aboutVersion(about)}`} help={t('appSettings.about.help')} sunk />
+      <Line
+        label={
+          <>
+            {t('app.name')} <VersionText about={about} />
+          </>
+        }
+        help={t('appSettings.about.help')}
+        sunk
+      />
     </Group>
   );
 }
@@ -599,7 +621,9 @@ export function appSettingsSections(
           {
             id: 'about',
             label: 'appSettings.sections.about',
-            value: value((c) => (c.platform.about ? aboutVersion(c.platform.about) : '')),
+            value: function AboutValue({ ctx: c }: { readonly ctx: Ctx }) {
+              return c.platform.about ? <VersionText about={c.platform.about} /> : null;
+            },
             intro: intro('appSettings.about.intro'),
             component: About,
           },

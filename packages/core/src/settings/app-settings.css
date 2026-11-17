@@ -85,3 +85,8 @@
   padding: 5px 11px;
   font-size: 13px;
 }
+
+/* The commit after the version, in retreat (as in the system line). */
+.ch-aset-commit {
+  color: var(--ch-muted);
+}

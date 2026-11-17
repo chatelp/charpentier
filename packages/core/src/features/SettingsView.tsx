@@ -1,4 +1,4 @@
-import { useEffect, useRef, type KeyboardEvent } from 'react';
+import { useEffect, useRef, type ComponentType, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { WorkspaceContext } from '../workspace/workspace-context';
 import { featureText, type SettingsSection } from './feature';
@@ -40,6 +40,8 @@ export function SettingsView({
     readonly label: string;
     readonly shortcut: string | undefined;
     readonly open: () => void;
+    /** The machine's square before the way to the machine's settings (§4.8). */
+    readonly icon?: ComponentType | undefined;
   };
 }) {
   const { t } = useTranslation();
@@ -126,13 +128,14 @@ export function SettingsView({
             );
           })}
         </ul>
-        <p className="ch-settings-hint">{look?.hint ? text(look.hint) : t('settings.hint')}</p>
         {other && (
           <button type="button" className="ch-settings-other" onClick={other.open}>
+            {other.icon && <other.icon />}
             {other.label}
             {other.shortcut && <kbd>{other.shortcut}</kbd>}
           </button>
         )}
+        <p className="ch-settings-hint">{look?.hint ? text(look.hint) : t('settings.hint')}</p>
       </nav>
       <div
         ref={pageRef}

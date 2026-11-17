@@ -1146,8 +1146,10 @@ export function ProjectWorkspace({
           {...(systemSections.length > 0 && {
             other: {
               label: t('appSettings.toSystem'),
-              shortcut: registry.shortcutLabel('systemSettings'),
+              // The machine's key: ⊞ (Ctrl standing in for it on a Mac, as in the system menu).
+              shortcut: `${platform.keybindings.primaryModifier === 'Meta' ? '⌃' : '⊞'},`,
               open: () => ctx.openSystemSettings(),
+              icon: features.find((f) => f.settingsLook)?.settingsLook?.icon,
             },
           })}
         />
