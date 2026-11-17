@@ -97,7 +97,7 @@ Jamais pour décorer, jamais sur la page de l'app, jamais pour un état ordinair
 - **Choix** écrits en ligne, l'option retenue entre crochets : `[oui] non`, `[sur batterie] toujours jamais` ; `←` `→` changent l'option de la ligne choisie.
 - **Boutons** : le mot en minuscules dans un cadre de 1 px `--sys-rule`, sa touche en `--ch-faint` après lui (`se connecter ⏎`) ; celui que `⏎` déclenche a son cadre en `--ch-ink-2`.
 - **Jauges** en cellules : dans la ligne, dix cellules de 4 × 9 px ; dans les réglages, vingt cellules de 6 × 11 px, réglées par `←` `→`.
-- **Groupes** : un intitulé en minuscules `--ch-faint`, un filet sous le groupe. Tout en JetBrains Mono et en minuscules ; l'équerre est le seul motif.
+- **Groupes** : un intitulé en minuscules `--ch-faint`, un filet sous le groupe. Tout en JetBrains Mono et en minuscules (les mots de l'instrument : titres, libellés, aides, cadrans), **sauf les noms**, écrits comme ils s'écrivent : un réseau (`Maison-5G`, la casse compte), un appareil, une imprimante (`Brother HL-L2350DW`), le Compagnon, la feuille `Aa`. L'équerre est le seul motif.
 
 | Surface d'outil (ardoise) | Reste sur la page (perle) |
 |---|---|
