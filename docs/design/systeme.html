@@ -441,7 +441,10 @@
           `<div class="seg ${cls} ${open === id ? 'open' : ''}">${html}</div>`;
         const narrow = s150;
         const parts = [
-          seg('sys', `${SQ}<b>charpentier</b>${narrow ? '' : '<span class="v">0.1.1</span>'}`),
+          seg(
+            'sys',
+            `${SQ}<b>charpentier</b>${narrow ? '' : '<span class="v">0.1.1</span> <span class="f">(43d2f0a)</span>'}`,
+          ),
           seg('msg', `<span class="${o.msgCls || ''}">${o.msg || ''}</span>`, `msg`),
         ];
         if (o.maj) parts.push(seg('maj', `maj <span class="v acc">0.1.2</span>`));
@@ -535,7 +538,7 @@
           under(
             'sys',
             `<div class="sys panel" style="width:420px">
-            <div class="ph">charpentier 0.1.1<span>nixos 26.11 · x250</span></div>
+            <div class="ph"><span style="color:var(--ch-ink)">charpentier 0.1.1 <span style="color:var(--ch-faint)">(43d2f0a)</span></span><span>nixos 26.11 · x250</span></div>
             <div class="grp">${row('réglages du système', '', { k: '⊞,' })}${row('réglages de l’app', '', { k: '⌘,' })}${row('terminal', '', { k: '⊞T' })}</div>
             <div class="grp">${row('imprimer…', '', { k: '⊞P' })}${row('relire sur le téléphone…')}${row('copier mes textes sur une clé', '', { k: '⊞U' })}${row('verrouiller', '', { k: '⊞L' })}</div>
             <div class="grp">
@@ -575,7 +578,7 @@
           line({ msg: '' }) +
           `<div class="sys full">
           <div class="rail">
-            <div class="t">${SQ}réglages du système</div>
+            <div class="t">${SQ}réglages du système<span style="margin-left:auto;color:var(--ch-faint)">⌫ tableau</span></div>
             <div style="padding-top:8px">
             ${row('réseau', 'maison')}${row('bluetooth', '1')}${row('écran', '100 %')}${row('son', '40')}${row('clavier', 'azerty')}
             <div class="row sel"><span>énergie</span>${lead()}<span>82 %</span></div>
@@ -584,7 +587,7 @@
             <div class="last">${row('réglages de l’app', '', { k: '⌘,' })}</div>
           </div>
           <div class="sec">
-            <div class="xclose">échap ×</div>
+            <div class="xclose">échap tableau ×</div>
             <div class="path">réglages du système /</div>
             <h1>énergie</h1>
             <div class="grp"><div class="gt">batteries</div>
@@ -614,7 +617,7 @@
               ${row('batterie à 3 %', 'hiberner')}
               <div class="help">veille : instantanée, la mémoire reste alimentée. hibernation : tout est écrit sur le disque chiffré et l’appareil s’éteint ; il reprend après le mot de passe du disque.</div>
             </div>
-            <div class="foot" style="border:0;padding:12px 0 0">↑↓ choisir · ←→ changer · ⏎ ouvrir · échap revenir au texte</div>
+            <div class="foot" style="border:0;padding:12px 0 0">↑↓ choisir · ←→ changer · ⏎ ouvrir · échap revenir au tableau</div>
           </div></div>`,
         terminal: () =>
           page() +
@@ -642,7 +645,7 @@
 <span style="color:#d26a5c">error:</span> attribute 'resume_offset' missing <span style="color:#c8a86a">(hosts/x250/default.nix:174)</span>
 <span style="color:var(--ch-muted)">~ $</span> <span style="background:#e0a040;color:#14161a">&nbsp;</span></pre></div>`,
         verrou: () =>
-          `<div class="sys line"><div class="seg">${SQ}<b>charpentier</b><span class="v">0.1.1</span></div><div class="seg msg"><span>verrouillé</span></div><div class="seg">bat ${gauge(8)} <span class="v">82 %</span></div><div class="seg"><span class="v">14:32</span></div></div>
+          `<div class="sys line"><div class="seg">${SQ}<b>charpentier</b><span class="v">0.1.1</span> <span class="f">(43d2f0a)</span></div><div class="seg msg"><span>verrouillé</span></div><div class="seg">bat ${gauge(8)} <span class="v">82 %</span></div><div class="seg"><span class="v">14:32</span></div></div>
           <div class="sys full" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding-bottom:80px">
             <div style="color:var(--ch-ink);font:300 64px/1 var(--ch-font-sys)">14:32</div>
             <div style="margin-top:12px;color:var(--ch-muted);font-size:13px">vendredi 13 novembre</div>
@@ -746,11 +749,11 @@
         apropos: () =>
           line({ msg: '' }) +
           `<div class="sys full">
-          <div class="rail"><div class="t">${SQ}réglages du système</div><div style="padding-top:8px">
+          <div class="rail"><div class="t">${SQ}réglages du système<span style="margin-left:auto;color:var(--ch-faint)">⌫ tableau</span></div><div style="padding-top:8px">
             ${row('réseau', 'maison')}${row('bluetooth', '1')}${row('écran', '100 %')}${row('son', '40')}${row('clavier', 'azerty')}${row('énergie', '82 %')}${row('verrouillage', 'au réveil')}${row('impression', 'brother')}${row('clé usb', '—')}${row('date et heure', 'paris')}${row('terminal', 'visible')}
             <div class="row sel"><span>à propos</span>${lead()}<span>0.1.1</span></div></div>
             <div class="last">${row('réglages de l’app', '', { k: '⌘,' })}</div></div>
-          <div class="sec"><div class="xclose">échap ×</div><div class="path">réglages du système /</div><h1>à propos</h1>
+          <div class="sec"><div class="xclose">échap tableau ×</div><div class="path">réglages du système /</div><h1>à propos</h1>
             <div class="grp"><div class="gt">charpentier</div>${row('version', '0.1.1 · installée le 14 nov. 2026')}${row('système', 'nixos 26.11 · génération 42')}${row('mise à jour', 'à jour · vérifiée à 14:05')}</div>
             <div class="grp"><div class="gt">carnet d’entretien</div>
               ${row('bat0 · interne', 'usure 12 % · 214 cycles · 23,1 Wh sur 26,3')}
@@ -766,7 +769,7 @@
               <div class="row sel"><span>réparer le système…</span>${lead()}<span>⏎</span></div>
               <div class="help" style="padding-left:0">vérifie chaque fichier du système et remplace ce qui est abîmé, depuis le serveur ; reconstruit le menu de démarrage. ne touche ni à vos projets, ni aux réseaux, au verrou, à la synchronisation, à la clé ou aux réglages.</div>
             </div>
-            <div class="foot" style="border:0;padding:12px 0 0">↑↓ choisir · ⏎ ouvrir · N note · échap revenir au texte</div>
+            <div class="foot" style="border:0;padding:12px 0 0">↑↓ choisir · ⏎ ouvrir · N note · échap revenir au tableau</div>
           </div></div>`,
         reparer: () =>
           line({ msg: 'réparation · 1 284 fichiers sur 3 902' }) +
@@ -794,6 +797,64 @@
             <div class="foot">ouvert tant que ce panneau l’est · échap coupe l’accès</div>
           </div>`,
           ),
+        console: () => {
+          const tabs = [
+            'réseau',
+            'bluetooth',
+            'écran',
+            'son',
+            'clavier',
+            'énergie',
+            'verrouillage',
+            'impression',
+            'clé usb',
+            'date',
+            'terminal',
+            'à propos',
+          ];
+          const box = (title, inner, w = '100%') =>
+            `<div style="position:relative;width:${w};border:1px solid var(--ch-ink-2);padding:14px 16px 10px;box-sizing:border-box"><span style="position:absolute;top:-10px;left:12px;padding:0 6px;background:var(--ch-bg);color:var(--ch-ink)">${title}</span>${inner}</div>`;
+          return (
+            line({ msg: '' }) +
+            `<div class="sys full" style="display:flex;flex-direction:column">
+            <div style="display:flex;justify-content:space-between;padding:0 16px;background:var(--ch-ink);color:var(--ch-bg);line-height:28px"><span style="display:flex;gap:9px;align-items:center">${SQ.replace('class="sq"', 'class="sq" style="color:#14161a"')}<b style="font-weight:500">charpentier · réglages du système</b></span><span>x250 · 0.1.1</span></div>
+            <div style="display:flex;gap:0;padding:0 8px;border-bottom:1px solid var(--ch-ink-2)">${tabs.map((t) => `<span style="padding:0 14px;line-height:34px;${t === 'énergie' ? 'background:var(--ch-ink-2);color:var(--ch-bg)' : 'color:var(--ch-muted)'}">${t}</span>`).join('')}</div>
+            <div style="flex:1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px 32px;padding:30px 32px;align-content:start">
+              ${box('batteries', row('bat0 · interne', '74 % · usure 12 %') + row('bat1 · arrière', '90 % · usure 21 %') + row('ensemble', '82 % · 5h40 · 6,1 W'))}
+              ${box('économie d’énergie', row('activer', opt(['sur batterie', 'toujours', 'jamais'], 'sur batterie')) + '<div class="help" style="padding-left:12px">pas de turbo, luminosité −20 %. seule sous 20 %.</div>')}
+              ${box('inactivité', `<div class="tbl" style="grid-template-columns:1fr 120px 120px"><div class="th"></div><div class="th">batterie</div><div class="th">secteur</div><div>atténuer l’écran</div><div class="sel">1 min</div><div>5 min</div><div>éteindre l’écran</div><div>3 min</div><div>10 min</div><div>mettre en veille</div><div>10 min</div><div>30 min</div></div>`)}
+              ${box('préserver les batteries', row('arrêter la charge à 80 %', opt(['oui', 'non'], 'oui')) + row('cette fois seulement', '<span class="btn">charger à 100 %</span>'))}
+              ${box('veille et hibernation', row('rabat fermé', opt(['veille', 'rien'], 'veille')) + row('en veille sur batterie, hiberner après', opt(['1 h', '3 h', '12 h', 'jamais'], '3 h')) + row('batterie à 3 %', 'hiberner'))}
+            </div>
+            <div style="display:flex;gap:28px;padding:0 16px;background:var(--ch-ink-2);color:var(--ch-bg);line-height:26px"><span>↑↓ choisir</span><span>←→ changer</span><span>⇥ section</span><span>⏎ ouvrir</span><span>⌘, réglages de l’app</span><span style="margin-left:auto">échap revenir au texte</span></div>
+          </div>`
+          );
+        },
+        tableau: () => {
+          const tile = (name, big, lines, sel = false) =>
+            `<div style="border:1px solid ${sel ? 'var(--ch-ink)' : 'var(--sys-rule)'};padding:14px 16px;${sel ? 'box-shadow:inset 0 0 0 1px var(--ch-ink)' : ''}"><div style="display:flex;justify-content:space-between;color:${sel ? 'var(--ch-ink)' : 'var(--ch-muted)'}"><span>${name}</span><span class="f">${sel ? '⏎ ouvrir' : ''}</span></div><div style="margin:10px 0 8px;color:var(--ch-ink);font:300 28px/1.1 var(--ch-font-sys)">${big}</div>${lines.map((l) => `<div class="sub" style="line-height:20px">${l}</div>`).join('')}</div>`;
+          return (
+            line({ msg: '' }) +
+            `<div class="sys full" style="padding:22px 28px">
+            <div style="display:flex;align-items:center;gap:10px;padding-bottom:14px;border-bottom:1px solid var(--sys-rule)">${SQ}<span style="color:var(--ch-ink)">réglages du système</span><span class="f">x250 · 0.1.1 · allumé depuis 3 h 12</span><span style="margin-left:auto" class="f">⌘, réglages de l’app · échap ×</span></div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:22px">
+              ${tile('réseau', `maison ${bars(3)}`, ['wi-fi oui · câble non', '192.168.1.24'])}
+              ${tile('bluetooth', '1', ['clavier MX Keys'])}
+              ${tile('écran', '100 %', ['luminosité 70 · nuit auto', 'externe : aucun'])}
+              ${tile('son', '40', [gauge(4) + ' · goutte oui · cloche non'])}
+              ${tile('énergie', '82 %', ['5h40 · économie sur batterie', 'charge arrêtée à 80 %', 'hiberne après 3 h'], true)}
+              ${tile('verrouillage', 'au réveil', ['code de 6 · 5 erreurs, puis 30 s'])}
+              ${tile('clavier', 'azerty', ['pavé coupé pendant la frappe'])}
+              ${tile('impression', 'brother', ['HL-L2350DW · A4'])}
+              ${tile('clé usb', '—', ['aucune clé'])}
+              ${tile('date et heure', '14:32', ['paris · automatique'])}
+              ${tile('terminal', 'visible', ['⊞T · 40 % de hauteur'])}
+              ${tile('à propos', '0.1.1', ['à jour · carnet d’entretien'])}
+            </div>
+            <div class="foot" style="border:0;padding:16px 0 0">←→↑↓ choisir · ⏎ ouvrir le cadran · échap revenir au texte</div>
+          </div>`
+          );
+        },
         echelle: () =>
           page() +
           line({ msg: 'clé branchée · <span class="acc">⊞U copier</span>', batLow: false }),
