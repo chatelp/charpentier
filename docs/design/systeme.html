@@ -441,7 +441,10 @@
           `<div class="seg ${cls} ${open === id ? 'open' : ''}">${html}</div>`;
         const narrow = s150;
         const parts = [
-          seg('sys', `${SQ}<b>charpentier</b>${narrow ? '' : '<span class="v">0.1.1</span>'}`),
+          seg(
+            'sys',
+            `${SQ}<b>charpentier</b>${narrow ? '' : '<span class="v">0.1.1</span> <span class="f">(43d2f0a)</span>'}`,
+          ),
           seg('msg', `<span class="${o.msgCls || ''}">${o.msg || ''}</span>`, `msg`),
         ];
         if (o.maj) parts.push(seg('maj', `maj <span class="v acc">0.1.2</span>`));
@@ -535,7 +538,7 @@
           under(
             'sys',
             `<div class="sys panel" style="width:420px">
-            <div class="ph">charpentier 0.1.1<span>nixos 26.11 · x250</span></div>
+            <div class="ph"><span style="color:var(--ch-ink)">charpentier 0.1.1 <span style="color:var(--ch-faint)">(43d2f0a)</span></span><span>nixos 26.11 · x250</span></div>
             <div class="grp">${row('réglages du système', '', { k: '⊞,' })}${row('réglages de l’app', '', { k: '⌘,' })}${row('terminal', '', { k: '⊞T' })}</div>
             <div class="grp">${row('imprimer…', '', { k: '⊞P' })}${row('relire sur le téléphone…')}${row('copier mes textes sur une clé', '', { k: '⊞U' })}${row('verrouiller', '', { k: '⊞L' })}</div>
             <div class="grp">
@@ -642,7 +645,7 @@
 <span style="color:#d26a5c">error:</span> attribute 'resume_offset' missing <span style="color:#c8a86a">(hosts/x250/default.nix:174)</span>
 <span style="color:var(--ch-muted)">~ $</span> <span style="background:#e0a040;color:#14161a">&nbsp;</span></pre></div>`,
         verrou: () =>
-          `<div class="sys line"><div class="seg">${SQ}<b>charpentier</b><span class="v">0.1.1</span></div><div class="seg msg"><span>verrouillé</span></div><div class="seg">bat ${gauge(8)} <span class="v">82 %</span></div><div class="seg"><span class="v">14:32</span></div></div>
+          `<div class="sys line"><div class="seg">${SQ}<b>charpentier</b><span class="v">0.1.1</span> <span class="f">(43d2f0a)</span></div><div class="seg msg"><span>verrouillé</span></div><div class="seg">bat ${gauge(8)} <span class="v">82 %</span></div><div class="seg"><span class="v">14:32</span></div></div>
           <div class="sys full" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding-bottom:80px">
             <div style="color:var(--ch-ink);font:300 64px/1 var(--ch-font-sys)">14:32</div>
             <div style="margin-top:12px;color:var(--ch-muted);font-size:13px">vendredi 13 novembre</div>
