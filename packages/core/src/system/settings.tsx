@@ -11,7 +11,7 @@ import { useTranslation } from 'react-i18next';
 import { usePlatform } from '../app/platform-context';
 import { featureText, type SettingsSection } from '../features/feature';
 import { Gauge, Keys, Slider } from './controls';
-import { postSoon, shortDate } from './panels';
+import { duration, hours, minutesSince, postSoon, shortDate } from './panels';
 import { beforeRestart } from './restart';
 import { useSystemState } from './system-store';
 
@@ -219,6 +219,18 @@ function Display() {
               void system.setBrightness(v);
               postSoon(system, 'lum', text('system.messages.brightness', { value: v }));
             }}
+          />
+        </Row>
+        {/* D-37: 100 % by default (1920 px); 125 and 150 % for larger letters. */}
+        <Row label={s('rows.screenScale')} help={s('rows.screenScaleHelp')}>
+          <Keys
+            options={[100, 125, 150].map((v) => ({
+              value: v as 100 | 125 | 150,
+              label: text('system.seg.percent', { value: v }),
+            }))}
+            value={state.settings.screenScale}
+            label={s('rows.screenScale')}
+            onChange={set('screenScale')}
           />
         </Row>
       </Group>
@@ -812,6 +824,48 @@ function value(read: (state: ReturnType<typeof useSettings>) => string) {
   };
 }
 
+/**
+ * A dial of the board (docs/DESIGN.md §4.12, 1.23): the value large, then a
+ * line or two of detail in the muted ink.
+ */
+function dial(
+  read: (settings: ReturnType<typeof useSettings>) => {
+    readonly value: ReactNode;
+    readonly details: readonly ReactNode[];
+  },
+) {
+  return function Dial() {
+    const { value: big, details } = read(useSettings());
+    return (
+      <>
+        <p className="ch-sysset-dial-value">{big}</p>
+        {details.filter(Boolean).map((d, i) => (
+          <p key={i} className="ch-sysset-dial-detail">
+            {d}
+          </p>
+        ))}
+      </>
+    );
+  };
+}
+
+const dot = (...parts: readonly (string | false | null | undefined)[]) =>
+  parts.filter(Boolean).join(' · ');
+
+/** « x250 · 0.1.1 (43d2f0a) · allumé depuis 3 h 12 », after the board's title. */
+export function SettingsSubtitle() {
+  const { state, s } = useSettings();
+  return (
+    <>
+      {dot(
+        state.device.name,
+        deviceVersionLabel(state),
+        s('board.since', { time: duration(minutesSince(state.device.bootedAt)) }),
+      )}
+    </>
+  );
+}
+
 export const systemSettingsSections: readonly SettingsSection[] = [
   {
     id: 'network',
@@ -819,6 +873,16 @@ export const systemSettingsSections: readonly SettingsSection[] = [
     intro: intro('network'),
     value: value(({ state, s }) => (state.wifi.enabled ? (state.wifi.connected ?? '–') : s('off'))),
     component: Network,
+    dial: dial(({ state, s }) => ({
+      value: state.wifi.enabled ? (state.wifi.connected ?? '–') : s('off'),
+      details: [
+        dot(
+          `${s('rows.wifi')} ${state.wifi.enabled ? s('on') : s('off')}`,
+          `${s('rows.ethernet')} ${state.ethernet.connected ? s('on') : s('off')}`,
+        ),
+        state.wifi.address,
+      ],
+    })),
   },
   {
     id: 'bluetooth',
@@ -833,6 +897,16 @@ export const systemSettingsSections: readonly SettingsSection[] = [
     intro: intro('display'),
     value: value(({ state }) => `${state.brightness} %`),
     component: Display,
+    dial: dial(({ state, s, text }) => ({
+      value: text('system.seg.percent', { value: state.settings.screenScale }),
+      details: [
+        dot(
+          `${s('rows.brightness')} ${state.brightness}`,
+          `${s('rows.night')} ${state.night.mode === 'auto' ? s('rows.auto') : state.night.mode === 'on' ? s('on') : s('off')}`,
+        ),
+        `${s('rows.external')} : ${state.externalScreen ?? s('values.none')}`,
+      ],
+    })),
   },
   {
     id: 'sound',
@@ -840,6 +914,10 @@ export const systemSettingsSections: readonly SettingsSection[] = [
     intro: intro('sound'),
     value: value(({ state, s }) => (state.muted ? s('rows.mute') : `${state.volume} %`)),
     component: Sound,
+    dial: dial(({ state, s }) => ({
+      value: state.muted ? s('rows.mute') : String(state.volume),
+      details: [!state.muted && <Gauge value={state.volume} />],
+    })),
   },
   {
     id: 'power',
@@ -847,8 +925,29 @@ export const systemSettingsSections: readonly SettingsSection[] = [
     intro: PowerIntro,
     value: value(({ state }) => (hasBattery(state) ? `${batteryLevel(state)} %` : '')),
     component: Power,
+    dial: dial(({ state }) => ({
+      value: hasBattery(state) ? `${batteryLevel(state)} %` : '–',
+      details: [
+        state.power.remaining !== null && hours(state.power.remaining),
+        state.power.charging && '⚡',
+      ],
+    })),
   },
-  { id: 'lock', label: 'system.settings.lock', intro: intro('lock'), component: Lock },
+  {
+    id: 'lock',
+    label: 'system.settings.lock',
+    intro: intro('lock'),
+    component: Lock,
+    dial: dial(({ state, s }) => ({
+      value:
+        state.settings.askCode === 'wake'
+          ? s('rows.askWake')
+          : state.settings.askCode === 'after15'
+            ? s('rows.askAfter15')
+            : s('rows.askNever'),
+      details: [state.lock.hasCode ? null : s('board.noCode')],
+    })),
+  },
   {
     id: 'keyboard',
     label: 'system.settings.keyboard',
@@ -860,6 +959,10 @@ export const systemSettingsSections: readonly SettingsSection[] = [
     label: 'system.settings.printing',
     intro: intro('printing'),
     component: Printing,
+    dial: dial(({ state, s }) => ({
+      value: state.printers.find((p) => p.isDefault)?.name ?? state.printers[0]?.name ?? '—',
+      details: [state.settings.paperSize === 'a4' ? 'A4' : s('rows.letter')],
+    })),
   },
   {
     id: 'usb',
@@ -867,13 +970,34 @@ export const systemSettingsSections: readonly SettingsSection[] = [
     intro: intro('usb'),
     value: value(({ state }) => state.usb?.name ?? '–'),
     component: Usb,
+    dial: dial(({ state, s }) => ({
+      value: state.usb ? state.usb.name : '—',
+      details: [state.usb ? null : s('board.noUsb')],
+    })),
   },
-  { id: 'datetime', label: 'system.settings.datetime', intro: DateIntro, component: DateTime },
+  {
+    id: 'datetime',
+    label: 'system.settings.datetime',
+    intro: DateIntro,
+    component: DateTime,
+    dial: dial(({ state, s, language }) => ({
+      value: new Intl.DateTimeFormat(language, {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: !state.settings.clock24,
+      }).format(new Date()),
+      details: [dot(state.timeZone, state.settings.autoTime && s('rows.autoTimeShort'))],
+    })),
+  },
   {
     id: 'systemLine',
     label: 'system.settings.systemLine',
     intro: intro('systemLine'),
     component: SystemLineSettings,
+    dial: dial(({ state, s }) => ({
+      value: state.settings.showCpu ? 'cpu' : s('off'),
+      details: [s('rows.showCpu')],
+    })),
   },
   {
     id: 'about',

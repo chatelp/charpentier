@@ -541,8 +541,14 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
       if (!external.active || Math.abs(external.scale - scale) > 0.01)
         await run('swaymsg', 'output', external.name, 'enable', 'scale', String(scale));
       if (internal?.active) await run('swaymsg', 'output', internal.name, 'disable');
-    } else if (internal && !internal.active)
-      await run('swaymsg', 'output', internal.name, 'enable');
+    } else if (internal) {
+      // The laptop's own screen at its chosen scale (D-37: 100 % by default).
+      const own = state.settings.screenScale / 100;
+      if (!internal.active)
+        await run('swaymsg', 'output', internal.name, 'enable', 'scale', String(own));
+      else if (Math.abs(internal.scale - own) > 0.01)
+        await run('swaymsg', 'output', internal.name, 'scale', String(own));
+    }
     const was = state.externalScreen;
     update({ externalScreen: external?.label ?? null });
     if (external && was !== external.label)
@@ -1068,7 +1074,7 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
       save();
       if (key === 'screenOffAfter' || key === 'sleepAfter') applyIdle();
       if (key === 'showCpu') monitor.setBackground(value === true);
-      if (key === 'externalScale') await applyOutputs();
+      if (key === 'externalScale' || key === 'screenScale') await applyOutputs();
       if (
         key === 'keyboardLayout' ||
         key === 'touchpad' ||

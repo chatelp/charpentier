@@ -224,6 +224,8 @@ export interface SystemSettings {
   readonly showCpu: boolean;
   /** The external screen's scale, in % (« externe seul »). */
   readonly externalScale: 100 | 125 | 150;
+  /** The laptop's own screen's scale, in % (D-37: 100 by default, 1920 px CSS on the X250). */
+  readonly screenScale: 100 | 125 | 150;
   /** The night mode's warmth, in kelvin: light, medium or strong (docs/DESIGN.md §4.12). */
   readonly nightWarmth: NightWarmth;
 }
@@ -329,6 +331,7 @@ export const DEFAULT_SYSTEM_SETTINGS: SystemSettings = {
   clock24: true,
   showCpu: true,
   externalScale: 100,
+  screenScale: 100,
   nightWarmth: 4000,
 };
 

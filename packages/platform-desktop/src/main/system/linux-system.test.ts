@@ -59,7 +59,13 @@ function fakeX250() {
   };
   const sound = { volume: 0.4, muted: false };
   const usb = { plugged: false, mounted: null as string | null };
-  const screens = { external: false, externalActive: false, internalActive: true, scale: 1 };
+  const screens = {
+    external: false,
+    externalActive: false,
+    internalActive: true,
+    scale: 1,
+    internalScale: 1,
+  };
   const runs: string[][] = [];
   const bt = { paired: false };
   const hotspot = {
@@ -238,7 +244,7 @@ function fakeX250() {
                   active: screens.internalActive,
                   make: 'Lenovo',
                   model: 'Unknown',
-                  scale: 1.25,
+                  scale: screens.internalScale,
                 },
                 ...(screens.external
                   ? [
@@ -257,8 +263,12 @@ function fakeX250() {
             screens.externalActive = true;
             screens.scale = Number(args[4]);
           }
-          if (args[0] === 'output' && args[1] === 'eDP-1')
-            screens.internalActive = args[2] === 'enable';
+          if (args[0] === 'output' && args[1] === 'eDP-1') {
+            if (args[2] === 'scale') screens.internalScale = Number(args[3]);
+            else screens.internalActive = args[2] === 'enable';
+            if (args[2] === 'enable' && args[3] === 'scale')
+              screens.internalScale = Number(args[4]);
+          }
           return ok();
         case 'lpstat':
           return args[0] === '-e'
@@ -603,6 +613,16 @@ describe('the System service of the X250 (phase 5.4)', () => {
     await new Promise((r) => setTimeout(r, 600));
     expect(x250.screens.internalActive).toBe(true);
     expect(system.state().externalScreen).toBeNull();
+  });
+
+  it('sets the laptop screen’s scale, 100 % by default (D-37, phase 7.3)', async () => {
+    const { system, x250 } = await start();
+    expect(system.state().settings.screenScale).toBe(100);
+    await system.setSetting('screenScale', 125);
+    expect(ran(x250.runs, 'swaymsg', 'output', 'eDP-1', 'scale', '1.25')).toBe(true);
+    expect(x250.screens.internalScale).toBe(1.25);
+    await system.setSetting('screenScale', 100);
+    expect(x250.screens.internalScale).toBe(1);
   });
 
   it('sets the keyboard, the touchpad and the warm light of the night (phase 5.7)', async () => {

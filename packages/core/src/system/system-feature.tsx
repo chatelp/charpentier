@@ -4,7 +4,7 @@ import type { Feature } from '../features/feature';
 import type { WorkspaceContext } from '../workspace/workspace-context';
 import { Square } from './controls';
 import { systemPrefix } from './prefix';
-import { systemSettingsSections } from './settings';
+import { SettingsSubtitle, systemSettingsSections } from './settings';
 import { SystemLine, type SystemModifier } from './SystemLine';
 import { SystemCover } from './Cover';
 import { Monitor } from './Monitor';
@@ -125,6 +125,7 @@ export function createSystemFeature({ modifier }: { readonly modifier: SystemMod
       material: 'system',
       icon: () => <Square size={14} />,
       hint: 'system.settings.hint',
+      subtitle: SettingsSubtitle,
     },
     prefixes: [systemPrefix],
     views: [{ id: MONITOR_VIEW, label: 'system.monitor.name', component: Monitor, ownClose: true }],

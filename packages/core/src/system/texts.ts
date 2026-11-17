@@ -393,6 +393,11 @@ export const systemTexts: TextTree = {
       unknown: 'inconnu',
     },
     settings: {
+      board: {
+        since: 'allumé depuis {{time}}',
+        noUsb: 'aucune clé',
+        noCode: 'sans code',
+      },
       title: 'réglages du système',
       hint: '↑↓ sections · Tab réglages\nÉchap revenir au texte',
       intro: {
@@ -491,6 +496,7 @@ export const systemTexts: TextTree = {
         askWake: 'à chaque réveil',
         askAfter15: 'après 15 min',
         askNever: 'jamais',
+        autoTimeShort: 'automatique',
         codeHelp: 'Disque chiffré : {{encrypted}}.',
         code: 'Code',
         codeSet: 'choisi',
@@ -517,6 +523,9 @@ export const systemTexts: TextTree = {
         usbNone: 'Aucune clé branchée.',
         usbKey: 'Clé « {{name}} »',
         externalScale: 'Échelle de l’écran externe',
+        screenScale: 'Échelle de l’écran',
+        screenScaleHelp:
+          '100 % : toute la largeur (1920 px). 125 % et 150 % : des lettres plus grandes.',
         timeZone: 'Fuseau',
         autoTime: 'Heure automatique',
         clock24: 'Format 24 h',

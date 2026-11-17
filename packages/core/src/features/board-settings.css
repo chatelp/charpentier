@@ -1,0 +1,422 @@
+/*
+ * A machine's settings on two levels (docs/DESIGN.md §4.12, 1.23), in the
+ * system's charter: the flat instrument. Flat surfaces and 1 px rules, no
+ * relief; the chosen line in reverse video; leader dots between a label and
+ * its value; the system's monospace; lower case.
+ */
+.ch-sysset {
+  position: absolute;
+  inset: 0;
+  z-index: calc(var(--ch-z-command, 6) - 1);
+  background: var(--ch-bg);
+  color: var(--ch-ink-2);
+  font: 13px / 1.6 var(--ch-font-sys);
+}
+
+/* Lower case for the instrument's words; names (a network, a device) keep theirs. */
+.ch-sysset-title,
+.ch-sysset-dial-name,
+.ch-sysset-line > span:first-child,
+.ch-sysset-path,
+.ch-sysset-page-title,
+.ch-sysset-intro,
+.ch-sysset-hint,
+.ch-sysset-body .ch-set-title,
+.ch-sysset-body .ch-set-label,
+.ch-sysset-body .ch-set-help,
+.ch-sysset-dial-value,
+.ch-sysset-dial-detail {
+  text-transform: lowercase;
+}
+
+.ch-sysset kbd {
+  font: inherit;
+  font-family: 'Inter', var(--ch-font-sys);
+}
+
+.ch-sysset-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ch-ink-2);
+  font: inherit;
+  text-transform: lowercase;
+  cursor: pointer;
+}
+
+.ch-sysset-link:hover,
+.ch-sysset-link:focus-visible {
+  color: var(--ch-ink);
+  outline: none;
+}
+
+.ch-sysset-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--ch-ink);
+  font: 500 13px var(--ch-font-sys);
+}
+
+.ch-sysset-hint {
+  margin: 16px 0 0;
+  color: var(--ch-faint);
+  font-size: 11.5px;
+}
+
+/* ─── The board ──────────────────────────────────────────────────────── */
+.ch-sysset.is-board {
+  overflow: auto;
+  padding: 24px 28px;
+}
+
+.ch-sysset-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--ch-faint);
+}
+
+.ch-sysset-sub {
+  color: var(--ch-ink-2);
+}
+
+.ch-sysset-actions {
+  margin-left: auto;
+  color: var(--ch-faint);
+}
+
+.ch-sysset-board {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 22px;
+}
+
+.ch-sysset-dial {
+  min-height: 120px;
+  padding: 14px 16px;
+  border: 1px solid var(--ch-faint);
+  cursor: pointer;
+  outline: none;
+}
+
+/* The chosen dial: its frame in ink, doubled. */
+.ch-sysset-dial[aria-selected='true'] {
+  border-color: var(--ch-ink);
+  box-shadow: inset 0 0 0 1px var(--ch-ink);
+}
+
+.ch-sysset-dial-name {
+  display: flex;
+  margin: 0;
+  color: var(--ch-muted);
+  font-size: 12px;
+}
+
+.ch-sysset-dial[aria-selected='true'] .ch-sysset-dial-name {
+  color: var(--ch-ink);
+}
+
+.ch-sysset-dial-open {
+  margin-left: auto;
+  color: var(--ch-ink);
+}
+
+.ch-sysset-dial-value {
+  margin: 10px 0 8px;
+  overflow: hidden;
+  color: var(--ch-ink);
+  font: 300 28px / 1.2 var(--ch-font-sys);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ch-sysset-dial-detail {
+  margin: 0;
+  color: var(--ch-muted);
+  font-size: 12px;
+}
+
+/* ─── A section ──────────────────────────────────────────────────────── */
+.ch-sysset.is-section {
+  display: grid;
+  grid-template-columns: 340px minmax(0, 1fr);
+}
+
+.ch-sysset-rail {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-right: 1px solid var(--ch-faint);
+}
+
+.ch-sysset-rail-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 18px 16px 14px;
+  border-bottom: 1px solid var(--ch-faint);
+}
+
+.ch-sysset-rail-head .ch-sysset-link {
+  color: var(--ch-faint);
+}
+
+.ch-sysset-sections {
+  margin: 0;
+  padding: 10px 0;
+  overflow: auto;
+  list-style: none;
+}
+
+.ch-sysset-line {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  width: 100%;
+  height: 24px;
+  padding: 0 16px;
+  border: 0;
+  background: none;
+  color: var(--ch-ink-2);
+  font: inherit;
+  text-align: left;
+  text-transform: lowercase;
+  cursor: pointer;
+  outline: none;
+}
+
+.ch-sysset-line span:first-child {
+  white-space: nowrap;
+}
+
+/* Leader dots between a label and its value. */
+.ch-sysset-leader {
+  flex: 1;
+  min-width: 12px;
+  border-bottom: 1px dotted var(--ch-faint);
+  transform: translateY(-4px);
+}
+
+.ch-sysset-line-value {
+  color: var(--ch-ink);
+  white-space: nowrap;
+}
+
+/* The active section: reverse video. */
+.ch-sysset-line[aria-selected='true'] {
+  background: var(--ch-ink);
+  color: var(--ch-bg);
+}
+
+.ch-sysset-line[aria-selected='true'] .ch-sysset-line-value {
+  color: var(--ch-bg);
+}
+
+.ch-sysset-line[aria-selected='true'] .ch-sysset-leader {
+  border-color: var(--ch-bg);
+}
+
+.ch-sysset-line:focus-visible:not([aria-selected='true']) {
+  color: var(--ch-ink);
+}
+
+.ch-sysset-other {
+  margin-top: auto;
+  height: 44px;
+  align-items: center;
+  border-top: 1px solid var(--ch-faint);
+}
+
+.ch-sysset-other kbd {
+  color: var(--ch-faint);
+}
+
+.ch-sysset-page {
+  position: relative;
+  min-width: 0;
+  overflow: auto;
+  padding: 24px 48px 32px;
+}
+
+.ch-sysset-back {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  color: var(--ch-faint);
+}
+
+.ch-sysset-path {
+  margin: 0;
+  color: var(--ch-faint);
+}
+
+.ch-sysset-page-title {
+  margin: 2px 0 14px;
+  color: var(--ch-ink);
+  font: 500 20px var(--ch-font-sys);
+}
+
+.ch-sysset-intro {
+  max-width: 860px;
+  margin: 0 0 18px;
+  color: var(--ch-muted);
+}
+
+/* ─── The section's lines, in the flat instrument ────────────────────── */
+.ch-sysset-body {
+  max-width: 860px;
+}
+
+.ch-sysset-body .ch-set-group {
+  margin: 0 0 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--ch-faint);
+}
+
+.ch-sysset-body .ch-set-title {
+  margin: 0 0 6px;
+  color: var(--ch-muted);
+  font: 13px var(--ch-font-sys);
+  font-variant-caps: normal;
+  letter-spacing: normal;
+}
+
+.ch-sysset-body .ch-set-row {
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 8px;
+  min-height: 24px;
+  padding: 2px 0;
+  border: 0;
+}
+
+/* Leader dots from the label to its control. */
+.ch-sysset-body .ch-set-row::after {
+  content: '';
+  order: 1;
+  flex: 1;
+  min-width: 12px;
+  border-bottom: 1px dotted var(--ch-faint);
+  transform: translateY(-4px);
+}
+
+.ch-sysset-body .ch-set-text {
+  display: contents;
+}
+
+.ch-sysset-body .ch-set-label {
+  order: 0;
+  color: var(--ch-ink-2);
+  font: inherit;
+}
+
+.ch-sysset-body .ch-set-control {
+  order: 2;
+}
+
+.ch-sysset-body .ch-set-help {
+  order: 3;
+  flex-basis: 100%;
+  margin: 2px 0 4px;
+  color: var(--ch-muted);
+  font: 12px / 1.5 var(--ch-font-sys);
+}
+
+.ch-sysset-body .ch-set-value {
+  color: var(--ch-ink);
+  font: inherit;
+}
+
+/* What stays chosen (the network joined): reverse video, no hollow. */
+.ch-sysset-body .ch-set-row.is-chosen {
+  margin: 0;
+  padding: 2px 6px;
+  border-radius: 0;
+  background: var(--ch-ink);
+  box-shadow: none;
+}
+
+.ch-sysset-body .ch-set-row.is-chosen .ch-set-label,
+.ch-sysset-body .ch-set-row.is-chosen .ch-set-value,
+.ch-sysset-body .ch-set-row.is-chosen .ch-set-help {
+  color: var(--ch-bg);
+}
+
+.ch-sysset-body .ch-set-row.is-chosen::after {
+  border-color: var(--ch-bg);
+}
+
+/* Setting keys: the chosen one in brackets, the others faint. */
+.ch-sysset-body .ch-sys-keys button {
+  padding: 0 4px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--ch-faint);
+  font: inherit;
+  text-transform: lowercase;
+}
+
+.ch-sysset-body .ch-sys-keys button.is-on,
+.ch-sysset-body .ch-sys-keys button.is-on:active {
+  background: none;
+  box-shadow: none;
+  color: var(--ch-ink);
+}
+
+.ch-sysset-body .ch-sys-keys button.is-on::before {
+  content: '[';
+  color: var(--ch-faint);
+}
+
+.ch-sysset-body .ch-sys-keys button.is-on::after {
+  content: ']';
+  color: var(--ch-faint);
+}
+
+.ch-sysset-body .ch-sys-keys button:focus-visible {
+  background: var(--ch-ink);
+  color: var(--ch-bg);
+  outline: none;
+}
+
+/* Buttons: a 1 px frame, flat. */
+.ch-sysset-body .ch-btn {
+  padding: 1px 10px;
+  border: 1px solid var(--ch-faint);
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--ch-ink);
+  font: inherit;
+  text-transform: lowercase;
+}
+
+.ch-sysset-body .ch-btn:hover,
+.ch-sysset-body .ch-btn:focus-visible,
+.ch-sysset-body .ch-btn:active {
+  background: var(--ch-ink);
+  box-shadow: none;
+  color: var(--ch-bg);
+  outline: none;
+}
+
+/* A field: underlined, not hollow. */
+.ch-sysset-body .ch-set-input {
+  padding: 2px 4px;
+  border-bottom: 1px solid var(--ch-faint);
+  border-radius: 0;
+  box-shadow: none;
+  font: inherit;
+}
+
+.ch-sysset-body .ch-set-card {
+  border: 1px solid var(--ch-faint);
+  border-radius: 0;
+  box-shadow: none;
+}

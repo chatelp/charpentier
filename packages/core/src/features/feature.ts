@@ -42,6 +42,8 @@ export interface Feature {
     readonly icon?: ComponentType;
     /** Text key of the keys hint at the foot of the rail. */
     readonly hint?: string;
+    /** After the title, on the board (« x250 · 0.1.1 · allumé depuis 3 h 12 »). */
+    readonly subtitle?: ComponentType<WorkspaceProps>;
   };
   /** Full-frame views, like the Atelier (the X250's monitor). */
   readonly views?: readonly FeatureView[];
@@ -96,6 +98,12 @@ export interface SettingsSection {
   /** The sentence under the section's title. */
   readonly intro?: ComponentType<WorkspaceProps>;
   readonly component: ComponentType<WorkspaceProps>;
+  /**
+   * Its dial on the board of a machine's settings (docs/DESIGN.md §4.12,
+   * 1.23): the value large, then a line or two of detail; without one, the
+   * value alone.
+   */
+  readonly dial?: ComponentType<WorkspaceProps>;
 }
 
 export interface FeatureCover {

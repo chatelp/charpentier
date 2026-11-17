@@ -70,17 +70,27 @@ describe('contribution points of the core (phase 5.1)', () => {
     await userEvent.keyboard('{Enter}');
     await screen.findByText('écho bonjour');
 
-    // A section of the machine's settings, opened by its shortcut; the rail goes from one to the next.
+    // The machine's settings, opened by their shortcut on the board of dials (DESIGN 1.23);
+    // ⏎ opens a section with its rail, which goes from one to the next; Échap back to the board.
     await userEvent.keyboard(mod('{Alt>},{/Alt}'));
-    const rail = await screen.findByRole('listbox', { name: 'Sections des réglages' });
-    await waitFor(() => expect(document.activeElement?.textContent).toBe('Sonde42'));
-    expect(rail.textContent).toContain('Autre sonde');
-    expect(screen.getByRole('region', { name: 'Sonde' }).textContent).toContain('Régler la sonde');
+    const board = await screen.findByRole('listbox', { name: 'Sections des réglages' });
+    await waitFor(() => expect(document.activeElement?.getAttribute('data-dial')).toBe('probe'));
+    expect(board.textContent).toContain('Autre sonde');
+    expect(document.activeElement?.textContent).toContain('42');
     expect(screen.getByRole('region', { name: 'Bande de la sonde' }).textContent).toBe(
       'projet system-settings',
     );
+    await userEvent.keyboard('{Enter}');
+    expect((await screen.findByRole('region', { name: 'Sonde' })).textContent).toContain(
+      'Régler la sonde',
+    );
+    await waitFor(() => expect(document.activeElement?.getAttribute('data-section')).toBe('probe'));
     await userEvent.keyboard('{ArrowDown}');
     await screen.findByRole('region', { name: 'Autre sonde' });
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() =>
+      expect(document.activeElement?.getAttribute('data-dial')).toBe('probeOther'),
+    );
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(document.activeElement).toBe(editor));
 

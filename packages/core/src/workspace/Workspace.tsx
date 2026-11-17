@@ -72,6 +72,7 @@ import { isCovered } from '../features/cover';
 import { featureText } from '../features/feature';
 import { FeatureFooterItems, FeatureTopZones, useFeatures } from '../features/features-context';
 import { SettingsView } from '../features/SettingsView';
+import { BoardSettingsView } from '../features/BoardSettingsView';
 import { appSettingsSections } from '../settings/app-settings';
 import './workspace.css';
 import { CloseButton } from '../icons/CloseButton';
@@ -610,7 +611,8 @@ export function ProjectWorkspace({
     },
     openSystemSettings: (sectionId) => {
       if (systemSections.length === 0) return;
-      if (sectionId) setSystemSection(sectionId);
+      // No section asked: the board (DESIGN 1.23).
+      setSystemSection(sectionId);
       setNavigatorOpen(false);
       setView('system-settings');
       setAtelierFocus((n) => n + 1);
@@ -1155,11 +1157,10 @@ export function ProjectWorkspace({
         />
       )}
       {view === 'system-settings' && (
-        <SettingsView
+        <BoardSettingsView
           ctx={ctx}
           sections={systemSections}
           section={systemSection}
-          look="feature"
           active={palette === null && !navigatorOpen}
           focusRequest={atelierFocus}
           onSection={setSystemSection}

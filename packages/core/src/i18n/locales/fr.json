@@ -257,6 +257,14 @@
     "sectionsLabel": "Sections des réglages",
     "hint": "↑↓ choisir · ⏎ ouvrir · Échap revenir au texte"
   },
+  "boardSettings": {
+    "close": "échap",
+    "open": "ouvrir",
+    "board": "tableau",
+    "toBoard": "échap tableau",
+    "boardHint": "←→↑↓ choisir · ⏎ ouvrir le cadran · échap revenir au texte",
+    "sectionHint": "↑↓ choisir · ⏎ régler · ⌫ ou échap revenir au tableau"
+  },
   "appSettings": {
     "yes": "oui",
     "no": "non",
