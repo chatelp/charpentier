@@ -9,7 +9,8 @@ import {
 import type * as Y from 'yjs';
 import { compagnonChat } from './chat';
 import { sceneContext, validatedStyleChoice } from './context';
-import { projectMemory, threadWindow } from './memory';
+import { leavingAlert, leavingSoon, projectMemory, windowStart } from './memory';
+import { keepThreadSummary } from './thread-summary';
 
 /** Turns of the conversation sent back to the model (the oldest are left out). */
 const HISTORY = 30;
@@ -42,11 +43,28 @@ export async function answerAuthor(input: {
       .map((m) => m.text)
       .join('\n'),
   });
+  // The thread's last messages; before them, its summary; the alert when the oldest are about to go.
+  const start = windowStart(thread.length, memory, HISTORY);
+  const window = thread.slice(start);
+  const earlier = await keepThreadSummary({
+    llm: input.llm,
+    mentorDoc: input.mentorDoc,
+    thread,
+    start,
+    language: context.language,
+    ...(input.signal && { signal: input.signal }),
+  });
+  const alert = leavingAlert(leavingSoon(thread.length, memory, HISTORY), window[0]);
   const answer = await compagnonChat(
     input.llm,
     // The Atelier comes through the Compagnon's tree, whole with its statuses.
-    { ...context, level: readMentorLevel(input.root) },
-    threadWindow(thread, memory, HISTORY).map((m) => ({
+    {
+      ...context,
+      level: readMentorLevel(input.root),
+      ...(earlier && { earlier }),
+      ...(alert && { alert }),
+    },
+    window.map((m) => ({
       role: m.role,
       text: m.mode === 'interview' ? `(in the interview) ${m.text}` : m.text,
     })),

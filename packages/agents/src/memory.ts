@@ -254,9 +254,84 @@ const WINDOW_STEP = 20;
  * notes what matters (the transition of D-35: nothing lost).
  */
 export function threadWindow<T>(thread: readonly T[], store: MemoryStore, window: number): T[] {
-  if (store.isEmpty()) return thread.slice(-FIRST_READING);
-  const start = Math.max(0, Math.floor((thread.length - window) / WINDOW_STEP) * WINDOW_STEP);
-  return thread.slice(start);
+  return thread.slice(windowStart(thread.length, store, window));
+}
+
+/** Where the part of the thread sent with a call starts (see threadWindow). */
+export function windowStart(length: number, store: MemoryStore, window: number): number {
+  if (store.isEmpty()) return Math.max(0, length - FIRST_READING);
+  return Math.max(0, Math.floor((length - window) / WINDOW_STEP) * WINDOW_STEP);
+}
+
+/** Messages to come before the oldest block sent leaves the window: the alert's horizon. */
+const ALERT_AHEAD = 4;
+
+/**
+ * How many of the oldest messages sent will soon no longer be (the next
+ * step of the window), 0 when none: the Compagnon is told, so that he notes
+ * what matters in them before they go (D-35; the summary keeps the rest).
+ */
+export function leavingSoon(length: number, store: MemoryStore, window: number): number {
+  if (store.isEmpty()) return 0;
+  const start = windowStart(length, store, window);
+  const next = windowStart(length + ALERT_AHEAD, store, window);
+  return Math.min(next - start, length - start);
+}
+
+/** The alert sent with the author's last words, when the oldest messages sent are about to go. */
+export function leavingAlert(count: number, first?: { readonly text: string }): string {
+  if (count <= 0) return '';
+  const opening = first ? ` (from "${first.text.slice(0, 60).replace(/\s+/g, ' ')}…")` : '';
+  return `THE FIRST ${count} MESSAGES OF THE THREAD ABOVE${opening} will soon no longer be sent to you; only a summary will remain. Before answering, make sure what matters in them for later is in your notebook (do not note again what is already there).`;
+}
+
+/**
+ * The thread's past turns, ready to be sent: after the summary of what came
+ * before (when the thread is long), the last of them marked stable (the
+ * prompt cache's point: everything up to there is the same next time).
+ */
+export function stableThread(
+  pastTurns: readonly { readonly role: 'user' | 'assistant'; readonly content: string }[],
+  earlier?: string,
+): { role: 'user' | 'assistant'; content: string; stable?: boolean }[] {
+  const summary = earlier
+    ? `What was said before the messages below, summarized (older than them; the Atelier and your notebook come first):\n<earlier-thread>\n${earlier}\n</earlier-thread>`
+    : '';
+  const opening = [summary, 'The thread with the author so far:'].filter(Boolean).join('\n\n');
+  const first = pastTurns[0];
+  const before =
+    first?.role === 'user'
+      ? [
+          { ...first, content: summary ? `${summary}\n\n${first.content}` : first.content },
+          ...pastTurns.slice(1),
+        ]
+      : [{ role: 'user' as const, content: opening }, ...pastTurns];
+  return before.map((m, index) => (index === before.length - 1 ? { ...m, stable: true } : m));
+}
+
+/** A notebook this short is read whole by the works that cannot open notes (analyses, reviews). */
+const READ_NOTEBOOK = 16000;
+
+/**
+ * The notebook for the works that read it without the tool (a scene's
+ * analysis, a chapter's review, the deep works): what the author decided,
+ * intends, doubts, so that a remark does not go against a deliberate choice.
+ * Read only: only the Compagnon in the conversation and the interview writes it.
+ * Empty when there is no note.
+ */
+export function notebookForReading(mentorDoc: Y.Doc): string {
+  const notes = listNotes(mentorDoc);
+  if (notes.length === 0) return '';
+  // The author's notes and their decisions first, when everything does not fit.
+  const rank = (n: Note) =>
+    (n.by === 'author' ? 0 : 10) + noteNatures.findIndex((x) => n.path.includes(`/${x}/`));
+  let text = '';
+  for (const n of [...notes].sort((a, b) => rank(a) - rank(b))) {
+    const entry = `## ${n.path}${n.by === 'author' ? ' (written by the author)' : ''}\n${n.text}\n\n`;
+    if (text.length + entry.length > READ_NOTEBOOK) break;
+    text += entry;
+  }
+  return `The notebook the Compagnon keeps with the author (their decisions, intentions, doubts; read only). What the author validated in the sheets comes first, then their own notes, then the Compagnon's. Do not remark against a choice the notebook shows the author made on purpose; you may remind them of it when it matters.\n<notebook>\n${text.trim()}\n</notebook>`;
 }
 
 /** A notebook this short goes whole with every call (cheaper than reading notes one by one). */
@@ -265,6 +340,7 @@ const WHOLE_NOTEBOOK = 8000;
 /** How the Compagnon is told about his notebook, in every mode: the same at every call. */
 export const MEMORY_INSTRUCTIONS = `WHAT YOU KNOW lies in one tree under ${MEMORY_ROOT}, read with the memory tool: ${ATELIER_DIR}/ is the author's Atelier (their sheets, each field with its status; read only: you change it only through proposals they validate); ${PROJECT_DIR}/ and ${AUTHOR_DIR}/ are your notebook.
 YOUR NOTEBOOK: each note is a file in a folder of its nature: ${PROJECT_DIR}/<nature>/<name>.md for this book, ${AUTHOR_DIR}/<nature>/<name>.md for the author; natures: ${noteNatures.join(', ')} ("a-reprendre": what to come back to with the author; "histoire": what the author tells of themselves and where the book comes from; "accompagnement" and "facon-d-ecrire" usually about the author). Its first line is a short title, "# La fin reste ouverte". You keep notes across sessions, one note per fact, in ${PROJECT_DIR}/ for this book and ${AUTHOR_DIR}/ for the author as a writer (how they work, what helps them, what they do not want). Note what you will need later and that the Atelier's sheets do not hold: the author's story and intentions, their decisions and why, their doubts, the questions to come back to, how they want to be accompanied. Keep notes short, dated by their content, and up to date: correct or remove a note that is no longer true rather than adding a contradicting one. Never write lines of the novel, dialogue or secrets in it. Notes marked "author" are the author's: read them, never change them. The notebook as it stands comes with the author's last words; when only its index comes, view a note before relying on its details.
+THE EARLIER THREAD: when the thread is long, only its last messages are sent to you; what came before comes as a summary (<earlier-thread>), less precise than your notebook. When told that the oldest messages sent will soon go, note what matters in them before answering.
 PRECEDENCE, when what you know disagrees over time:
 1. What the author validated in the Atelier is their decision: it comes first, before your notebook and before old messages.
 2. A note the author wrote or corrected comes before your own notes.

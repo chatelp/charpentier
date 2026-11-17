@@ -29,9 +29,13 @@ import {
   generateWithMemory,
   MEMORY_INSTRUCTIONS,
   memoryContext,
+  leavingAlert,
+  leavingSoon,
   projectMemory,
-  threadWindow,
+  stableThread,
+  windowStart,
 } from './memory';
+import { keepThreadSummary } from './thread-summary';
 import { narrativeProseIn } from './guard';
 import { compagnonSystemPrompt, type MentorLevel } from './prompts';
 
@@ -302,7 +306,18 @@ export async function interviewTurn(input: {
       .map((m) => m.text)
       .join('\n'),
   });
-  const history = threadWindow(thread, memory, HISTORY);
+  // The thread's last messages; before them, its summary; the alert when the oldest are about to go.
+  const start = windowStart(thread.length, memory, HISTORY);
+  const history = thread.slice(start);
+  const earlier = await keepThreadSummary({
+    llm,
+    mentorDoc,
+    thread,
+    start,
+    language,
+    ...(input.signal && { signal: input.signal }),
+  });
+  const alert = leavingAlert(leavingSoon(thread.length, memory, HISTORY), history[0]);
 
   // From the most stable to the most changing (the prompt cache, phase 6.5):
   // the system prompt; the thread so far, whose start moves by steps; then,
@@ -318,11 +333,10 @@ export async function interviewTurn(input: {
         ? said(m)
         : JSON.stringify({ reply: said(m), question: null, why: null, proposals: [] }),
   }));
-  const opening = { role: 'user' as const, content: 'The thread with the author so far:' };
-  const before = [...(pastTurns[0]?.role === 'user' ? [] : [opening]), ...pastTurns];
   const now = [
     atelierContext(memory),
     memoryContext(memory),
+    ...(alert ? [alert] : []),
     interviewModeText({ mode, section }),
     authorSpoke
       ? said(history.at(-1) ?? ({ mode: 'interview', text: '' } as (typeof history)[number]))
@@ -330,10 +344,7 @@ export async function interviewTurn(input: {
         ? '[The author passes on this question: ask a different one, same section.]'
         : '[The author opens the guided interview: ask your question.]',
   ].join('\n\n');
-  const turns = [
-    ...before.map((m, index) => (index === before.length - 1 ? { ...m, stable: true } : m)),
-    { role: 'user' as const, content: now },
-  ];
+  const turns = [...stableThread(pastTurns, earlier), { role: 'user' as const, content: now }];
   const system = interviewSystemPrompt({ language, level, mode, section });
 
   let turn: Turn | undefined;

@@ -114,6 +114,7 @@ export class AgentHost {
             sceneDoc,
             sceneId,
             level,
+            mentorDoc,
             tier: automatic ? 'fast' : 'deep',
           });
           mentorDoc.transact(() => analyses.set(sceneId, digest), agentOrigin('scene-analysis'));

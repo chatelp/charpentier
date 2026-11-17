@@ -6,6 +6,7 @@ import {
   MEMORY_INSTRUCTIONS,
   memoryContext,
   type MemoryStore,
+  stableThread,
 } from './memory';
 import { compagnonSystemPrompt, chatAnswerSchema, type MentorLevel } from './prompts';
 
@@ -18,6 +19,12 @@ export interface ChatContext {
   readonly scene?: { readonly title: string; readonly text: string };
   /** The project's sheets, summarized as text. */
   readonly sheets?: string;
+  /** The notebook, read only (a chapter's review): see notebookForReading. */
+  readonly notebook?: string;
+  /** The summary of the thread before the messages sent (phase 6.5). */
+  readonly earlier?: string;
+  /** Sent with the last words: the oldest messages sent are about to go. */
+  readonly alert?: string;
 }
 
 export interface ChatTurn {
@@ -46,6 +53,7 @@ const CORRECTION = `Your previous answer broke THE RULE: it contained text writt
 function contextMessage(context: ChatContext): string {
   const parts = [`<project title="${context.projectTitle}" />`];
   if (context.sheets) parts.push(`<sheets>\n${context.sheets}\n</sheets>`);
+  if (context.notebook) parts.push(context.notebook);
   if (context.scene)
     parts.push(`<scene title="${context.scene.title}">\n${context.scene.text}\n</scene>`);
   return `Context of the author's book (their own text, for reference only):\n${parts.join('\n')}`;
@@ -100,20 +108,15 @@ export async function compagnonChat(
         ? t.text
         : JSON.stringify({ reply: t.text, example: null, styleChoiceId: null }),
   }));
-  const before = [
-    ...(past[0]?.role === 'user'
-      ? []
-      : [{ role: 'user' as const, content: 'The thread with the author so far:' }]),
-    ...past,
-  ];
   const messages = [
-    ...before.map((m, index) => (index === before.length - 1 ? { ...m, stable: true } : m)),
+    ...stableThread(past, context.earlier),
     {
       role: 'user' as const,
       content: [
         contextMessage(context),
         memory && atelierContext(memory),
         memory && memoryContext(memory),
+        context.alert,
         lastAuthor?.text ?? '',
       ]
         .filter(Boolean)

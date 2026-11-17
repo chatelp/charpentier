@@ -21,6 +21,7 @@ import {
 } from '@charpentier/schema';
 import type * as Y from 'yjs';
 import { sceneContext, sheetsSummary, validatedStyleChoice } from './context';
+import { notebookForReading } from './memory';
 import { changeRatio, isOneSentence, MAX_CORRECTION_RATIO, narrativeProseIn } from './guard';
 import type { MentorLevel } from './prompts';
 
@@ -239,6 +240,8 @@ export async function analyzeScene(input: {
   readonly sceneDoc: Y.Doc;
   readonly sceneId: string;
   readonly level: MentorLevel;
+  /** The mentor document: its notebook is read (phase 6.5), never written here. */
+  readonly mentorDoc?: Y.Doc;
   /** `fast` for the frequent automatic analyses (Haiku when the author chose it, D-20). */
   readonly tier?: 'fast' | 'deep';
   readonly signal?: AbortSignal;
@@ -251,7 +254,17 @@ export async function analyzeScene(input: {
   const response = await input.llm.generate(
     {
       system: analysisSystemPrompt({ language, level }),
-      messages: [{ role: 'user', content: contextMessage(root, sceneDoc, sceneId) }],
+      messages: [
+        {
+          role: 'user',
+          content: [
+            input.mentorDoc ? notebookForReading(input.mentorDoc) : '',
+            contextMessage(root, sceneDoc, sceneId),
+          ]
+            .filter(Boolean)
+            .join('\n\n'),
+        },
+      ],
       responseSchema: analysisSchema,
       maxOutputTokens: 16000,
       tier: input.tier ?? 'deep',

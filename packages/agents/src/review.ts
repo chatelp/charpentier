@@ -9,6 +9,7 @@ import {
 import type * as Y from 'yjs';
 import { compagnonChat } from './chat';
 import { sceneContext, sheetsSummary } from './context';
+import { notebookForReading } from './memory';
 
 /** What the Compagnon is asked: the request stays out of the conversation the author sees. */
 const REVIEW_REQUEST = `I have just finished this chapter. Give me your review of it as a whole: first what works, then the one or two things most worth working on (stakes, character arcs, rhythm, point of view, clues planted or left hanging), each with its why, and end with one question to carry into the next chapter. You may quote my words briefly to point at passages. Do not rewrite anything.`;
@@ -60,6 +61,7 @@ export async function reviewChapter(input: {
       projectTitle,
       level: readMentorLevel(root),
       sheets: sheetsSummary(root),
+      notebook: notebookForReading(mentorDoc),
       scene: { title: chapter.title, text },
     },
     [{ role: 'author', text: REVIEW_REQUEST }],

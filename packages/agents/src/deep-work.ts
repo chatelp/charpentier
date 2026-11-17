@@ -27,6 +27,7 @@ import {
 } from '@charpentier/schema';
 import type * as Y from 'yjs';
 import { sceneContext, sheetsSummary } from './context';
+import { notebookForReading } from './memory';
 import { narrativeProseIn } from './guard';
 
 /**
@@ -305,6 +306,7 @@ export function estimateDeepWork(input: {
   const chars =
     deepWorkSystemPrompt(task, language).length +
     contextMessage(root, manuscript.text, task, characterId).length +
+    (input.mentorDoc ? notebookForReading(input.mentorDoc).length : 0) +
     JSON.stringify(deepWorkSchemas[task]).length;
   const inputTokens = Math.ceil(chars / CHARS_PER_TOKEN);
   const outputTokens = EXPECTED_OUTPUT;
@@ -375,7 +377,15 @@ export async function deepWork(input: {
     {
       system: deepWorkSystemPrompt(task, language),
       messages: [
-        { role: 'user', content: contextMessage(root, manuscript.text, task, characterId) },
+        {
+          role: 'user',
+          content: [
+            notebookForReading(input.mentorDoc),
+            contextMessage(root, manuscript.text, task, characterId),
+          ]
+            .filter(Boolean)
+            .join('\n\n'),
+        },
       ],
       responseSchema: deepWorkSchemas[task],
       maxOutputTokens: OUTPUT_BUDGET,
