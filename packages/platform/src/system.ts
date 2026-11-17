@@ -235,6 +235,8 @@ export interface SystemState {
     readonly name: string;
     readonly model: string;
     readonly appVersion: string;
+    /** The commit the app was built from (short), when known: shown beside the version. */
+    readonly commit?: string;
     readonly osVersion: string;
     readonly generation: number;
     readonly installedAt: string;
@@ -290,6 +292,14 @@ export interface SystemState {
 /** The version shown everywhere: the system's when it has updates, else the app's. */
 export const deviceVersion = (state: SystemState): string =>
   state.update?.installed.version ?? state.device.appVersion;
+
+/**
+ * The version as the author reads it: the number, then the commit it was
+ * built from (« 0.1.1 (43d2f0a) »), since a development build keeps the last
+ * release's number (decision of the author, 17 November 2026).
+ */
+export const deviceVersionLabel = (state: SystemState): string =>
+  state.device.commit ? `${deviceVersion(state)} (${state.device.commit})` : deviceVersion(state);
 
 /** The longest message of the system line (docs/DESIGN.md §4.12). */
 export const MESSAGE_LENGTH = 40;

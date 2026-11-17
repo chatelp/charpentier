@@ -535,7 +535,7 @@ describe('the updates of the X250 (phase 5.12)', () => {
     expect(about.textContent).toContain('0.6.0 prête');
     await userEvent.click(about);
     await screen.findByText('Version 0.6.0 prête');
-    expect(screen.getByText(/0\.5\.0 · installée le 12 nov\./)).toBeTruthy();
+    expect(screen.getByText(/0\.5\.0 \(43d2f0a\) · installée le 12 nov\./)).toBeTruthy();
     expect(screen.getByText('La lumière suit le clavier dans les listes.')).toBeTruthy();
 
     await userEvent.click(screen.getByRole('button', { name: 'Vérifier maintenant' }));
@@ -556,7 +556,7 @@ describe('the updates of the X250 (phase 5.12)', () => {
     await userEvent.keyboard(sys(','));
     const rail = await screen.findByRole('listbox', { name: 'Sections des réglages' });
     await userEvent.click(within(rail).getByRole('option', { name: /À propos/ }));
-    await screen.findByText(/0\.5\.0 · installée/);
+    await screen.findByText(/0\.5\.0 \(43d2f0a\) · installée/);
     expect(screen.queryByText('Vérifier maintenant')).toBeNull();
   });
 });

@@ -126,6 +126,7 @@ function deviceSystem(): (SystemService & { dispose?(): void }) | null {
   const linux = createLinuxSystem({
     tools: nodeTools(),
     appVersion: app.getVersion(),
+    ...(__CHARPENTIER_COMMIT__ && { commit: __CHARPENTIER_COMMIT__ }),
     hostname: os.hostname(),
     settingsFile: path.join(app.getPath('userData'), 'system.json'),
     // The keyboard chosen at installation (charpentier-os, hosts/x250).
@@ -508,6 +509,12 @@ function secretsWithoutKeychain() {
 }
 
 void app.whenReady().then(() => {
+  // « À propos de Charpentier » on the Mac: the version, then the commit it was built from.
+  if (__CHARPENTIER_COMMIT__)
+    app.setAboutPanelOptions({
+      applicationVersion: app.getVersion(),
+      version: __CHARPENTIER_COMMIT__,
+    });
   secretsWithoutKeychain();
   // Once the secrets can be read (without a keychain, in clear on the device).
   shareAccountWithUpdates();

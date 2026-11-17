@@ -4,7 +4,7 @@ import path from 'node:path';
 import {
   createLockKeeper,
   DEFAULT_SYSTEM_SETTINGS,
-  deviceVersion,
+  deviceVersionLabel,
   startMessages,
   updateMessages,
   isValidCode,
@@ -88,6 +88,8 @@ export interface LinuxSystem extends SystemService {
 export interface LinuxSystemOptions {
   readonly tools: SystemTools;
   readonly appVersion: string;
+  /** The commit the app was built from (short), if known. */
+  readonly commit?: string;
   readonly hostname: string;
   /** Where the device's settings are kept (JSON). */
   readonly settingsFile: string;
@@ -189,6 +191,7 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
       name: options.hostname,
       model: '',
       appVersion: options.appVersion,
+      ...(options.commit && { commit: options.commit }),
       osVersion: '',
       generation: 0,
       installedAt: now().toISOString(),
@@ -1235,7 +1238,7 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
 
     start: async () => {
       await refresh();
-      const version = deviceVersion(state);
+      const version = deviceVersionLabel(state);
       const atStart = startMessages(lastVersion ?? null, state.update);
       const line = (text: string, at: string, quiet?: boolean) => ({
         id: `s${++sequence}`,

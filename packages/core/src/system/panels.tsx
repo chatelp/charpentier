@@ -1,6 +1,6 @@
 import {
   batteryLevel,
-  deviceVersion,
+  deviceVersionLabel,
   type SyncAccountInfo,
   type SystemService,
   type WifiNetwork,
@@ -163,7 +163,7 @@ function MenuPanel({ ctx, onDone }: PanelProps) {
       <Head
         name={text('system.panel.menu')}
         aside={text('system.panel.version', {
-          app: deviceVersion(state),
+          app: deviceVersionLabel(state),
           os: state.device.osVersion,
           name: state.device.name,
         })}
@@ -240,7 +240,7 @@ function UpdatePanel({ ctx, onDone }: PanelProps) {
       <>
         <Head name={text('system.panel.update')} />
         <p className="ch-sys-note">
-          {text('system.panel.updateNone', { version: deviceVersion(state) })}
+          {text('system.panel.updateNone', { version: deviceVersionLabel(state) })}
         </p>
       </>
     );

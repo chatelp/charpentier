@@ -1,6 +1,6 @@
 import {
   batteryLevel,
-  deviceVersion,
+  deviceVersionLabel,
   hasBattery,
   type BluetoothDevice,
   type SystemService,
@@ -748,7 +748,7 @@ function About() {
       <Row label={s('rows.appVersion')}>
         <span className="ch-set-value">
           {s('rows.versionValue', {
-            version: deviceVersion(state),
+            version: deviceVersionLabel(state),
             day: dayLabel(installedAt, language, s),
           })}
         </span>
@@ -900,7 +900,7 @@ export const systemSettingsSections: readonly SettingsSection[] = [
     value: value(({ state, s }) =>
       state.update?.ready
         ? s('rows.readyShort', { version: state.update.ready.version })
-        : deviceVersion(state),
+        : deviceVersionLabel(state),
     ),
     component: About,
   },

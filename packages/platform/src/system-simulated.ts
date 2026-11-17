@@ -84,6 +84,7 @@ export function createSimulatedSystem(
       name: 'x250',
       model: 'ThinkPad X250 · i5-5300U · 8 Go',
       appVersion: '0.5.0',
+      commit: '43d2f0a',
       osVersion: 'nixos 26.11',
       generation: 12,
       installedAt: '2026-11-13T09:00:00Z',

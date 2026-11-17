@@ -101,6 +101,7 @@ Premier essai le 15 novembre 2026 (Z Fold5, variante dev) : la configuration est
 - [ ] Écrire une scène, la fermer, la rouvrir : rien n'est perdu.
 - [ ] La correction orthographique française souligne une faute.
 - [ ] Une phrase écrite sur le X250 arrive sur le Mac, et inversement.
+- [x] Les sons de « Aa » (interface et frappe) s'entendent sur le haut-parleur du X250. Vérifié à l'oreille par l'auteur le 17 novembre 2026 avec l'app 43d2f0a, après correction : ils arrivaient au haut-parleur, mais bien trop bas (813690f, eebcdf6 : rien sous 300 Hz, +10 dB, puis +6 dB par un bus commun avec un limiteur).
 
 ## 5.12 · Les mises à jour (après la première release de l'app)
 

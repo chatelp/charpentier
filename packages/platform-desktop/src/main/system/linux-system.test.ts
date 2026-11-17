@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { deviceVersionLabel } from '@charpentier/platform';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createLinuxSystem, type LinuxSystem } from './linux-system';
 import type { RunResult, SystemTools } from './tools';
@@ -374,6 +375,12 @@ describe('the System service of the X250 (phase 5.4)', () => {
       devices: [{ id: '00:1B:66:AA:BB:CC', name: 'Casque Sennheiser', connected: false }],
     });
     expect(system.journal().map((m) => m.text)).toEqual(['démarrage · charpentier 0.5.0']);
+  });
+
+  it('shows the commit beside the version (a development build keeps the release number)', async () => {
+    const { system } = await start(fakeX250(), undefined, undefined, { commit: '43d2f0a' });
+    expect(system.journal()[0]?.text).toBe('démarrage · charpentier 0.5.0 (43d2f0a)');
+    expect(deviceVersionLabel(system.state())).toBe('0.5.0 (43d2f0a)');
   });
 
   it('joins a protected network: a wrong password leaves nothing behind, the right one connects', async () => {

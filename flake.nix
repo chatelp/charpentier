@@ -15,7 +15,10 @@
     in
     {
       packages.${system} = {
-        charpentier = pkgs.callPackage ./nix/charpentier.nix { };
+        # The commit shown beside the version (a dirty checkout gives its own, or nothing).
+        charpentier = pkgs.callPackage ./nix/charpentier.nix {
+          commit = self.shortRev or self.dirtyShortRev or "";
+        };
         default = self.packages.${system}.charpentier;
       };
     };
