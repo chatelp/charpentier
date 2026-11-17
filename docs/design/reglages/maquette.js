@@ -138,14 +138,7 @@
             'Son de frappe',
             'Une frappe de machine, très bas.',
             `<span class="mk-ctl">${btn('Écouter')}${keys(['oui', 'non'], 'non')}</span>`,
-          ) +
-          (x250
-            ? row(
-                'Son d’allumage',
-                'Une cloche de machine à écrire, à la fin du démarrage.',
-                `<span class="mk-ctl">${btn('Écouter')}${keys(['oui', 'non'], 'non')}</span>`,
-              )
-            : ''),
+          ),
       ),
     },
     compagnon: {
