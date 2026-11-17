@@ -63,7 +63,11 @@ describe('Anthropic LLM service', () => {
       model: OPUS,
       max_tokens: 16000,
       system: [
-        { type: 'text', text: 'You are le Compagnon.', cache_control: { type: 'ephemeral' } },
+        {
+          type: 'text',
+          text: 'You are le Compagnon.',
+          cache_control: { type: 'ephemeral', ttl: '1h' },
+        },
       ],
       output_config: {
         effort: 'high',
@@ -72,6 +76,37 @@ describe('Anthropic LLM service', () => {
       betas: ['server-side-fallback-2026-07-01'],
       fallbacks: 'default',
     });
+  });
+
+  it('keeps the stable history in the cache for an hour, the last words outside it', async () => {
+    const { client, requests } = fakeClient(() => message('ok'));
+    const llm = new AnthropicLlmService({
+      apiKey: () => 'sk-test',
+      models: () => ({ deep: OPUS, fast: OPUS }),
+      createClient: () => client,
+    });
+    await llm.generate({
+      ...request,
+      messages: [
+        { role: 'user', content: 'Mon héroïne est batelière.', stable: true },
+        { role: 'assistant', content: 'Je note.' },
+        { role: 'user', content: 'Et son frère ?' },
+      ],
+    });
+    expect(requests[0]?.['messages']).toEqual([
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'text',
+            text: 'Mon héroïne est batelière.',
+            cache_control: { type: 'ephemeral', ttl: '1h' },
+          },
+        ],
+      },
+      { role: 'assistant', content: 'Je note.' },
+      { role: 'user', content: 'Et son frère ?' },
+    ]);
   });
 
   it('sends light work to Haiku only when chosen, without fallbacks', async () => {

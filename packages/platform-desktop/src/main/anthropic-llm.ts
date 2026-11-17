@@ -26,6 +26,15 @@ export class LlmUnconfiguredError extends Error {}
  * Anthropic's official SDK, the author's own key (BYOK). The status follows
  * the network and the key; the author's writing never depends on it.
  */
+/**
+ * A cache point lasts an hour, not the API's default five minutes: an author
+ * often thinks longer than that between two messages, and every expired
+ * point sends the whole history again at full price. Writing it costs twice
+ * the input price (instead of 1.25), reading it a tenth: paid back as soon as
+ * one message comes more than five minutes after the last.
+ */
+const CACHE = { type: 'ephemeral', ttl: '1h' } as const;
+
 /** A cache point on a message's last block (everything before it is the same next time). */
 function cachePoint(content: unknown): unknown {
   const blocks =
@@ -34,7 +43,7 @@ function cachePoint(content: unknown): unknown {
   const last = blocks.at(-1) as Record<string, unknown>;
   // Thinking blocks cannot carry a cache point; the message's other blocks can.
   if (last['type'] === 'thinking' || last['type'] === 'redacted_thinking') return blocks;
-  return [...blocks.slice(0, -1), { ...last, cache_control: { type: 'ephemeral' } }];
+  return [...blocks.slice(0, -1), { ...last, cache_control: CACHE }];
 }
 
 /**
@@ -143,7 +152,7 @@ export class AnthropicLlmService implements LlmService {
           model,
           max_tokens: request.maxOutputTokens,
           // The system prompt is stable: cached across calls.
-          system: [{ type: 'text', text: request.system, cache_control: { type: 'ephemeral' } }],
+          system: [{ type: 'text', text: request.system, cache_control: CACHE }],
           messages: request.messages.map((m) => ({
             role: m.role,
             content: m.stable
