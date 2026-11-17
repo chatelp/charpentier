@@ -219,7 +219,7 @@ describe('desktop app', () => {
       effort: 'high',
       format: { type: 'json_schema' },
     });
-    expect(analysis?.body.system?.[0]?.cache_control).toEqual({ type: 'ephemeral' });
+    expect(analysis?.body.system?.[0]?.cache_control).toEqual({ type: 'ephemeral', ttl: '1h' });
     expect(analysis?.headers['anthropic-beta']).toContain('server-side-fallback-2026-07-01');
 
     await window.keyboard.press('ControlOrMeta+L');
