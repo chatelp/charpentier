@@ -144,8 +144,10 @@ describe('the thread’s rolling summary (phase 6.5)', () => {
     // A light call for the block that left, then the answer.
     expect(requests.map((r) => r.tier)).toEqual(['fast', 'deep']);
     const sent = requests[1]?.messages ?? [];
-    expect(String(sent[0]?.content)).toContain('<earlier-thread>\nRésumé 1');
-    expect(sent.filter((m) => m.stable)).toHaveLength(1);
+    // The Atelier and the notebook first, then the summary: both in the cached part.
+    expect(String(sent[0]?.content)).toContain('<notebook>');
+    expect(String(sent[1]?.content)).toContain('<earlier-thread>\nRésumé 1');
+    expect(sent.filter((m) => m.stable)).toHaveLength(2);
     expect(String(sent.at(-1)?.content)).toContain('THE FIRST 20 MESSAGES');
     expect(String(sent.at(-1)?.content)).not.toContain('earlier-thread');
   });

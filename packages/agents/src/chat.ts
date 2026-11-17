@@ -1,4 +1,5 @@
 import type { LlmService } from '@charpentier/platform';
+import type { BookContext } from './book-context';
 import { isOneSentence, narrativeProseIn } from './guard';
 import {
   atelierContext,
@@ -25,6 +26,8 @@ export interface ChatContext {
   readonly earlier?: string;
   /** Sent with the last words: the oldest messages sent are about to go. */
   readonly alert?: string;
+  /** The Atelier and the notebook, before the thread (cached), and what changed since. */
+  readonly book?: BookContext;
 }
 
 export interface ChatTurn {
@@ -98,8 +101,9 @@ export async function compagnonChat(
     ...history.filter((t) => t.role === 'author').map((t) => t.text),
   ].join('\n');
   // From the most stable to the most changing (the prompt cache, phase 6.5):
-  // the thread so far, then, with the author's last words, the book as it
-  // stands (sheets, scene) and the notebook.
+  // the Atelier and the notebook as they stood when the thread sent began,
+  // the thread so far, then, with the author's last words, what changed
+  // since and the book as it stands (the scene).
   const lastAuthor = history.at(-1)?.role === 'author' ? history.at(-1) : undefined;
   const past = (lastAuthor ? history.slice(0, -1) : history).map((t) => ({
     role: t.role === 'author' ? ('user' as const) : ('assistant' as const),
@@ -108,14 +112,16 @@ export async function compagnonChat(
         ? t.text
         : JSON.stringify({ reply: t.text, example: null, styleChoiceId: null }),
   }));
+  const book = context.book;
   const messages = [
+    ...(book ? [{ role: 'user' as const, content: book.stable, stable: true }] : []),
     ...stableThread(past, context.earlier),
     {
       role: 'user' as const,
       content: [
         contextMessage(context),
-        memory && atelierContext(memory),
-        memory && memoryContext(memory),
+        book ? book.now : memory && atelierContext(memory),
+        !book && memory && memoryContext(memory),
         context.alert,
         lastAuthor?.text ?? '',
       ]

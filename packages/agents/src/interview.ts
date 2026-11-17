@@ -25,16 +25,15 @@ import {
 } from '@charpentier/schema';
 import type * as Y from 'yjs';
 import {
-  atelierContext,
   generateWithMemory,
   MEMORY_INSTRUCTIONS,
-  memoryContext,
   leavingAlert,
   leavingSoon,
   projectMemory,
   stableThread,
   windowStart,
 } from './memory';
+import { bookContext } from './book-context';
 import { keepThreadSummary } from './thread-summary';
 import { narrativeProseIn } from './guard';
 import { compagnonSystemPrompt, type MentorLevel } from './prompts';
@@ -320,9 +319,10 @@ export async function interviewTurn(input: {
   const alert = leavingAlert(leavingSoon(thread.length, memory, HISTORY), history[0]);
 
   // From the most stable to the most changing (the prompt cache, phase 6.5):
-  // the system prompt; the thread so far, whose start moves by steps; then,
-  // with the author's last words, what changes at every turn: the Atelier,
-  // the notebook, the mode.
+  // the system prompt; the Atelier and the notebook as they stood when the
+  // thread sent began; the thread so far, whose start moves by steps; then,
+  // with the author's last words, what changes at every turn: what changed
+  // in the Atelier and the notebook since, the mode.
   const said = (m: (typeof history)[number]) =>
     m.mode === 'conversation' ? `(in the conversation about the text) ${m.text}` : m.text;
   const past = authorSpoke ? history.slice(0, -1) : history;
@@ -333,9 +333,9 @@ export async function interviewTurn(input: {
         ? said(m)
         : JSON.stringify({ reply: said(m), question: null, why: null, proposals: [] }),
   }));
+  const book = bookContext({ mentorDoc, store: memory, key: 'interview', start });
   const now = [
-    atelierContext(memory),
-    memoryContext(memory),
+    ...(book.now ? [book.now] : []),
     ...(alert ? [alert] : []),
     interviewModeText({ mode, section }),
     authorSpoke
@@ -344,7 +344,11 @@ export async function interviewTurn(input: {
         ? '[The author passes on this question: ask a different one, same section.]'
         : '[The author opens the guided interview: ask your question.]',
   ].join('\n\n');
-  const turns = [...stableThread(pastTurns, earlier), { role: 'user' as const, content: now }];
+  const turns = [
+    { role: 'user' as const, content: book.stable, stable: true },
+    ...stableThread(pastTurns, earlier),
+    { role: 'user' as const, content: now },
+  ];
   const system = interviewSystemPrompt({ language, level, mode, section });
 
   let turn: Turn | undefined;

@@ -186,8 +186,8 @@ describe('one Compagnon: each mode knows what was said in the other (D-35)', () 
     expect(JSON.stringify(requests[0]?.messages)).toContain(
       '(in the conversation about the text) Je veux un ton nuancé.',
     );
-    // The notebook, short, goes whole with the turn; the system prompt stays the same.
-    expect(JSON.stringify(requests[0]?.messages.at(-1))).toContain(
+    // The notebook, short, goes whole before the thread (cached); the system prompt stays the same.
+    expect(JSON.stringify(requests[0]?.messages[0])).toContain(
       '/memories/auteur/rythme.md\\nÉcrit le matin.',
     );
   });
@@ -210,8 +210,8 @@ describe('one Compagnon: each mode knows what was said in the other (D-35)', () 
       answer,
     );
     await interviewTurn({ llm: first.llm, root, mentorDoc, mode: 'free' });
-    // All 40 messages: 39 before, the last one with the turn (same instant: order not checked).
-    expect(first.requests[0]?.messages).toHaveLength(40);
+    // The Atelier and the notebook, then all 40 messages: 39 before, the last one with the turn.
+    expect(first.requests[0]?.messages).toHaveLength(41);
     expect(JSON.stringify(first.requests[0]?.messages.at(-1))).toContain('YOUR NOTEBOOK IS EMPTY');
 
     addInterviewMessage(mentorDoc, { role: 'author', text: 'Et maintenant ?' }, AUTHOR);
@@ -219,7 +219,7 @@ describe('one Compagnon: each mode knows what was said in the other (D-35)', () 
     await interviewTurn({ llm: next.llm, root, mentorDoc, mode: 'free' });
     // A window of the thread now (its start moves by steps of 20): the notebook holds the rest.
     const sent = next.requests[0]?.messages ?? [];
-    expect(sent.length).toBeLessThan(43);
+    expect(sent.length).toBeLessThan(44);
     expect(sent.length).toBeGreaterThanOrEqual(30);
     expect(JSON.stringify(sent.at(-1))).not.toContain('YOUR NOTEBOOK IS EMPTY');
     expect(JSON.stringify(sent.at(-1))).toContain('Parole 0 : le début.');

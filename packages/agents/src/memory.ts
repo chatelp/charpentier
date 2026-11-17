@@ -52,6 +52,10 @@ const numbered = (text: string) =>
     .map((line, i) => `${String(i + 1).padStart(6)}\t${line}`)
     .join('\n');
 
+const noteEntry = (n: Note) =>
+  `## ${n.path}${n.by === 'author' ? ' (author, read only)' : ''}\n${n.text}`;
+const atelierEntry = ([path, text]: readonly [string, string]) => `## ${path}\n${text}`;
+
 export interface MemoryStore {
   /** The index the Compagnon reads at every call: each note's path and first line. */
   index(): string;
@@ -60,6 +64,8 @@ export interface MemoryStore {
   /** The Atelier's files, whole, and their index (empty without the Atelier). */
   atelierWhole(): string;
   atelierIndex(): string;
+  /** Each file of the tree as the whole texts above give it (Atelier and notes), by path. */
+  entries(): ReadonlyMap<string, string>;
   /** What this call wrote, corrected or removed (« Noté au carnet »). */
   changes(): readonly NotedChange[];
   isEmpty(): boolean;
@@ -141,10 +147,7 @@ export function projectMemory(input: {
 
   return {
     isEmpty: () => notes().length === 0,
-    whole: () =>
-      notes()
-        .map((n) => `## ${n.path}${n.by === 'author' ? ' (author, read only)' : ''}\n${n.text}`)
-        .join('\n\n'),
+    whole: () => notes().map(noteEntry).join('\n\n'),
     index() {
       const all = notes();
       if (all.length === 0) return '(the notebook is empty)';
@@ -158,7 +161,12 @@ export function projectMemory(input: {
     },
 
     changes: () => [...changes].map(([path, change]) => ({ path, change })),
-    atelierWhole: () => [...atelier()].map(([path, text]) => `## ${path}\n${text}`).join('\n\n'),
+    atelierWhole: () => [...atelier()].map(atelierEntry).join('\n\n'),
+    entries: () =>
+      new Map([
+        ...[...atelier()].map((file) => [file[0], atelierEntry(file)] as const),
+        ...notes().map((n) => [n.path, noteEntry(n)] as const),
+      ]),
     atelierIndex: () =>
       [...atelier()]
         .map(([path, text]) => `${path}: ${text.split('\n').slice(1).join(' · ').slice(0, 140)}`)
@@ -339,7 +347,7 @@ const WHOLE_NOTEBOOK = 8000;
 
 /** How the Compagnon is told about his notebook, in every mode: the same at every call. */
 export const MEMORY_INSTRUCTIONS = `WHAT YOU KNOW lies in one tree under ${MEMORY_ROOT}, read with the memory tool: ${ATELIER_DIR}/ is the author's Atelier (their sheets, each field with its status; read only: you change it only through proposals they validate); ${PROJECT_DIR}/ and ${AUTHOR_DIR}/ are your notebook.
-YOUR NOTEBOOK: each note is a file in a folder of its nature: ${PROJECT_DIR}/<nature>/<name>.md for this book, ${AUTHOR_DIR}/<nature>/<name>.md for the author; natures: ${noteNatures.join(', ')} ("a-reprendre": what to come back to with the author; "histoire": what the author tells of themselves and where the book comes from; "accompagnement" and "facon-d-ecrire" usually about the author). Its first line is a short title, "# La fin reste ouverte". You keep notes across sessions, one note per fact, in ${PROJECT_DIR}/ for this book and ${AUTHOR_DIR}/ for the author as a writer (how they work, what helps them, what they do not want). Note what you will need later and that the Atelier's sheets do not hold: the author's story and intentions, their decisions and why, their doubts, the questions to come back to, how they want to be accompanied. Keep notes short, dated by their content, and up to date: correct or remove a note that is no longer true rather than adding a contradicting one. Never write lines of the novel, dialogue or secrets in it. Notes marked "author" are the author's: read them, never change them. The notebook as it stands comes with the author's last words; when only its index comes, view a note before relying on its details.
+YOUR NOTEBOOK: each note is a file in a folder of its nature: ${PROJECT_DIR}/<nature>/<name>.md for this book, ${AUTHOR_DIR}/<nature>/<name>.md for the author; natures: ${noteNatures.join(', ')} ("a-reprendre": what to come back to with the author; "histoire": what the author tells of themselves and where the book comes from; "accompagnement" and "facon-d-ecrire" usually about the author). Its first line is a short title, "# La fin reste ouverte". You keep notes across sessions, one note per fact, in ${PROJECT_DIR}/ for this book and ${AUTHOR_DIR}/ for the author as a writer (how they work, what helps them, what they do not want). Note what you will need later and that the Atelier's sheets do not hold: the author's story and intentions, their decisions and why, their doubts, the questions to come back to, how they want to be accompanied. Keep notes short, dated by their content, and up to date: correct or remove a note that is no longer true rather than adding a contradicting one. Never write lines of the novel, dialogue or secrets in it. Notes marked "author" are the author's: read them, never change them. The Atelier and your notebook come before the thread, as they stood when the thread sent began; what changed in them since comes with the author's last words and wins over it. When only an index comes, view a file before relying on its details.
 THE EARLIER THREAD: when the thread is long, only its last messages are sent to you; what came before comes as a summary (<earlier-thread>), less precise than your notebook. When told that the oldest messages sent will soon go, note what matters in them before answering.
 PRECEDENCE, when what you know disagrees over time:
 1. What the author validated in the Atelier is their decision: it comes first, before your notebook and before old messages.
@@ -361,16 +369,21 @@ export function atelierContext(store: MemoryStore): string {
     : `The author's Atelier, its index (view a sheet under ${ATELIER_DIR} for its fields):\n<atelier-index>\n${store.atelierIndex()}\n</atelier-index>`;
 }
 
+/** The notebook as it stands: whole while short, else its index. */
+export function notebookBody(store: MemoryStore): string {
+  const whole = store.whole();
+  return whole.length <= WHOLE_NOTEBOOK
+    ? `<notebook>\n${whole || '(empty)'}\n</notebook>`
+    : `<notebook-index>\n${store.index()}\n</notebook-index>`;
+}
+
+/** Sent with the author's last words while the notebook is empty: the first reading. */
+export const EMPTY_NOTEBOOK = `YOUR NOTEBOOK IS EMPTY: you received the whole of what was said so far. Before answering, read it and write the notes that matter (a few well-chosen notes, not a transcript).`;
+
 /** The notebook as it stands, sent with the author's last words: whole while short, else its index. */
 export function memoryContext(store: MemoryStore): string {
-  const whole = store.whole();
-  const body =
-    whole.length <= WHOLE_NOTEBOOK
-      ? `<notebook>\n${whole || '(empty)'}\n</notebook>`
-      : `<notebook-index>\n${store.index()}\n</notebook-index>`;
-  return store.isEmpty()
-    ? `${body}\nYOUR NOTEBOOK IS EMPTY: you received the whole of what was said so far. Before answering, read it and write the notes that matter (a few well-chosen notes, not a transcript).`
-    : body;
+  const body = notebookBody(store);
+  return store.isEmpty() ? `${body}\n${EMPTY_NOTEBOOK}` : body;
 }
 
 /** @deprecated kept for callers that build one system text: instructions and notebook together. */

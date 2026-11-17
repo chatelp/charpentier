@@ -7,6 +7,7 @@ import {
   readMentorLevel,
 } from '@charpentier/schema';
 import type * as Y from 'yjs';
+import { bookContext } from './book-context';
 import { compagnonChat } from './chat';
 import { sceneContext, validatedStyleChoice } from './context';
 import { leavingAlert, leavingSoon, projectMemory, windowStart } from './memory';
@@ -63,6 +64,7 @@ export async function answerAuthor(input: {
       level: readMentorLevel(input.root),
       ...(earlier && { earlier }),
       ...(alert && { alert }),
+      book: bookContext({ mentorDoc: input.mentorDoc, store: memory, key: 'chat', start }),
     },
     window.map((m) => ({
       role: m.role,
