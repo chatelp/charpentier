@@ -4,12 +4,14 @@ import type { WorkspaceContext } from '../workspace/workspace-context';
 import { featureText, type SettingsSection } from './feature';
 import { useFeatures } from './features-context';
 import { CloseButton } from '../icons/CloseButton';
+import { Medallion } from '../icons/Pictogram';
 
 /**
- * The settings view (docs/DESIGN.md §4.12): full frame, like the Atelier. On
- * the left a rail with one line per section and its current value; on the
- * right the section. Its sections come from the features; without any, there
- * is no settings view.
+ * A settings view: full frame, like the Atelier. On the left a rail with one
+ * line per section and its current value; on the right the section. The
+ * app's settings (docs/DESIGN.md §4.8, phase 7.3) come from the core, in the
+ * app's design; the machine's (§4.12) from a feature, in its look (the X250's
+ * system charter). Each leads to the other where both exist (D-36).
  */
 export function SettingsView({
   ctx,
@@ -19,6 +21,8 @@ export function SettingsView({
   focusRequest,
   onSection,
   onClose,
+  look: lookOf = 'app',
+  other,
 }: {
   readonly ctx: WorkspaceContext;
   readonly sections: readonly SettingsSection[];
@@ -29,12 +33,21 @@ export function SettingsView({
   readonly focusRequest: number;
   onSection(id: string): void;
   onClose(): void;
+  /** The app's look (its slate rail, the sliders' medallion) or the feature's. */
+  readonly look?: 'app' | 'feature';
+  /** The other settings view, at the foot of the rail. */
+  readonly other?: {
+    readonly label: string;
+    readonly shortcut: string | undefined;
+    readonly open: () => void;
+  };
 }) {
   const { t } = useTranslation();
   const text = featureText(t);
   const railRef = useRef<HTMLUListElement>(null);
   const pageRef = useRef<HTMLDivElement>(null);
-  const look = useFeatures().find((f) => f.settingsLook)?.settingsLook;
+  const featureLook = useFeatures().find((f) => f.settingsLook)?.settingsLook;
+  const look = lookOf === 'feature' ? featureLook : undefined;
   const current = sections.find((s) => s.id === section) ?? sections[0];
   const index = current ? sections.indexOf(current) : -1;
 
@@ -81,6 +94,7 @@ export function SettingsView({
       <nav className={`ch-settings-rail ${look?.material === 'system' ? 'ch-system' : 'ch-tool'}`}>
         <h2 className={`ch-settings-title${look ? ' is-feature' : ''}`}>
           {look?.icon && <look.icon />}
+          {!look && <Medallion name="reglages" size={30} />}
           {look ? text(look.title) : t('settings.title')}
         </h2>
         <ul
@@ -112,7 +126,13 @@ export function SettingsView({
             );
           })}
         </ul>
-        {look?.hint && <p className="ch-settings-hint">{text(look.hint)}</p>}
+        <p className="ch-settings-hint">{look?.hint ? text(look.hint) : t('settings.hint')}</p>
+        {other && (
+          <button type="button" className="ch-settings-other" onClick={other.open}>
+            {other.label}
+            {other.shortcut && <kbd>{other.shortcut}</kbd>}
+          </button>
+        )}
       </nav>
       <div
         ref={pageRef}

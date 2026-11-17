@@ -39,6 +39,14 @@ const DRAWINGS = {
   ),
   // Style et voix: the tuning fork, « donner le ton » (phase 6.4).
   diapason: <path d="M8.5 3v6.5a3.5 3.5 0 0 0 7 0V3M12 13v8M10 21h4" />,
+  // The app's settings: two sliders (docs/design/pictos/reglages.svg, phase 7.3).
+  reglages: (
+    <>
+      <path d="M4 7h10M18 7h2M4 17h4M12 17h8" />
+      <circle cx="16" cy="7" r="2" />
+      <circle cx="10" cy="17" r="2" />
+    </>
+  ),
 } satisfies Record<string, ReactNode>;
 
 export type PictogramName = keyof typeof DRAWINGS;

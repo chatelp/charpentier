@@ -61,7 +61,7 @@ describe('features (phase 5.1)', () => {
     ]);
     expect(model.menus[0]?.entries[2]).toMatchObject({
       id: 'openSettings',
-      label: 'Ouvrir les réglages',
+      label: 'Réglages de l’app…',
       shortcut: { key: ',', meta: true },
     });
   });
@@ -69,10 +69,14 @@ describe('features (phase 5.1)', () => {
   it('leaves nothing behind when it is gone', async () => {
     const i18n = await createI18n('fr');
     const registry = createWorkspaceRegistry('Meta', []);
-    expect(registry.ids()).not.toContain('openSettings');
+    // The app's settings are the core's (phase 7.3): there without any feature.
+    expect(registry.ids()).toContain('openSettings');
+    expect(registry.ids()).not.toContain('probeSettings');
     const app = buildMenuModel(registry, i18n.t).menus[0]?.entries ?? [];
     expect(app.map((e) => (e.kind === 'separator' ? '-' : e.kind))).toEqual([
       'role',
+      '-',
+      'command',
       '-',
       'role',
       'role',

@@ -170,7 +170,7 @@ function MenuPanel({ ctx, onDone }: PanelProps) {
       />
       {item('systemSettings', text('system.panel.settings'), () => {
         onDone();
-        ctx?.openSettings();
+        ctx?.openSystemSettings();
       })}
       {item(
         'systemPrint',

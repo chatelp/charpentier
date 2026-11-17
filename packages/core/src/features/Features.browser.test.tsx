@@ -70,14 +70,14 @@ describe('contribution points of the core (phase 5.1)', () => {
     await userEvent.keyboard('{Enter}');
     await screen.findByText('écho bonjour');
 
-    // A section of the settings, opened by its shortcut; the rail goes from one to the next.
-    await userEvent.keyboard(mod(','));
+    // A section of the machine's settings, opened by its shortcut; the rail goes from one to the next.
+    await userEvent.keyboard(mod('{Alt>},{/Alt}'));
     const rail = await screen.findByRole('listbox', { name: 'Sections des réglages' });
     await waitFor(() => expect(document.activeElement?.textContent).toBe('Sonde42'));
     expect(rail.textContent).toContain('Autre sonde');
     expect(screen.getByRole('region', { name: 'Sonde' }).textContent).toContain('Régler la sonde');
     expect(screen.getByRole('region', { name: 'Bande de la sonde' }).textContent).toBe(
-      'projet settings',
+      'projet system-settings',
     );
     await userEvent.keyboard('{ArrowDown}');
     await screen.findByRole('region', { name: 'Autre sonde' });
@@ -85,7 +85,7 @@ describe('contribution points of the core (phase 5.1)', () => {
     await waitFor(() => expect(document.activeElement).toBe(editor));
 
     // A click on an empty spot leaves the focus on the body: Échap still goes back to the text.
-    await userEvent.keyboard(mod(','));
+    await userEvent.keyboard(mod('{Alt>},{/Alt}'));
     await screen.findByRole('listbox', { name: 'Sections des réglages' });
     (document.activeElement as HTMLElement).blur();
     expect(document.activeElement).toBe(document.body);
@@ -114,14 +114,17 @@ describe('contribution points of the core (phase 5.1)', () => {
     await screen.findByText('Aucun résultat');
     await userEvent.keyboard('{Escape}');
 
-    // No settings without a section: the shortcut does nothing, the menu does not offer them.
+    // Without it, ⌘, opens the app's settings, and nothing of the machine's.
     await waitFor(() => expect(document.activeElement).toBe(editor));
     await userEvent.keyboard(mod(','));
-    expect(screen.queryByRole('listbox', { name: 'Sections des réglages' })).toBeNull();
+    const rail = await screen.findByRole('listbox', { name: 'Sections des réglages' });
+    expect(rail.textContent).toContain('Apparence');
+    expect(rail.textContent).not.toContain('Sonde');
     const ids = lastMenu()?.menus.flatMap((m) =>
       m.entries.flatMap((e) => (e.kind === 'command' ? [e.id] : [])),
     );
-    expect(ids).not.toContain('openSettings');
+    expect(ids).toContain('openSettings');
+    expect(ids).not.toContain('probeSettings');
     expect(lastMenu()?.menus.map((m) => m.label)).not.toContain('Sonde');
   });
 });

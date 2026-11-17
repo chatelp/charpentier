@@ -210,7 +210,7 @@
     "syncSignOut": "Se déconnecter du serveur",
     "syncDevices": "Appareils connectés…",
     "adminPage": "Administrer le serveur…",
-    "openSettings": "Ouvrir les réglages",
+    "openSettings": "Réglages de l’app…",
     "checkStructure": "Vérifier la structure",
     "trackClues": "Suivre les indices",
     "characterReport": "Faire le point sur un personnage…",
@@ -254,7 +254,123 @@
   "settings": {
     "label": "Réglages",
     "title": "réglages",
-    "sectionsLabel": "Sections des réglages"
+    "sectionsLabel": "Sections des réglages",
+    "hint": "↑↓ choisir · ⏎ ouvrir · Échap revenir au texte"
+  },
+  "appSettings": {
+    "yes": "oui",
+    "no": "non",
+    "px": "{{value}} px",
+    "rem": "{{value}} rem",
+    "toSystem": "Réglages du système",
+    "toApp": "Réglages de l’app",
+    "sections": {
+      "appearance": "Apparence",
+      "writing": "Écriture",
+      "sounds": "Sons",
+      "compagnon": "Compagnon",
+      "sync": "Synchronisation",
+      "library": "Bibliothèque",
+      "about": "À propos"
+    },
+    "appearance": {
+      "intro": "Le thème, le mouvement, la page. Les mêmes réglages sont à portée de main dans la feuille Aa, en bas à droite.",
+      "theme": "Thème",
+      "themeHelp": "Système suit le réglage de l’appareil, clair le jour, sombre le soir.",
+      "motion": "Mouvement",
+      "motionHelp": "Les panneaux et les notes apparaissent sans glisser.",
+      "page": "La page",
+      "textSizeHelp": "De {{min}} à {{max}} px. {{keys}} partout, {{reset}} revient à {{initial}} px.",
+      "columnHelp": "Environ 66 signes par ligne, la mesure d’un livre."
+    },
+    "writing": {
+      "intro": "Ce que la page fait pendant que vous écrivez.",
+      "page": "La page",
+      "focusHelp": "Le paragraphe en cours reste net, le reste pâlit.",
+      "typewriter": "Défilement machine à écrire",
+      "typewriterHelp": "La ligne que vous écrivez reste à la même hauteur, la page monte.",
+      "atelier": "Atelier",
+      "rejected": "Afficher les rejets",
+      "rejectedHelp": "Les propositions que vous avez refusées restent visibles, barrées."
+    },
+    "sounds": {
+      "intro": "Des sons discrets, coupés par défaut, valables partout.",
+      "app": "Sons de l’app",
+      "listen": "Écouter",
+      "uiHelp": "Un déclic, un toc, un tic : quand vous validez, refusez, ouvrez.",
+      "typingHelp": "Une frappe légère à chaque touche, dans le texte seulement."
+    },
+    "compagnon": {
+      "intro": "Il lit par-dessus votre épaule avec votre propre clé : vous payez Anthropic directement, à l’usage.",
+      "key": "Clé d’API",
+      "keyLabel": "Clé Anthropic",
+      "keyHelp": "Gardée dans le trousseau de l’appareil ; elle ne part que vers Anthropic.",
+      "keySaved": "enregistrée",
+      "noKey": "aucune",
+      "enter": "Saisir…",
+      "change": "Changer…",
+      "forget": "Oublier",
+      "disabled": "indisponible dans cette version",
+      "models": "Modèles",
+      "light": "Remarques légères et grammaire",
+      "lightHelp": "Opus 5.5 partout par défaut. Haiku 5.5 coûte bien moins cher pour les remarques pendant l’écriture ; les analyses et la conversation restent sur Opus.",
+      "opus": "Opus 5.5",
+      "haiku": "Haiku 5.5",
+      "interview": "Entretien",
+      "interviewLabel": "Façon de mener l’entretien",
+      "interviewHelp": "Libre : vous parlez de ce que vous voulez. Dirigé : il suit les modules dans l’ordre.",
+      "free": "Libre",
+      "guided": "Dirigé"
+    },
+    "sync": {
+      "intro": "Vos romans, sur tous vos appareils, par votre serveur.",
+      "account": "Compte",
+      "none": "Pas de compte sur cet appareil",
+      "noneHelp": "Connectez-vous à votre serveur pour retrouver vos romans partout.",
+      "signIn": "Se connecter…",
+      "where": "sur {{server}} · {{state}}",
+      "state": {
+        "off": "déconnecté",
+        "connecting": "connexion…",
+        "synced": "à jour",
+        "syncing": "synchronisation…",
+        "offline": "hors ligne",
+        "unauthorized": "à reconnecter"
+      },
+      "short": {
+        "off": "non",
+        "connecting": "connexion…",
+        "synced": "à jour",
+        "syncing": "en cours",
+        "offline": "hors ligne",
+        "unauthorized": "à reconnecter"
+      },
+      "devices": "Appareils connectés",
+      "devicesHelp": "Ceux qui synchronisent avec votre compte ; vous pouvez en retirer un.",
+      "see": "Voir…",
+      "admin": "Administrer le serveur",
+      "adminHelp": "Comptes, appareils, sauvegardes : la page d’administration.",
+      "open": "Ouvrir…",
+      "leave": "Quitter",
+      "signOut": "Se déconnecter",
+      "signOutHelp": "Vos romans restent sur cet appareil ; ils ne se synchronisent plus."
+    },
+    "library": {
+      "intro": "Où vivent vos romans, et comment les retrouver.",
+      "folder": "Dossier",
+      "folderHelp": "Un dossier par roman, ses scènes en Markdown à côté.",
+      "change": "Changer…",
+      "reveal": "Afficher dans le Finder",
+      "all": "Tous vos romans",
+      "allHelp": "La bibliothèque : ouvrir, renommer, la corbeille.",
+      "novels_one": "{{count}} roman",
+      "novels_other": "{{count}} romans"
+    },
+    "about": {
+      "intro": "La version de l’app et le commit dont elle est construite.",
+      "version": "Version",
+      "help": "Une version de développement garde le numéro de la dernière release ; le commit dit laquelle c’est."
+    }
   },
   "navigator": {
     "label": "Plan du manuscrit",

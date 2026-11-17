@@ -25,6 +25,11 @@ export interface Platform {
   readonly library: LibraryService;
   /** The library's folder on disk; `null` where projects do not live in folders (web). */
   readonly libraryFolder: LibraryFolderService | null;
+  /**
+   * The app's version and the commit it was built from, for « À propos »
+   * (docs/PLAN.md phase 7.3); absent where the host does not know it.
+   */
+  readonly about?: { readonly version: string; readonly commit?: string } | null;
   readonly preferences: PreferencesService;
   readonly keybindings: KeybindingsService;
   readonly agents: AgentsService;

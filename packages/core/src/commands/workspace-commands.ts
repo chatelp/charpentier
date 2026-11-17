@@ -412,7 +412,8 @@ export function createWorkspaceRegistry(
     ...atelierCommands,
     ...languageCommands,
     ...syncCommands,
-    ...(features.some((f) => f.settings?.length) ? [openSettingsCommand] : []),
+    // The app's settings, everywhere (phase 7.3).
+    openSettingsCommand,
     ...features.flatMap((f) => f.commands ?? []),
   ])
     registry.register(command);

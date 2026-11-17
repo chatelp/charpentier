@@ -9,7 +9,11 @@ export const probeFeature: Feature = {
   id: 'probe',
   texts: {
     fr: {
-      commands: { probePing: 'Sonder la machine', probeOpenView: 'Ouvrir la vue de la sonde' },
+      commands: {
+        probePing: 'Sonder la machine',
+        probeOpenView: 'Ouvrir la vue de la sonde',
+        probeSettings: 'Réglages de la sonde',
+      },
       probe: {
         menu: 'Sonde',
         section: 'Sonde',
@@ -22,6 +26,13 @@ export const probeFeature: Feature = {
   commands: [
     { id: 'probePing', scope: 'global', run: (ctx) => ctx.notify('sonde : ping') },
     { id: 'probeOpenView', scope: 'global', run: (ctx) => ctx.openView('probe') },
+    // The machine's settings: their own view (D-36), apart from the app's.
+    {
+      id: 'probeSettings',
+      scope: 'global',
+      keybinding: 'Mod-Alt-,',
+      run: (ctx) => ctx.openSystemSettings(),
+    },
   ],
   menu: [{ menu: 'probe', label: 'probe.menu', items: ['probePing', '-', 'probeOpenView'] }],
   topZone: {

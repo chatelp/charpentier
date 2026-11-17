@@ -10,7 +10,8 @@ import type { WorkRef } from '@charpentier/schema';
 import type { WorkState } from '../work/use-background-work';
 import type { PrefsUpdate, WritingPrefs } from './writing-prefs';
 
-export type WorkspaceView = 'write' | 'atelier' | 'overview' | 'settings' | `view:${string}`;
+export type WorkspaceView =
+  'write' | 'atelier' | 'overview' | 'settings' | 'system-settings' | `view:${string}`;
 
 /** Everything a command may use. Rebuilt on every render of the workspace. */
 export interface WorkspaceContext {
@@ -66,8 +67,13 @@ export interface WorkspaceContext {
    */
   readonly view: WorkspaceView;
   openAtelier(location?: AtelierLocation): void;
-  /** The settings view, on a section; does nothing when no feature brings one. */
+  /** The app's settings (docs/DESIGN.md §4.8, phase 7.3), on a section. */
   openSettings(sectionId?: string): void;
+  /**
+   * The machine's settings, which a feature brings (the X250's, in the
+   * system's charter: D-36); does nothing without one.
+   */
+  openSystemSettings(sectionId?: string): void;
   /** A feature's full-frame view (docs/PLAN.md phase 5.1). */
   openView(viewId: string): void;
   /** Runs a command of the registry, a feature's included (false: unknown or disabled). */

@@ -72,6 +72,7 @@ import { isCovered } from '../features/cover';
 import { featureText } from '../features/feature';
 import { FeatureFooterItems, FeatureTopZones, useFeatures } from '../features/features-context';
 import { SettingsView } from '../features/SettingsView';
+import { appSettingsSections } from '../settings/app-settings';
 import './workspace.css';
 import { CloseButton } from '../icons/CloseButton';
 import { useBackgroundWork, workName } from '../work/use-background-work';
@@ -252,9 +253,15 @@ export function ProjectWorkspace({
 
   // What the features bring (docs/PLAN.md phase 5.1).
   const features = useFeatures();
-  const settingsSections = useMemo(() => features.flatMap((f) => f.settings ?? []), [features]);
+  // The machine's settings come from the features (the X250's); the app's are the core's (7.3).
+  const systemSections = useMemo(() => features.flatMap((f) => f.settings ?? []), [features]);
+  const appSections = useMemo(
+    () => appSettingsSections({ platform }, { systemAbout: systemSections.length > 0 }),
+    [platform, systemSections.length],
+  );
   const featureViews = useMemo(() => features.flatMap((f) => f.views ?? []), [features]);
   const [settingsSection, setSettingsSection] = useState<string>();
+  const [systemSection, setSystemSection] = useState<string>();
   const registry = useMemo(
     () =>
       createWorkspaceRegistry(
@@ -596,10 +603,16 @@ export function ProjectWorkspace({
     },
     openWriting: () => setView('write'),
     openSettings: (sectionId) => {
-      if (settingsSections.length === 0) return;
       if (sectionId) setSettingsSection(sectionId);
       setNavigatorOpen(false);
       setView('settings');
+      setAtelierFocus((n) => n + 1);
+    },
+    openSystemSettings: (sectionId) => {
+      if (systemSections.length === 0) return;
+      if (sectionId) setSystemSection(sectionId);
+      setNavigatorOpen(false);
+      setView('system-settings');
       setAtelierFocus((n) => n + 1);
     },
     openView: (viewId) => {
@@ -697,7 +710,7 @@ export function ProjectWorkspace({
   // Échap leaves the settings and the full-frame views wherever the focus is:
   // a click on an empty spot of the page leaves it on the body, out of their
   // own key handlers (found on the X250).
-  const fullFrame = view === 'settings' || view.startsWith('view:');
+  const fullFrame = view === 'settings' || view === 'system-settings' || view.startsWith('view:');
   useEffect(() => {
     if (!fullFrame || palette !== null || navigatorOpen) return;
     const onKeyDown = (event: KeyboardEvent) => {
@@ -1123,12 +1136,37 @@ export function ProjectWorkspace({
       {view === 'settings' && (
         <SettingsView
           ctx={ctx}
-          sections={settingsSections}
+          sections={appSections}
           section={settingsSection}
           active={palette === null && !navigatorOpen}
           focusRequest={atelierFocus}
           onSection={setSettingsSection}
           onClose={() => setView('write')}
+          // On the X250, the rail leads to the machine's settings (D-36).
+          {...(systemSections.length > 0 && {
+            other: {
+              label: t('appSettings.toSystem'),
+              shortcut: registry.shortcutLabel('systemSettings'),
+              open: () => ctx.openSystemSettings(),
+            },
+          })}
+        />
+      )}
+      {view === 'system-settings' && (
+        <SettingsView
+          ctx={ctx}
+          sections={systemSections}
+          section={systemSection}
+          look="feature"
+          active={palette === null && !navigatorOpen}
+          focusRequest={atelierFocus}
+          onSection={setSystemSection}
+          onClose={() => setView('write')}
+          other={{
+            label: t('appSettings.toApp'),
+            shortcut: registry.shortcutLabel('openSettings'),
+            open: () => ctx.openSettings(),
+          }}
         />
       )}
       {featureViews.map(

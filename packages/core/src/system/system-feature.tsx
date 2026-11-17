@@ -56,7 +56,7 @@ export function createSystemFeature({ modifier }: { readonly modifier: SystemMod
       id: 'systemSettings',
       scope: 'global',
       keybinding: key(','),
-      run: (ctx) => ctx.openSettings(),
+      run: (ctx) => ctx.openSystemSettings(),
     },
     {
       id: 'systemSleep',

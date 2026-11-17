@@ -119,6 +119,26 @@ export function playSound(sound: Sound): void {
   else tone(a, 'sine', [2600, 2600, 0], [0.11, 0.001, 0.025]);
 }
 
+/** « Écouter » in the settings: the sound itself, whether its option is on or not. */
+export function previewSound(sound: Sound | 'typing'): void {
+  const saved = enabled;
+  enabled = { ui: true, typing: true };
+  try {
+    if (sound !== 'typing') playSound(sound);
+    else
+      (['char', 'char', 'space', 'char', 'char', 'char'] as const).forEach((kind, i) =>
+        setTimeout(() => {
+          const before = enabled;
+          enabled = { ui: true, typing: true };
+          playKeySound(kind, performance.now() + i);
+          enabled = before;
+        }, i * 140),
+      );
+  } finally {
+    enabled = saved;
+  }
+}
+
 let lastKey = 0;
 
 /** The typing sound (its own option): at most one every 30 ms. */

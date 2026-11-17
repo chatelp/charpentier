@@ -1,0 +1,87 @@
+/* The app's settings page (docs/DESIGN.md §4.8 « Réglages de l'app », 1.22). */
+.ch-aset-group {
+  max-width: 44rem;
+  margin: 0 0 var(--ch-space-4);
+}
+
+.ch-aset-group-title {
+  margin: 0 0 4px;
+  color: var(--ch-muted);
+}
+
+.ch-aset-line {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--ch-shade);
+}
+
+/* What is chosen and named (the key, the account, the folder): a sunk line. */
+.ch-aset-line.is-sunk {
+  margin: 4px -12px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: var(--ch-radius-md);
+  background: var(--ch-bg);
+  box-shadow: var(--ch-inset);
+}
+
+.ch-aset-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.ch-aset-label {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--ch-ink);
+  font: 13.5px / 1.4 var(--ch-font-ui);
+}
+
+.ch-aset-help {
+  margin: 2px 0 0;
+  color: var(--ch-muted);
+  font: 12px / 1.45 var(--ch-font-ui);
+}
+
+.ch-aset-control {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+}
+
+.ch-aset-control .ch-btn {
+  padding: 4px 10px;
+}
+
+.ch-aset-choice {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.ch-aset-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ch-aset-number {
+  min-width: 4.2em;
+  text-align: center;
+  color: var(--ch-ink);
+  font: 16px var(--ch-font-text);
+}
+
+.ch-aset-value {
+  color: var(--ch-ink-2);
+  font: 12.5px var(--ch-font-ui);
+}
+
+/* Setting keys at the size of the page's lines (the « Aa » sheet keeps its smaller ones). */
+.ch-aset-choice .ch-btn,
+.ch-aset-control > .ch-btn {
+  padding: 5px 11px;
+  font-size: 13px;
+}

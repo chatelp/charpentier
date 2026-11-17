@@ -95,6 +95,7 @@ export function createDesktopPlatform(
       suggest: (word, language) => bridge.invoke({ type: 'spell.suggest', word, language }),
     },
     system: options.system ?? null,
+    about: bridge.about ?? null,
     // docs/DESIGN.md §4.1: a 34 px title bar merged with the background (none on a device).
     titleBarHeight: bridge.platform === 'darwin' && !appliance ? 34 : 0,
     // A device has no menu bar: the command zone stands in for it.

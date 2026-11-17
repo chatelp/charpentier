@@ -107,6 +107,8 @@ export function createWebPlatform(
   options: {
     readonly simulateSystem?: boolean | 'first-start' | 'update';
     readonly sync?: boolean;
+    /** The app's version and commit, given by the web app's build (« À propos »). */
+    readonly about?: { readonly version: string; readonly commit?: string };
   } = {},
 ): Platform {
   const system = options.simulateSystem
@@ -131,6 +133,7 @@ export function createWebPlatform(
   void sync?.start();
   return {
     host: 'web',
+    about: options.about ?? null,
     documents,
     library,
     libraryFolder: null,

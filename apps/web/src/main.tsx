@@ -33,6 +33,10 @@ createRoot(container).render(
         simulateSystem: x250,
         // Served by the author's server (its build): the account syncs with it (phase 4.7 a).
         sync: import.meta.env.PROD,
+        about: {
+          version: __CHARPENTIER_VERSION__,
+          ...(__CHARPENTIER_COMMIT__ && { commit: __CHARPENTIER_COMMIT__ }),
+        },
       })}
       i18n={i18n}
       features={features}

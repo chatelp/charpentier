@@ -137,7 +137,7 @@ export const systemPrefix: CommandPrefix = {
       case 'veille':
         return void sys.suspend();
       case 'reglages':
-        return ctx.openSettings();
+        return ctx.openSystemSettings();
       case 'moniteur':
         return ctx.openView(MONITOR_VIEW);
       case 'verrou':

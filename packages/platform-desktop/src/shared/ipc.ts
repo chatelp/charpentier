@@ -190,6 +190,8 @@ export interface DesktopBridge {
    * screen of a writing device, without title bar or menu bar.
    */
   readonly appliance?: boolean;
+  /** The app's version and the commit it was built from (« À propos », phase 7.3). */
+  readonly about?: { readonly version: string; readonly commit?: string };
   invoke<R extends Request>(request: R): Promise<Responses[R['type']]>;
   send(message: Message): void;
   /** Messages from the main process; returns an unsubscribe function. */

@@ -466,7 +466,12 @@ function createWindow() {
       : { titleBarStyle: 'hiddenInset' as const }),
     backgroundColor: '#e3e7ed',
     webPreferences: {
-      additionalArguments: [...(appliance ? ['--charpentier-appliance'] : [])],
+      additionalArguments: [
+        ...(appliance ? ['--charpentier-appliance'] : []),
+        // « À propos » in the app's settings (phase 7.3): the version and its commit.
+        `--charpentier-version=${app.getVersion()}`,
+        ...(builtFrom ? [`--charpentier-commit=${builtFrom}`] : []),
+      ],
       preload: path.join(import.meta.dirname, '../preload/index.cjs'),
       contextIsolation: true,
       sandbox: true,

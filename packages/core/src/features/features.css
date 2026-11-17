@@ -250,3 +250,40 @@
   color: var(--ch-faint);
   content: '·';
 }
+
+/* The app's settings (docs/DESIGN.md §4.8, phase 7.3): the sliders' medallion, the hint in the app's font. */
+.ch-settings-rail.ch-tool .ch-settings-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ch-settings-rail.ch-tool .ch-settings-hint {
+  font-family: var(--ch-font-ui);
+}
+
+/* The way to the other settings view (D-36), under an engraved rule. */
+.ch-settings-other {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: var(--ch-space-2) 0 0;
+  padding: var(--ch-space-3) 10px 0;
+  border: 0;
+  border-top: 1px solid var(--ch-shade);
+  background: transparent;
+  color: var(--ch-ink-2);
+  font: 12.5px var(--ch-font-ui);
+  text-align: left;
+  cursor: pointer;
+}
+
+.ch-settings-other kbd {
+  margin-left: auto;
+  color: var(--ch-faint);
+  font: inherit;
+}
+
+.ch-settings-rail.ch-system .ch-settings-other {
+  font-family: var(--ch-font-sys);
+}
