@@ -575,7 +575,7 @@
           line({ msg: '' }) +
           `<div class="sys full">
           <div class="rail">
-            <div class="t">${SQ}réglages du système</div>
+            <div class="t">${SQ}réglages du système<span style="margin-left:auto;color:var(--ch-faint)">⌫ tableau</span></div>
             <div style="padding-top:8px">
             ${row('réseau', 'maison')}${row('bluetooth', '1')}${row('écran', '100 %')}${row('son', '40')}${row('clavier', 'azerty')}
             <div class="row sel"><span>énergie</span>${lead()}<span>82 %</span></div>
@@ -584,7 +584,7 @@
             <div class="last">${row('réglages de l’app', '', { k: '⌘,' })}</div>
           </div>
           <div class="sec">
-            <div class="xclose">échap ×</div>
+            <div class="xclose">échap tableau ×</div>
             <div class="path">réglages du système /</div>
             <h1>énergie</h1>
             <div class="grp"><div class="gt">batteries</div>
@@ -614,7 +614,7 @@
               ${row('batterie à 3 %', 'hiberner')}
               <div class="help">veille : instantanée, la mémoire reste alimentée. hibernation : tout est écrit sur le disque chiffré et l’appareil s’éteint ; il reprend après le mot de passe du disque.</div>
             </div>
-            <div class="foot" style="border:0;padding:12px 0 0">↑↓ choisir · ←→ changer · ⏎ ouvrir · échap revenir au texte</div>
+            <div class="foot" style="border:0;padding:12px 0 0">↑↓ choisir · ←→ changer · ⏎ ouvrir · échap revenir au tableau</div>
           </div></div>`,
         terminal: () =>
           page() +
@@ -746,11 +746,11 @@
         apropos: () =>
           line({ msg: '' }) +
           `<div class="sys full">
-          <div class="rail"><div class="t">${SQ}réglages du système</div><div style="padding-top:8px">
+          <div class="rail"><div class="t">${SQ}réglages du système<span style="margin-left:auto;color:var(--ch-faint)">⌫ tableau</span></div><div style="padding-top:8px">
             ${row('réseau', 'maison')}${row('bluetooth', '1')}${row('écran', '100 %')}${row('son', '40')}${row('clavier', 'azerty')}${row('énergie', '82 %')}${row('verrouillage', 'au réveil')}${row('impression', 'brother')}${row('clé usb', '—')}${row('date et heure', 'paris')}${row('terminal', 'visible')}
             <div class="row sel"><span>à propos</span>${lead()}<span>0.1.1</span></div></div>
             <div class="last">${row('réglages de l’app', '', { k: '⌘,' })}</div></div>
-          <div class="sec"><div class="xclose">échap ×</div><div class="path">réglages du système /</div><h1>à propos</h1>
+          <div class="sec"><div class="xclose">échap tableau ×</div><div class="path">réglages du système /</div><h1>à propos</h1>
             <div class="grp"><div class="gt">charpentier</div>${row('version', '0.1.1 · installée le 14 nov. 2026')}${row('système', 'nixos 26.11 · génération 42')}${row('mise à jour', 'à jour · vérifiée à 14:05')}</div>
             <div class="grp"><div class="gt">carnet d’entretien</div>
               ${row('bat0 · interne', 'usure 12 % · 214 cycles · 23,1 Wh sur 26,3')}
@@ -766,7 +766,7 @@
               <div class="row sel"><span>réparer le système…</span>${lead()}<span>⏎</span></div>
               <div class="help" style="padding-left:0">vérifie chaque fichier du système et remplace ce qui est abîmé, depuis le serveur ; reconstruit le menu de démarrage. ne touche ni à vos projets, ni aux réseaux, au verrou, à la synchronisation, à la clé ou aux réglages.</div>
             </div>
-            <div class="foot" style="border:0;padding:12px 0 0">↑↓ choisir · ⏎ ouvrir · N note · échap revenir au texte</div>
+            <div class="foot" style="border:0;padding:12px 0 0">↑↓ choisir · ⏎ ouvrir · N note · échap revenir au tableau</div>
           </div></div>`,
         reparer: () =>
           line({ msg: 'réparation · 1 284 fichiers sur 3 902' }) +
