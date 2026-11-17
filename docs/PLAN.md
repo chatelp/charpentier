@@ -272,6 +272,24 @@ Trois étapes d'inactivité (atténuer, éteindre l'écran, mettre en veille), a
 ### 5.16 Le terminal intégré [D-40]
 Un terminal dans l'app, sous la ligne système, dans la charte du système : un module natif de pty (une première pour l'app : licence et empaquetage Nix à vérifier), ouvert par le menu système (« Terminal ⊞T »), `:terminal` et « Ouvrir un terminal ». Masqué et bloqué dès que l'app est verrouillée. La combinaison de secours (Ctrl+Alt+Shift+⏎, foot habillé dans la charte du système côté `charpentier-os`) et la console restent.
 **Vérifiable** : ⊞T ouvre un terminal sous la ligne, j'y lance une commande ; je ferme le rabat, à la réouverture le verrou cache le terminal.
+
+### 5.17 Les témoins : le point rouge et le son d'allumage [D-41]
+Le point rouge du capot (le point du « i » de ThinkPad) devient un témoin : fixe quand le X250 est allumé, pulsé en veille, clignotant lentement tant qu'un texte n'est pas synchronisé ; l'app le pilote selon l'état. Le son d'allumage : une cloche discrète jouée par l'app à la passation, en fin de démarrage, parmi les sons de l'interface, désactivée par défaut, qui respecte le volume et le muet. Côté `charpentier-os` : le droit d'écrire la LED (`tpacpi::lid_logo_dot`, à vérifier sur le X250).
+**Vérifiable** : j'écris hors ligne, le point du capot clignote ; la synchro faite, il redevient fixe ; en veille, il pulse.
+
+### 5.18 L'odomètre, la carte d'écriture et `:fetch` [D-41]
+Dans le moniteur : le total des frappes depuis l'installation, les mots par minute, une carte des heures d'écriture sur l'année en caractères de bloc ; tout est compté en local et ne quitte pas le X250. `:fetch` affiche la fiche de la machine façon neofetch, l'équerre en ASCII dans l'ambre du système : X250, processeur, NixOS, génération, temps allumé, mots écrits sur la machine.
+**Vérifiable** : après une séance, le moniteur montre mes frappes du jour sur la carte de l'année ; `:fetch` affiche la fiche avec l'équerre.
+
+### 5.19 Le carnet d'entretien et « Réparer le système… » [D-41]
+Dans Réglages du système › À propos : le carnet d'entretien (cycles et usure des deux batteries, santé SMART du disque, pics de température, notes à la main) et « Réparer le système… », avec son avancement : vérifier le système (`nix-store --verify --check-contents --repair`), retélécharger depuis le cache du serveur ce qui est abîmé ou manque, reconstruire le menu de démarrage ; projets, réseaux connus, code du verrou, synchro, clé du Compagnon et réglages restent. L'effacement complet reste hors de l'interface (clé USB, démarrage par le réseau). Côté `charpentier-os` : la lecture SMART (root : petit service ou règle polkit), le service de réparation et son droit polkit.
+**Vérifiable** : le carnet montre l'usure de mes deux batteries et la santé du disque ; « Réparer le système… » se termine sans que j'aie à ressaisir un mot de passe Wi-Fi ni ma clé.
+
+### 5.20 Relire sur le téléphone [D-41]
+Le X250 sert le manuscrit en lecture seule au téléphone, par le réseau où il est déjà connecté (pas de point d'accès créé pour l'occasion) : un panneau affiche un QR code avec un jeton, et le service ne vit que tant que le panneau est ouvert. Côté `charpentier-os` : ouvrir le port sur le réseau local pendant ce temps-là (aujourd'hui, le pare-feu ne l'ouvre que sur le réseau temporaire du premier démarrage).
+**Vérifiable** : je scanne le QR code, je relis mon chapitre sur le téléphone ; je ferme le panneau, la page ne répond plus.
+
+À trancher, sans phase pour l'instant : le démarrage « à la Mac » (D-41), demandé à la session de design (logo du fabricant gardé par BGRT, barre de progression Plymouth, passation sans couture vers l'app, variantes mise à jour, reprise, extinction ; piste OS : un démarrage plus rapide du BIOS). Il aura sa phase quand le storyboard sera là ; le son d'allumage (5.17) s'y rattachera.
 ---
 
 ## Étape 6 : l'entretien avec le Compagnon et les agents spécialisés [D-26, D-27]
