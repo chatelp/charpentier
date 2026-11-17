@@ -4,23 +4,22 @@ import { defineConfig } from 'electron-vite';
 
 /**
  * The commit the app is built from, shown beside its version (a development
- * build keeps the last release's number): given by Nix, which builds without
- * the repository's history (CHARPENTIER_COMMIT), else asked of git.
+ * build keeps the last release's number), « + » after it when the tree was
+ * modified. Asked of git; Nix builds without the history and gives it at
+ * launch instead (CHARPENTIER_COMMIT, read by the main process).
  */
 function commit(): string {
   const given = process.env['CHARPENTIER_COMMIT'];
-  if (given !== undefined) return given.slice(0, 7);
+  if (given !== undefined) return given;
   try {
-    return execFileSync('git', ['rev-parse', '--short=7', 'HEAD'], { encoding: 'utf8' }).trim();
+    const git = (...args: string[]) => execFileSync('git', args, { encoding: 'utf8' }).trim();
+    const head = git('rev-parse', '--short=7', 'HEAD');
+    return git('status', '--porcelain', '--untracked-files=no') ? `${head}-dirty` : head;
   } catch {
     return '';
   }
 }
 
-/**
- * Main and preload are bundled with everything they use (workspace packages
- * are TypeScript sources): the packaged app needs no node_modules.
- */
 export default defineConfig({
   main: {
     build: { externalizeDeps: false, target: 'node24' },

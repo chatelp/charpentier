@@ -117,6 +117,16 @@ function installedKeyboard(): 'azerty' | 'qwerty' | undefined {
 }
 
 /**
+ * The commit the app comes from, shown beside its version: given at launch
+ * by the X250's wrapper (CHARPENTIER_COMMIT: the app is built once whatever
+ * the commit), else built in. Short, « + » after it for a modified tree.
+ */
+const builtFrom = ((raw: string) =>
+  raw.endsWith('-dirty') ? `${raw.slice(0, 7)}+` : raw.slice(0, 7))(
+  process.env['CHARPENTIER_COMMIT'] || __CHARPENTIER_COMMIT__,
+);
+
+/**
  * The device's system (docs/PLAN.md phase 5.4): the X250's on Linux as a
  * device, a simulated one on request, none otherwise.
  */
@@ -126,7 +136,7 @@ function deviceSystem(): (SystemService & { dispose?(): void }) | null {
   const linux = createLinuxSystem({
     tools: nodeTools(),
     appVersion: app.getVersion(),
-    ...(__CHARPENTIER_COMMIT__ && { commit: __CHARPENTIER_COMMIT__ }),
+    ...(builtFrom && { commit: builtFrom }),
     hostname: os.hostname(),
     settingsFile: path.join(app.getPath('userData'), 'system.json'),
     // The keyboard chosen at installation (charpentier-os, hosts/x250).
@@ -510,11 +520,8 @@ function secretsWithoutKeychain() {
 
 void app.whenReady().then(() => {
   // « À propos de Charpentier » on the Mac: the version, then the commit it was built from.
-  if (__CHARPENTIER_COMMIT__)
-    app.setAboutPanelOptions({
-      applicationVersion: app.getVersion(),
-      version: __CHARPENTIER_COMMIT__,
-    });
+  if (builtFrom)
+    app.setAboutPanelOptions({ applicationVersion: app.getVersion(), version: builtFrom });
   secretsWithoutKeychain();
   // Once the secrets can be read (without a keychain, in clear on the device).
   shareAccountWithUpdates();

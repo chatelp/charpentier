@@ -13,8 +13,6 @@
   makeWrapper,
   makeDesktopItem,
   copyDesktopItems,
-  # The commit the app is built from (the flake's shortRev), shown beside its version.
-  commit ? "",
 }:
 let
   root = ../.;
@@ -68,8 +66,9 @@ stdenv.mkDerivation (finalAttrs: {
   env = {
     ELECTRON_SKIP_BINARY_DOWNLOAD = "1";
     PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1";
-    # The build has no git history: the version's commit comes from the flake.
-    CHARPENTIER_COMMIT = commit;
+    # The version's commit is not built in (a documentation commit would rebuild the app):
+    # the flake's wrapper gives it at launch (CHARPENTIER_COMMIT, read by the main process).
+    CHARPENTIER_COMMIT = "";
   };
 
   buildPhase = ''
