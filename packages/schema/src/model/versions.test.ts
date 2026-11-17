@@ -12,6 +12,8 @@ import {
   setActiveVariant,
 } from './manuscript';
 import { initProject } from './project';
+import { addSignal, listVersionSignals } from './signals';
+import { SYSTEM } from './origins';
 import {
   activeVersionId,
   createVersion,
@@ -182,5 +184,38 @@ describe('working versions (DESIGN 1.20)', () => {
     Y.applyUpdate(b, Y.encodeStateAsUpdate(a));
     expect(activeVersionId(b)).toBe(onA);
     expect(active(b, scenes[0])).toBe('v-a');
+  });
+
+  it('shows a remark only in the versions that read its variant', () => {
+    const { doc, scenes } = novel();
+    const anchor = (variantId: string) => ({
+      sceneId: scenes[2],
+      variantId,
+      start: {},
+      end: {},
+    });
+    const principal = active(doc, scenes[2]) ?? '';
+    addSignal(
+      doc,
+      { kind: 'craft', author: 'agent:analysis', message: 'Avant', textAnchor: anchor(principal) },
+      SYSTEM,
+    );
+    // One version: every remark, as before.
+    expect(listVersionSignals(doc)).toHaveLength(1);
+    createVersion(doc, 'Fin à Nantes');
+    addVariantMeta(doc, scenes[2], {
+      variantId: 'v-n',
+      name: 'N',
+      origin: 'author',
+      activate: true,
+    });
+    addSignal(
+      doc,
+      { kind: 'craft', author: 'agent:analysis', message: 'Après', textAnchor: anchor('v-n') },
+      SYSTEM,
+    );
+    expect(listVersionSignals(doc).map((s) => s.message)).toEqual(['Après']);
+    switchVersion(doc, MAIN_VERSION);
+    expect(listVersionSignals(doc).map((s) => s.message)).toEqual(['Avant']);
   });
 });

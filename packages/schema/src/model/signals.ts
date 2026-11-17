@@ -1,7 +1,9 @@
 import * as Y from 'yjs';
 import { names, newId, nowIso } from './ids';
 import { readFieldRef, type FieldRef } from './modules';
+import { listVersionScenes } from './manuscript';
 import { AUTHOR, type Origin } from './origins';
+import { listVersions } from './versions';
 
 /**
  * Mentor signals (docs/SPEC.md §15.3), in the root document's top-level map
@@ -70,6 +72,20 @@ export function listSignals(
 }
 
 /** Low-level creation, used by AgentWriter and by the host (e.g. external edits). */
+/**
+ * The signals the active working version shows (DESIGN 1.20): one anchored
+ * in a variant only where that variant is read, none of a scene out of the
+ * version. With a single version, all of them.
+ */
+export function listVersionSignals(doc: Y.Doc, filter: { state?: SignalState } = {}): Signal[] {
+  const all = listSignals(doc, filter);
+  if (listVersions(doc).length < 2) return all;
+  const read = new Map(listVersionScenes(doc).map((s) => [s.id, s.activeVariantId]));
+  return all.filter(
+    (s) => !s.textAnchor || read.get(s.textAnchor.sceneId) === s.textAnchor.variantId,
+  );
+}
+
 export function addSignal(doc: Y.Doc, input: NewSignal, origin: Origin): string {
   const id = newId();
   doc.transact(() => {

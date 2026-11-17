@@ -1,4 +1,4 @@
-import { listSignals, type Signal } from '@charpentier/schema';
+import { listVersionSignals, type Signal } from '@charpentier/schema';
 import type { Editor } from '@tiptap/core';
 import {
   useCallback,
@@ -13,7 +13,8 @@ import type * as Y from 'yjs';
 import { useDocSnapshot } from '../hooks/use-doc-snapshot';
 import { placedSignals, signalAtCursor, type SignalDecorationsOptions } from './signal-decorations';
 
-const readOpenSignals = (doc: Y.Doc) => listSignals(doc, { state: 'open' });
+/** The open remarks the active working version shows (DESIGN 1.20). */
+const readOpenSignals = (doc: Y.Doc) => listVersionSignals(doc, { state: 'open' });
 
 export interface OpenNote {
   readonly id: string;
