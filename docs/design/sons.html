@@ -268,6 +268,85 @@
           <textarea rows="3" placeholder="Tapez ici pour essayer le son de frappe…"></textarea>
         </div>
       </section>
+
+      <h1 style="margin-top: 48px">Sons du système (X250)</h1>
+      <p class="lead">
+        Deux sons de la machine, et non de l’app. Comme les autres, ils suivent un geste de l’auteur
+        et passent par le volume du système.
+      </p>
+
+      <section class="snd">
+        <button data-play="volume">Volume<small>repère de niveau</small></button>
+        <div class="r">
+          <h2>Volume : une goutte au niveau choisi</h2>
+          <p>
+            Comme sur macOS : à chaque cran, une goutte brève, jouée au nouveau volume, pour
+            entendre le niveau sans regarder. Ronde et courte, plus grave que le déclic.
+          </p>
+          <table>
+            <tr>
+              <th>Voix 1</th>
+              <td>
+                sinus, 880 → 660 Hz (rampe exponentielle sur 30 ms) ; attaque 2 ms jusqu’à 0,12 ;
+                chute exponentielle à 80 ms
+              </td>
+            </tr>
+            <tr>
+              <th>Voix 2</th>
+              <td>sinus 1 760 Hz ; attaque 2 ms jusqu’à 0,03 ; chute exponentielle à 40 ms</td>
+            </tr>
+            <tr>
+              <th>Durée</th>
+              <td>80 ms</td>
+            </tr>
+            <tr>
+              <th>Quand</th>
+              <td>
+                Touches de volume du ThinkPad, curseur du segment <code>vol</code>,
+                <code>:vol 40</code>. Au plus une goutte toutes les 120 ms quand la touche reste
+                enfoncée ; rien en coupant le son ; une goutte en le rétablissant. Jouée
+                <em>après</em> le changement, donc au nouveau niveau.
+              </td>
+            </tr>
+          </table>
+        </div>
+      </section>
+
+      <section class="snd">
+        <button data-play="cloche">Cloche<small>fin du démarrage</small></button>
+        <div class="r">
+          <h2>Cloche : la marge de la machine à écrire</h2>
+          <p>
+            Le « ding » de fin de ligne d’une machine à écrire : un petit marteau sur un timbre, des
+            partiels inharmoniques qui s’éteignent l’un après l’autre. Une fois, quand la barre de
+            démarrage est pleine.
+          </p>
+          <table>
+            <tr>
+              <th>Marteau</th>
+              <td>bruit blanc de 8 ms, passe-bande 4 000 Hz, Q 1,5 ; gain 0,02</td>
+            </tr>
+            <tr>
+              <th>Timbre</th>
+              <td>
+                trois sinus, attaque 1 ms : 2 093 Hz à 0,05, chute exponentielle à 1,2 s ; 5 777 Hz
+                (× 2,76) à 0,015, chute à 0,5 s ; 11 302 Hz (× 5,4) à 0,006, chute à 0,2 s
+              </td>
+            </tr>
+            <tr>
+              <th>Durée</th>
+              <td>1,2 s, le seul son long</td>
+            </tr>
+            <tr>
+              <th>Quand</th>
+              <td>
+                Une fois, quand la barre de démarrage est pleine, avant le rideau. Désactivée par
+                défaut (Réglages de l’app › Sons › Son d’allumage).
+              </td>
+            </tr>
+          </table>
+        </div>
+      </section>
     </main>
 
     <script>
@@ -328,6 +407,16 @@
           const space = kind === 'space';
           noise(space ? 18 : 12, jitter(space ? 1400 : 2200, 0.15), 0.8, jitter(0.025, 0.2));
           tone('sine', 180, 180, 0, 0.02, 0.001, 0.02);
+        },
+        volume() {
+          tone('sine', 880, 660, 0.03, 0.12, 0.002, 0.08);
+          tone('sine', 1760, 1760, 0, 0.03, 0.002, 0.04);
+        },
+        cloche() {
+          noise(8, 4000, 1.5, 0.02);
+          tone('sine', 2093, 2093, 0, 0.05, 0.001, 1.2);
+          tone('sine', 5777, 5777, 0, 0.015, 0.001, 0.5);
+          tone('sine', 11302, 11302, 0, 0.006, 0.001, 0.2);
         },
         frappe() {
           'Le dégel'
