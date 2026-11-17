@@ -1,4 +1,5 @@
 import {
+  activeVersionId,
   checkpointText,
   createCheckpoint,
   createVariant,
@@ -6,6 +7,7 @@ import {
   getScene,
   listCheckpoints,
   listTrashedVariants,
+  MAIN_VERSION,
   renameVariant,
   restoreCheckpoint,
   restoreVariant,
@@ -17,13 +19,22 @@ import {
 import type { WorkspaceContext } from '../workspace/workspace-context';
 import type { CommandId } from './command-id';
 import type { Command } from './registry';
+import { activeVersionLabel } from './version-commands';
 
 type Ctx = WorkspaceContext;
 
-/** Name shown for a variant: its own, or « Version n » by order of creation. */
+/**
+ * Name shown for a variant: its own, or « Variante n » by order of creation.
+ * The old default « Version n » reads « Variante n » (DESIGN 1.20: « version »
+ * now names the novel's working versions); a name the author chose never
+ * changes.
+ */
 export function variantLabel(t: Ctx['t'], scene: SceneInfo, variantId: string): string {
   const index = scene.variants.findIndex((v) => v.id === variantId);
-  return scene.variants[index]?.name || t('variants.defaultName', { n: index + 1 });
+  const name = scene.variants[index]?.name ?? '';
+  const old = /^Version (\d+)$/.exec(name);
+  if (old) return t('variants.defaultName', { n: Number(old[1]) });
+  return name || t('variants.defaultName', { n: index + 1 });
 }
 
 /** « Aujourd’hui, 14:32 », or the date; with the seconds to tell apart two points of the same minute. */
@@ -88,8 +99,12 @@ function promptRenameVariant(ctx: Ctx, variantId: string): void {
 function newVariant(ctx: Ctx, copy: boolean): void {
   const current = scene(ctx);
   if (!current || !ctx.sceneDocs) return;
+  // In a working version, the variant takes the version's name (DESIGN 1.20).
+  const inVersion = activeVersionId(ctx.root) !== MAIN_VERSION;
   const variantId = createVariant(ctx.root, ctx.sceneDocs.sceneDoc, current.id, {
-    name: ctx.t('variants.defaultName', { n: current.variants.length + 1 }),
+    name: inVersion
+      ? activeVersionLabel(ctx)
+      : ctx.t('variants.defaultName', { n: current.variants.length + 1 }),
     ...(copy && { copyOf: current.activeVariantId }),
     activate: true,
   });

@@ -3,10 +3,13 @@ import {
   createChapter,
   createScene,
   getScene,
-  listAllScenes,
   listChapters,
+  listVersionScenes,
+  readOutline,
   listScenes,
   listTrash,
+  listTrashedVersions,
+  restoreVersion,
   readProjectMeta,
   moveChapterStep,
   moveScene,
@@ -23,6 +26,7 @@ import { ensureScene, renameProjectEverywhere } from '../workspace/default-scene
 import type { CommandId } from './command-id';
 import type { PrimaryModifier } from './keybinding';
 import { trashedVariantItems, variantCommands } from './variant-commands';
+import { versionCommands } from './version-commands';
 import { writingCommands } from './writing-commands';
 import { atelierCommands } from './atelier-commands';
 import { languageCommands } from './language-commands';
@@ -38,7 +42,7 @@ const currentScene = (ctx: WorkspaceContext) => getScene(ctx.root, ctx.sceneId);
 
 /** Opens the scene that follows (or precedes) `sceneId`, before it disappears. */
 function neighbourOf(ctx: WorkspaceContext, sceneIds: ReadonlySet<string>): string | undefined {
-  const all = listAllScenes(ctx.root);
+  const all = listVersionScenes(ctx.root);
   const index = all.findIndex((s) => sceneIds.has(s.id));
   const after = all.slice(index + 1).find((s) => !sceneIds.has(s.id));
   const before = all
@@ -189,7 +193,7 @@ export const workspaceCommands: readonly WorkspaceCommand[] = [
     scope: 'global',
     keybinding: 'Mod-Alt-ArrowDown',
     run: (ctx) => {
-      const all = listAllScenes(ctx.root);
+      const all = listVersionScenes(ctx.root);
       const next = all[all.findIndex((s) => s.id === ctx.sceneId) + 1];
       if (next) ctx.openScene(next.id);
     },
@@ -199,7 +203,7 @@ export const workspaceCommands: readonly WorkspaceCommand[] = [
     scope: 'global',
     keybinding: 'Mod-Alt-ArrowUp',
     run: (ctx) => {
-      const all = listAllScenes(ctx.root);
+      const all = listVersionScenes(ctx.root);
       const previous = all[all.findIndex((s) => s.id === ctx.sceneId) - 1];
       if (previous) ctx.openScene(previous.id);
     },
@@ -212,7 +216,9 @@ export const workspaceCommands: readonly WorkspaceCommand[] = [
     run: (ctx) => {
       const scene = currentScene(ctx);
       if (!scene) return;
-      const index = listScenes(ctx.root, scene.chapterId).findIndex((s) => s.id === scene.id);
+      // Indexes among what the version shows (other versions' scenes may sit in between).
+      const shown = readOutline(ctx.root).find((c) => c.id === scene.chapterId)?.scenes ?? [];
+      const index = shown.findIndex((s) => s.id === scene.id);
       newSceneAfter(ctx, scene.chapterId, index + 1);
     },
   },
@@ -222,7 +228,7 @@ export const workspaceCommands: readonly WorkspaceCommand[] = [
     keybinding: 'Mod-Alt-Shift-n',
     run: (ctx) => {
       const scene = currentScene(ctx);
-      const index = listChapters(ctx.root).findIndex((c) => c.id === scene?.chapterId);
+      const index = readOutline(ctx.root).findIndex((c) => c.id === scene?.chapterId);
       newChapterAt(ctx, index + 1);
     },
   },
@@ -257,7 +263,7 @@ export const workspaceCommands: readonly WorkspaceCommand[] = [
       ctx.openPalette({
         kind: 'pick',
         placeholder: ctx.t('palette.pickChapter'),
-        items: listChapters(ctx.root)
+        items: readOutline(ctx.root)
           .filter((c) => c.id !== scene.chapterId)
           .map((c) => ({ id: c.id, label: c.title })),
         onPick: (chapterId) =>
@@ -320,6 +326,12 @@ export const workspaceCommands: readonly WorkspaceCommand[] = [
             label: c.title,
             detail: ctx.t('palette.trashedChapter'),
           })),
+          // A working version comes back with its own scenes and variants (DESIGN 1.20).
+          ...listTrashedVersions(ctx.root).map((v) => ({
+            id: `version:${v.id}`,
+            label: v.name,
+            detail: ctx.t('palette.trashedVersion'),
+          })),
         ],
         onPick: (key) => {
           const [kind, id = ''] = key.split(/:(.*)/s);
@@ -327,6 +339,8 @@ export const workspaceCommands: readonly WorkspaceCommand[] = [
             variants.find((v) => v.id === key)?.restore();
           } else if (kind === 'entity') {
             entities.find((e) => e.id === key)?.restore();
+          } else if (kind === 'version') {
+            restoreVersion(ctx.root, id);
           } else if (kind === 'scene') {
             restoreSceneWithChapter(ctx.root, id);
             ctx.openScene(id);
@@ -393,6 +407,7 @@ export function createWorkspaceRegistry(
   for (const command of [
     ...workspaceCommands,
     ...variantCommands,
+    ...versionCommands,
     ...writingCommands,
     ...atelierCommands,
     ...languageCommands,

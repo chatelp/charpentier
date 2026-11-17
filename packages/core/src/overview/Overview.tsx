@@ -1,4 +1,7 @@
 import {
+  activeVersionId,
+  MAIN_VERSION,
+  sceneIsCommon,
   checkpointText,
   createVariantFromCheckpoint,
   fragmentPlainText,
@@ -25,6 +28,7 @@ import './overview.css';
 import { CloseButton } from '../icons/CloseButton';
 import { renameProjectEverywhere } from '../workspace/default-scene';
 import '../workspace/novel.css';
+import { useActiveVersionName } from '../workspace/NovelTitle';
 
 const readCheckpoints = (doc: Y.Doc) => listCheckpoints(doc);
 /** Restore points shown in the strip; the others through « Tous (N)… ». */
@@ -67,6 +71,9 @@ export function Overview({ ctx, active, onOpen, onClose }: OverviewProps) {
 
   const total = [...words.values()].reduce((a, b) => a + b, 0);
   const title = useDocSnapshot(ctx.root, readProjectMeta)?.title ?? '';
+  // Working versions (DESIGN 1.20): the active one under the title, and on its own scenes.
+  const versionName = useActiveVersionName(ctx.root);
+  const activeVersion = activeVersionId(ctx.root);
   // The title renamed in place (docs/DESIGN.md §4.8, 1.19): R, or « Renommer ».
   const [renaming, setRenaming] = useState(false);
   useEffect(() => {
@@ -239,6 +246,7 @@ export function Overview({ ctx, active, onOpen, onClose }: OverviewProps) {
       </h2>
       <p className="ch-overview-sub">
         {[
+          ...(versionName ? [t('versions.stats', { version: versionName })] : []),
           t('overview.chapters', { count: outline.length }),
           t('overview.scenes', { count: all.length }),
           t('overview.words', { count: total, formatted: number.format(total) }),
@@ -275,7 +283,14 @@ export function Overview({ ctx, active, onOpen, onClose }: OverviewProps) {
                 onDoubleClick={() => onOpen(scene.id)}
               >
                 <div className="ch-card-n">{numbers.get(scene.id)}</div>
-                <div className="ch-card-t">{scene.title}</div>
+                <div className="ch-card-t">
+                  {scene.title}
+                  {versionName &&
+                    activeVersion !== MAIN_VERSION &&
+                    !sceneIsCommon(ctx.root, scene.id, activeVersion) && (
+                      <span className="ch-card-version">{versionName}</span>
+                    )}
+                </div>
                 <div className="ch-card-m">
                   <span>
                     {words.has(scene.id)

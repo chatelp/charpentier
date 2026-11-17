@@ -58,8 +58,8 @@ describe('variants and restore points, keyboard only', () => {
     await replaceText('Il pleuvait.');
 
     await userEvent.keyboard('{ControlOrMeta>}{Alt>}v{/Alt}{/ControlOrMeta}'); // change variant…
-    await userEvent.keyboard('version 1{Enter}');
-    await waitFor(() => expect(document.title).toBe('Mon roman — Scène 1 (Version 1)'));
+    await userEvent.keyboard('variante 1{Enter}');
+    await waitFor(() => expect(document.title).toBe('Mon roman — Scène 1 (Variante 1)'));
     expect(editorText()).toBe('Il faisait beau.');
 
     await command('changer de variante');

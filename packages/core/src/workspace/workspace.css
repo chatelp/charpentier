@@ -225,3 +225,18 @@
   cursor: pointer;
   pointer-events: auto;
 }
+
+/* The version in the header (docs/DESIGN.md §4.4, 1.20): the version's own variant in vermilion
+   small caps; a common scene says so in the faint ink, so that a change is known to go everywhere. */
+.ch-crumb.is-version {
+  font: 500 12px / 1 var(--ch-font-text);
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.06em;
+  color: var(--ch-author);
+  opacity: 0.8;
+}
+
+.ch-crumb.is-version.is-common {
+  color: var(--ch-faint);
+  opacity: 1;
+}

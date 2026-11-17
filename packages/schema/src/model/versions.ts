@@ -160,6 +160,14 @@ export function sceneIsCommon(doc: Y.Doc, sceneId: string, versionId: string): b
   return versionVariant(doc, sceneId, versionId) === versionVariant(doc, sceneId, MAIN_VERSION);
 }
 
+/** How many versions share this scene's text (Principale's variant): writing in it writes for them all. */
+export function versionsSharingScene(doc: Y.Doc, sceneId: string): number {
+  const main = versionVariant(doc, sceneId, MAIN_VERSION);
+  return listVersions(doc).filter(
+    (v) => sceneInVersion(doc, sceneId, v.id) && versionVariant(doc, sceneId, v.id) === main,
+  ).length;
+}
+
 /** Scenes that read a variant of their own in this version (« 3 scènes à elle »). */
 export function versionOwnScenes(doc: Y.Doc, versionId: string): number {
   if (versionId === MAIN_VERSION) return 0;

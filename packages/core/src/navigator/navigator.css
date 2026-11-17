@@ -163,3 +163,38 @@
   margin-right: 6px;
   color: var(--ch-faint);
 }
+
+/* Working versions (docs/DESIGN.md §4.4, 1.20). */
+.ch-nav-own {
+  margin-left: 6px;
+  color: var(--ch-author);
+  font: italic 11px var(--ch-font-text);
+  opacity: 0.85;
+}
+
+.ch-nav-out {
+  margin: 10px 14px 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--ch-shade);
+  color: var(--ch-muted);
+  font: 11.5px var(--ch-font-ui);
+}
+
+.ch-nav-out p {
+  margin: 0 0 4px;
+}
+
+.ch-nav-out .ch-link {
+  color: var(--ch-ink-2);
+  font: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--ch-faint);
+}
+
+/* The scenes out of the version, shown on demand, in the faint ink. */
+.ch-nav-out-scene {
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  color: var(--ch-faint);
+}

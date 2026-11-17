@@ -4,8 +4,11 @@ import {
   listEntities,
   listWorkRecords,
   readMentorLevel,
+  MAIN_VERSION,
   readProjectMeta,
   readOutline,
+  sceneIsCommon,
+  versionsSharingScene,
   workKey,
 } from '@charpentier/schema';
 import type * as Y from 'yjs';
@@ -55,7 +58,8 @@ import { lastScenePref, type ProjectSession } from './default-scene';
 import { panelsPref, readPanels, type StoredPanels } from './panels-pref';
 import { projectStatsPref } from '../library/project-stats';
 import { CommandZone, DisplaySheet, EdgeHandle, ModeSwitch } from './EntryPoints';
-import { NovelButton, NovelSheet } from './NovelTitle';
+import { NovelButton, NovelSheet, readVersionsView, useActiveVersionName } from './NovelTitle';
+import { sceneInActiveVersion, spaced } from '../commands/version-commands';
 import { GuidedTour, WELCOMED_PREF, WelcomeNote } from './Onboarding';
 import { SceneHeader, SceneOpener, WritingFooter } from './SceneChrome';
 import { useSceneDocs } from './use-scene-docs';
@@ -131,7 +135,7 @@ export function ProjectWorkspace({
   const [palette, setPalette] = useState<{ key: number; request: PaletteRequest } | null>(null);
   const [navigatorOpen, setNavigatorOpen] = useState(false);
   // The novel's sheet (docs/DESIGN.md §4.8, 1.19): open, and on its title field or not.
-  const [novel, setNovel] = useState<{ renaming: boolean } | null>(null);
+  const [novel, setNovel] = useState<{ mode: 'sheet' | 'renaming' | 'version' } | null>(null);
   const [view, setView] = useState<WorkspaceContext['view']>('write');
   const [atelierLocation, setAtelierLocation] = useState<AtelierLocation>({ rail: 'meta' });
   const [atelierFocus, setAtelierFocus] = useState(0);
@@ -265,7 +269,13 @@ export function ProjectWorkspace({
   const languageOn = mentorLevel > 1;
   const scenes = outline.flatMap((c) => c.scenes);
   // The requested scene may vanish (trashed on another device): fall back to the first one.
-  const scene = scenes.find((s) => s.id === requestedSceneId) ?? scenes[0];
+  // Out of the version (another device switched it, DESIGN 1.20): the nearest scene before it.
+  const scene =
+    scenes.find((s) => s.id === requestedSceneId) ??
+    scenes.find((s) => s.id === sceneInActiveVersion({ root }, requestedSceneId)) ??
+    scenes[0];
+  const versionsView = useDocSnapshot(root, readVersionsView);
+  const versionName = useActiveVersionName(root);
   const sceneId = scene?.id ?? requestedSceneId;
   const chapterIndex = outline.findIndex((c) => c.scenes.some((s) => s.id === sceneId));
   const chapter = outline[chapterIndex];
@@ -524,6 +534,30 @@ export function ProjectWorkspace({
 
   const notify = (text: string) => setStatus({ key: ++paletteSequence, text });
 
+  // The first time the author writes in a common scene outside Principale, a line says it goes
+  // for every version that shares it (DESIGN 1.20), once per scene.
+  const toldCommon = useRef(new Set<string>());
+  useEffect(() => {
+    if (!editor || versionsView.active === MAIN_VERSION) return;
+    const onUpdate = ({ transaction }: { transaction: { docChanged: boolean } }) => {
+      if (!transaction.docChanged || toldCommon.current.has(sceneId)) return;
+      if (!sceneIsCommon(root, sceneId, versionsView.active)) return;
+      toldCommon.current.add(sceneId);
+      const count = versionsSharingScene(root, sceneId);
+      setStatus({
+        key: ++paletteSequence,
+        text: t(count === 2 ? 'versions.firstTypingTwo' : 'versions.firstTypingMany', {
+          count,
+          shortcut: spaced(registry.shortcutLabel('newVariant')),
+        }),
+      });
+    };
+    editor.on('update', onUpdate);
+    return () => {
+      editor.off('update', onUpdate);
+    };
+  }, [editor, versionsView.active, sceneId, root, t, registry]);
+
   const openScene = useCallback(
     (id: string) => {
       setRequestedSceneId(id);
@@ -571,10 +605,10 @@ export function ProjectWorkspace({
       if (id !== projectId) onOpenProject?.(id);
     },
     novelOpen: novel !== null,
-    toggleNovel: (renaming = false) => {
-      playSound(novel && !renaming ? 'toc' : 'tic');
+    toggleNovel: (mode) => {
+      playSound(novel && !mode ? 'toc' : 'tic');
       setNavigatorOpen(false);
-      setNovel(novel && !renaming ? null : { renaming });
+      setNovel(novel && !mode ? null : { mode: mode ?? 'sheet' });
     },
     openOverview: () => {
       setNavigatorOpen(false);
@@ -903,9 +937,9 @@ export function ProjectWorkspace({
         : view === 'write' && !navigatorOpen && <NovelButton ctx={ctx} />}
       {novel && (
         <NovelSheet
-          key={novel.renaming ? 'renaming' : 'sheet'}
+          key={novel.mode}
           ctx={ctx}
-          renaming={novel.renaming}
+          mode={novel.mode}
           onClose={(backToText) => {
             playSound('toc');
             setNovel(null);
@@ -946,6 +980,11 @@ export function ProjectWorkspace({
           chapter={chapter}
           chapterIndex={chapterIndex}
           scene={scene}
+          version={
+            scene && versionName && versionsView.active !== MAIN_VERSION
+              ? { name: versionName, common: sceneIsCommon(root, scene.id, versionsView.active) }
+              : undefined
+          }
           onOutline={() => setNavigatorOpen(true)}
           onVariants={() => void registry.execute('switchVariant', ctx)}
         />

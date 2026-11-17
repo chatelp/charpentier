@@ -1,5 +1,9 @@
 import {
-  listChapters,
+  activeVersionId,
+  listScenesOutOfVersion,
+  MAIN_VERSION,
+  sceneIsCommon,
+  setSceneInVersion,
   moveChapter,
   moveChapterStep,
   moveScene,
@@ -14,6 +18,7 @@ import { Fragment, useEffect, useRef, useState, type DragEvent, type KeyboardEve
 import { formatCheckpointDate, variantLabel } from '../commands/variant-commands';
 import { useDocSnapshot } from '../hooks/use-doc-snapshot';
 import { variantLetter } from '../workspace/SceneChrome';
+import { useActiveVersionName } from '../workspace/NovelTitle';
 import { toRoman } from '../workspace/roman';
 
 import { useTranslation } from 'react-i18next';
@@ -82,6 +87,11 @@ export function Navigator({ ctx, outline, active, onClose, signals }: NavigatorP
   const [focusTick, setFocusTick] = useState(0);
   const [dragged, setDragged] = useState<Item | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
+  // Working versions (DESIGN 1.20): the version's own scenes say so; the others wait below.
+  const versionName = useActiveVersionName(ctx.root);
+  const activeVersion = activeVersionId(ctx.root);
+  const outOfVersion = versionName ? listScenesOutOfVersion(ctx.root) : [];
+  const [showOut, setShowOut] = useState(false);
   const elements = useRef(new Map<string, HTMLLIElement>());
 
   const focused =
@@ -204,7 +214,7 @@ export function Navigator({ ctx, outline, active, onClose, signals }: NavigatorP
       moveScene(ctx.root, dragged.id, { chapterId, index });
     } else {
       const chapterId = target.kind === 'chapter' ? target.id : target.chapterId;
-      const others = listChapters(ctx.root).filter((c) => c.id !== dragged.id);
+      const others = outline.filter((c) => c.id !== dragged.id);
       moveChapter(
         ctx.root,
         dragged.id,
@@ -252,6 +262,12 @@ export function Navigator({ ctx, outline, active, onClose, signals }: NavigatorP
             >
               {readProjectMeta(ctx.root)?.title}
             </button>
+            {versionName && (
+              <>
+                {' · '}
+                <i>{versionName}</i>
+              </>
+            )}
             {' · '}
             {t('footer.words', { count: [...words.values()].reduce((a, b) => a + b, 0) })}
           </>
@@ -322,6 +338,12 @@ export function Navigator({ ctx, outline, active, onClose, signals }: NavigatorP
                     </span>
                   )}
                   {numberOf(item)} · {item.title}
+                  {item.kind === 'scene' &&
+                    versionName &&
+                    activeVersion !== MAIN_VERSION &&
+                    !sceneIsCommon(ctx.root, item.id, activeVersion) && (
+                      <span className="ch-nav-own">{versionName}</span>
+                    )}
                 </span>
                 <span className="ch-nav-meta" aria-hidden="true">
                   {dots > 0 && <span className="ch-nav-dots">{'•'.repeat(dots)}</span>}
@@ -377,6 +399,33 @@ export function Navigator({ ctx, outline, active, onClose, signals }: NavigatorP
           );
         })}
       </ul>
+      {outOfVersion.length > 0 && (
+        <div className="ch-nav-out">
+          <p>
+            {t('versions.out', { count: outOfVersion.length })}
+            {' · '}
+            <button type="button" className="ch-link" onClick={() => setShowOut(!showOut)}>
+              {t(showOut ? 'versions.hide' : 'versions.show')}
+            </button>
+          </p>
+          {showOut &&
+            outOfVersion.map((s) => (
+              <p key={s.id} className="ch-nav-out-scene">
+                <span>{s.title}</span>
+                <button
+                  type="button"
+                  className="ch-link"
+                  onClick={() => {
+                    setSceneInVersion(ctx.root, s.id, true);
+                    ctx.openScene(s.id);
+                  }}
+                >
+                  {t('versions.addHere')}
+                </button>
+              </p>
+            ))}
+        </div>
+      )}
       <p className="ch-nav-hint">{t('navigator.hint')}</p>
     </aside>
   );

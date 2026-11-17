@@ -7,6 +7,8 @@ import {
   initProject,
   listAllScenes,
   listChapters,
+  listVersionScenes,
+  readOutline,
   readProjectMeta,
   renameProject,
   SYSTEM,
@@ -77,10 +79,11 @@ export function initialProjectId(platform: Platform, titles: DefaultTitles): Pro
  * and a scene when there are none. Returns the first live scene.
  */
 export function ensureScene(root: Y.Doc, titles: Pick<DefaultTitles, 'chapter' | 'scene'>): string {
-  const first = listAllScenes(root)[0];
+  // The active version's (DESIGN 1.20): a version without scenes gets one of its own.
+  const first = listVersionScenes(root)[0];
   if (first) return first.id;
   const chapterId =
-    listChapters(root)[0]?.id ?? createChapter(root, { title: titles.chapter }, SYSTEM);
+    readOutline(root)[0]?.id ?? createChapter(root, { title: titles.chapter }, SYSTEM);
   return createScene(root, { chapterId, title: titles.scene }, SYSTEM).sceneId;
 }
 
@@ -112,7 +115,7 @@ export async function openProject(
     await platform.preferences.set(LAST_PROJECT_PREF, projectId);
     const fallback = ensureScene(root, titles);
     const last = await platform.preferences.get<string>(lastScenePref(projectId));
-    const live = new Set(listAllScenes(root).map((s) => s.id));
+    const live = new Set(listVersionScenes(root).map((s) => s.id));
     const opened = handle;
     return {
       projectId,

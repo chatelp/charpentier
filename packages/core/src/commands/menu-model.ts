@@ -99,6 +99,12 @@ export const MENU_LAYOUT: readonly { readonly menu: string; readonly items: read
       'trashScene',
       'trashChapter',
       'restoreFromTrash',
+      '-',
+      'newVersion',
+      'switchVersion',
+      'renameVersion',
+      'removeSceneFromVersion',
+      'addSceneToVersion',
     ],
   },
   {

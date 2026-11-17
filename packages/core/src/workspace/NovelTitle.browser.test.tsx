@@ -57,7 +57,8 @@ describe('the novel’s title (docs/DESIGN.md §4.8, 1.19)', () => {
     const sheet = await screen.findByRole('dialog', { name: 'Le roman' });
     expect(button().getAttribute('aria-expanded')).toBe('true');
     expect(sheet.textContent).toContain('Roman · 1 chapitre · 1 scène · 0 mot');
-    const others = await within(sheet).findAllByRole('button', { name: /aujourd’hui|hier|le / });
+    await within(sheet).findByRole('button', { name: /Le Phare des Sept-Îles/ });
+    const others = [...sheet.querySelectorAll<HTMLElement>('.ch-novel-other')];
     expect(others.map((b) => b.querySelector('b')?.textContent)).toEqual([
       'Le Phare des Sept-Îles',
       'La Saison des cerises',

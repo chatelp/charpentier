@@ -18,9 +18,15 @@ export function SceneHeader({
   chapter,
   chapterIndex,
   scene,
+  version,
   onOutline,
   onVariants,
 }: SceneChromeProps & {
+  /**
+   * Outside Principale (DESIGN 1.20): the version whose own variant the scene
+   * reads, or `common` when it shares Principale's (writing goes for all).
+   */
+  readonly version?: { readonly name: string; readonly common: boolean } | undefined;
   readonly onOutline: () => void;
   readonly onVariants: () => void;
 }) {
@@ -43,10 +49,36 @@ export function SceneHeader({
       <button type="button" tabIndex={-1} className="ch-crumb is-scene" onClick={onOutline}>
         {sceneRank > 0 ? t('header.scene', { rank: sceneRank, title: scene.title }) : scene.title}
       </button>
-      {scene.variants.length > 1 && (
-        <button type="button" tabIndex={-1} className="ch-crumb is-variant" onClick={onVariants}>
-          {t('header.variant', { letter: variantLetter(variantIndex) })}
-        </button>
+      {version ? (
+        <>
+          <span className="ch-crumb-sep" aria-hidden="true">
+            ·
+          </span>
+          <button
+            type="button"
+            tabIndex={-1}
+            className={`ch-crumb is-version${version.common ? ' is-common' : ''}`}
+            title={
+              version.common
+                ? t('versions.commonTitle')
+                : t('versions.ownTitle', { version: version.name })
+            }
+            aria-label={
+              version.common
+                ? t('versions.commonLabel')
+                : t('versions.ownLabel', { version: version.name })
+            }
+            onClick={onVariants}
+          >
+            {version.common ? t('versions.common') : version.name}
+          </button>
+        </>
+      ) : (
+        scene.variants.length > 1 && (
+          <button type="button" tabIndex={-1} className="ch-crumb is-variant" onClick={onVariants}>
+            {t('header.variant', { letter: variantLetter(variantIndex) })}
+          </button>
+        )
       )}
     </header>
   );

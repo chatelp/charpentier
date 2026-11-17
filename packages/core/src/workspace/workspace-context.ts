@@ -80,8 +80,11 @@ export interface WorkspaceContext {
   openProject(projectId: string): void;
   /** The novel's sheet (docs/DESIGN.md §4.8 « Le titre du roman »): open or not. */
   readonly novelOpen: boolean;
-  /** Opens or closes the novel's sheet; `renaming`: opens it with the title as a field. */
-  toggleNovel(renaming?: boolean): void;
+  /**
+   * Opens or closes the novel's sheet; with a mode, opens it on the title as
+   * a field, or on a new working version's name (DESIGN 1.20).
+   */
+  toggleNovel(mode?: 'renaming' | 'version'): void;
   /** Words written today in this project (the date panel of the system line). */
   readonly wordsToday: number;
   /** The author is typing (the entry points fade, the cpu curve stands still). */
