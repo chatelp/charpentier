@@ -129,9 +129,10 @@
       <p class="lead">
         Désactivés par défaut. Calibrés pour les petits haut-parleurs d’un portable (le X250) : rien
         sous 300 Hz, qu’ils ne rendent pas, et des gains relevés d’environ 10 dB le 17 novembre
-        2026. Synthétisés avec Web Audio (aucun fichier, aucune licence). Jamais pour une remarque
-        du Compagnon : un son ne suit qu'un geste de l'auteur. Les volumes sont des gains absolus
-        d'un `GainNode` ; le volume du système fait le reste.
+        2026. Dans l’app, tous passent ensuite par un bus commun : gain de 2 (+6 dB), puis un
+        limiteur à −3 dB. Synthétisés avec Web Audio (aucun fichier, aucune licence). Jamais pour
+        une remarque du Compagnon : un son ne suit qu'un geste de l'auteur. Les volumes sont des
+        gains absolus d'un `GainNode` ; le volume du système fait le reste.
       </p>
 
       <section class="snd">
@@ -241,7 +242,7 @@
             <tr>
               <th>Caractère</th>
               <td>
-                bruit blanc de 12 ms, passe-bande 2 200 Hz (± 15 % au hasard), Q 0,8 ; gain 0,08 (±
+                bruit blanc de 12 ms, passe-bande 2 200 Hz (± 15 % au hasard), Q 0,8 ; gain 0,11 (±
                 20 % au hasard) ; plus un sinus 360 Hz de 20 ms, gain 0,06 ; attaques 1 ms, chutes
                 exponentielles
               </td>
@@ -407,7 +408,7 @@
           if (kind === 'enter') return SOUNDS.toc(0.5);
           if (kind === 'back') return noise(10, 3000, 0.8, 0.05);
           const space = kind === 'space';
-          noise(space ? 18 : 12, jitter(space ? 1400 : 2200, 0.15), 0.8, jitter(0.08, 0.2));
+          noise(space ? 18 : 12, jitter(space ? 1400 : 2200, 0.15), 0.8, jitter(0.11, 0.2));
           tone('sine', 360, 360, 0, 0.06, 0.001, 0.02);
         },
         volume() {
