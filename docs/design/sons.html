@@ -127,9 +127,11 @@
     <main>
       <h1>Sons de Charpentier</h1>
       <p class="lead">
-        Désactivés par défaut. Synthétisés avec Web Audio (aucun fichier, aucune licence). Jamais
-        pour une remarque du Compagnon : un son ne suit qu'un geste de l'auteur. Les volumes sont
-        des gains absolus d'un `GainNode` ; le volume du système fait le reste.
+        Désactivés par défaut. Calibrés pour les petits haut-parleurs d’un portable (le X250) : rien
+        sous 300 Hz, qu’ils ne rendent pas, et des gains relevés d’environ 10 dB le 17 novembre
+        2026. Synthétisés avec Web Audio (aucun fichier, aucune licence). Jamais pour une remarque
+        du Compagnon : un son ne suit qu'un geste de l'auteur. Les volumes sont des gains absolus
+        d'un `GainNode` ; le volume du système fait le reste.
       </p>
 
       <section class="snd">
@@ -144,14 +146,14 @@
             <tr>
               <th>Voix 1</th>
               <td>
-                sinus, 1 320 → 990 Hz (rampe exponentielle sur 40 ms) ; attaque 3 ms jusqu'à 0,09 ;
+                sinus, 1 320 → 990 Hz (rampe exponentielle sur 40 ms) ; attaque 3 ms jusqu'à 0,28 ;
                 chute exponentielle jusqu'à 0,0001 à 60 ms
               </td>
             </tr>
             <tr>
               <th>Voix 2</th>
               <td>
-                départ à +28 ms ; sinus 1 980 Hz fixe ; attaque 2 ms jusqu'à 0,05 ; chute
+                départ à +28 ms ; sinus 1 980 Hz fixe ; attaque 2 ms jusqu'à 0,16 ; chute
                 exponentielle à 45 ms
               </td>
             </tr>
@@ -176,14 +178,14 @@
             <tr>
               <th>Corps</th>
               <td>
-                triangle, 220 → 150 Hz (rampe exponentielle sur 90 ms) ; attaque 4 ms jusqu'à 0,12 ;
+                triangle, 440 → 300 Hz (rampe exponentielle sur 90 ms) ; attaque 4 ms jusqu'à 0,38 ;
                 chute exponentielle à 120 ms
               </td>
             </tr>
             <tr>
               <th>Attaque</th>
               <td>
-                bruit blanc de 15 ms, filtre passe-bande 900 Hz, Q 1,2 ; gain 0,04 ; chute
+                bruit blanc de 15 ms, filtre passe-bande 900 Hz, Q 1,2 ; gain 0,13 ; chute
                 exponentielle à 15 ms
               </td>
             </tr>
@@ -210,7 +212,7 @@
           <table>
             <tr>
               <th>Voix</th>
-              <td>sinus 2 600 Hz ; attaque 1 ms jusqu'à 0,035 ; chute exponentielle à 25 ms</td>
+              <td>sinus 2 600 Hz ; attaque 1 ms jusqu'à 0,11 ; chute exponentielle à 25 ms</td>
             </tr>
             <tr>
               <th>Durée</th>
@@ -239,8 +241,8 @@
             <tr>
               <th>Caractère</th>
               <td>
-                bruit blanc de 12 ms, passe-bande 2 200 Hz (± 15 % au hasard), Q 0,8 ; gain 0,025 (±
-                20 % au hasard) ; plus un sinus 180 Hz de 20 ms, gain 0,02 ; attaques 1 ms, chutes
+                bruit blanc de 12 ms, passe-bande 2 200 Hz (± 15 % au hasard), Q 0,8 ; gain 0,08 (±
+                20 % au hasard) ; plus un sinus 360 Hz de 20 ms, gain 0,06 ; attaques 1 ms, chutes
                 exponentielles
               </td>
             </tr>
@@ -254,7 +256,7 @@
             </tr>
             <tr>
               <th>Effacement</th>
-              <td>bruit de 10 ms, passe-bande 3 000 Hz, gain 0,015</td>
+              <td>bruit de 10 ms, passe-bande 3 000 Hz, gain 0,05</td>
             </tr>
             <tr>
               <th>Règles</th>
@@ -287,13 +289,13 @@
             <tr>
               <th>Voix 1</th>
               <td>
-                sinus, 880 → 660 Hz (rampe exponentielle sur 30 ms) ; attaque 2 ms jusqu’à 0,12 ;
+                sinus, 880 → 660 Hz (rampe exponentielle sur 30 ms) ; attaque 2 ms jusqu’à 0,3 ;
                 chute exponentielle à 80 ms
               </td>
             </tr>
             <tr>
               <th>Voix 2</th>
-              <td>sinus 1 760 Hz ; attaque 2 ms jusqu’à 0,03 ; chute exponentielle à 40 ms</td>
+              <td>sinus 1 760 Hz ; attaque 2 ms jusqu’à 0,08 ; chute exponentielle à 40 ms</td>
             </tr>
             <tr>
               <th>Durée</th>
@@ -324,13 +326,13 @@
           <table>
             <tr>
               <th>Marteau</th>
-              <td>bruit blanc de 8 ms, passe-bande 4 000 Hz, Q 1,5 ; gain 0,02</td>
+              <td>bruit blanc de 8 ms, passe-bande 4 000 Hz, Q 1,5 ; gain 0,06</td>
             </tr>
             <tr>
               <th>Timbre</th>
               <td>
-                trois sinus, attaque 1 ms : 2 093 Hz à 0,05, chute exponentielle à 1,2 s ; 5 777 Hz
-                (× 2,76) à 0,015, chute à 0,5 s ; 11 302 Hz (× 5,4) à 0,006, chute à 0,2 s
+                trois sinus, attaque 1 ms : 2 093 Hz à 0,16, chute exponentielle à 1,2 s ; 5 777 Hz
+                (× 2,76) à 0,05, chute à 0,5 s ; 11 302 Hz (× 5,4) à 0,02, chute à 0,2 s
               </td>
             </tr>
             <tr>
@@ -391,32 +393,32 @@
       const jitter = (v, r) => v * (1 + (Math.random() * 2 - 1) * r);
       const SOUNDS = {
         declic() {
-          tone('sine', 1320, 990, 0.04, 0.09, 0.003, 0.06);
-          tone('sine', 1980, 1980, 0, 0.05, 0.002, 0.045, 0.028);
+          tone('sine', 1320, 990, 0.04, 0.28, 0.003, 0.06);
+          tone('sine', 1980, 1980, 0, 0.16, 0.002, 0.045, 0.028);
         },
         toc(scale = 1) {
-          tone('triangle', 220, 150, 0.09, 0.12 * scale, 0.004, 0.12);
-          noise(15, 900, 1.2, 0.04 * scale);
+          tone('triangle', 440, 300, 0.09, 0.38 * scale, 0.004, 0.12);
+          noise(15, 900, 1.2, 0.13 * scale);
         },
         tic() {
-          tone('sine', 2600, 2600, 0, 0.035, 0.001, 0.025);
+          tone('sine', 2600, 2600, 0, 0.11, 0.001, 0.025);
         },
         key(kind = 'char') {
           if (kind === 'enter') return SOUNDS.toc(0.5);
-          if (kind === 'back') return noise(10, 3000, 0.8, 0.015);
+          if (kind === 'back') return noise(10, 3000, 0.8, 0.05);
           const space = kind === 'space';
-          noise(space ? 18 : 12, jitter(space ? 1400 : 2200, 0.15), 0.8, jitter(0.025, 0.2));
-          tone('sine', 180, 180, 0, 0.02, 0.001, 0.02);
+          noise(space ? 18 : 12, jitter(space ? 1400 : 2200, 0.15), 0.8, jitter(0.08, 0.2));
+          tone('sine', 360, 360, 0, 0.06, 0.001, 0.02);
         },
         volume() {
-          tone('sine', 880, 660, 0.03, 0.12, 0.002, 0.08);
-          tone('sine', 1760, 1760, 0, 0.03, 0.002, 0.04);
+          tone('sine', 880, 660, 0.03, 0.3, 0.002, 0.08);
+          tone('sine', 1760, 1760, 0, 0.08, 0.002, 0.04);
         },
         cloche() {
-          noise(8, 4000, 1.5, 0.02);
-          tone('sine', 2093, 2093, 0, 0.05, 0.001, 1.2);
-          tone('sine', 5777, 5777, 0, 0.015, 0.001, 0.5);
-          tone('sine', 11302, 11302, 0, 0.006, 0.001, 0.2);
+          noise(8, 4000, 1.5, 0.06);
+          tone('sine', 2093, 2093, 0, 0.16, 0.001, 1.2);
+          tone('sine', 5777, 5777, 0, 0.05, 0.001, 0.5);
+          tone('sine', 11302, 11302, 0, 0.02, 0.001, 0.2);
         },
         frappe() {
           'Le dégel'
