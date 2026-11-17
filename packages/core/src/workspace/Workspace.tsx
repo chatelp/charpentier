@@ -514,6 +514,12 @@ export function ProjectWorkspace({
     };
   }, [editor, mentorLevel, agentsStatus, sceneId, analyze]);
 
+  // Another scene opens at its top: the page does not keep the previous one's scroll (a short
+  // scene would open with its title hidden). Going to a remark scrolls to it afterwards.
+  useEffect(() => {
+    if (scroller.current) scroller.current.scrollTop = 0;
+  }, [sceneId]);
+
   // Going to a remark in another scene: once its editor is there, select the passage.
   const { openNote, sceneSignals } = marks;
   const showPendingSignal = useCallback(() => {
