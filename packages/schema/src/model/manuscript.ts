@@ -2,6 +2,14 @@ import * as Y from 'yjs';
 import { names, newId, nowIso } from './ids';
 import { keyAt, sortOrdered } from './order';
 import { AUTHOR, type Origin } from './origins';
+import {
+  activeVersionId,
+  emptyChapterInVersion,
+  ownerVersion,
+  recordVariantChoice,
+  sceneInVersion,
+  trashedVersionIds,
+} from './versions';
 
 /**
  * The manuscript tree in the project's root document (docs/SPEC.md §15.2):
@@ -25,6 +33,8 @@ export interface VariantInfo {
   readonly name: string;
   readonly createdAt: string;
   readonly origin: VariantOrigin;
+  /** The working version it was made in (none: Principale's). */
+  readonly version?: string;
 }
 
 export interface SceneInfo {
@@ -33,8 +43,10 @@ export interface SceneInfo {
   readonly chapterId: string;
   readonly order: string;
   readonly activeVariantId: string;
-  /** Live (non-trashed) variants, oldest first. */
+  /** Live (non-trashed) variants, oldest first (a trashed version's go with it). */
   readonly variants: readonly VariantInfo[];
+  /** The working version it was created in, which alone it belongs to (none: all). */
+  readonly version?: string;
 }
 
 type YMap = Y.Map<unknown>;
@@ -73,14 +85,20 @@ export function createChapter(
   doc.transact(() => {
     const siblings = listChapters(doc);
     const chapters = chaptersMap(doc);
-    const order = keyAt(siblings, input.index ?? siblings.length, (sid, o) =>
-      chapters.get(sid)?.set('order', o),
-    );
+    const shown = new Set(readOutline(doc).map((c) => c.id));
+    const index =
+      input.index === undefined
+        ? siblings.length
+        : indexAmongAll(siblings, (c) => shown.has(c.id), input.index);
+    const order = keyAt(siblings, index, (sid, o) => chapters.get(sid)?.set('order', o));
     const chapter = new Y.Map<unknown>();
     chapters.set(id, chapter);
     chapter.set('title', input.title);
     chapter.set('order', order);
     chapter.set('createdAt', nowIso());
+    // Made outside Principale: it belongs to that version only (DESIGN 1.20).
+    const owner = ownerVersion(doc);
+    if (owner) chapter.set('version', owner);
   }, origin);
   return id;
 }
@@ -107,9 +125,11 @@ export function moveChapter(
     const chapters = chaptersMap(doc);
     const chapter = requireMap(chapters, chapterId, 'chapter');
     const siblings = listChapters(doc).filter((c) => c.id !== chapterId);
+    const shown = new Set(readOutline(doc).map((c) => c.id));
+    const at = indexAmongAll(siblings, (c) => shown.has(c.id), index);
     chapter.set(
       'order',
-      keyAt(siblings, index, (sid, o) => chapters.get(sid)?.set('order', o)),
+      keyAt(siblings, at, (sid, o) => chapters.get(sid)?.set('order', o)),
     );
   }, origin);
 }
@@ -130,21 +150,30 @@ export function restoreChapter(doc: Y.Doc, chapterId: string, origin: Origin = A
 
 // ─── Scenes ──────────────────────────────────────────────────────────────
 
-function toScene(id: string, m: YMap): SceneInfo {
+const versionOf = (m: YMap) =>
+  typeof m.get('version') === 'string' ? { version: String(m.get('version')) } : {};
+
+function toScene(id: string, m: YMap, trashedVersions: ReadonlySet<string> = new Set()): SceneInfo {
   const variants = (m.get('variants') as Y.Map<YMap> | undefined) ?? new Y.Map<YMap>();
+  const active = String(m.get('activeVariantId') ?? '');
   return {
     id,
     title: String(m.get('title') ?? ''),
     chapterId: String(m.get('chapterId') ?? ''),
     order: String(m.get('order') ?? ''),
-    activeVariantId: String(m.get('activeVariantId') ?? ''),
+    activeVariantId: active,
+    ...versionOf(m),
     variants: [...variants.entries()]
-      .filter(([, v]) => isLive(v))
+      .filter(
+        ([vid, v]) =>
+          isLive(v) && (vid === active || !trashedVersions.has(String(v.get('version') ?? ''))),
+      )
       .map(([vid, v]) => ({
         id: vid,
         name: String(v.get('name') ?? ''),
         createdAt: String(v.get('createdAt') ?? ''),
         origin: (v.get('origin') as VariantOrigin | undefined) ?? 'author',
+        ...versionOf(v),
       }))
       .sort((a, b) =>
         a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : a.id < b.id ? -1 : 1,
@@ -154,16 +183,32 @@ function toScene(id: string, m: YMap): SceneInfo {
 
 export function getScene(doc: Y.Doc, sceneId: string): SceneInfo | undefined {
   const m = scenesMap(doc).get(sceneId);
-  return m && isLive(m) ? toScene(sceneId, m) : undefined;
+  return m && isLive(m) ? toScene(sceneId, m, trashedVersionIds(doc)) : undefined;
 }
 
-/** Live scenes of a live chapter, in order. */
+/** Live scenes of a live chapter, in order, in every version. */
 export function listScenes(doc: Y.Doc, chapterId: string): SceneInfo[] {
+  const trashed = trashedVersionIds(doc);
   return sortOrdered(
     [...scenesMap(doc).entries()]
       .filter(([, m]) => isLive(m) && m.get('chapterId') === chapterId)
-      .map(([id, m]) => toScene(id, m)),
+      .map(([id, m]) => toScene(id, m, trashed)),
   );
+}
+
+/**
+ * Where `index` among the siblings the active version shows falls among all
+ * of them (scenes of other versions may sit in between).
+ */
+function indexAmongAll<T extends { readonly id: string }>(
+  all: readonly T[],
+  shown: (item: T) => boolean,
+  index: number,
+): number {
+  const visible = all.filter(shown);
+  if (visible.length === all.length) return index;
+  const at = visible[index];
+  return at ? all.indexOf(at) : all.length;
 }
 
 /** Creates a scene and its first variant's metadata. The variant's text lives in the scene document. */
@@ -178,9 +223,12 @@ export function createScene(
     requireMap(chaptersMap(doc), input.chapterId, 'chapter');
     const scenes = scenesMap(doc);
     const siblings = listScenes(doc, input.chapterId);
-    const order = keyAt(siblings, input.index ?? siblings.length, (sid, o) =>
-      scenes.get(sid)?.set('order', o),
-    );
+    const version = activeVersionId(doc);
+    const index =
+      input.index === undefined
+        ? siblings.length
+        : indexAmongAll(siblings, (sc) => sceneInVersion(doc, sc.id, version), input.index);
+    const order = keyAt(siblings, index, (sid, o) => scenes.get(sid)?.set('order', o));
     const scene = new Y.Map<unknown>();
     scenes.set(sceneId, scene);
     scene.set('title', input.title);
@@ -191,6 +239,12 @@ export function createScene(
     scene.set('variants', variants);
     variants.set(variantId, variantEntry(input.variantName ?? '', 'author'));
     scene.set('activeVariantId', variantId);
+    // Made outside Principale: it belongs to that version only (DESIGN 1.20).
+    const owner = ownerVersion(doc);
+    if (owner) {
+      scene.set('version', owner);
+      recordVariantChoice(doc, sceneId, variantId);
+    }
   }, origin);
   return { sceneId, variantId };
 }
@@ -216,10 +270,12 @@ export function moveScene(
     const scenes = scenesMap(doc);
     const scene = requireMap(scenes, sceneId, 'scene');
     const siblings = listScenes(doc, to.chapterId).filter((s) => s.id !== sceneId);
+    const version = activeVersionId(doc);
+    const at = indexAmongAll(siblings, (sc) => sceneInVersion(doc, sc.id, version), to.index);
     scene.set('chapterId', to.chapterId);
     scene.set(
       'order',
-      keyAt(siblings, to.index, (sid, o) => scenes.get(sid)?.set('order', o)),
+      keyAt(siblings, at, (sid, o) => scenes.get(sid)?.set('order', o)),
     );
   }, origin);
 }
@@ -237,11 +293,12 @@ export function restoreScene(doc: Y.Doc, sceneId: string, origin: Origin = AUTHO
 
 // ─── Variant metadata ────────────────────────────────────────────────────
 
-function variantEntry(name: string, origin: VariantOrigin): YMap {
+function variantEntry(name: string, origin: VariantOrigin, version?: string): YMap {
   const v = new Y.Map<unknown>();
   v.set('name', name);
   v.set('createdAt', nowIso());
   v.set('origin', origin);
+  if (version) v.set('version', version);
   return v;
 }
 
@@ -256,9 +313,15 @@ export function addVariantMeta(
   origin: Origin = AUTHOR,
 ): void {
   doc.transact(() => {
-    variantsOf(doc, sceneId).set(input.variantId, variantEntry(input.name, input.origin));
-    if (input.activate)
+    variantsOf(doc, sceneId).set(
+      input.variantId,
+      variantEntry(input.name, input.origin, ownerVersion(doc)),
+    );
+    if (input.activate) {
       requireMap(scenesMap(doc), sceneId, 'scene').set('activeVariantId', input.variantId);
+      // The active version reads it from now on (DESIGN 1.20).
+      recordVariantChoice(doc, sceneId, input.variantId);
+    }
   }, origin);
 }
 
@@ -285,6 +348,8 @@ export function setActiveVariant(
     const variant = requireMap(variantsOf(doc, sceneId), variantId, 'variant');
     if (!isLive(variant)) throw new Error(`Variant is in the trash: ${variantId}`);
     requireMap(scenesMap(doc), sceneId, 'scene').set('activeVariantId', variantId);
+    // Only the active version's choice changes (DESIGN 1.20).
+    recordVariantChoice(doc, sceneId, variantId);
   }, origin);
 }
 
@@ -309,14 +374,52 @@ export interface OutlineChapter extends ChapterInfo {
   readonly scenes: readonly SceneInfo[];
 }
 
-/** Live chapters with their live scenes, in reading order. */
-export function readOutline(doc: Y.Doc): OutlineChapter[] {
+/**
+ * Live chapters with their live scenes, in reading order, as a working
+ * version shows them (the active one by default, DESIGN 1.20): its scenes
+ * only; a chapter shows when it has one of them, or when it is empty and
+ * not another version's. With a single version, the whole manuscript.
+ */
+export function readOutline(
+  doc: Y.Doc,
+  versionId: string = activeVersionId(doc),
+): OutlineChapter[] {
+  const chapters = chaptersMap(doc);
+  return readFullOutline(doc).flatMap((chapter) => {
+    const scenes = chapter.scenes.filter((s) => sceneInVersion(doc, s.id, versionId));
+    if (scenes.length > 0) return [{ ...chapter, scenes }];
+    const m = chapters.get(chapter.id);
+    return chapter.scenes.length === 0 && m && emptyChapterInVersion(m, versionId)
+      ? [{ ...chapter, scenes }]
+      : [];
+  });
+}
+
+/** Every live chapter with every live scene, whatever the version (sync, the mirror's store). */
+export function readFullOutline(doc: Y.Doc): OutlineChapter[] {
   return listChapters(doc).map((chapter) => ({ ...chapter, scenes: listScenes(doc, chapter.id) }));
 }
 
-/** Live scenes of the whole manuscript, in reading order. */
+/** Live scenes of the whole manuscript, in every version, in reading order. */
 export function listAllScenes(doc: Y.Doc): SceneInfo[] {
-  return readOutline(doc).flatMap((c) => c.scenes);
+  return readFullOutline(doc).flatMap((c) => c.scenes);
+}
+
+/** Live scenes of the active version (or `versionId`), in reading order. */
+export function listVersionScenes(doc: Y.Doc, versionId?: string): SceneInfo[] {
+  return readOutline(doc, versionId).flatMap((c) => c.scenes);
+}
+
+/** Live scenes not in this version (the drawer's « hors de cette version »). */
+export function listScenesOutOfVersion(
+  doc: Y.Doc,
+  versionId: string = activeVersionId(doc),
+): SceneInfo[] {
+  const trashed = trashedVersionIds(doc);
+  return listAllScenes(doc).filter(
+    (s) =>
+      !sceneInVersion(doc, s.id, versionId) && !(s.version !== undefined && trashed.has(s.version)),
+  );
 }
 
 /**
@@ -358,7 +461,7 @@ export function moveChapterStep(
   direction: -1 | 1,
   origin: Origin = AUTHOR,
 ): boolean {
-  const chapters = listChapters(doc);
+  const chapters = readOutline(doc);
   const index = chapters.findIndex((c) => c.id === chapterId);
   const target = index + direction;
   if (index < 0 || target < 0 || target >= chapters.length) return false;

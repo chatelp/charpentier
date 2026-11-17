@@ -19,3 +19,4 @@ export * from './project';
 export * from './scene-content';
 export * from './signals';
 export * from './scene-text-bridge';
+export * from './versions';

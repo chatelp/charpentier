@@ -26,4 +26,9 @@ export const names = {
   module: (module: string) => `module:${module}`,
   variant: (variantId: string) => `variant:${variantId}`,
   checkpoints: 'checkpoints',
+  /** Working versions (docs/DESIGN.md §4.4, 1.20): each under a random key. */
+  versions: 'versions',
+  /** Principale's choices (scene → variant) and memberships (scene → in or out). */
+  versionMainChoices: 'versionMain:choices',
+  versionMainMembers: 'versionMain:members',
 } as const;
