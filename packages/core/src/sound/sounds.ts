@@ -2,6 +2,9 @@
  * The interface's sounds (docs/DESIGN.md §3.4, recipes in docs/design/sons.html):
  * synthesized with Web Audio, offline, off by default. A sound only ever
  * follows a gesture of the author, never a remark appearing by itself.
+ * Calibrated for a laptop's small speakers (17 November 2026): nothing under
+ * 300 Hz, which they do not render, and gains about 10 dB higher than at
+ * first; a sound's peak stays under 0.5, so that two at once do not clip.
  */
 
 /** click: validate, resolve; toc: reject, ignore, close; tic: open a note or a panel. */
@@ -68,8 +71,8 @@ function noise(a: AudioContext, ms: number, frequency: number, q: number, peak: 
 const jitter = (value: number, range: number) => value * (1 + (Math.random() * 2 - 1) * range);
 
 function toc(a: AudioContext, scale = 1) {
-  tone(a, 'triangle', [220, 150, 0.09], [0.12 * scale, 0.004, 0.12]);
-  noise(a, 15, 900, 1.2, 0.04 * scale);
+  tone(a, 'triangle', [440, 300, 0.09], [0.38 * scale, 0.004, 0.12]);
+  noise(a, 15, 900, 1.2, 0.13 * scale);
 }
 
 /**
@@ -81,10 +84,10 @@ export function playSound(sound: Sound): void {
   const a = audio();
   if (!a) return;
   if (sound === 'click') {
-    tone(a, 'sine', [1320, 990, 0.04], [0.09, 0.003, 0.06]);
-    tone(a, 'sine', [1980, 1980, 0], [0.05, 0.002, 0.045], 0.028);
+    tone(a, 'sine', [1320, 990, 0.04], [0.28, 0.003, 0.06]);
+    tone(a, 'sine', [1980, 1980, 0], [0.16, 0.002, 0.045], 0.028);
   } else if (sound === 'toc') toc(a);
-  else tone(a, 'sine', [2600, 2600, 0], [0.035, 0.001, 0.025]);
+  else tone(a, 'sine', [2600, 2600, 0], [0.11, 0.001, 0.025]);
 }
 
 let lastKey = 0;
@@ -96,10 +99,10 @@ export function playKeySound(kind: KeySound, now = performance.now()): void {
   const a = audio();
   if (!a) return;
   if (kind === 'enter') return toc(a, 0.5);
-  if (kind === 'back') return noise(a, 10, 3000, 0.8, 0.015);
+  if (kind === 'back') return noise(a, 10, 3000, 0.8, 0.05);
   const space = kind === 'space';
-  noise(a, space ? 18 : 12, jitter(space ? 1400 : 2200, 0.15), 0.8, jitter(0.025, 0.2));
-  tone(a, 'sine', [180, 180, 0], [0.02, 0.001, 0.02]);
+  noise(a, space ? 18 : 12, jitter(space ? 1400 : 2200, 0.15), 0.8, jitter(0.08, 0.2));
+  tone(a, 'sine', [360, 360, 0], [0.06, 0.001, 0.02]);
 }
 
 /** The key sound of a keydown in the text, if it writes or erases (not a repeat, not a composition). */

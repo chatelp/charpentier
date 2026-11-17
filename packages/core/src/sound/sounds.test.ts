@@ -35,4 +35,42 @@ describe('sounds (docs/DESIGN.md §3.4)', () => {
     expect(keySoundOf(key('a', { isComposing: true }))).toBeNull();
     expect(keySoundOf(key('s', { metaKey: true }))).toBeNull();
   });
+
+  it('is heard on a laptop: nothing under 300 Hz, peaks loud enough and under 0.5', () => {
+    const frequencies: number[] = [];
+    const gains: number[] = [];
+    const param = (into: number[]) => ({
+      setValueAtTime: (v: number) => into.push(v),
+      exponentialRampToValueAtTime: (v: number) => into.push(v),
+      set value(v: number) {
+        into.push(v);
+      },
+    });
+    const node = <T extends object>(extra: T) => ({ ...extra, connect: (n: unknown) => n });
+    class FakeContext {
+      currentTime = 0;
+      sampleRate = 48000;
+      destination = {};
+      createOscillator = () =>
+        node({ type: '', frequency: param(frequencies), start() {}, stop() {} });
+      createGain = () => node({ gain: param(gains) });
+      createBiquadFilter = () => node({ type: '', frequency: param([]), Q: param([]) });
+      createBuffer = (_: number, length: number) => ({
+        getChannelData: () => new Float32Array(length),
+      });
+      createBufferSource = () => node({ buffer: null, start() {} });
+    }
+    vi.stubGlobal('AudioContext', FakeContext);
+    setSoundSettings({ ui: true, typing: true });
+    playSound('click');
+    playSound('toc');
+    playSound('tic');
+    (['char', 'space', 'enter', 'back'] as const).forEach((kind, i) =>
+      playKeySound(kind, 10_000 + i * 100),
+    );
+    expect(Math.min(...frequencies)).toBeGreaterThanOrEqual(300);
+    expect(Math.max(...gains)).toBeLessThan(0.5);
+    // Every sound reaches a gain a laptop's speakers render (the first ones peaked at 0.02).
+    expect(Math.max(...gains)).toBeGreaterThan(0.2);
+  });
 });
