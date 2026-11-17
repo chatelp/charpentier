@@ -794,6 +794,64 @@
             <div class="foot">ouvert tant que ce panneau l’est · échap coupe l’accès</div>
           </div>`,
           ),
+        console: () => {
+          const tabs = [
+            'réseau',
+            'bluetooth',
+            'écran',
+            'son',
+            'clavier',
+            'énergie',
+            'verrouillage',
+            'impression',
+            'clé usb',
+            'date',
+            'terminal',
+            'à propos',
+          ];
+          const box = (title, inner, w = '100%') =>
+            `<div style="position:relative;width:${w};border:1px solid var(--ch-ink-2);padding:14px 16px 10px;box-sizing:border-box"><span style="position:absolute;top:-10px;left:12px;padding:0 6px;background:var(--ch-bg);color:var(--ch-ink)">${title}</span>${inner}</div>`;
+          return (
+            line({ msg: '' }) +
+            `<div class="sys full" style="display:flex;flex-direction:column">
+            <div style="display:flex;justify-content:space-between;padding:0 16px;background:var(--ch-ink);color:var(--ch-bg);line-height:28px"><span style="display:flex;gap:9px;align-items:center">${SQ.replace('class="sq"', 'class="sq" style="color:#14161a"')}<b style="font-weight:500">charpentier · réglages du système</b></span><span>x250 · 0.1.1</span></div>
+            <div style="display:flex;gap:0;padding:0 8px;border-bottom:1px solid var(--ch-ink-2)">${tabs.map((t) => `<span style="padding:0 14px;line-height:34px;${t === 'énergie' ? 'background:var(--ch-ink-2);color:var(--ch-bg)' : 'color:var(--ch-muted)'}">${t}</span>`).join('')}</div>
+            <div style="flex:1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px 32px;padding:30px 32px;align-content:start">
+              ${box('batteries', row('bat0 · interne', '74 % · usure 12 %') + row('bat1 · arrière', '90 % · usure 21 %') + row('ensemble', '82 % · 5h40 · 6,1 W'))}
+              ${box('économie d’énergie', row('activer', opt(['sur batterie', 'toujours', 'jamais'], 'sur batterie')) + '<div class="help" style="padding-left:12px">pas de turbo, luminosité −20 %. seule sous 20 %.</div>')}
+              ${box('inactivité', `<div class="tbl" style="grid-template-columns:1fr 120px 120px"><div class="th"></div><div class="th">batterie</div><div class="th">secteur</div><div>atténuer l’écran</div><div class="sel">1 min</div><div>5 min</div><div>éteindre l’écran</div><div>3 min</div><div>10 min</div><div>mettre en veille</div><div>10 min</div><div>30 min</div></div>`)}
+              ${box('préserver les batteries', row('arrêter la charge à 80 %', opt(['oui', 'non'], 'oui')) + row('cette fois seulement', '<span class="btn">charger à 100 %</span>'))}
+              ${box('veille et hibernation', row('rabat fermé', opt(['veille', 'rien'], 'veille')) + row('en veille sur batterie, hiberner après', opt(['1 h', '3 h', '12 h', 'jamais'], '3 h')) + row('batterie à 3 %', 'hiberner'))}
+            </div>
+            <div style="display:flex;gap:28px;padding:0 16px;background:var(--ch-ink-2);color:var(--ch-bg);line-height:26px"><span>↑↓ choisir</span><span>←→ changer</span><span>⇥ section</span><span>⏎ ouvrir</span><span>⌘, réglages de l’app</span><span style="margin-left:auto">échap revenir au texte</span></div>
+          </div>`
+          );
+        },
+        tableau: () => {
+          const tile = (name, big, lines, sel = false) =>
+            `<div style="border:1px solid ${sel ? 'var(--ch-ink)' : 'var(--sys-rule)'};padding:14px 16px;${sel ? 'box-shadow:inset 0 0 0 1px var(--ch-ink)' : ''}"><div style="display:flex;justify-content:space-between;color:${sel ? 'var(--ch-ink)' : 'var(--ch-muted)'}"><span>${name}</span><span class="f">${sel ? '⏎ ouvrir' : ''}</span></div><div style="margin:10px 0 8px;color:var(--ch-ink);font:300 28px/1.1 var(--ch-font-sys)">${big}</div>${lines.map((l) => `<div class="sub" style="line-height:20px">${l}</div>`).join('')}</div>`;
+          return (
+            line({ msg: '' }) +
+            `<div class="sys full" style="padding:22px 28px">
+            <div style="display:flex;align-items:center;gap:10px;padding-bottom:14px;border-bottom:1px solid var(--sys-rule)">${SQ}<span style="color:var(--ch-ink)">réglages du système</span><span class="f">x250 · 0.1.1 · allumé depuis 3 h 12</span><span style="margin-left:auto" class="f">⌘, réglages de l’app · échap ×</span></div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:22px">
+              ${tile('réseau', `maison ${bars(3)}`, ['wi-fi oui · câble non', '192.168.1.24'])}
+              ${tile('bluetooth', '1', ['clavier MX Keys'])}
+              ${tile('écran', '100 %', ['luminosité 70 · nuit auto', 'externe : aucun'])}
+              ${tile('son', '40', [gauge(4) + ' · goutte oui · cloche non'])}
+              ${tile('énergie', '82 %', ['5h40 · économie sur batterie', 'charge arrêtée à 80 %', 'hiberne après 3 h'], true)}
+              ${tile('verrouillage', 'au réveil', ['code de 6 · 5 erreurs, puis 30 s'])}
+              ${tile('clavier', 'azerty', ['pavé coupé pendant la frappe'])}
+              ${tile('impression', 'brother', ['HL-L2350DW · A4'])}
+              ${tile('clé usb', '—', ['aucune clé'])}
+              ${tile('date et heure', '14:32', ['paris · automatique'])}
+              ${tile('terminal', 'visible', ['⊞T · 40 % de hauteur'])}
+              ${tile('à propos', '0.1.1', ['à jour · carnet d’entretien'])}
+            </div>
+            <div class="foot" style="border:0;padding:16px 0 0">←→↑↓ choisir · ⏎ ouvrir le cadran · échap revenir au texte</div>
+          </div>`
+          );
+        },
         echelle: () =>
           page() +
           line({ msg: 'clé branchée · <span class="acc">⊞U copier</span>', batLow: false }),
