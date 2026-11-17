@@ -17,6 +17,7 @@
     "test": "vitest run",
     "check:guards": "node scripts/guard-selftest.mjs",
     "check:licenses": "node scripts/check-licenses.mjs",
+    "clean:cache": "node scripts/clean-cache.mjs",
     "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm check:guards && pnpm check:licenses",
     "dev:desktop": "pnpm --filter @charpentier/desktop dev",
     "test:desktop": "pnpm --filter @charpentier/desktop test:e2e",
