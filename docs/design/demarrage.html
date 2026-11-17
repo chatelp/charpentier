@@ -117,7 +117,7 @@
         background: #2c313a;
       }
       .bar i.on {
-        background: var(--bar-on, var(--amber));
+        background: var(--bar-on, var(--ink2));
       }
       .label {
         margin-top: 14px;
@@ -197,7 +197,7 @@
     <script>
       const P = new URLSearchParams(location.search);
       const frame = document.getElementById('frame');
-      // Variante de la barre : ?barre=encre (cellules en encre, l'ambre réservé à ce qui attend l'auteur).
+      // La barre est en encre (choix de l'auteur, 17 nov.) ; ?barre=ambre montre la variante écartée.
       if (P.get('barre') === 'encre')
         document.documentElement.style.setProperty('--bar-on', '#b9c0ca');
       const SQ = `<svg viewBox="0 0 24 24"><path d="M3 2h6v13h13v6H3z" fill="currentColor"/><circle cx="17" cy="8" r="3" fill="#e0a040"/></svg>`;
