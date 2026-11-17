@@ -849,6 +849,20 @@ function dial(
   };
 }
 
+/** What the lock asks, the same on the board and in the rail. */
+const lockValue = ({ state, s }: ReturnType<typeof useSettings>) =>
+  state.settings.askCode === 'wake'
+    ? s('rows.askWake')
+    : state.settings.askCode === 'after15'
+      ? s('rows.askAfter15')
+      : s('rows.askNever');
+
+const printerName = ({ state }: ReturnType<typeof useSettings>) =>
+  state.printers.find((p) => p.isDefault)?.name ?? state.printers[0]?.name;
+
+/** « Europe/Paris » → « Paris ». */
+const city = (timeZone: string) => (timeZone.split('/').at(-1) ?? timeZone).replace(/_/g, ' ');
+
 const dot = (...parts: readonly (string | false | null | undefined)[]) =>
   parts.filter(Boolean).join(' · ');
 
@@ -895,7 +909,9 @@ export const systemSettingsSections: readonly SettingsSection[] = [
     id: 'display',
     label: 'system.settings.display',
     intro: intro('display'),
-    value: value(({ state }) => `${state.brightness} %`),
+    value: value(({ state, text }) =>
+      text('system.seg.percent', { value: state.settings.screenScale }),
+    ),
     component: Display,
     dial: dial(({ state, s, text }) => ({
       value: text('system.seg.percent', { value: state.settings.screenScale }),
@@ -937,15 +953,11 @@ export const systemSettingsSections: readonly SettingsSection[] = [
     id: 'lock',
     label: 'system.settings.lock',
     intro: intro('lock'),
+    value: value(lockValue),
     component: Lock,
-    dial: dial(({ state, s }) => ({
-      value:
-        state.settings.askCode === 'wake'
-          ? s('rows.askWake')
-          : state.settings.askCode === 'after15'
-            ? s('rows.askAfter15')
-            : s('rows.askNever'),
-      details: [state.lock.hasCode ? null : s('board.noCode')],
+    dial: dial((settings) => ({
+      value: lockValue(settings),
+      details: [settings.state.lock.hasCode ? null : settings.s('board.noCode')],
     })),
   },
   {
@@ -958,10 +970,12 @@ export const systemSettingsSections: readonly SettingsSection[] = [
     id: 'printing',
     label: 'system.settings.printing',
     intro: intro('printing'),
+    // The make alone in the rail; the board has room for the model.
+    value: value((settings) => printerName(settings)?.split(' ')[0] ?? '–'),
     component: Printing,
-    dial: dial(({ state, s }) => ({
-      value: state.printers.find((p) => p.isDefault)?.name ?? state.printers[0]?.name ?? '—',
-      details: [state.settings.paperSize === 'a4' ? 'A4' : s('rows.letter')],
+    dial: dial((settings) => ({
+      value: printerName(settings) ?? '—',
+      details: [settings.state.settings.paperSize === 'a4' ? 'A4' : settings.s('rows.letter')],
     })),
   },
   {
@@ -979,6 +993,7 @@ export const systemSettingsSections: readonly SettingsSection[] = [
     id: 'datetime',
     label: 'system.settings.datetime',
     intro: DateIntro,
+    value: value(({ state }) => city(state.timeZone)),
     component: DateTime,
     dial: dial(({ state, s, language }) => ({
       value: new Intl.DateTimeFormat(language, {
@@ -986,13 +1001,14 @@ export const systemSettingsSections: readonly SettingsSection[] = [
         minute: '2-digit',
         hour12: !state.settings.clock24,
       }).format(new Date()),
-      details: [dot(state.timeZone, state.settings.autoTime && s('rows.autoTimeShort'))],
+      details: [dot(city(state.timeZone), state.settings.autoTime && s('rows.autoTimeShort'))],
     })),
   },
   {
     id: 'systemLine',
     label: 'system.settings.systemLine',
     intro: intro('systemLine'),
+    value: value(({ state, s }) => (state.settings.showCpu ? 'cpu' : s('off'))),
     component: SystemLineSettings,
     dial: dial(({ state, s }) => ({
       value: state.settings.showCpu ? 'cpu' : s('off'),

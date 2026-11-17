@@ -148,7 +148,7 @@ describe('the system line of the X250 (phase 5.3)', () => {
     const rail = await screen.findByRole('listbox', { name: 'Sections des réglages' });
     await userEvent.click(within(rail).getByRole('option', { name: /Batterie et veille/ }));
     const page = await screen.findByRole('region', { name: 'Batterie et veille' });
-    expect(page.textContent).toContain('Sur secteur, sans batterie.');
+    expect(page.textContent).toContain('sur secteur, sans batterie.');
     expect(within(page).queryByText('Batteries')).toBeNull();
   });
 
@@ -466,8 +466,8 @@ describe('the system line of the X250 (phase 5.3)', () => {
     const rail = await screen.findByRole('listbox', { name: 'Sections des réglages' });
     await userEvent.click(within(rail).getByRole('option', { name: /Bluetooth/ }));
     const page = await screen.findByRole('region', { name: 'Bluetooth' });
-    await userEvent.click(within(page).getByRole('button', { name: 'Chercher' }));
-    await userEvent.click(await within(page).findByRole('button', { name: 'Appairer' }));
+    await userEvent.click(within(page).getByRole('button', { name: 'chercher' }));
+    await userEvent.click(await within(page).findByRole('button', { name: 'appairer' }));
     await waitFor(() =>
       expect(system.state().bluetooth.devices.map((d) => d.name)).toContain('Clavier K380'),
     );
@@ -534,17 +534,17 @@ describe('the updates of the X250 (phase 5.12)', () => {
     const about = within(rail).getByRole('option', { name: /À propos/ });
     expect(about.textContent).toContain('0.6.0 prête');
     await userEvent.click(about);
-    await screen.findByText('Version 0.6.0 prête');
+    await screen.findByText('version 0.6.0 prête');
     expect(screen.getByText(/0\.5\.0 \(43d2f0a\) · installée le 12 nov\./)).toBeTruthy();
     expect(screen.getByText('La lumière suit le clavier dans les listes.')).toBeTruthy();
 
-    await userEvent.click(screen.getByRole('button', { name: 'Vérifier maintenant' }));
+    await userEvent.click(screen.getByRole('button', { name: 'vérifier maintenant' }));
     expect(system.simulate.calls).toContain('checkUpdate');
 
-    const back = screen.getByRole('button', { name: 'Revenir à 0.4.2…' });
+    const back = screen.getByRole('button', { name: 'revenir à 0.4.2…' });
     await userEvent.click(back);
-    expect(back.textContent).toContain('Confirmer : redémarrer sur 0.4.2');
-    expect(screen.getByText(/Vos textes ne bougent pas/)).toBeTruthy();
+    expect(back.textContent).toContain('confirmer : redémarrer sur 0.4.2');
+    expect(screen.getByText(/vos textes ne bougent pas/)).toBeTruthy();
     await userEvent.click(back);
     await waitFor(() => expect(system.simulate.calls).toContain('bootVersion 0.4.2'));
   });
@@ -557,6 +557,6 @@ describe('the updates of the X250 (phase 5.12)', () => {
     const rail = await screen.findByRole('listbox', { name: 'Sections des réglages' });
     await userEvent.click(within(rail).getByRole('option', { name: /À propos/ }));
     await screen.findByText(/0\.5\.0 \(43d2f0a\) · installée/);
-    expect(screen.queryByText('Vérifier maintenant')).toBeNull();
+    expect(screen.queryByText('vérifier maintenant')).toBeNull();
   });
 });

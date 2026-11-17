@@ -13,19 +13,17 @@
   font: 13px / 1.6 var(--ch-font-sys);
 }
 
-/* Lower case for the instrument's words; names (a network, a device) keep theirs. */
+/*
+ * Lower case for the instrument's structural words (titles, section and
+ * group names, the path). The rest is written in lower case at its source,
+ * so that names keep theirs: a network, a printer, « Compagnon », « Aa ».
+ */
 .ch-sysset-title,
 .ch-sysset-dial-name,
 .ch-sysset-line > span:first-child,
 .ch-sysset-path,
 .ch-sysset-page-title,
-.ch-sysset-intro,
-.ch-sysset-hint,
-.ch-sysset-body .ch-set-title,
-.ch-sysset-body .ch-set-label,
-.ch-sysset-body .ch-set-help,
-.ch-sysset-dial-value,
-.ch-sysset-dial-detail {
+.ch-sysset-body .ch-set-title {
   text-transform: lowercase;
 }
 
@@ -184,7 +182,6 @@
   color: var(--ch-ink-2);
   font: inherit;
   text-align: left;
-  text-transform: lowercase;
   cursor: pointer;
   outline: none;
 }
@@ -350,6 +347,18 @@
   border-color: var(--ch-bg);
 }
 
+/* Its buttons too: text and frame in the paper's ink. */
+.ch-sysset-body .ch-set-row.is-chosen .ch-btn {
+  border-color: var(--ch-bg);
+  color: var(--ch-bg);
+}
+
+.ch-sysset-body .ch-set-row.is-chosen .ch-btn:hover,
+.ch-sysset-body .ch-set-row.is-chosen .ch-btn:focus-visible {
+  background: var(--ch-bg);
+  color: var(--ch-ink);
+}
+
 /* Setting keys: the chosen one in brackets, the others faint. */
 .ch-sysset-body .ch-sys-keys button {
   padding: 0 4px;
@@ -359,7 +368,6 @@
   box-shadow: none;
   color: var(--ch-faint);
   font: inherit;
-  text-transform: lowercase;
 }
 
 .ch-sysset-body .ch-sys-keys button.is-on,
@@ -394,7 +402,6 @@
   box-shadow: none;
   color: var(--ch-ink);
   font: inherit;
-  text-transform: lowercase;
 }
 
 .ch-sysset-body .ch-btn:hover,
@@ -419,4 +426,9 @@
   border: 1px solid var(--ch-faint);
   border-radius: 0;
   box-shadow: none;
+}
+
+/* The release notes: the page's monospace, in their own case. */
+.ch-sysset-body .ch-set-notes {
+  font: inherit;
 }
