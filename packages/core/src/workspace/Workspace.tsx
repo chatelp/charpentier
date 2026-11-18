@@ -465,10 +465,16 @@ export function ProjectWorkspace({
   });
 
   // ─── When the Compagnon reads (D-19) ───
+  // Readings under way: « lit la scène… » in the title of his panel (DESIGN 1.24).
+  const [reading, setReading] = useState(0);
   const analyze = useCallback(
     (sceneIds: readonly string[], automatic: boolean) => {
       if (sceneIds.length === 0) return;
-      void platform.agents.analyze({ projectId, sceneIds, automatic }).then((result) => {
+      setReading((n) => n + 1);
+      const done = platform.agents
+        .analyze({ projectId, sceneIds, automatic })
+        .finally(() => setReading((n) => n - 1));
+      void done.then((result) => {
         if (!automatic && result !== 'answered')
           setStatus({ key: ++paletteSequence, text: t(`mentor.ask.${result}`) });
         if (!automatic && result === 'answered')
@@ -1093,7 +1099,15 @@ export function ProjectWorkspace({
           onTab={setMentorPanel}
           workGroups={workGroups}
           header={<InterventionSlider root={root} level={mentorLevel} />}
-          levelName={t(`mentor.level.name.${mentorLevel}`)}
+          state={
+            agentsStatus === 'offline'
+              ? t('mentor.context.offline')
+              : agentsStatus === 'unconfigured'
+                ? t('mentor.context.noKey')
+                : reading > 0
+                  ? t('mentor.context.reading')
+                  : undefined
+          }
           conversation={
             <Conversation
               ctx={ctx}

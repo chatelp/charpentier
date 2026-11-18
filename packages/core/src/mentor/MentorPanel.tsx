@@ -47,8 +47,12 @@ export interface MentorPanelProps {
   /** Nothing to deal with: what to do instead (ask for the Compagnon's opinion on the scene). */
   readonly onAnalyze?: () => void;
   readonly analyzeShortcut?: string | undefined;
-  /** Name of the intervention level, for the panel's title (« cran Accompagnant »). */
-  readonly levelName?: string;
+  /**
+   * A passing state, the panel title's only context (docs/DESIGN.md §4.5,
+   * 1.24): « lit la scène… », « hors ligne », « sans clé ». Nothing at rest:
+   * the tab and the slider below already say the points and the level.
+   */
+  readonly state?: string | undefined;
   /**
    * The remarks of each background work, grouped at the head of the panel
    * whatever the scene, until they are all dealt with (docs/DESIGN.md §4.5).
@@ -289,12 +293,7 @@ export function MentorPanel(props: MentorPanelProps) {
         variant="mentor"
         onClose={props.onClose}
         name={t('mentor.name')}
-        context={[
-          t('mentor.pointsCount', { count: flat.length }),
-          props.levelName && t('mentor.levelContext', { name: props.levelName }),
-        ]
-          .filter(Boolean)
-          .join(' · ')}
+        context={props.state}
       />
       <div className="ch-seg" role="tablist" aria-label={t('mentor.panel')}>
         {(['points', 'conversation'] as const).map((tab) => (

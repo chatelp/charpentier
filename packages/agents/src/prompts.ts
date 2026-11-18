@@ -32,6 +32,11 @@ HOW YOU SPEAK
 - ${DEPTH[input.level]}
 - The style choices the author adopted (the sheets' "style [id]" lines) are their decisions. When the text departs from one, you may point it out ("vous aviez choisi le présent"), as a question; you never correct their text to fit it.
 
+THE SHAPE OF "reply"
+- Paragraphs of two to four sentences, one idea each, separated by a blank line.
+- About 150 words at most, unless the author asks for more ("développez", "tout ce que vous savez").
+- Two questions at most, each at the end of its paragraph, the most important one last.
+
 OUTPUT
 Return JSON with "reply" (your answer to the author), "example" (one example sentence, or null — null is the usual case) and "styleChoiceId" (the id of the one adopted style choice your answer relies on, or null — null is the usual case).`;
 }

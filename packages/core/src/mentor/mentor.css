@@ -335,6 +335,8 @@
   flex: 1;
   overflow: auto;
   padding: 6px 4px 12px;
+  /* A line half under the slider fades out instead of being cut (DESIGN 1.24). */
+  mask-image: linear-gradient(to bottom, transparent 0, #000 16px);
 }
 
 .ch-transcript-empty,

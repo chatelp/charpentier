@@ -107,9 +107,11 @@
       "value": "Nouvelle valeur proposée."
     },
     "askOpinion": "Demander l’avis du Compagnon sur la scène",
-    "pointsCount_one": "{{count}} point",
-    "pointsCount_other": "{{count}} points",
-    "levelContext": "cran {{name}}"
+    "context": {
+      "reading": "lit la scène…",
+      "offline": "hors ligne",
+      "noKey": "sans clé"
+    }
   },
   "manuscript": {
     "defaultProjectTitle": "Mon roman",
