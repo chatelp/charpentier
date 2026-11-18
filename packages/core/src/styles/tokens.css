@@ -110,7 +110,7 @@
   --ch-panel-w: 25.5rem; /* right panel: Points / Conversation, sheet drawer */
   --ch-drawer-w: 22rem; /* manuscript drawer */
   --ch-note-w: 18.5rem; /* margin note */
-  --ch-page-side: 3.5rem; /* least room beside the text: an edge handle and some air */
+  --ch-page-side: 2rem; /* least room beside the text: some air (no edge handles since DESIGN 1.25) */
   --ch-header-side: 10rem; /* each side of the scene header: room for « Écrire | Atelier » */
   /* Below 1180px wide, margin notes unfold under their paragraph. */
 

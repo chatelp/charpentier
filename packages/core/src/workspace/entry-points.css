@@ -13,68 +13,115 @@
   pointer-events: none;
 }
 
-/* Edge handles, where the panels come from. */
-.ch-edge {
-  position: absolute;
-  top: 50%;
-  z-index: var(--ch-z-header, 3);
+/*
+ * The console (docs/DESIGN.md §4.8, 1.25): a plate in relief at the foot of
+ * the page, the manuscript's key, the command zone in its hollow, the
+ * Compagnon's key. Gone while typing, like every entry point.
+ */
+.ch-console {
   display: flex;
-  flex-direction: column;
   align-items: center;
   gap: 10px;
-  padding: 16px 8px 12px;
-  border: 0;
+  width: 100%;
+  padding: 6px 7px;
+  border-radius: 22px;
   background: var(--ch-bg);
   box-shadow: var(--ch-raise-s);
-  color: var(--ch-muted);
-  transform: translateY(-50%);
-  cursor: pointer;
+  pointer-events: auto;
 }
 
-.ch-edge:hover,
-.ch-edge:focus-visible {
-  color: var(--ch-ink);
+/* The command line is open: its full-width bar takes the plate's place. */
+.ch-console.is-away {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ch-console > .ch-cmdzone {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+}
+
+.ch-console-key {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--ch-bg);
+  box-shadow: var(--ch-raise-s);
+  color: var(--ch-ink-2);
+  cursor: pointer;
+  transition:
+    box-shadow var(--ch-dur-relief),
+    color var(--ch-dur-relief);
+}
+
+.ch-console-key.is-mentor {
+  color: var(--ch-mentor);
+}
+
+.ch-console-key:hover,
+.ch-console-key:focus-visible {
   box-shadow: var(--ch-raise);
+  color: var(--ch-ink);
   outline: none;
 }
 
-/* Slate handles cast the page's shadow. */
-.ch-edge.ch-tool {
-  box-shadow: var(--ch-page-raise-s);
-}
-
-.ch-edge.ch-tool:hover,
-.ch-edge.ch-tool:focus-visible {
-  box-shadow: var(--ch-page-raise);
-}
-
-.ch-edge.is-left {
-  left: 0;
-  border-radius: 0 var(--ch-radius-md) var(--ch-radius-md) 0;
-}
-
-.ch-edge.is-right {
-  right: 0;
-  border-radius: var(--ch-radius-md) 0 0 var(--ch-radius-md);
-}
-
-.ch-edge-label {
-  writing-mode: vertical-rl;
-  font: 500 13.5px var(--ch-font-text);
-  font-variant-caps: all-small-caps;
-  letter-spacing: 0.08em;
-}
-
-.ch-edge.is-left .ch-edge-label {
-  transform: rotate(180deg);
-}
-
-.ch-edge-count {
-  min-width: 18px;
-  padding: 2px 0;
+.ch-console-key.is-mentor:hover,
+.ch-console-key.is-mentor:focus-visible {
   color: var(--ch-mentor);
-  font: 600 11px var(--ch-font-ui);
+}
+
+/* A toggle: pressed while its panel is open (§4.7, a choice is a key left pressed). */
+.ch-console-key.is-down,
+.ch-console-key.is-down:hover {
+  box-shadow: var(--ch-inset);
+}
+
+/* The number of open points, in its own small relief. */
+.ch-console-count {
+  position: absolute;
+  top: -5px;
+  right: -7px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background: var(--ch-bg);
+  box-shadow: var(--ch-raise-s);
+  color: var(--ch-mentor);
+  font: 600 10.5px/17px var(--ch-font-ui);
+  font-variant-numeric: tabular-nums;
   text-align: center;
+}
+
+/* Their names, so that nothing is hidden: above each key when the mouse comes near, or at the focus. */
+.ch-console-name {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  color: var(--ch-muted);
+  font: 11px var(--ch-font-ui);
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateX(-50%);
+  transition: opacity var(--ch-dur-relief);
+  pointer-events: none;
+}
+
+.ch-console-name kbd {
+  color: var(--ch-faint);
+  font: inherit;
+}
+
+.ch-console:hover .ch-console-name,
+.ch-console-key:focus-visible .ch-console-name {
+  opacity: 1;
 }
 
 /* Écrire | Atelier, top right of the page. */

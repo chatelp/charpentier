@@ -112,8 +112,6 @@ export function SceneOpener({ chapter, chapterIndex, scene }: SceneChromeProps) 
 export function WritingFooter({
   words,
   wordsToday,
-  remarks,
-  onRemarks,
   status,
   mentorNote,
   onEnterKey,
@@ -126,9 +124,6 @@ export function WritingFooter({
   /** Hidden outside the writing surface. */
   readonly words: number | undefined;
   readonly wordsToday: number;
-  /** Open remarks of the Compagnon on this project. */
-  readonly remarks: number;
-  readonly onRemarks: () => void;
   readonly status: string | undefined;
   readonly mentorNote: string | undefined;
   /** The Compagnon waits for its key: « Compagnon : saisir la clé », clickable. */
@@ -170,11 +165,6 @@ export function WritingFooter({
         <span role="status" aria-live="polite" className="ch-footer-fit">
           {status}
         </span>
-        {remarks > 0 && (
-          <button type="button" tabIndex={-1} className="ch-footer-remarks" onClick={onRemarks}>
-            {t('footer.remarks', { count: remarks })}
-          </button>
-        )}
         {onEnterKey ? (
           <button
             type="button"

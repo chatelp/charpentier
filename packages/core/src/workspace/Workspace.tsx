@@ -58,7 +58,7 @@ import type { PaletteRequest, PaletteScope } from '../palette/palette-request';
 import { lastScenePref, type ProjectSession } from './default-scene';
 import { panelsPref, readPanels, type StoredPanels } from './panels-pref';
 import { projectStatsPref } from '../library/project-stats';
-import { CommandZone, DisplaySheet, EdgeHandle, ModeSwitch } from './EntryPoints';
+import { CommandZone, Console, DisplaySheet, ModeSwitch } from './EntryPoints';
 import { NovelButton, NovelSheet, readVersionsView, useActiveVersionName } from './NovelTitle';
 import { sceneInActiveVersion, spaced } from '../commands/version-commands';
 import { GuidedTour, WELCOMED_PREF, WelcomeNote } from './Onboarding';
@@ -977,20 +977,7 @@ export function ProjectWorkspace({
           }}
         />
       )}
-      {/* Entry points (docs/DESIGN.md §4.8), in the order of the tab key. */}
-      {view === 'write' && !navigatorOpen && (
-        <EdgeHandle
-          side="left"
-          label={t('entry.manuscript')}
-          title={t('entry.manuscriptTitle')}
-          shortcut={registry.shortcutLabel('toggleNavigator')}
-          tour={1}
-          onOpen={() => {
-            playSound('tic');
-            setNavigatorOpen(true);
-          }}
-        />
-      )}
+      {/* Entry points (docs/DESIGN.md §4.8), in the order of the tab key; the console is in the footer. */}
       {view === 'write' && (
         <ModeSwitch
           view="write"
@@ -1225,8 +1212,6 @@ export function ProjectWorkspace({
       <WritingFooter
         words={view === 'write' ? words : undefined}
         wordsToday={wordsToday}
-        remarks={marks.openSignals.length}
-        onRemarks={() => setMentorPanel('points')}
         status={status?.text}
         mentorNote={mentorNote}
         onEnterKey={
@@ -1257,9 +1242,28 @@ export function ProjectWorkspace({
         }
         commandZone={
           view === 'write' && (
-            <CommandZone
-              shortcut={registry.shortcutLabel('openPalette')}
-              onOpen={() => ctx.openPalette()}
+            <Console
+              away={paletteOpen}
+              manuscript={{
+                shortcut: registry.shortcutLabel('toggleNavigator'),
+                open: navigatorOpen,
+                toggle: () => ctx.toggleNavigator(),
+              }}
+              compagnon={{
+                shortcut: registry.shortcutLabel('toggleMentorPanel'),
+                open: mentorPanel !== null,
+                count: marks.openSignals.length,
+                toggle: () => {
+                  playSound(mentorPanel ? 'toc' : 'tic');
+                  setMentorPanel(mentorPanel ? null : 'points');
+                },
+              }}
+              commandZone={
+                <CommandZone
+                  shortcut={registry.shortcutLabel('openPalette')}
+                  onOpen={() => ctx.openPalette()}
+                />
+              }
             />
           )
         }
@@ -1289,20 +1293,6 @@ export function ProjectWorkspace({
             playSound('toc');
             setDisplayOpen(false);
             if (backToText) focusTextIfIdle();
-          }}
-        />
-      )}
-      {view === 'write' && !mentorPanel && !sheetPanel && (
-        <EdgeHandle
-          side="right"
-          label={t('entry.compagnon')}
-          title={t('entry.compagnonTitle')}
-          shortcut={registry.shortcutLabel('toggleMentorPanel')}
-          count={marks.openSignals.length}
-          tour={2}
-          onOpen={() => {
-            playSound('tic');
-            setMentorPanel('points');
           }}
         />
       )}

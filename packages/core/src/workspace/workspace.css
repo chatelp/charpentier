@@ -148,6 +148,11 @@
   right: calc(var(--ch-panel-w) + 46px);
 }
 
+/* The manuscript's drawer on the left: the footer starts after it, the console's key in sight. */
+.ch-app[data-navigator] .ch-footer {
+  left: calc(var(--ch-drawer-w) + 46px);
+}
+
 .ch-footer-right {
   display: flex;
   white-space: nowrap;
@@ -162,7 +167,10 @@
  */
 .ch-app[data-view='write'] .ch-footer {
   display: grid;
-  grid-template-columns: minmax(4.5rem, 1fr) minmax(10rem, min(30rem, 38vw)) minmax(9rem, 1fr);
+  /* The middle column holds the console: the command zone and its two keys (DESIGN 1.25). */
+  grid-template-columns:
+    minmax(4.5rem, 1fr) minmax(14rem, calc(min(30rem, 38vw) + 6.5rem))
+    minmax(9rem, 1fr);
 }
 
 .ch-app[data-view='write'] .ch-footer-right {
@@ -203,7 +211,8 @@
   min-width: 0;
 }
 
-.ch-footer-middle > .ch-cmdzone {
+.ch-footer-middle > .ch-cmdzone,
+.ch-footer-middle > .ch-console {
   width: 100%;
 }
 

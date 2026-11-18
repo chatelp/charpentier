@@ -4,46 +4,113 @@ import type { PrefsUpdate, WritingPrefs } from './writing-prefs';
 import { stepMeasure, stepTextSize } from './writing-prefs';
 import './entry-points.css';
 import { CloseButton } from '../icons/CloseButton';
+import { Pictogram, type PictogramName } from '../icons/Pictogram';
 
 /** « Label (shortcut) »: the native tooltip of every entry point (docs/DESIGN.md §4.8). */
 export const withShortcut = (label: string, shortcut: string | undefined) =>
   shortcut ? `${label} (${shortcut})` : label;
 
 /**
- * A handle on the edge of the window, where its panel comes from
- * (docs/DESIGN.md §4.8): vertical label in small caps, its shortcut, and for
- * the Compagnon the number of open points.
+ * A key of the console (docs/DESIGN.md §4.8, 1.25): a disc in relief with the
+ * panel's pictogram, its name and shortcut above it when the mouse comes near.
+ * A toggle: it stays pressed while its panel is open, a second click closes it.
  */
-export function EdgeHandle({
-  side,
-  label,
+function ConsoleKey({
+  picto,
+  name,
   title,
   shortcut,
   count,
+  pressed,
   tour,
-  onOpen,
+  mentor = false,
+  onToggle,
 }: {
-  readonly side: 'left' | 'right';
-  readonly label: string;
+  readonly picto: PictogramName;
+  readonly name: string;
   readonly title: string;
   readonly shortcut: string | undefined;
   readonly count?: number;
+  readonly pressed: boolean;
   /** Step of the guided tour that points at it. */
   readonly tour: number;
-  readonly onOpen: () => void;
+  readonly mentor?: boolean;
+  onToggle(): void;
 }) {
   return (
     <button
       type="button"
-      className={`ch-edge ch-chrome ch-tool is-${side}`}
+      className={`ch-console-key${mentor ? ' is-mentor' : ''}${pressed ? ' is-down' : ''}`}
       title={withShortcut(title, shortcut)}
+      aria-label={name}
+      aria-pressed={pressed}
       data-tour={tour}
-      onClick={onOpen}
+      onClick={onToggle}
     >
-      {count !== undefined && count > 0 && <span className="ch-edge-count">{count}</span>}
-      <span className="ch-edge-label">{label}</span>
-      {shortcut && <kbd>{shortcut}</kbd>}
+      <span className="ch-console-name" aria-hidden="true">
+        {name} {shortcut && <kbd>{shortcut}</kbd>}
+      </span>
+      <Pictogram name={picto} size={17} />
+      {count !== undefined && count > 0 && (
+        <span className="ch-console-count" aria-hidden="true">
+          {count}
+        </span>
+      )}
     </button>
+  );
+}
+
+/**
+ * The console (docs/DESIGN.md §4.8, 1.25, the author's choice): a plate in
+ * relief at the foot of the page, the manuscript's key, the command zone, the
+ * Compagnon's key. It gives way to the command line once that is open.
+ */
+export function Console({
+  commandZone,
+  manuscript,
+  compagnon,
+  away,
+}: {
+  readonly commandZone: ReactNode;
+  readonly manuscript: {
+    readonly shortcut: string | undefined;
+    readonly open: boolean;
+    toggle(): void;
+  };
+  readonly compagnon: {
+    readonly shortcut: string | undefined;
+    readonly open: boolean;
+    readonly count: number;
+    toggle(): void;
+  };
+  /** The command line is open: the plate fades out. */
+  readonly away: boolean;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className={`ch-console ch-chrome${away ? ' is-away' : ''}`}>
+      <ConsoleKey
+        picto="manuscrit"
+        name={t('entry.manuscript')}
+        title={t('entry.manuscriptTitle')}
+        shortcut={manuscript.shortcut}
+        pressed={manuscript.open}
+        tour={1}
+        onToggle={manuscript.toggle}
+      />
+      {commandZone}
+      <ConsoleKey
+        picto="compagnon"
+        name={t('entry.compagnon')}
+        title={t('entry.compagnonTitle')}
+        shortcut={compagnon.shortcut}
+        count={compagnon.count}
+        pressed={compagnon.open}
+        tour={2}
+        mentor
+        onToggle={compagnon.toggle}
+      />
+    </div>
   );
 }
 

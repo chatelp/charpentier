@@ -91,23 +91,20 @@ describe('a small screen (1024 × 640, the X250 in HD or a virtual machine)', ()
       if (zone && box.width > 0) expect(overlap(box, zone)).toBe(false);
     }
 
-    // The crumbs keep clear of « Écrire | Atelier », the text of the « Manuscrit » handle.
+    // The crumbs keep clear of « Écrire | Atelier ».
     const modes = document.querySelector('.ch-modes')?.getBoundingClientRect();
     for (const crumb of document.querySelectorAll('.ch-crumb')) {
       if (modes) expect(overlap(crumb.getBoundingClientRect(), modes)).toBe(false);
     }
-    const handle = document.querySelector('.ch-edge.is-left')?.getBoundingClientRect();
-    const text = document.querySelector('.ch-page')?.getBoundingClientRect();
-    if (handle && text) expect(text.left).toBeGreaterThan(handle.right);
   });
 
   it('holds the Compagnon’s panel whole on the right', async () => {
     await start();
     await screen.findByText('Je lis par-dessus votre épaule');
     await userEvent.keyboard('{Escape}');
-    const handle = document.querySelector<HTMLElement>('.ch-edge.is-right');
-    expect(handle).toBeTruthy();
-    handle?.click();
+    const key = document.querySelector<HTMLElement>('.ch-console-key.is-mentor');
+    expect(key).toBeTruthy();
+    key?.click();
     const panel = await waitFor(() => {
       const found = document.querySelector<HTMLElement>('.ch-mentor-panel');
       expect(found).toBeTruthy();

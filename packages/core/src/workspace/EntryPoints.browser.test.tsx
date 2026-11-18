@@ -40,20 +40,28 @@ describe('entry points (docs/DESIGN.md §4.8)', () => {
     const { platform } = setup();
     await open(platform);
 
-    // The manuscript handle opens the drawer and gives way to it.
-    const manuscript = screen.getByRole('button', { name: /Manuscrit/ });
+    // The console (DESIGN 1.25): the manuscript's key opens the drawer and stays pressed;
+    // a second click closes it.
+    const manuscript = screen.getByRole('button', { name: 'Manuscrit' });
     expect(manuscript.title).toMatch(/^Manuscrit : chapitres et scènes \(.+J\)$/);
+    expect(manuscript.getAttribute('aria-pressed')).toBe('false');
     await userEvent.click(manuscript);
     await screen.findByRole('complementary', { name: 'Plan du manuscrit' });
-    expect(document.querySelector('.ch-edge.is-left')).toBeNull();
-    await userEvent.keyboard('{Escape}');
+    expect(manuscript.getAttribute('aria-pressed')).toBe('true');
+    // The drawer may cover the foot on a narrow screen: the click itself, not the pointer's path.
+    manuscript.click();
+    await waitFor(() =>
+      expect(screen.queryByRole('complementary', { name: 'Plan du manuscrit' })).toBeNull(),
+    );
 
-    // The Compagnon handle opens its panel, which says what to do when there is nothing.
-    await userEvent.click(screen.getByRole('button', { name: /Compagnon/ }));
+    // The Compagnon's key opens his panel, which says what to do when there is nothing.
+    const compagnon = screen.getByRole('button', { name: 'Compagnon' });
+    await userEvent.click(compagnon);
     const panel = await screen.findByRole('complementary', { name: 'Le Compagnon' });
     expect(within(panel).getByText('Rien à traiter pour l’instant.')).toBeTruthy();
-    expect(document.querySelector('.ch-edge.is-right')).toBeNull();
+    expect(compagnon.getAttribute('aria-pressed')).toBe('true');
     await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(compagnon.getAttribute('aria-pressed')).toBe('false'));
 
     // The command zone opens the command line, with useful commands before typing anything.
     await userEvent.click(screen.getByRole('button', { name: /Que voulez-vous faire/ }));
@@ -92,7 +100,7 @@ describe('entry points (docs/DESIGN.md §4.8)', () => {
   it('keeps open panels open the next time the project opens', async () => {
     const { platform, prefs, docs } = setup();
     await open(platform);
-    await userEvent.click(screen.getByRole('button', { name: /Compagnon/ }));
+    await userEvent.click(screen.getByRole('button', { name: 'Compagnon' }));
     await screen.findByRole('complementary', { name: 'Le Compagnon' });
     await waitFor(() =>
       expect([...prefs.entries()].find(([key]) => key.startsWith('panels:'))?.[1]).toMatchObject({
@@ -112,7 +120,7 @@ describe('entry points (docs/DESIGN.md §4.8)', () => {
     // ⏎ in the text starts the tour (no new paragraph).
     await userEvent.keyboard('{Enter}');
     await screen.findByRole('dialog', { name: 'Le manuscrit' });
-    expect(document.querySelector('.ch-edge.is-left')?.classList).toContain('ch-tour-on');
+    expect(screen.getByRole('button', { name: 'Manuscrit' }).classList).toContain('ch-tour-on');
     await userEvent.keyboard('{Enter}');
     await screen.findByRole('dialog', { name: 'Le Compagnon' });
     await userEvent.keyboard('{Enter}');

@@ -469,8 +469,6 @@
     "words_other": "{{count, number}} mots",
     "today_one": "+{{count, number}} aujourd’hui",
     "today_other": "+{{count, number}} aujourd’hui",
-    "remarks_one": "{{count}} remarque du Compagnon",
-    "remarks_other": "{{count}} remarques du Compagnon",
     "saved": "Enregistré",
     "enterKey": "Compagnon : saisir la clé"
   },
@@ -898,15 +896,15 @@
     "body": "Je n’écrirai jamais une ligne de votre roman : je signale, j’explique, je pose des questions. Trois endroits à connaître :",
     "places": {
       "left": {
-        "where": "à gauche",
-        "what": ", le manuscrit : chapitres et scènes ;"
+        "where": "le livre",
+        "what": ", en bas à gauche : le manuscrit, chapitres et scènes ;"
       },
       "right": {
-        "where": "à droite",
-        "what": ", mes remarques et notre conversation ;"
+        "where": "le compas",
+        "what": ", en bas à droite : mes remarques et notre conversation ;"
       },
       "bottom": {
-        "where": "en bas",
+        "where": "entre les deux",
         "what": ", « Que voulez-vous faire ? » : tapez ce que vous cherchez, tout y est."
       }
     },
