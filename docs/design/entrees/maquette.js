@@ -17,6 +17,20 @@
     .mk-entry.is-mentor svg { color: var(--ch-mentor); }
     .mk-sep { position: absolute; z-index: 4; width: 1px; height: 14px; background: var(--ch-shade);
       box-shadow: 1px 0 0 var(--ch-highlight); }
+    .mk-med { position: absolute; z-index: 4; display: inline-flex; align-items: center; gap: 9px;
+      border: 0; background: transparent; color: var(--ch-muted); font: 12.5px var(--ch-font-ui); padding: 0; }
+    .mk-med .mk-disc { position: relative; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%;
+      box-shadow: var(--ch-raise-s); background: var(--ch-bg); color: var(--ch-ink-2); }
+    .mk-med .mk-disc svg { width: 17px; height: 17px; }
+    .mk-med.is-mentor .mk-disc { color: var(--ch-mentor); }
+    .mk-med.is-down .mk-disc { box-shadow: var(--ch-inset); }
+    .mk-med.is-down { color: var(--ch-ink); }
+    .mk-med .mk-badge { position: absolute; top: -5px; right: -7px; min-width: 17px; height: 17px; padding: 0 4px;
+      border-radius: 9px; background: var(--ch-bg); box-shadow: var(--ch-raise-s); color: var(--ch-mentor);
+      font: 600 10.5px/17px var(--ch-font-ui); text-align: center; }
+    .mk-med kbd { color: var(--ch-faint); font: 11px var(--ch-font-ui); }
+    .ch-cmdzone { position: relative; z-index: 5; }
+    .mk-plate { position: absolute; z-index: 2; border-radius: 22px; box-shadow: var(--ch-raise-s); background: var(--ch-bg); }
   `;
   document.head.appendChild(css);
   const BOOK =
@@ -78,5 +92,59 @@
       'is-mentor',
     );
     c.style.left = r.left - c.offsetWidth - 14 + 'px';
+  } else if (o.variante === 'medaillons') {
+    // Des médaillons-touches : en relief au repos, enfoncés tant que leur panneau est ouvert.
+    const med = (svg, label, key, cls, style, left = true) => {
+      const b = document.createElement('button');
+      b.className = `mk-med ${cls}`;
+      const disc = `<span class="mk-disc">${svg}${o.badge !== false && cls.includes('mentor') ? `<span class="mk-badge">${count}</span>` : ''}</span>`;
+      const text = `<span>${label} <kbd>${key}</kbd></span>`;
+      b.innerHTML = left ? disc + text : text + disc;
+      Object.assign(b.style, style);
+      document.body.appendChild(b);
+      return b;
+    };
+    med(BOOK, 'Manuscrit', '⌘J', o.down === 'm' ? 'is-down' : '', {
+      left: novel.right + 18 + 'px',
+      top: novel.top - 4 + 'px',
+    });
+    const c = med(
+      COMPASS,
+      'Compagnon',
+      '⌘L',
+      `is-mentor ${o.down === 'c' ? 'is-down' : ''}`,
+      { top: modes.top - 4 + 'px' },
+      false,
+    );
+    c.style.left = modes.left - c.offsetWidth - 22 + 'px';
+  } else if (o.variante === 'console') {
+    // Une console en relief autour de la zone de commande : le manuscrit, la commande, le Compagnon.
+    const z = rect('.ch-cmdzone');
+    const foot = document.querySelector('.ch-footer');
+    const f = foot.getBoundingClientRect();
+    if (getComputedStyle(foot).position === 'static') foot.style.position = 'relative';
+    const plate = document.createElement('div');
+    plate.className = 'mk-plate';
+    Object.assign(plate.style, {
+      left: z.left - f.left - 58 + 'px',
+      top: z.top - f.top - 7 + 'px',
+      width: z.width + 116 + 'px',
+      height: z.height + 14 + 'px',
+      zIndex: 0,
+    });
+    foot.prepend(plate);
+    const disc = (svg, cls, x, badge) => {
+      const b = document.createElement('button');
+      b.className = `mk-med ${cls}`;
+      b.title = cls.includes('mentor') ? 'Compagnon (⌘L)' : 'Manuscrit (⌘J)';
+      b.innerHTML = `<span class="mk-disc">${svg}${badge ? `<span class="mk-badge">${count}</span>` : ''}</span>`;
+      Object.assign(b.style, { left: x + 'px', top: z.top - 1 + 'px' });
+      document.body.appendChild(b);
+    };
+    disc(BOOK, o.down === 'm' ? 'is-down' : '', z.left - 46, false);
+    disc(COMPASS, `is-mentor ${o.down === 'c' ? 'is-down' : ''}`, z.right + 12, true);
+    document.querySelectorAll('.ch-footer-right > *').forEach((e) => {
+      if (/remarque|Compagnon/.test(e.textContent || '')) e.style.display = 'none';
+    });
   }
 })();
