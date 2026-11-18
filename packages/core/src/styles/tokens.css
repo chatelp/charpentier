@@ -150,11 +150,13 @@
     --ch-mentor-soft: rgb(134 174 219 / 0.13);
     --ch-author: #e3876a;
     --ch-author-soft: rgb(227 135 106 / 0.24);
-    --ch-lit-bg: transparent;
+    --ch-lit: inset 0 1px 0 rgb(255 255 255 / 0.1), inset 0 16px 18px -12px rgb(255 255 255 / 0.08);
+    --ch-lit-bg: color-mix(in srgb, var(--ch-bg) 93%, #fff);
   }
 }
 :root[data-theme='dark'] {
-  --ch-lit-bg: transparent;
+  --ch-lit: inset 0 1px 0 rgb(255 255 255 / 0.1), inset 0 16px 18px -12px rgb(255 255 255 / 0.08);
+  --ch-lit-bg: color-mix(in srgb, var(--ch-bg) 93%, #fff);
   --ch-bg: #1b1e23;
   --ch-ink: #dfe3ea;
   --ch-ink-2: #b9c0ca;
@@ -178,13 +180,14 @@
  */
 :root {
   /*
-   * The light (docs/DESIGN.md §4.7): where the author is now (the current tab,
-   * the active line, the open panel, the held button). A white glow spilling
-   * under the element, as under the system line. On the light page the element
-   * also turns lighter than the paper; on slate and the dark page the glow is enough.
+   * The light (docs/DESIGN.md §4.7, 1.26, the author's choice « B, rétroéclairé »):
+   * where the author is now (the current tab, the active line, the open panel,
+   * the held button). Backlit from within, from above: a bright top edge and a
+   * light falling inside, nothing spilling out; the element turns lighter than
+   * its material. Never a dark tint: lit is lighter, pressed (a hollow) is darker.
    */
-  --ch-lit: 0 9px 14px -7px rgb(255 255 255 / 0.75);
-  --ch-lit-bg: color-mix(in srgb, var(--ch-bg) 35%, #fff);
+  --ch-lit: inset 0 1px 0 rgb(255 255 255 / 0.9), inset 0 14px 16px -12px rgb(255 255 255 / 0.8);
+  --ch-lit-bg: color-mix(in srgb, var(--ch-bg) 55%, #fff);
   --ch-page-raise: var(--ch-raise);
   --ch-page-raise-s: var(--ch-raise-s);
   --ch-page-shade: var(--ch-shade);
@@ -213,7 +216,8 @@
     inset var(--ch-depth-s) var(--ch-depth-s) var(--ch-blur-s) var(--ch-shade),
     inset calc(var(--ch-depth-s) * -1) calc(var(--ch-depth-s) * -1) var(--ch-blur-s)
       var(--ch-highlight);
-  --ch-lit-bg: transparent;
+  --ch-lit: inset 0 1px 0 rgb(255 255 255 / 0.13), inset 0 16px 18px -12px rgb(255 255 255 / 0.1);
+  --ch-lit-bg: color-mix(in srgb, var(--ch-bg) 94%, #fff);
   /* Its one blue: the Compagnon's, lighter on this dark (and the dot of /admin's emblem). */
   --ch-mentor: #86aedb;
   color-scheme: dark;
@@ -243,6 +247,11 @@
     inset var(--ch-depth-s) var(--ch-depth-s) var(--ch-blur-s) var(--ch-shade),
     inset calc(var(--ch-depth-s) * -1) calc(var(--ch-depth-s) * -1) var(--ch-blur-s)
       var(--ch-highlight);
+  /*
+   * The system keeps its own: its lists select in reverse video (§3.1), and
+   * the line's segments keep the glow under them they always had.
+   */
+  --ch-lit: 0 9px 14px -7px rgb(255 255 255 / 0.75);
   --ch-lit-bg: transparent;
   color-scheme: dark;
   background-color: var(--ch-bg);
