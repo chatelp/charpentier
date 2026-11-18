@@ -115,3 +115,28 @@ export function anchoredText(sceneDoc: Y.Doc, anchor: TextAnchor): string | unde
   const plain = plainOf(start.type);
   return end.index > start.index ? plain.slice(start.index, end.index) : undefined;
 }
+
+/**
+ * Whether two anchors cover a common stretch of the text as it stands now
+ * (false when either was deleted): how a remark is known to be about a
+ * passage the author already decided on, whatever words were quoted.
+ */
+export function anchorsOverlap(sceneDoc: Y.Doc, a: TextAnchor, b: TextAnchor): boolean {
+  const range = (anchor: TextAnchor) => {
+    const start = Y.createAbsolutePositionFromRelativePosition(
+      Y.createRelativePositionFromJSON(anchor.start),
+      sceneDoc,
+    );
+    const end = Y.createAbsolutePositionFromRelativePosition(
+      Y.createRelativePositionFromJSON(anchor.end),
+      sceneDoc,
+    );
+    return start && end && start.type === end.type && end.index > start.index
+      ? { type: start.type, from: start.index, to: end.index }
+      : undefined;
+  };
+  if (a.sceneId !== b.sceneId || a.variantId !== b.variantId) return false;
+  const ra = range(a);
+  const rb = range(b);
+  return !!ra && !!rb && ra.type === rb.type && ra.from < rb.to && rb.from < ra.to;
+}

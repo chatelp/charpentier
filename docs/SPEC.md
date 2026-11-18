@@ -218,7 +218,7 @@ Chaque information (fiche ou champ de fiche) porte un statut visible :
 |---|---|---|
 | **Proposée** | oui | Déduite par l'agent, en attente de l'auteur. |
 | **Validée** | oui | Saisie ou validée par l'auteur. Seul l'auteur peut la modifier. |
-| **Rejetée** | oui | Proposition refusée. L'agent ne la repropose pas sauf élément nouveau dans le texte (la valeur rejetée et sa justification sont conservées pour le vérifier). |
+| **Rejetée** | oui | Proposition refusée. L'agent ne repropose pas la valeur rejetée, quel que soit le passage cité à l'appui et à la casse et la ponctuation près ; une autre valeur pour le même champ reste une proposition nouvelle (la valeur rejetée est conservée pour le vérifier, et montrée à l'agent). |
 | **Contredite** | non, dérivé | Information validée qui porte au moins un signalement de conflit ouvert. Résoudre le conflit ne lui fait pas perdre la validation. |
 
 Toute saisie directe de l'auteur est validée d'office. Toute modification par l'auteur d'une information proposée la rend validée.

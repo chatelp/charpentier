@@ -166,7 +166,9 @@ export type ProposalResult =
  * Records an agent proposal, unless the author has decided:
  * - a validated field is never touched (the caller raises a conflict signal
  *   instead when the text disagrees with it);
- * - a value the author rejected is not proposed again unless the evidence is new.
+ * - a value the author rejected is not proposed again, whatever the evidence
+ *   (a model that quotes another passage for the same value brings nothing
+ *   new) and however it is spelled (`sameRejectedValue`).
  */
 export function agentProposeField(
   container: Container,
@@ -177,14 +179,9 @@ export function agentProposeField(
   const state = readField(container, field);
   if (state.status === 'validated')
     return { ok: false, reason: 'validated', validatedValue: state.value ?? null };
-  const evidenceHash = hashEvidence(proposal.evidence);
-  if (
-    state.rejected.some(
-      (r) => sameValue(r.value, proposal.value) && r.evidenceHash === evidenceHash,
-    )
-  ) {
+  if (state.rejected.some((r) => sameRejectedValue(r.value, proposal.value)))
     return { ok: false, reason: 'rejected-before' };
-  }
+  const evidenceHash = hashEvidence(proposal.evidence);
   if (
     state.proposal &&
     sameValue(state.proposal.value, proposal.value) &&
@@ -219,6 +216,33 @@ export function stableStringify(value: unknown): string {
 
 export const sameValue = (a: FieldValue, b: FieldValue): boolean =>
   stableStringify(a) === stableStringify(b);
+
+/** A value as a refusal remembers it: letters and digits only, case and punctuation aside. */
+const loose = (value: FieldValue): FieldValue => {
+  if (typeof value === 'string')
+    return value
+      .normalize('NFC')
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}]+/gu, ' ')
+      .trim();
+  if (Array.isArray(value)) return (value as readonly FieldValue[]).map(loose);
+  if (value && typeof value === 'object')
+    return Object.fromEntries(
+      Object.entries(value as { readonly [key: string]: FieldValue }).map(([k, v]) => [
+        k,
+        loose(v),
+      ]),
+    );
+  return value;
+};
+
+/**
+ * Whether a proposal says again what the author refused: the same value up
+ * to case, spaces and punctuation (« Un polar. » and « un polar »). Accents
+ * are kept: they change words (« pêcheur », « pécheur »).
+ */
+export const sameRejectedValue = (rejected: FieldValue, proposed: FieldValue): boolean =>
+  sameValue(loose(rejected), loose(proposed));
 
 /** FNV-1a 32-bit hash of the evidence, order-insensitive. */
 export function hashEvidence(evidence: readonly Evidence[]): string {

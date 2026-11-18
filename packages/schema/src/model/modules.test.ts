@@ -70,19 +70,25 @@ describe('field statuses', () => {
     expect(readFieldRef(doc, pitch)).toMatchObject({ status: 'validated', value: 'Proposé.' });
   });
 
-  it('a rejected value is not proposed again unless the text gives new evidence', () => {
+  it('a rejected value is not proposed again, whatever the evidence or the spelling', () => {
     const doc = newProjectDoc();
     const agent = createAgentWriter(doc, 'bottom-up');
     agent.proposeField(pitch, 'Un polar.', evidence('le commissaire'));
     rejectProposal(doc, pitch);
     expect(readFieldRef(doc, pitch).status).toBe('rejected');
 
-    expect(agent.proposeField(pitch, 'Un polar.', evidence('le commissaire'))).toEqual({
-      ok: false,
-      reason: 'rejected-before',
+    const refused = { ok: false, reason: 'rejected-before' };
+    expect(agent.proposeField(pitch, 'Un polar.', evidence('le commissaire'))).toEqual(refused);
+    // Another passage quoted for the same value is not a new fact.
+    expect(agent.proposeField(pitch, 'Un polar.', evidence('une autopsie'))).toEqual(refused);
+    expect(agent.proposeField(pitch, 'un  polar', evidence('une autopsie'))).toEqual(refused);
+    expect(readFieldRef(doc, pitch).status).toBe('rejected');
+    // Another value is another proposal; accents make another word.
+    expect(agent.proposeField(pitch, 'Un pólar.', evidence('une autopsie'))).toEqual({ ok: true });
+    expect(agent.proposeField(pitch, 'Un roman noir.', evidence('une autopsie'))).toEqual({
+      ok: true,
     });
-    expect(agent.proposeField(pitch, 'Un polar.', evidence('une autopsie'))).toEqual({ ok: true });
-    expect(agent.proposeField(pitch, 'Un polar.', evidence('une autopsie'))).toEqual({
+    expect(agent.proposeField(pitch, 'Un roman noir.', evidence('une autopsie'))).toEqual({
       ok: false,
       reason: 'unchanged',
     });

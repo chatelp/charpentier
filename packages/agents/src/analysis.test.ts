@@ -9,7 +9,9 @@ import {
   listEntities,
   listSignals,
   parseSceneMarkdown,
+  readFieldRef,
   rejectEntity,
+  rejectProposal,
   variantFragment,
   writeSceneDocToFragment,
 } from '@charpentier/schema';
@@ -149,5 +151,146 @@ describe('scene analysis (bottom-up, conflicts, remarks)', () => {
       { resolved: 1 },
     );
     expect(remarkKindsFor(1)).toEqual([]);
+  });
+
+  it('never brings back a value the author rejected, even quoted otherwise, and says so to the model', async () => {
+    const { root, sceneDoc, sceneId, helene } = project();
+    const ref = { module: 'characters', entityId: helene, field: 'fear' } as const;
+    const sad = (quote: string, value = 'la tristesse') => ({
+      characters: [
+        {
+          name: 'Hélène',
+          existingId: helene,
+          quote: 'Hélène avait les yeux verts',
+          fields: [{ field: 'fear', value, quote }],
+        },
+      ],
+    });
+    await analyzeScene({
+      llm: model(sad('Elle était très triste')),
+      root,
+      sceneDoc,
+      sceneId,
+      level: 1,
+    });
+    expect(readFieldRef(root, ref).proposal?.value).toBe('la tristesse');
+    rejectProposal(root, ref);
+
+    // The same value on another passage, or spelled otherwise: still refused.
+    const prompts: string[] = [];
+    const again: LlmService = {
+      ...model({}),
+      generate: async (request) => {
+        prompts.push(String(request.messages[0]?.content));
+        return { text: JSON.stringify({ ...empty, ...sad('ce matin-là', 'La tristesse.') }) };
+      },
+    };
+    expect(await analyzeScene({ llm: again, root, sceneDoc, sceneId, level: 1 })).toMatchObject({
+      proposals: 0,
+    });
+    expect(readFieldRef(root, ref)).toMatchObject({ status: 'rejected' });
+    expect(readFieldRef(root, ref).proposal).toBeUndefined();
+    // The model is told what was refused, as in the interview.
+    expect(prompts[0]).toContain('<refused>');
+    expect(prompts[0]).toContain(`characters [${helene}] "Hélène" fear: rejected "la tristesse"`);
+  });
+
+  it('does not raise again a remark the author dismissed when another quote of the passage is given', async () => {
+    const { root, sceneDoc, sceneId } = project();
+    const remark = (quote: string) => ({
+      remarks: [
+        {
+          kind: 'craft',
+          quote,
+          title: 'Émotion nommée',
+          message: 'L’émotion est nommée.',
+          principle: 'Montrer plutôt que dire.',
+          correction: null,
+          example: null,
+          styleChoiceId: null,
+        },
+      ],
+    });
+    await analyzeScene({
+      llm: model(remark('Elle était très triste')),
+      root,
+      sceneDoc,
+      sceneId,
+      level: 3,
+    });
+    const [raised] = listSignals(root, { state: 'open' });
+    dismissSignal(root, raised?.id ?? '');
+
+    const prompts: string[] = [];
+    const again: LlmService = {
+      ...model({}),
+      generate: async (request) => {
+        prompts.push(String(request.messages[0]?.content));
+        return { text: JSON.stringify({ ...empty, ...remark('était très triste') }) };
+      },
+    };
+    expect(await analyzeScene({ llm: again, root, sceneDoc, sceneId, level: 3 })).toMatchObject({
+      signals: 0,
+    });
+    expect(listSignals(root, { state: 'open' })).toHaveLength(0);
+    expect(prompts[0]).toContain(
+      'remark dismissed (craft) on "Elle était très triste": Émotion nommée',
+    );
+    // Elsewhere in the scene, the same kind of remark is still made.
+    await analyzeScene({
+      llm: model(remark('ouvrit le sas sans badge')),
+      root,
+      sceneDoc,
+      sceneId,
+      level: 3,
+    });
+    expect(listSignals(root, { state: 'open' })).toHaveLength(1);
+  });
+
+  it('extends a clue’s pending list scene after scene, and leaves out a scene the author refused', async () => {
+    const root = new Y.Doc({ guid: 'project:p2' });
+    initProject(root, { id: 'p2', title: 'Les serres', kind: 'novel' });
+    const chapterId = createChapter(root, { title: 'Un' });
+    const scenes = ['Un', 'Deux', 'Trois'].map((title) => {
+      const { sceneId, variantId } = createScene(root, { chapterId, title });
+      const sceneDoc = new Y.Doc();
+      writeSceneDocToFragment(
+        parseSceneMarkdown(`Scène ${title} : le badge rouge traînait sur la table.`),
+        variantFragment(sceneDoc, variantId),
+      );
+      return { sceneId, sceneDoc };
+    });
+    const badge = createEntity(root, 'clues', { title: 'Le badge rouge', kind: 'clue' }, AUTHOR);
+    const ref = { module: 'clues', entityId: badge, field: 'appearsIn' } as const;
+    const llm = model({
+      clues: [
+        {
+          existingId: badge,
+          title: 'Le badge rouge',
+          kind: 'clue',
+          role: 'appears',
+          quote: 'le badge rouge traînait',
+        },
+      ],
+    });
+    const read = (i: number) =>
+      analyzeScene({
+        llm,
+        root,
+        sceneDoc: scenes[i]?.sceneDoc ?? new Y.Doc(),
+        sceneId: scenes[i]?.sceneId ?? '',
+        level: 1,
+      });
+    const ids = scenes.map((s) => s.sceneId);
+    await read(1);
+    await read(2);
+    expect(readFieldRef(root, ref).proposal?.value).toEqual([ids[1], ids[2]]);
+    await read(0);
+    expect(readFieldRef(root, ref).proposal?.value).toEqual(ids); // in the manuscript's order
+
+    // Refused: none of these scenes is proposed for it again, alone or with others.
+    rejectProposal(root, ref);
+    expect(await read(1)).toMatchObject({ proposals: 0 });
+    expect(readFieldRef(root, ref).proposal).toBeUndefined();
   });
 });
