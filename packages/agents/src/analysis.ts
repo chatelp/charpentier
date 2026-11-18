@@ -233,7 +233,7 @@ export interface AnalysisResult {
  * proposals in the sheets, conflicts with validated facts, clue tracking and
  * remarks anchored in the text, all through the AgentWriter (statuses are
  * respected: a validated or rejected field is never overwritten). Remarks of
- * an earlier analysis of this scene that are not reported again are resolved.
+ * an earlier analysis of this variant that are not reported again are resolved.
  */
 export async function analyzeScene(input: {
   readonly llm: LlmService;
@@ -471,10 +471,13 @@ export function applyAnalysis(
     });
   }
 
-  // Earlier remarks on this scene that the text no longer calls for.
+  // Earlier remarks of this analysis on this variant that the text no longer
+  // calls for. Remarks of another work (« Vérifier la structure »), or
+  // anchored in another variant, are not this reading's to withdraw.
   let resolved = 0;
   for (const s of all) {
-    if (s.state !== 'open' || s.author !== 'mentor' || s.textAnchor?.sceneId !== sceneId) continue;
+    if (s.state !== 'open' || s.author !== 'mentor' || s.source !== writer.agent) continue;
+    if (s.textAnchor?.sceneId !== sceneId || s.textAnchor.variantId !== variantId) continue;
     if (s.fingerprint && reported.has(s.fingerprint)) continue;
     if (s.kind === 'external-edit') continue;
     if (writer.resolveOwnSignal(s.id)) resolved++;

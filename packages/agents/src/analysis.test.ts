@@ -1,10 +1,14 @@
 import type { LlmService } from '@charpentier/platform';
 import {
+  addVariantMeta,
+  anchorForQuote,
   AUTHOR,
+  createAgentWriter,
   createChapter,
   createEntity,
   createScene,
   dismissSignal,
+  getScene,
   initProject,
   listEntities,
   listSignals,
@@ -37,6 +41,9 @@ function project() {
   );
   return { root, sceneDoc, sceneId, helene };
 }
+
+const activeVariant = (root: Y.Doc, sceneId: string) =>
+  getScene(root, sceneId)?.activeVariantId ?? '';
 
 const empty = {
   characters: [],
@@ -199,5 +206,56 @@ describe('scene analysis (bottom-up, conflicts, remarks)', () => {
     ];
     await analyzeScene({ llm: model({ remarks }), root, sceneDoc, sceneId, level: 4 });
     expect(listSignals(root)).toEqual([]);
+  });
+});
+
+describe('the remarks an analysis withdraws', () => {
+  it('withdraws only its own remarks, on the variant it read', async () => {
+    const { root, sceneDoc, sceneId } = project();
+    const variantId = activeVariant(root, sceneId);
+    const anchored = (variant: string) => {
+      const textAnchor = anchorForQuote(sceneDoc, sceneId, variant, 'Elle était très triste');
+      if (!textAnchor) throw new Error('not anchored');
+      return textAnchor;
+    };
+    // A remark of « Vérifier la structure » on this very scene.
+    const structure = createAgentWriter(root, 'structure').raiseSignal({
+      kind: 'craft',
+      message: 'La scène arrive tard dans l’acte.',
+      textAnchor: anchored(variantId),
+      fingerprint: 'task-structure',
+    });
+    // A remark of an earlier analysis, on another variant of the scene.
+    writeSceneDocToFragment(
+      parseSceneMarkdown('Elle était très triste, vraiment.'),
+      variantFragment(sceneDoc, 'v2'),
+    );
+    addVariantMeta(root, sceneId, { variantId: 'v2', name: 'Essai', origin: 'author' });
+    const analysis = createAgentWriter(root, 'scene-analysis');
+    const elsewhere = analysis.raiseSignal({
+      kind: 'craft',
+      message: 'L’émotion est nommée.',
+      textAnchor: anchored('v2'),
+      fingerprint: 'other-variant',
+    });
+    const own = analysis.raiseSignal({
+      kind: 'craft',
+      message: 'L’émotion est nommée.',
+      textAnchor: anchored(variantId),
+      fingerprint: 'own',
+    });
+
+    const result = await analyzeScene({ llm: model({}), root, sceneDoc, sceneId, level: 4 });
+    expect(result).toMatchObject({ resolved: 1 });
+    const state = (id: string) => listSignals(root).find((s) => s.id === id)?.state;
+    const source = (id: string) => listSignals(root).find((s) => s.id === id)?.source;
+    expect([structure, elsewhere, own].map(source)).toEqual([
+      'structure',
+      'scene-analysis',
+      'scene-analysis',
+    ]);
+    expect(state(own)).toBe('resolved');
+    expect(state(structure)).toBe('open');
+    expect(state(elsewhere)).toBe('open');
   });
 });

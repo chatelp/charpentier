@@ -30,6 +30,11 @@ export interface Signal {
   readonly state: SignalState;
   /** `mentor`, or a person id for human annotations later. */
   readonly author: string;
+  /**
+   * The agent that raised it (`scene-analysis`, `structure`…), set by
+   * AgentWriter: an agent only withdraws remarks of its own kind of work.
+   */
+  readonly source?: string;
   /** A few words naming the remark (« Les yeux d'Hélène »). */
   readonly title?: string;
   readonly message: string;

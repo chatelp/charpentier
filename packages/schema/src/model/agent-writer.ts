@@ -31,7 +31,7 @@ export interface AgentWriter {
     fields: Readonly<Record<string, FieldValue>>,
     evidence: readonly Evidence[],
   ): string;
-  raiseSignal(signal: Omit<NewSignal, 'author'>): string;
+  raiseSignal(signal: Omit<NewSignal, 'author' | 'source'>): string;
   resolveOwnSignal(signalId: string): boolean;
 }
 
@@ -49,7 +49,8 @@ export function createAgentWriter(rootDoc: Y.Doc, agent: string): AgentWriter {
       proposeFieldValue(rootDoc, ref, { value, agent, evidence }, origin),
     proposeEntity: (module, fields, evidence) =>
       proposeEntityWithFields(rootDoc, module, { agent, fields, evidence }, origin),
-    raiseSignal: (signal) => addSignal(rootDoc, { ...signal, author: 'mentor' }, origin),
+    raiseSignal: (signal) =>
+      addSignal(rootDoc, { ...signal, author: 'mentor', source: agent }, origin),
     resolveOwnSignal: (signalId) => resolveMentorSignal(rootDoc, signalId, origin),
   };
 }
