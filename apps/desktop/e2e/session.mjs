@@ -6,8 +6,8 @@
 //
 //   pnpm session:mac <out> [steps…]   (builds, then plays the session)
 //
-// Steps: book (the manuscript, no call), interview, guided, structure,
-// memory (quits, relaunches, asks). Without steps: all of them. `--fake`: no
+// Steps: book (the manuscript, no call), interview, guided, structure, style
+// (with `--book=<file>`), memory (quits, relaunches, asks). Without steps: all of them. `--fake`: no
 // key, the Compagnon unreachable (to try the gestures for free).
 // It costs API credits: about 1 € for all the steps.
 import fs from 'node:fs';
@@ -20,8 +20,12 @@ const appDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
 const out = path.resolve(args.find((a) => !a.startsWith('-')) ?? 'session');
 const fake = args.includes('--fake');
+// `--book=<file>`: the reference text of the style step (.txt, .md, .epub, .pdf).
+const book = args.find((a) => a.startsWith('--book='))?.slice('--book='.length);
 const asked = args.filter((a) => !a.startsWith('-')).slice(1);
-const steps = asked.length ? asked : ['book', 'interview', 'guided', 'structure', 'memory'];
+const steps = asked.length
+  ? asked
+  : ['book', 'interview', 'guided', 'structure', ...(book ? ['style'] : []), 'memory'];
 fs.mkdirSync(out, { recursive: true });
 const dirs = { library: path.join(out, 'Bibliothèque'), userData: path.join(out, 'data') };
 const apiKey = fake ? 'sk-ant-none' : savedApiKey();
@@ -214,6 +218,44 @@ const STEPS = {
       await conversation.click();
       await snap(window, 'structure-bilan');
     }
+  },
+
+  async style({ app, window }) {
+    if (!book) throw new Error('--book=<fichier> manque');
+    // The system's dialog answers with the book, without a window.
+    await app.evaluate(({ dialog }, file) => {
+      dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [file] });
+    }, path.resolve(book));
+    await window.keyboard.press('ControlOrMeta+0');
+    await window.getByRole('button', { name: 'Texte de référence…' }).click();
+    const card = window.getByRole('group', { name: 'Dégager les choix de style' });
+    await card.waitFor({ timeout: 30_000 });
+    await snap(window, 'style-cout');
+    await window.getByRole('button', { name: /Lancer/ }).click();
+    await answered(
+      window,
+      window.locator('.ch-bilan-head', { hasText: /Style · d’après/ }).first(),
+      'choix de style',
+      300_000,
+    );
+    await snap(window, 'style-propositions');
+    // Two choices adopted: V validates the last proposal, twice.
+    await window.getByRole('textbox', { name: 'Parlez de votre roman…' }).focus();
+    await window.keyboard.press('v');
+    await wait(400);
+    await window.keyboard.press('v');
+    await wait(600);
+    await window.keyboard.press('ControlOrMeta+6');
+    await snap(window, 'style-et-voix');
+    // A remark that relies on them.
+    await window.keyboard.press('ControlOrMeta+E');
+    await command(window, 'Parler au Compagnon');
+    const question = window.getByRole('textbox', { name: 'Votre question au Compagnon' });
+    await question.fill('Ma scène d’Angers suit-elle les choix de style que j’ai adoptés ?');
+    await question.press('Enter');
+    await thinking(window, 'remarque de style');
+    await snap(window, 'style-remarque');
+    await window.keyboard.press('Escape');
   },
 
   async memory(session) {
