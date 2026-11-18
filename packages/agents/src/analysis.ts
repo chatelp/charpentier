@@ -23,6 +23,7 @@ import {
   type SignalKind,
 } from '@charpentier/schema';
 import type * as Y from 'yjs';
+import { answerJson } from './answer';
 import { sceneContext, sheetsSummary, validatedStyleChoice } from './context';
 import { notebookForReading } from './memory';
 import { changeRatio, isOneSentence, MAX_CORRECTION_RATIO, narrativeProseIn } from './guard';
@@ -315,7 +316,17 @@ export async function analyzeScene(input: {
     },
     input.signal,
   );
-  const analysis = JSON.parse(response.text) as Analysis;
+  // Whole or not at all: a cut answer would file half an analysis as a complete one.
+  const read = answerJson<Partial<Analysis>>(response);
+  const list = <T>(value: T[] | undefined): T[] => (Array.isArray(value) ? value : []);
+  const analysis: Analysis = {
+    characters: list(read.characters),
+    worldRules: list(read.worldRules),
+    clues: list(read.clues),
+    knowledge: list(read.knowledge),
+    conflicts: list(read.conflicts),
+    remarks: list(read.remarks),
+  };
   return applyAnalysis(
     createAgentWriter(root, 'scene-analysis'),
     { root, sceneDoc, sceneId, variantId, level },

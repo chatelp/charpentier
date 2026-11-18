@@ -1,6 +1,6 @@
 import type { LlmRequest, LlmService } from '@charpentier/platform';
 import { describe, expect, it } from 'vitest';
-import { compagnonChat, type ChatContext } from './index';
+import { compagnonChat, UnusableAnswerError, type ChatContext } from './index';
 
 /** A model whose answers are scripted, recording what it was asked. */
 function scriptedModel(answers: readonly string[]) {
@@ -10,7 +10,9 @@ function scriptedModel(answers: readonly string[]) {
     onStatusChange: () => () => {},
     generate: async (request) => {
       requests.push(request);
-      return { text: answers[requests.length - 1] ?? answers[answers.length - 1] ?? '' };
+      const text = answers[requests.length - 1] ?? answers[answers.length - 1] ?? '';
+      // « CUT » stands for an answer stopped at the output limit.
+      return text.startsWith('CUT') ? { text: text.slice(3), truncated: true } : { text };
     },
   };
   return { llm, requests };
@@ -71,8 +73,30 @@ describe('the Compagnon in conversation', () => {
     expect(answer).toEqual({ reply: 'Qu’est-ce qu’Hélène refuse, au fond ? Partez de là.' });
   });
 
-  it('rejects malformed answers', async () => {
-    const { llm } = scriptedModel(['pas du JSON', '{"reply":""}']);
-    expect((await compagnonChat(llm, context, [])).guarded).toBe(true);
+  it('fails, and refuses nothing, when the answers cannot be read', async () => {
+    const { llm, requests } = scriptedModel(['pas du JSON', '{"reply":""}']);
+    const failure = compagnonChat(llm, context, []);
+    await expect(failure).rejects.toBeInstanceOf(UnusableAnswerError);
+    await expect(failure).rejects.toMatchObject({ reason: 'unreadable' });
+    // Asked again as it was: the model broke no rule, it is not told it did.
+    expect(requests).toHaveLength(2);
+    expect(requests[1]?.messages).toEqual(requests[0]?.messages);
+  });
+
+  it('never takes an answer cut at the output limit for a whole one, or for a refusal', async () => {
+    // Cut twice: a failure, even though what came of the first parses.
+    const cut = scriptedModel([`CUT${json('Que veut Hélène')}`, 'CUT{"reply":"Que veut']);
+    await expect(compagnonChat(cut.llm, context, [])).rejects.toMatchObject({
+      reason: 'truncated',
+    });
+    // Cut once, then whole: the whole answer is given.
+    const then = scriptedModel(['CUT{"reply":"Que veut', json('Que veut Hélène, au fond ?')]);
+    expect(await compagnonChat(then.llm, context, [])).toEqual({
+      reply: 'Que veut Hélène, au fond ?',
+    });
+    // The rule broken, then nothing to read: still a failure, not his refusal.
+    const written = json('— Je ne partirai pas, dit Hélène.\n— Alors reste, répondit Paul.');
+    const mixed = scriptedModel([written, 'pas du JSON']);
+    await expect(compagnonChat(mixed.llm, context, [])).rejects.toBeInstanceOf(UnusableAnswerError);
   });
 });

@@ -121,6 +121,22 @@ describe('Anthropic LLM service', () => {
     expect(requests[0]).not.toHaveProperty('fallbacks');
   });
 
+  it('says when an answer was cut at the output limit', async () => {
+    let stop = 'max_tokens';
+    const { client } = fakeClient(() => message('{"reply":"Que veut', stop));
+    const llm = new AnthropicLlmService({
+      apiKey: () => 'sk-test',
+      models: () => ({ deep: OPUS, fast: OPUS }),
+      createClient: () => client,
+    });
+    expect(await llm.generate(request)).toMatchObject({
+      text: '{"reply":"Que veut',
+      truncated: true,
+    });
+    stop = 'end_turn';
+    expect(await llm.generate(request)).not.toHaveProperty('truncated');
+  });
+
   it('reports offline, missing key and refusals', async () => {
     let fail: unknown = new Anthropic.APIConnectionError({ message: 'down' });
     const { client } = fakeClient(() => fail);

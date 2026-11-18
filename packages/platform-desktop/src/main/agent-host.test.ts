@@ -3,7 +3,10 @@ import os from 'node:os';
 import path from 'node:path';
 import type Anthropic from '@anthropic-ai/sdk';
 import {
+  addChatMessage,
+  AUTHOR,
   chatMessages,
+  addInterviewMessage,
   interviewMessages,
   createChapter,
   createScene,
@@ -13,7 +16,7 @@ import {
   variantFragment,
   writeSceneDocToFragment,
 } from '@charpentier/schema';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AgentHost } from './agent-host';
 import { AnthropicLlmService } from './anthropic-llm';
 import { DocStore } from './doc-store';
@@ -57,7 +60,7 @@ function fakeClient() {
   return { client, seen };
 }
 
-async function setUp() {
+async function setUp(other?: Anthropic) {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'charpentier-agents-'));
   dirs.push(tmp);
   const library = new FolderLibrary(path.join(tmp, 'Bibliothèque'));
@@ -77,7 +80,7 @@ async function setUp() {
   const llm = new AnthropicLlmService({
     apiKey: () => 'sk-test',
     models: () => ({ deep: 'claude-opus-5-5', fast: 'claude-opus-5-5' }),
-    createClient: () => client,
+    createClient: () => other ?? client,
   });
   const host = new AgentHost(llm, {} as SecretStore, store);
   return { host, store, projectId: project.id, seen };
@@ -125,6 +128,33 @@ describe('the specialised agents in the main process (D-27)', () => {
         characterId: 'nobody',
       }),
     ).toBeNull();
+  });
+});
+
+describe('an answer that cannot be used (cut at the output limit)', () => {
+  it('is reported as a failure: the Compagnon says nothing he did not say', async () => {
+    const create = async () => ({
+      stop_reason: 'max_tokens',
+      content: [{ type: 'text', text: '{"reply":"Que veut' }],
+      usage: { input_tokens: 10, output_tokens: 10 },
+    });
+    const { host, store, projectId } = await setUp({
+      beta: { messages: { create } },
+    } as unknown as Anthropic);
+    const mentor = store.acquire(guids.mentor(projectId), 'test');
+    addChatMessage(mentor, { role: 'author', text: 'Ma scène est-elle trop lente ?' }, AUTHOR);
+    addInterviewMessage(mentor, { role: 'author', text: 'Hélène est batelière.' }, AUTHOR);
+    const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      expect(await host.handle({ type: 'agents.ask', projectId })).toBe('failed');
+      expect(await host.handle({ type: 'agents.interview', projectId, mode: 'free' })).toBe(
+        'failed',
+      );
+    } finally {
+      logged.mockRestore();
+    }
+    expect(chatMessages(mentor).map((m) => m.role)).toEqual(['author']);
+    expect(interviewMessages(mentor).map((m) => m.role)).toEqual(['author']);
   });
 });
 

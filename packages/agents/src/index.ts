@@ -1,5 +1,6 @@
 // Host-agnostic agents of the Compagnon: prompts, guardrails, orchestration.
 // They talk to models only through the platform's LlmService.
+export { UnusableAnswerError } from './answer';
 export { compagnonChat, type ChatAnswer, type ChatContext, type ChatTurn } from './chat';
 export {
   changeRatio,

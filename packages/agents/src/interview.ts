@@ -1,3 +1,4 @@
+import { UnusableAnswerError } from './answer';
 import type { LlmService } from '@charpentier/platform';
 import {
   addInterviewMessage,
@@ -353,12 +354,15 @@ export async function interviewTurn(input: {
   const system = interviewSystemPrompt({ language, level, mode, section });
 
   let turn: Turn | undefined;
+  // How the last attempt ended: the rule broken (a refusal follows), or no answer to read.
+  let failed: 'guarded' | 'truncated' | 'unreadable' | undefined;
   for (let attempt = 0; attempt < 2 && !turn; attempt++) {
     const response = await generateWithMemory(
       llm,
       {
         system,
-        messages: attempt === 0 ? turns : [...turns, { role: 'user', content: CORRECTION }],
+        // The correction only after an answer that broke the rule.
+        messages: failed === 'guarded' ? [...turns, { role: 'user', content: CORRECTION }] : turns,
         responseSchema: interviewSchema,
         maxOutputTokens: 16000,
         tier: 'deep',
@@ -366,15 +370,18 @@ export async function interviewTurn(input: {
       memory,
       input.signal,
     );
-    const parsed = parseTurn(response.text);
-    if (
-      parsed &&
+    const parsed = response.truncated ? undefined : parseTurn(response.text);
+    if (!parsed) failed = response.truncated ? 'truncated' : 'unreadable';
+    else if (
       [parsed.reply, parsed.question ?? '', parsed.why ?? ''].every(
         (t) => narrativeProseIn(t, authorText).length === 0,
       )
     )
       turn = parsed;
+    else failed = 'guarded';
   }
+  // No answer to read is a failure, not a refusal: nothing is said in his name.
+  if (!turn && failed !== 'guarded') throw new UnusableAnswerError(failed ?? 'unreadable');
   if (!turn) {
     addInterviewMessage(
       mentorDoc,

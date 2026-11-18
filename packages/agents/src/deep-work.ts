@@ -27,6 +27,7 @@ import {
   bornIn,
 } from '@charpentier/schema';
 import type * as Y from 'yjs';
+import { answerJson } from './answer';
 import { sceneContext, sheetsSummary } from './context';
 import { notebookForReading } from './memory';
 import { narrativeProseIn } from './guard';
@@ -394,7 +395,7 @@ export async function deepWork(input: {
     },
     input.signal,
   );
-  const output = JSON.parse(response.text) as DeepWorkOutput;
+  const output = answerJson<DeepWorkOutput>(response);
   return applyDeepWork({ ...input, manuscript }, output);
 }
 

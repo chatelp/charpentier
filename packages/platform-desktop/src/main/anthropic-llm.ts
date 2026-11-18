@@ -198,6 +198,8 @@ export class AnthropicLlmService implements LlmService {
       return {
         text,
         ...(toolCalls.length > 0 && { toolCalls, turn: message.content }),
+        // Cut at the output limit: the caller must not take it for a whole answer.
+        ...(message.stop_reason === 'max_tokens' && { truncated: true }),
         usage: {
           inputTokens: message.usage.input_tokens,
           outputTokens: message.usage.output_tokens,

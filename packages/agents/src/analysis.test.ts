@@ -18,6 +18,7 @@ import {
 import { describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
 import { analyzeScene, remarkKindsFor } from './analysis';
+import { UnusableAnswerError } from './answer';
 
 function project() {
   const root = new Y.Doc({ guid: 'project:p1' });
@@ -292,5 +293,35 @@ describe('scene analysis (bottom-up, conflicts, remarks)', () => {
     rejectProposal(root, ref);
     expect(await read(1)).toMatchObject({ proposals: 0 });
     expect(readFieldRef(root, ref).proposal).toBeUndefined();
+  });
+
+  it('files nothing of an analysis cut at the output limit, or unreadable', async () => {
+    const { root, sceneDoc, sceneId } = project();
+    const marc = {
+      name: 'Marc',
+      existingId: null,
+      quote: 'Un technicien nommé Marc',
+      fields: [],
+    };
+    const answering = (response: { text: string; truncated?: boolean }): LlmService => ({
+      ...model({}),
+      generate: async () => response,
+    });
+    const whole = JSON.stringify({ ...empty, characters: [marc] });
+    for (const response of [{ text: whole, truncated: true }, { text: whole.slice(0, 40) }])
+      await expect(
+        analyzeScene({ llm: answering(response), root, sceneDoc, sceneId, level: 3 }),
+      ).rejects.toBeInstanceOf(UnusableAnswerError);
+    expect(listEntities(root, 'characters').filter((c) => c.status === 'proposed')).toEqual([]);
+    // A list left out is read as empty, not as a crash halfway through the filing.
+    expect(
+      await analyzeScene({
+        llm: answering({ text: JSON.stringify({ characters: [marc] }) }),
+        root,
+        sceneDoc,
+        sceneId,
+        level: 3,
+      }),
+    ).toMatchObject({ proposals: 1 });
   });
 });

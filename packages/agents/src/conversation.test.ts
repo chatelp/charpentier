@@ -13,6 +13,7 @@ import {
 } from '@charpentier/schema';
 import { describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
+import { UnusableAnswerError } from './answer';
 import { answerAuthor } from './conversation';
 
 describe('conversation with the Compagnon', () => {
@@ -61,5 +62,22 @@ describe('conversation with the Compagnon', () => {
     expect(await answerAuthor({ llm, root, mentorDoc, sceneDoc, sceneId })).toBe(
       'nothing-to-answer',
     );
+  });
+
+  it('stores no message of the Compagnon when the model’s answer cannot be read', async () => {
+    const root = new Y.Doc({ guid: 'project:p3' });
+    initProject(root, { id: 'p3', title: 'Les serres', kind: 'novel' });
+    const mentorDoc = new Y.Doc();
+    addChatMessage(mentorDoc, { role: 'author', text: 'Ma scène est-elle trop lente ?' }, AUTHOR);
+    const llm: LlmService = {
+      status: () => 'available',
+      onStatusChange: () => () => {},
+      generate: async () => ({ text: '{"reply":"Que se passe-t-il pour', truncated: true }),
+    };
+    await expect(answerAuthor({ llm, root, mentorDoc })).rejects.toBeInstanceOf(
+      UnusableAnswerError,
+    );
+    // No refusal he did not make: the author's question still waits for its answer.
+    expect(chatMessages(mentorDoc).map((m) => m.role)).toEqual(['author']);
   });
 });

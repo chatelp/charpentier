@@ -82,6 +82,8 @@ export interface LlmResponse {
   readonly toolCalls?: readonly LlmToolCall[];
   /** Its turn as the provider gave it, to send back with the tools' results. */
   readonly turn?: unknown;
+  /** The answer stopped at `maxOutputTokens`: incomplete, not to be used as it is. */
+  readonly truncated?: boolean;
   readonly usage?: {
     readonly inputTokens: number;
     readonly outputTokens: number;

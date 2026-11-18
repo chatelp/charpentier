@@ -1,4 +1,5 @@
 import type { LlmService } from '@charpentier/platform';
+import { UnusableAnswerError } from './answer';
 import type { BookContext } from './book-context';
 import { isOneSentence, narrativeProseIn } from './guard';
 import {
@@ -41,7 +42,7 @@ export interface ChatAnswer {
   readonly example?: string;
   /** The id the model gave of a style choice its answer relies on (checked by the caller). */
   readonly styleChoiceId?: string;
-  /** True when the model's answers broke the rule twice and a refusal was given instead. */
+  /** True when the model's answer still broke the rule and a refusal was given instead. */
   readonly guarded?: boolean;
 }
 
@@ -86,7 +87,10 @@ function parseAnswer(
 /**
  * One answer of the Compagnon in the free conversation (docs/SPEC.md §6.7).
  * Every answer goes through the guardrails; one that breaks them is asked
- * again once, then replaced by a plain refusal.
+ * again once, then replaced by a plain refusal. An answer that cannot be
+ * read (cut short, not the JSON asked for) is another matter: asked again
+ * once as it was, then an UnusableAnswerError, never a refusal the Compagnon
+ * did not make.
  */
 export async function compagnonChat(
   llm: LlmService,
@@ -135,11 +139,16 @@ export async function compagnonChat(
     ? `${compagnonSystemPrompt(context)}\n\n${MEMORY_INSTRUCTIONS}`
     : compagnonSystemPrompt(context);
 
+  // How the last attempt ended: the rule broken (a refusal follows), or no answer to read.
+  let last: 'guarded' | 'truncated' | 'unreadable' | undefined;
   for (let attempt = 0; attempt < 2; attempt++) {
     const request = {
       system,
+      // The correction only after an answer that broke the rule.
       messages:
-        attempt === 0 ? messages : [...messages, { role: 'user' as const, content: CORRECTION }],
+        last === 'guarded'
+          ? [...messages, { role: 'user' as const, content: CORRECTION }]
+          : messages,
       responseSchema: chatAnswerSchema,
       maxOutputTokens: 16000,
       tier: 'deep' as const,
@@ -147,9 +156,10 @@ export async function compagnonChat(
     const response = memory
       ? await generateWithMemory(llm, request, memory, signal)
       : await llm.generate(request, signal);
-    const answer = parseAnswer(response.text);
+    const answer = response.truncated ? undefined : parseAnswer(response.text);
     if (!answer) {
-      onRefused?.({ answer: response.text, why: ['unreadable'] });
+      last = response.truncated ? 'truncated' : 'unreadable';
+      onRefused?.({ answer: response.text, why: [last] });
       continue;
     }
     const exampleOk = answer.example === null || isOneSentence(answer.example);
@@ -170,6 +180,8 @@ export async function compagnonChat(
         ...(answer.example !== null && { example: answer.example }),
         ...(answer.styleChoiceId !== null && { styleChoiceId: answer.styleChoiceId }),
       };
+    last = 'guarded';
   }
+  if (last !== 'guarded') throw new UnusableAnswerError(last ?? 'unreadable');
   return { reply: FALLBACK[context.language.slice(0, 2)] ?? FALLBACK['fr'] ?? '', guarded: true };
 }
