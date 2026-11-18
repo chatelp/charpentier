@@ -89,6 +89,15 @@ export function readJson(
   });
 }
 
+/** A percent-encoded piece of a path, decoded; null when it is malformed (`%FF`). */
+export function decodePath(text: string): string | null {
+  try {
+    return decodeURIComponent(text);
+  } catch {
+    return null;
+  }
+}
+
 export const bearer = (request: IncomingMessage) =>
   /^Bearer (\S+)$/.exec(request.headers.authorization ?? '')?.[1] ?? '';
 
@@ -224,9 +233,12 @@ export async function handleApi(
       devices: devices.map((d) => ({ ...d, current: d.id === session.sessionId })),
     });
   } else if (request.method === 'DELETE' && url.pathname.startsWith('/api/devices/')) {
-    const id = decodeURIComponent(url.pathname.slice('/api/devices/'.length));
-    const revoked = /^[0-9a-f-]{36}$/.test(id) && (await revokeSession(db, session.userId, id));
-    send(response, revoked ? 204 : 404);
+    const id = decodePath(url.pathname.slice('/api/devices/'.length));
+    if (id === null) send(response, 400, { error: 'path' });
+    else {
+      const revoked = /^[0-9a-f-]{36}$/.test(id) && (await revokeSession(db, session.userId, id));
+      send(response, revoked ? 204 : 404);
+    }
   } else {
     send(response, 404, { error: 'not-found' });
   }

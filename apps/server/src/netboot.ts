@@ -4,7 +4,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { join } from 'node:path';
 import { pipeline } from 'node:stream/promises';
 import type { Database } from './database';
-import { send } from './http-api';
+import { decodePath, send } from './http-api';
 import { byteRange } from './installer';
 import { accessFor, credential } from './nix-cache';
 import { latestVersion, VERSION } from './updates';
@@ -104,7 +104,9 @@ export async function handleNetboot(
 
   // Pixiecore's question, for a machine starting on the network.
   if (rest[0] === 'v1' && rest[1] === 'boot' && rest[2]) {
-    const mac = normalizeMac(decodeURIComponent(rest[2]));
+    const asked = decodePath(rest[2]);
+    if (asked === null) return answer(400, { error: 'path' });
+    const mac = normalizeMac(asked);
     const allowed = new Set(options.macs.map(normalizeMac).filter((m) => m !== null));
     if (!mac || !allowed.has(mac)) return nothing();
     const version = (await latestVersion(db))?.version;

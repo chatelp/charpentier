@@ -1,3 +1,5 @@
+import pg from 'pg';
+
 /**
  * What the server needs from Postgres: `pg`'s Pool in production, PGlite
  * (Postgres in WebAssembly) in the tests. Both answer `query(text, params)`.
@@ -7,6 +9,18 @@ export interface Database {
     text: string,
     params?: unknown[],
   ): Promise<{ readonly rows: Row[] }>;
+}
+
+/**
+ * Production's Postgres. An idle connection that breaks (Postgres restarted,
+ * the network cut) makes the pool emit `error`; without a listener Node would
+ * throw it and end the server. It is logged: the pool drops that connection
+ * and opens another at the next query.
+ */
+export function createPool(connectionString: string): pg.Pool {
+  const pool = new pg.Pool({ connectionString });
+  pool.on('error', (error) => console.error('[postgres]', error.message));
+  return pool;
 }
 
 /** Creates or updates the tables (idempotent: run at every start). */

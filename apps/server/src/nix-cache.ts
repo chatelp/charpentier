@@ -6,6 +6,7 @@ import { pipeline } from 'node:stream/promises';
 import { sessionFor } from './accounts';
 import { isCiToken } from './ci-tokens';
 import type { Database } from './database';
+import { decodePath } from './http-api';
 import { receiveUpload } from './uploads';
 
 /**
@@ -95,11 +96,16 @@ export async function handleCache(
     plain(response, 404);
     return true;
   }
-  const file = decodeURIComponent(url.pathname.slice(CACHE_PREFIX.length));
   const method = request.method ?? 'GET';
   const access = await accessFor(db, credential(request));
   if (!access) {
     plain(response, 401, { 'WWW-Authenticate': 'Basic realm="charpentier"' });
+    return true;
+  }
+  // Decoded after the token: a malformed path (`%FF`) is a bad request, not a crash.
+  const file = decodePath(url.pathname.slice(CACHE_PREFIX.length));
+  if (file === null) {
+    plain(response, 400);
     return true;
   }
 
