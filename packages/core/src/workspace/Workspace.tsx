@@ -301,9 +301,10 @@ export function ProjectWorkspace({
           key: ++paletteSequence,
           text: t(`work.task.${ref.task}.footerDone`, {
             name: reference?.title ?? workName(root, ref),
-            key:
-              registry.shortcutLabel(ref.task === 'style' ? 'atelierInterview' : 'talkToMentor') ??
-              '',
+            // « (⌘0) » after the place, or nothing when the command has no key.
+            key: ((label) => (label ? ` (${label})` : ''))(
+              registry.shortcutLabel(ref.task === 'style' ? 'atelierInterview' : 'talkToMentor'),
+            ),
           }),
         });
     },

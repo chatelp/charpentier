@@ -24,7 +24,8 @@
     "package:desktop": "pnpm --filter @charpentier/desktop package",
     "package:linux": "pnpm --filter @charpentier/desktop package:linux",
     "test:llm": "vitest run packages/platform-desktop/src/main/compagnon.live.test.ts",
-    "test:llm:mac": "node scripts/live-llm.mjs"
+    "test:llm:mac": "node scripts/live-llm.mjs",
+    "session:mac": "pnpm --filter @charpentier/desktop exec electron-vite build && node apps/desktop/e2e/session.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

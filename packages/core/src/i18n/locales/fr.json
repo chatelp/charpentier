@@ -1204,7 +1204,7 @@
         "doing": "Le Compagnon vérifie la structure…",
         "done": "Vérifiée {{when}}",
         "bilan": "Bilan de la structure",
-        "footerDone": "Le bilan de la structure est dans la conversation avec le Compagnon ({{key}}).",
+        "footerDone": "Le bilan de la structure est dans la conversation avec le Compagnon{{key}}.",
         "busy": "Un travail à la fois : le Compagnon vérifie la structure ({{elapsed}}).",
         "failed": "La vérification n’a pas abouti.",
         "stopped": "Arrêtée à {{elapsed}} : rien n’a été rangé."
@@ -1217,7 +1217,7 @@
         "doing": "Le Compagnon suit les indices…",
         "done": "Suivis {{when}}",
         "bilan": "Bilan des indices",
-        "footerDone": "Le bilan des indices est dans la conversation avec le Compagnon ({{key}}).",
+        "footerDone": "Le bilan des indices est dans la conversation avec le Compagnon{{key}}.",
         "busy": "Un travail à la fois : le Compagnon suit les indices ({{elapsed}}).",
         "failed": "Le suivi des indices n’a pas abouti.",
         "stopped": "Arrêté à {{elapsed}} : rien n’a été rangé."
@@ -1230,7 +1230,7 @@
         "doing": "Le Compagnon fait le point sur {{name}}…",
         "done": "Point fait {{when}}",
         "bilan": "Point sur {{name}}",
-        "footerDone": "Le point sur {{name}} est dans la conversation avec le Compagnon ({{key}}).",
+        "footerDone": "Le point sur {{name}} est dans la conversation avec le Compagnon{{key}}.",
         "busy": "Un travail à la fois : le Compagnon fait le point sur {{name}} ({{elapsed}}).",
         "failed": "Le point sur {{name}} n’a pas abouti.",
         "stopped": "Arrêté à {{elapsed}} : rien n’a été rangé."
@@ -1246,7 +1246,7 @@
         "measured": "Mesures faites · {{passages}} passages en lecture",
         "done": "Lu {{when}} : {{name}}",
         "bilan": "Style · d’après {{name}}",
-        "footerDone": "Les choix de style tirés de {{name}} sont dans l’entretien ({{key}}).",
+        "footerDone": "Les choix de style tirés de {{name}} sont dans l’entretien{{key}}.",
         "busy": "Un travail à la fois : le Compagnon lit {{name}} ({{elapsed}}).",
         "failed": "La lecture n’a pas abouti.",
         "stopped": "Arrêtée à {{elapsed}} : rien n’a été rangé.",
