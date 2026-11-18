@@ -721,15 +721,22 @@ describe('the updates of the X250 (phase 5.12)', () => {
       .filter((m) => !m.quiet)
       .map((m) => m.text);
 
-  it('shows nothing without the service, from a development system, or another contract', async () => {
+  it('shows nothing without the service, or from another contract', async () => {
     const x250 = fakeX250();
     const { system } = await start(x250);
     expect(system.state().update).toBeNull();
-    for (const text of [file({ development: true }), file({ contract: 2 }), '{oops']) {
+    for (const text of [file({ contract: 2 }), '{oops']) {
       x250.files.set(FILE, text);
       await system.refresh();
       expect(system.state().update).toBeNull();
     }
+  });
+
+  it('announces a development version on a development system (D-42)', async () => {
+    const x250 = fakeX250();
+    x250.files.set(FILE, file({ development: true, ready: { ...READY, version: '0.6.0-dev.3' } }));
+    const { system } = await start(x250);
+    expect(system.state().update?.ready?.version).toBe('0.6.0-dev.3');
   });
 
   it('reads the version installed, announces the one ready, and says a failure once', async () => {

@@ -64,6 +64,10 @@ export async function migrate(db: Database): Promise<void> {
       published_at timestamptz not null default now()
     )
   `);
+  // The development channel (D-42): the X250's development system reads its own pointer.
+  await db.query(
+    "alter table updates add column if not exists channel text not null default 'release'",
+  );
   // Administration (phase 4.6): roles, disabled accounts (never deleted), the
   // page's own sessions (a cookie), and the log of what administrators did.
   await db.query(

@@ -1,6 +1,6 @@
 # Contrat des mises à jour du X250 (phase 5.12)
 
-Entre le service de mise à jour du système (`charpentier-os`, sous root) et l'app (service `System`, `packages/platform-desktop/src/main/system/linux-system.ts`, sous l'utilisateur `auteur`). Le README de `charpentier-os` reprend ce texte ; toute modification se fait des deux côtés. Apparence : DESIGN §4.12 « Mises à jour ». Décisions : D-28, D-31.
+Entre le service de mise à jour du système (`charpentier-os`, sous root) et l'app (service `System`, `packages/platform-desktop/src/main/system/linux-system.ts`, sous l'utilisateur `auteur`). Le README de `charpentier-os` reprend ce texte ; toute modification se fait des deux côtés. Apparence : DESIGN §4.12 « Mises à jour ». Décisions : D-28, D-31, D-42.
 
 ## Le partage
 
@@ -32,14 +32,14 @@ Entre le service de mise à jour du système (`charpentier-os`, sous root) et l'
 ```
 
 - `contract` : 1. Un autre nombre : l'app ne lit pas le fichier et ne montre rien.
-- `installed` : la version qui tourne (celle du système, `X.Y.Z` ou `X.Y.Z-N`, D-31), sa génération NixOS, quand elle a été installée (premier démarrage sur elle), ses notes de version (lignes, telles que publiées dans `/api/updates/latest`), son `dataFormat`.
+- `installed` : la version qui tourne (celle du système, `X.Y.Z` ou `X.Y.Z-N`, D-31 ; `X.Y.Z-dev.N` sur la version développement, D-42), sa génération NixOS, quand elle a été installée (premier démarrage sur elle), ses notes de version (lignes, telles que publiées dans `/api/updates/latest`), son `dataFormat`.
 - `ready` : une version téléchargée, signature vérifiée, installée comme génération par défaut du prochain démarrage, ou `null`. Champs : `version`, `generation`, `publishedAt` (date du pointeur), `receivedAt`, `notes`.
 - `previous` : la génération sur laquelle on peut revenir (celle d'avant `installed`, encore au menu de démarrage), ou `null`. Champs : `version`, `generation`, `dataFormat`.
 - `setAside` : une version plus récente que `installed`, quittée par « Revenir à la version précédente » : on peut y repasser, et elle n'est plus annoncée comme prête. `null` sinon. Champs comme `previous`. Une version publiée plus récente qu'elle redevient `ready` normalement.
 - `lastCheck` : la dernière vérification terminée (réussie ou non), ou `null`.
 - `checking` : `true` pendant une vérification ou un téléchargement.
 - `failure` : le dernier échec, ou `null` (remis à `null` quand une version arrive bien). Champs : `version`, `at`, `reason` parmi `signature` (signature invalide), `unreadable` (version illisible : pointeur, chemin ou closure incohérents), `disk-full`, `interrupted` (téléchargement interrompu, repris à la vérification suivante).
-- `development` : `true` sur la version développement de 5.10 bis ; le service n'y installe jamais rien, l'app ne montre rien.
+- `development` : `true` sur la version développement de 5.10 bis. Depuis D-42, elle se met à jour comme une version d'écriture, depuis son propre pointeur (`/api/updates/dev`, ci-dessous) : `ready`, `failure`, `lastCheck`… y ont le même sens, et l'app les montre de la même façon. L'app affiche le numéro tel quel, sans le comparer.
 - `dataFormat` : le format des projets que cette version sait lire, lu dans le paquet de l'app de la génération (`<app>/share/charpentier/data-format`, un entier ; absent = 1). Il vient de `apps/desktop/resources/data-format`, à augmenter quand une version enregistre les projets d'une façon que les précédentes ne savent plus relire. L'app ne propose pas de revenir à une version dont le `dataFormat` est inférieur à celui de la version installée (bouton grisé, aide qui dit pourquoi).
 
 ## Le compte, pour lire le cache
@@ -47,6 +47,8 @@ Entre le service de mise à jour du système (`charpentier-os`, sous root) et l'
 Le cache du serveur ne répond qu'aux appareils du compte. L'app écrit, à chaque connexion à la synchronisation et au démarrage, `~auteur/.config/charpentier/update-access.json` = `{"server": "https://charpentier.chatel.pm", "token": "<jeton d'appareil>"}` (mode 0600), et le retire à la déconnexion (X250 seulement, `--appliance`). Le service le lit en root là où il est, sans le copier ; il passe le jeton au cache en `Authorization: Bearer` (ou Basic, utilisateur indifférent, mot de passe = jeton). Fichier absent : rien n'est vérifié, `lastCheck` ne bouge pas.
 
 Le pointeur : `GET <server>/api/updates/latest` avec le même jeton répond `{ "version", "notes", "systems": { "azerty", "qwerty" }, "publishedAt" }` ; `notes` est un texte, une note par ligne (le service coupe aux sauts de ligne, retire les lignes vides et un « - » de tête) ; 404 tant qu'aucune version n'est publiée.
+
+Une voie par machine (D-42) : une version d'écriture lit `/api/updates/latest` seulement, numéros `X.Y.Z` ou `X.Y.Z-N`, et refuse un système qui porte le marqueur `etc/charpentier/variant` ; la version développement lit `GET <server>/api/updates/dev`, même forme et même jeton, numéros `X.Y.Z-dev.N`, et n'accepte que des systèmes qui portent ce marqueur (`developpement`). Le serveur ne garde que la dernière version développement (pointeur et cache) ; il refuse une version, de l'une ou l'autre voie, tant que toute sa closure n'est pas dans le cache.
 
 La version installée : le système ne la connaît pas lui-même. Le service tient un registre `/var/lib/charpentier/update/generations.json` (génération → version, notes, date), rempli quand il installe ; pour la première installation, par la clé, la version est celle du paquet de l'app (`charpentier-0.1.0` → `0.1.0`).
 

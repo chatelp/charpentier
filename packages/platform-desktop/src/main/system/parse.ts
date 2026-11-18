@@ -476,8 +476,9 @@ export interface UpdateTarget {
 
 /**
  * Reads `/run/charpentier/update.json`, written by the update service of
- * `charpentier-os`. Null when it is missing, of another contract, from a
- * development system, or not what the contract says: nothing is shown then.
+ * `charpentier-os`. Null when it is missing, of another contract, or not what
+ * the contract says: nothing is shown then. A development system updates too,
+ * from its own channel (D-42), and shows it the same way.
  */
 export function parseUpdate(
   text: string | null,
@@ -496,7 +497,7 @@ export function parseUpdate(
   const notes = (v: unknown) =>
     Array.isArray(v) ? v.filter((n): n is string => typeof n === 'string') : [];
   const root = o(raw);
-  if (!root || root['contract'] !== UPDATE_CONTRACT || root['development'] === true) return null;
+  if (!root || root['contract'] !== UPDATE_CONTRACT) return null;
   const installed = o(root['installed']);
   const version = str(installed?.['version']);
   if (!installed || !version) return null;

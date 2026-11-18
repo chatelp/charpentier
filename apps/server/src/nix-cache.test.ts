@@ -148,3 +148,95 @@ describe('the X250’s version pointer (phase 5.11)', () => {
     });
   });
 });
+
+describe('the X250’s development channel (D-42, phase 5.12 bis)', () => {
+  const path = (letter: string, name: string) => `/nix/store/${letter.repeat(32)}-${name}`;
+  const A = path('a', 'nixos-system-x250-26.05');
+  const B = path('b', 'charpentier-0.6.0');
+  const C = path('c', 'charpentier-0.6.0-dev.1');
+  const D1 = path('d', 'nixos-system-x250-dev-26.05');
+  const D2 = path('f', 'nixos-system-x250-dev-26.05');
+  const U = path('g', 'not-published-yet');
+  const base = (p: string) => p.slice('/nix/store/'.length);
+  const hash = (p: string) => base(p).slice(0, 32);
+
+  async function upload(http: string, ci: string, p: string, refs: string[]) {
+    const nar = `nar/${hash(p)}.nar.zst`;
+    await fetch(`${http}/nix-cache/${nar}`, { method: 'PUT', body: 'nar', headers: basic(ci) });
+    const narinfo = `StorePath: ${p}\nURL: ${nar}\nCompression: zstd\nReferences: ${refs.map(base).join(' ')}\nSig: charpentier-x250-1:abc\n`;
+    const r = await fetch(`${http}/nix-cache/${hash(p)}.narinfo`, {
+      method: 'PUT',
+      body: narinfo,
+      headers: basic(ci),
+    });
+    expect(r.status).toBe(201);
+  }
+  const publish = (http: string, token: string, channel: string, v: string, system: string) =>
+    fetch(`${http}/api/updates/${channel}`, {
+      method: 'PUT',
+      body: JSON.stringify({ version: v, notes: '', systems: { azerty: system, qwerty: system } }),
+      headers: bearer(token),
+    });
+
+  it('has its own pointer and numbers, apart from the releases', async () => {
+    const { http, device, ci } = await setUp();
+    await upload(http, ci, B, []);
+    await upload(http, ci, D1, [B]);
+    expect((await fetch(`${http}/api/updates/dev`)).status).toBe(401);
+    expect((await fetch(`${http}/api/updates/dev`, { headers: basic(device) })).status).toBe(404);
+    expect((await publish(http, device, 'dev', '0.6.0-dev.1', D1)).status).toBe(403);
+    expect((await publish(http, ci, 'dev', '0.6.0', D1)).status).toBe(400);
+    expect((await publish(http, ci, 'dev', '0.6.0-2', D1)).status).toBe(400);
+    expect((await publish(http, ci, 'latest', '0.6.0-dev.1', D1)).status).toBe(400);
+    expect((await publish(http, ci, 'dev', '0.6.0-dev.1', D1)).status).toBe(201);
+
+    const dev = await fetch(`${http}/api/updates/dev`, { headers: basic(device) });
+    expect(await dev.json()).toMatchObject({
+      version: '0.6.0-dev.1',
+      systems: { azerty: D1 },
+      publishedAt: expect.stringMatching(/^\d{4}-/),
+    });
+    // The CI reads it too (to count N); the releases never see it.
+    expect((await fetch(`${http}/api/updates/dev`, { headers: bearer(ci) })).status).toBe(200);
+    expect((await fetch(`${http}/api/updates/latest`, { headers: basic(device) })).status).toBe(
+      404,
+    );
+  });
+
+  it('refuses a version whose closure is not whole in the cache', async () => {
+    const { http, ci } = await setUp();
+    await upload(http, ci, D1, [B]);
+    const refused = await publish(http, ci, 'dev', '0.6.0-dev.1', D1);
+    expect(refused.status).toBe(409);
+    expect(await refused.json()).toEqual({ error: 'not-in-cache', path: hash(B) });
+    expect((await publish(http, ci, 'latest', '0.6.0', D1)).status).toBe(409);
+  });
+
+  it('keeps the last development version only, and never a file of a release', async () => {
+    const { http, ci, cacheDir } = await setUp();
+    await upload(http, ci, B, []);
+    await upload(http, ci, A, [B]);
+    await upload(http, ci, C, [B]);
+    await upload(http, ci, D1, [B, C]);
+    await upload(http, ci, D2, [B]);
+    await upload(http, ci, U, []);
+    expect((await publish(http, ci, 'latest', '0.6.0', A)).status).toBe(201);
+    expect((await publish(http, ci, 'dev', '0.6.0-dev.1', D1)).status).toBe(201);
+    expect((await publish(http, ci, 'dev', '0.6.0-dev.2', D2)).status).toBe(201);
+
+    const files = new Set([
+      ...(await readdir(cacheDir)),
+      ...(await readdir(join(cacheDir, 'nar'))).map((f) => `nar/${f}`),
+    ]);
+    for (const kept of [A, B, D2, U]) {
+      expect(files).toContain(`${hash(kept)}.narinfo`);
+      expect(files).toContain(`nar/${hash(kept)}.nar.zst`);
+    }
+    for (const gone of [C, D1]) {
+      expect(files).not.toContain(`${hash(gone)}.narinfo`);
+      expect(files).not.toContain(`nar/${hash(gone)}.nar.zst`);
+    }
+    const ci2 = await fetch(`${http}/api/updates/latest`, { headers: bearer(ci) });
+    expect(await ci2.json()).toMatchObject({ version: '0.6.0' });
+  });
+});
