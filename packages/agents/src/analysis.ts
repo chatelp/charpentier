@@ -1,6 +1,7 @@
 import type { LlmService } from '@charpentier/platform';
 import {
   anchorForQuote,
+  anchoredText,
   createAgentWriter,
   getScene,
   hashEvidence,
@@ -22,7 +23,7 @@ import {
 import type * as Y from 'yjs';
 import { sceneContext, sheetsSummary, validatedStyleChoice } from './context';
 import { notebookForReading } from './memory';
-import { changeRatio, isOneSentence, MAX_CORRECTION_RATIO, narrativeProseIn } from './guard';
+import { isBoundedCorrection, isOneSentence, narrativeProseIn } from './guard';
 import type { MentorLevel } from './prompts';
 
 const CHARACTER_FIELDS = [
@@ -441,11 +442,16 @@ export function applyAnalysis(
   const allowed = new Set(remarkKindsFor(target.level));
   for (const remark of analysis.remarks) {
     if (!allowed.has(remark.kind)) continue;
+    // The passage as it stands in the text (its own spaces and apostrophes):
+    // what the correction replaces, and what it is checked against when applied.
+    const textAnchor = anchor(remark.quote);
+    const passage = textAnchor && anchoredText(sceneDoc, textAnchor);
     const suggestion: Signal['suggestion'] | undefined =
       remark.kind === 'language' &&
       remark.correction &&
-      changeRatio(remark.quote, remark.correction) <= MAX_CORRECTION_RATIO
-        ? { kind: 'correction', text: remark.correction }
+      passage &&
+      isBoundedCorrection(passage, remark.correction)
+        ? { kind: 'correction', text: remark.correction.trim(), quote: passage }
         : remark.example &&
             isOneSentence(remark.example) &&
             !narrativeProseIn(remark.example, sceneText).some((v) => v.kind === 'quote')

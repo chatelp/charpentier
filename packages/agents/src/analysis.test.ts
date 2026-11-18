@@ -150,4 +150,54 @@ describe('scene analysis (bottom-up, conflicts, remarks)', () => {
     );
     expect(remarkKindsFor(1)).toEqual([]);
   });
+
+  const language = (quote: string, correction: string) => ({
+    kind: 'language',
+    quote,
+    message: 'Accord.',
+    principle: 'Grammaire.',
+    correction,
+    example: null,
+  });
+
+  it('keeps a correction with the passage it was written for, as the text has it', async () => {
+    const { root, sceneDoc, sceneId } = project();
+    const remarks = [language('ouvrit le sas sans badge', 'ouvrit le sas sans badges')];
+    await analyzeScene({ llm: model({ remarks }), root, sceneDoc, sceneId, level: 2 });
+    expect(listSignals(root, { state: 'open' })).toMatchObject([
+      {
+        kind: 'language',
+        suggestion: {
+          kind: 'correction',
+          text: 'ouvrit le sas sans badges',
+          quote: 'ouvrit le sas sans badge',
+        },
+      },
+    ]);
+  });
+
+  it('never lets a correction carry a sentence of its own (adversarial)', async () => {
+    const root = new Y.Doc({ guid: 'project:p1' });
+    initProject(root, { id: 'p1', title: 'Les serres', kind: 'novel' });
+    const chapterId = createChapter(root, { title: 'Un' });
+    const { sceneId, variantId } = createScene(root, { chapterId, title: 'Le sas' });
+    const sceneDoc = new Y.Doc();
+    const long = 'Le vent tournait au-dessus des serres et la pluie battait les vitres, '
+      .repeat(7)
+      .replace(/, $/, '.');
+    const short = 'Marc ouvrit le sas sans badge et entra dans la serre';
+    writeSceneDocToFragment(
+      parseSceneMarkdown(`${long}\n\n${short}.`),
+      variantFragment(sceneDoc, variantId),
+    );
+    const remarks = [
+      // 35 % of 480 characters is room for a sentence: the ratio alone let it through.
+      language(long, `${long} Marc sortit alors un couteau de sa poche.`),
+      language(short, `${short}. Il mourut.`),
+      language(short, `${short}\nIl mourut`),
+      language(short, `${short} en sifflant un air que personne ne connaissait`),
+    ];
+    await analyzeScene({ llm: model({ remarks }), root, sceneDoc, sceneId, level: 4 });
+    expect(listSignals(root)).toEqual([]);
+  });
 });

@@ -3,7 +3,10 @@
 export { compagnonChat, type ChatAnswer, type ChatContext, type ChatTurn } from './chat';
 export {
   changeRatio,
+  isBoundedCorrection,
   isOneSentence,
+  MAX_CORRECTION_GROWTH,
+  MAX_CORRECTION_LENGTH,
   MAX_CORRECTION_RATIO,
   MAX_EXAMPLE_LENGTH,
   narrativeProseIn,

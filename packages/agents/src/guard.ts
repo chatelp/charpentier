@@ -119,3 +119,36 @@ export function changeRatio(original: string, corrected: string): number {
 
 /** A language correction may change at most this share of its segment. */
 export const MAX_CORRECTION_RATIO = 0.35;
+
+/**
+ * A correction fixes a few words: the passage it replaces and its own text
+ * stay short, whatever the ratio allows on a long passage.
+ */
+export const MAX_CORRECTION_LENGTH = 200;
+/** A correction may be this much longer than its passage (a missing word, an agreement). */
+export const MAX_CORRECTION_GROWTH = 30;
+
+/**
+ * Sentences of a passage, counted by the closing punctuation that text
+ * follows. Stricter than `sentencesOf`: a sentence added without its capital
+ * counts, and giving a sentence the capital it lacked adds none.
+ */
+const sentenceCount = (text: string) => 1 + (text.match(/[.!?…]+(?=[^.!?…]*\p{L})/gu) ?? []).length;
+
+/**
+ * A language correction the author may accept (D-11): it stays a correction
+ * of its passage and cannot carry new text. Short passage, short correction,
+ * one line, no sentence more than the passage has, few characters added, and
+ * a bounded share of the passage changed.
+ */
+export function isBoundedCorrection(quote: string, correction: string): boolean {
+  const from = quote.trim();
+  const to = correction.trim();
+  if (!from || !/\p{L}/u.test(to)) return false;
+  if ([...from].length > MAX_CORRECTION_LENGTH || [...to].length > MAX_CORRECTION_LENGTH)
+    return false;
+  if (/[\n\r\u2028\u2029]/.test(correction)) return false;
+  if ([...to].length - [...from].length > MAX_CORRECTION_GROWTH) return false;
+  if (sentenceCount(to) > sentenceCount(from)) return false;
+  return changeRatio(from, to) <= MAX_CORRECTION_RATIO;
+}
