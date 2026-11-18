@@ -576,6 +576,35 @@ describe('the System service of the X250 (phase 5.4)', () => {
     expect(system.state().lock.locked).toBe(false);
   });
 
+  it('« after 15 min of sleep »: a short sleep never opens a lock set before it', async () => {
+    const { system } = await start();
+    await system.setLockCode('1234');
+    await system.setSetting('askCode', 'after15');
+    const sleep = async (minutes: number) => {
+      system.sleeping();
+      clock.now = new Date(clock.now.getTime() + minutes * 60_000);
+      await system.woke();
+    };
+    // A long sleep locks; closing the lid again for a minute keeps it locked.
+    await sleep(180);
+    expect(system.state().lock.locked).toBe(true);
+    await sleep(1);
+    expect(system.state().lock.locked).toBe(true);
+    await sleep(1);
+    expect(system.state().lock.locked).toBe(true);
+    expect(await system.unlock('1234')).toBe('ok');
+
+    // Locked by hand, then a short sleep: still locked.
+    await system.lock();
+    await sleep(1);
+    expect(system.state().lock.locked).toBe(true);
+    expect(await system.unlock('1234')).toBe('ok');
+
+    // A short sleep still undoes the lock it set itself.
+    await sleep(1);
+    expect(system.state().lock.locked).toBe(false);
+  });
+
   it('copies the texts to a USB key, then ejects it (phase 5.7)', async () => {
     const copies: string[] = [];
     const x250 = fakeX250();
