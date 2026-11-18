@@ -1,5 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { listSessions, login, revokeSession, sessionFor, type Session } from './accounts';
+import { clientAddress } from './admin/network';
 import type { Database } from './database';
 
 /**
@@ -26,6 +27,13 @@ const MAX_BODY = 10_000;
 export class LoginLimiter {
   static readonly MAX_ATTEMPTS = MAX_ATTEMPTS;
   readonly #attempts = new Map<string, { count: number; until: number }>();
+  /** When the windows that have ended are next dropped. */
+  #nextPrune = 0;
+
+  /** The keys remembered (a window that ended is forgotten within the next one). */
+  get size(): number {
+    return this.#attempts.size;
+  }
 
   /** Attempts made in the current window (the log tells repeated refusals). */
   attempts(key: string): number {
@@ -38,6 +46,11 @@ export class LoginLimiter {
   /** True if this attempt may go ahead (and counts it). */
   allow(key: string): boolean {
     const now = this.now();
+    // Anyone can make a key (an e-mail never seen): none outlives its window for long.
+    if (now >= this.#nextPrune) {
+      for (const [k, e] of this.#attempts) if (e.until <= now) this.#attempts.delete(k);
+      this.#nextPrune = now + WINDOW_MS;
+    }
     const entry = this.#attempts.get(key);
     if (!entry || entry.until <= now) {
       this.#attempts.set(key, { count: 1, until: now + WINDOW_MS });
@@ -186,7 +199,10 @@ export async function handleApi(
       send(response, 400, { error: 'email-and-password' });
       return true;
     }
-    const key = `${request.socket.remoteAddress ?? ''}|${email.trim().toLowerCase()}`;
+    // The client behind Traefik (the last address of X-Forwarded-For), as for
+    // /admin: the socket's address is the proxy's, the same for everyone, and
+    // ten wrong passwords from anywhere would lock the account out everywhere.
+    const key = `${clientAddress(request)}|${email.trim().toLowerCase()}`;
     if (!limiter.allow(key)) {
       send(response, 429, { error: 'too-many-attempts' });
       return true;
