@@ -95,6 +95,8 @@ export async function compagnonChat(
   signal?: AbortSignal,
   /** His notebook (phase 6.5): read at every call, written as he goes. */
   memory?: MemoryStore,
+  /** An answer the guardrails refused, and why (the live tests show it). */
+  onRefused?: (refused: { readonly answer: unknown; readonly why: readonly unknown[] }) => void,
 ): Promise<ChatAnswer> {
   const authorText = [
     context.scene?.text ?? '',
@@ -146,12 +148,22 @@ export async function compagnonChat(
       ? await generateWithMemory(llm, request, memory, signal)
       : await llm.generate(request, signal);
     const answer = parseAnswer(response.text);
-    if (!answer) continue;
+    if (!answer) {
+      onRefused?.({ answer: response.text, why: ['unreadable'] });
+      continue;
+    }
     const exampleOk = answer.example === null || isOneSentence(answer.example);
-    const proseFree =
-      narrativeProseIn(answer.reply, authorText).length === 0 &&
-      (answer.example === null ||
-        narrativeProseIn(answer.example, authorText).every((v) => v.kind !== 'quote'));
+    const inReply = narrativeProseIn(answer.reply, authorText);
+    const inExample =
+      answer.example === null
+        ? []
+        : narrativeProseIn(answer.example, authorText).filter((v) => v.kind === 'quote');
+    const proseFree = inReply.length === 0 && inExample.length === 0;
+    if (!(exampleOk && proseFree))
+      onRefused?.({
+        answer,
+        why: [...(exampleOk ? [] : ['example: more than one sentence']), ...inReply, ...inExample],
+      });
     if (exampleOk && proseFree)
       return {
         reply: answer.reply,

@@ -72,7 +72,14 @@ describe.skipIf(!live)('the Compagnon refuses to write the novel (live, Claude O
     it(
       ask,
       async () => {
-        const answer = await compagnonChat(llm, context, [{ role: 'author', text: ask }]);
+        const answer = await compagnonChat(
+          llm,
+          context,
+          [{ role: 'author', text: ask }],
+          undefined,
+          undefined,
+          (refused) => console.info('refused by the guardrails', refused),
+        );
         // The model itself respected the rule (the guardrails did not have to step in)…
         expect(answer.guarded ?? false).toBe(false);
         // …and the answer carries no text for the book beyond one example sentence.
@@ -123,7 +130,8 @@ describe.skipIf(!live)(
       await interviewTurn({ llm, root, mentorDoc, mode: 'guided' });
       const question = interviewMessages(mentorDoc).at(-1);
       expect(question).toMatchObject({ role: 'compagnon', section: 'meta' });
-      expect(question?.text).toMatch(/\?/);
+      // The question has its own field, shown on its card with its « why » (6.2).
+      expect(question?.question).toMatch(/\?/);
     }, 120_000);
 
     it('declines to write a scene, and files nothing invented', async () => {
@@ -218,7 +226,11 @@ describe.skipIf(!live)('the specialised agents read the whole manuscript (live, 
     console.info('character', result, reviewOf(b.mentorDoc));
     const helene = listEntities(b.root, 'characters')[0];
     expect(Object.values(helene?.fields ?? {}).some((f) => f.proposal)).toBe(true);
-    expect(reviewOf(b.mentorDoc)).toMatch(/^Le point sur Hélène/);
+    // The interface names and dates the review (« Bilan… »): the message carries its work.
+    expect(chatMessages(b.mentorDoc).at(-1)?.work).toEqual({
+      task: 'character',
+      characterId: b.helene,
+    });
     expect(narrativeProseIn(reviewOf(b.mentorDoc), text)).toEqual([]);
   }, 300_000);
 });
