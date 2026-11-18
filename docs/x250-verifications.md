@@ -116,6 +116,7 @@ La v0.1.1 est publiée depuis le 15 novembre 2026 à 21:34 : c'est la release at
 
 - [x] ⊞, ouvre le tableau des Réglages du système, ⏎ sur Écran, l'échelle à 125 % : l'écran suit, Échap revient au tableau puis au texte. Fait le 18 novembre 2026 sur l'app 61e964a : `screenScale` enregistré à 125 à 08:54:32, eDP-1 à l'échelle 1.25 à 08:54:40 (surface 1536 × 864), la ligne affiche « 0.1.1 (61e964a) ».
 - [x] Après un redémarrage, l'écran est toujours à 125 %. Vu par l'auteur le 18 novembre 2026. Le saut d'image au démarrage reste à traiter avec 5.21.
+- [x] « Redémarrer… » depuis la ligne de commande : le menu s'ouvre avec la ligne armée, un ⏎ redémarre. Défaut signalé par l'auteur, corrigé dans fa3dbed, essayé par lui sur le X250 le 18 novembre 2026 (« ca marche »).
 
 ## 5.10 et 5.10 bis · Depuis le Yoga L13
 
