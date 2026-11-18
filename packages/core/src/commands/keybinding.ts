@@ -54,16 +54,31 @@ export function eventKey(event: Pick<KeyboardEvent, 'key' | 'code' | 'altKey'>):
   return event.key.length === 1 ? event.key.toLowerCase() : event.key;
 }
 
-export function matches(
-  chord: Chord,
-  event: Pick<KeyboardEvent, 'key' | 'code' | 'altKey' | 'shiftKey' | 'metaKey' | 'ctrlKey'>,
-): boolean {
+type ChordEvent = Pick<
+  KeyboardEvent,
+  'key' | 'code' | 'altKey' | 'shiftKey' | 'metaKey' | 'ctrlKey'
+>;
+
+const sameModifiers = (chord: Chord, event: ChordEvent): boolean =>
+  event.metaKey === chord.meta &&
+  event.ctrlKey === chord.ctrl &&
+  event.altKey === chord.alt &&
+  event.shiftKey === chord.shift;
+
+/** The chord's key is the character the event gives (the layout decides). */
+export function matchesCharacter(chord: Chord, event: ChordEvent): boolean {
+  return eventKey(event) === chord.key && sameModifiers(chord, event);
+}
+
+/**
+ * A digit chord also goes by the physical key of the digit row: on AZERTY that
+ * row gives `& é " ' ( - è _ ç à` unshifted, so ⌘1 arrives as ⌘& (`Digit1`).
+ * The modifiers stay exactly those declared.
+ */
+export function matches(chord: Chord, event: ChordEvent): boolean {
+  if (matchesCharacter(chord, event)) return true;
   return (
-    eventKey(event) === chord.key &&
-    event.metaKey === chord.meta &&
-    event.ctrlKey === chord.ctrl &&
-    event.altKey === chord.alt &&
-    event.shiftKey === chord.shift
+    /^[0-9]$/.test(chord.key) && event.code === `Digit${chord.key}` && sameModifiers(chord, event)
   );
 }
 

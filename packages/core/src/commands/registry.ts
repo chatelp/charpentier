@@ -1,6 +1,7 @@
 import {
   formatChord,
   matches,
+  matchesCharacter,
   parseKeybinding,
   sameChord,
   type Chord,
@@ -101,15 +102,20 @@ export class CommandRegistry<Ctx> {
     return chord && formatChord(chord, this.primary);
   }
 
-  /** The global command a key event triggers, if any. */
+  /**
+   * The global command a key event triggers, if any. A shortcut on the
+   * character typed comes first: on AZERTY ⌘' is also the key of the 4, and a
+   * digit shortcut takes the physical key only when nothing else has it.
+   */
   forEvent(event: KeyboardEvent, ctx: Ctx): Command<Ctx> | undefined {
-    const entry = this.#entries.find(
-      (e) =>
-        e.command.scope === 'global' &&
-        e.chords.some((chord) => matches(chord, event)) &&
-        (e.command.isEnabled?.(ctx) ?? true),
-    );
-    return entry?.command;
+    const find = (match: typeof matches) =>
+      this.#entries.find(
+        (e) =>
+          e.command.scope === 'global' &&
+          e.chords.some((chord) => match(chord, event)) &&
+          (e.command.isEnabled?.(ctx) ?? true),
+      );
+    return (find(matchesCharacter) ?? find(matches))?.command;
   }
 
   async execute(id: string, ctx: Ctx): Promise<boolean> {
