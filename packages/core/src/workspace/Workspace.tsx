@@ -58,7 +58,7 @@ import type { PaletteRequest, PaletteScope } from '../palette/palette-request';
 import { lastScenePref, type ProjectSession } from './default-scene';
 import { panelsPref, readPanels, type StoredPanels } from './panels-pref';
 import { projectStatsPref } from '../library/project-stats';
-import { CommandZone, Console, DisplaySheet, ModeSwitch } from './EntryPoints';
+import { CommandZone, Console, ConsoleKey, DisplaySheet, ModeSwitch } from './EntryPoints';
 import { NovelButton, NovelSheet, readVersionsView, useActiveVersionName } from './NovelTitle';
 import { sceneInActiveVersion, spaced } from '../commands/version-commands';
 import { GuidedTour, WELCOMED_PREF, WelcomeNote } from './Onboarding';
@@ -693,6 +693,11 @@ export function ProjectWorkspace({
   const latest = useRef(ctx);
   const paletteOpenRef = useRef(false);
   const paletteOpen = palette !== null;
+  // The Compagnon's key, in the console and in the overview's strip (DESIGN 1.25).
+  const toggleCompagnon = () => {
+    playSound(mentorPanel ? 'toc' : 'tic');
+    setMentorPanel(mentorPanel ? null : 'points');
+  };
   useLayoutEffect(() => {
     latest.current = ctx;
     paletteOpenRef.current = paletteOpen;
@@ -1207,6 +1212,19 @@ export function ProjectWorkspace({
             setView('write');
           }}
           onClose={() => setView('write')}
+          compagnon={
+            <ConsoleKey
+              picto="compagnon"
+              name={t('entry.compagnon')}
+              title={t('entry.compagnonTitle')}
+              shortcut={registry.shortcutLabel('toggleMentorPanel')}
+              count={marks.openSignals.length}
+              pressed={mentorPanel !== null}
+              mentor
+              band
+              onToggle={toggleCompagnon}
+            />
+          }
         />
       )}
       <WritingFooter
@@ -1253,10 +1271,7 @@ export function ProjectWorkspace({
                 shortcut: registry.shortcutLabel('toggleMentorPanel'),
                 open: mentorPanel !== null,
                 count: marks.openSignals.length,
-                toggle: () => {
-                  playSound(mentorPanel ? 'toc' : 'tic');
-                  setMentorPanel(mentorPanel ? null : 'points');
-                },
+                toggle: toggleCompagnon,
               }}
               commandZone={
                 <CommandZone

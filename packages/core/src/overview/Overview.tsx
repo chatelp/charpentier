@@ -14,7 +14,15 @@ import {
   variantFragment,
   type CheckpointInfo,
 } from '@charpentier/schema';
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type Ref } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+  type Ref,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 import { Doc as YDoc } from 'yjs';
 import type * as Y from 'yjs';
@@ -51,13 +59,15 @@ export interface OverviewProps {
   /** Open a scene and go back to writing. */
   readonly onOpen: (sceneId: string) => void;
   readonly onClose: () => void;
+  /** The Compagnon's key, at the strip's right end, before the help (DESIGN 1.25). */
+  readonly compagnon?: ReactNode;
 }
 
 /**
  * Overview of the manuscript (docs/DESIGN.md §4.4): a column per chapter, a
  * card per scene. Arrows move, ⌥ + arrows move the scene, ↵ writes, Échap goes back.
  */
-export function Overview({ ctx, active, onOpen, onClose }: OverviewProps) {
+export function Overview({ ctx, active, onOpen, onClose, compagnon }: OverviewProps) {
   const { t, i18n } = useTranslation();
   const { outline } = ctx;
   const words = ctx.sceneWords;
@@ -396,6 +406,7 @@ export function Overview({ ctx, active, onOpen, onClose }: OverviewProps) {
               </button>
             )}
           </div>
+          {compagnon}
           <span className="ch-overview-hint">{t('overview.hint')}</span>
         </footer>
       )}

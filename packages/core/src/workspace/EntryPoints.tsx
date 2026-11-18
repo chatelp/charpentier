@@ -15,7 +15,7 @@ export const withShortcut = (label: string, shortcut: string | undefined) =>
  * panel's pictogram, its name and shortcut above it when the mouse comes near.
  * A toggle: it stays pressed while its panel is open, a second click closes it.
  */
-function ConsoleKey({
+export function ConsoleKey({
   picto,
   name,
   title,
@@ -24,6 +24,7 @@ function ConsoleKey({
   pressed,
   tour,
   mentor = false,
+  band = false,
   onToggle,
 }: {
   readonly picto: PictogramName;
@@ -33,14 +34,16 @@ function ConsoleKey({
   readonly count?: number;
   readonly pressed: boolean;
   /** Step of the guided tour that points at it. */
-  readonly tour: number;
+  readonly tour?: number;
   readonly mentor?: boolean;
+  /** In the overview's strip (DESIGN 1.25): 30 px, in the strip's slate. */
+  readonly band?: boolean;
   onToggle(): void;
 }) {
   return (
     <button
       type="button"
-      className={`ch-console-key${mentor ? ' is-mentor' : ''}${pressed ? ' is-down' : ''}`}
+      className={`ch-console-key${mentor ? ' is-mentor' : ''}${pressed ? ' is-down' : ''}${band ? ' is-band' : ''}`}
       title={withShortcut(title, shortcut)}
       aria-label={name}
       aria-pressed={pressed}

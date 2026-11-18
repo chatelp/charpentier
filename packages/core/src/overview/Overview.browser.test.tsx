@@ -1,5 +1,5 @@
 import { createChapter, createScene, guids, readOutline } from '@charpentier/schema';
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import { userEvent } from 'vitest/browser';
 import { afterEach, describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
@@ -66,6 +66,22 @@ describe('overview of the manuscript', () => {
     await userEvent.keyboard('{Enter}');
     await waitFor(() => expect(document.title).toBe('Mon roman — C'));
     expect(screen.queryByRole('region', { name: 'Vue d’ensemble du manuscrit' })).toBeNull();
+  });
+
+  it('has the Compagnon’s key at the end of its strip, a toggle (DESIGN 1.25)', async () => {
+    await startApp();
+    await userEvent.keyboard('{ControlOrMeta>}{Shift>}p{/Shift}{/ControlOrMeta}');
+    const strip = await screen.findByRole('contentinfo', { name: /Variantes et restauration/ });
+    // No plate here, and no key of the book: the overview is the manuscript.
+    expect(document.querySelector('.ch-console')).toBeNull();
+    const key = within(strip).getByRole('button', { name: 'Compagnon' });
+    key.click();
+    await screen.findByRole('complementary', { name: 'Le Compagnon' });
+    expect(key.getAttribute('aria-pressed')).toBe('true');
+    key.click();
+    await waitFor(() =>
+      expect(screen.queryByRole('complementary', { name: 'Le Compagnon' })).toBeNull(),
+    );
   });
 
   it('previews a restore point from the strip and restores it, from the keyboard', async () => {

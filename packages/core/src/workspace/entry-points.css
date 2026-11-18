@@ -83,6 +83,21 @@
   box-shadow: var(--ch-inset);
 }
 
+/* In the overview's strip (DESIGN 1.25): 30 px, before the help; its name shows at its own hover. */
+.ch-console-key.is-band {
+  width: 30px;
+  height: 30px;
+  margin-left: auto;
+}
+
+.ch-console-key.is-band + .ch-overview-hint {
+  margin-left: 0;
+}
+
+.ch-console-key.is-band:hover .ch-console-name {
+  opacity: 1;
+}
+
 /* The number of open points, in its own small relief. */
 .ch-console-count {
   position: absolute;
