@@ -233,6 +233,40 @@ describe('the interview with the Compagnon (phase 6.1)', () => {
     expect(listEntities(root, 'characters')).toEqual([]);
   });
 
+  it('answers the message just sent, even after a message another device dated in the future', async () => {
+    const { root, mentorDoc } = project();
+    // Written on a device whose clock runs ahead.
+    mentorDoc.getArray('interview').push([
+      {
+        id: 'ahead',
+        at: '2999-01-01T00:00:00.000Z',
+        role: 'compagnon',
+        text: 'Parlez-moi de votre héroïne.',
+        mode: 'free',
+      },
+    ]);
+    say(mentorDoc, HELENE);
+    const { llm, asked } = fakeLlm({
+      reply: 'Je le range.',
+      proposals: [
+        {
+          module: 'characters',
+          entityId: null,
+          entityName: 'Hélène',
+          field: 'occupation',
+          value: 'batelière',
+          quote: 'Hélène, est batelière',
+        },
+      ],
+    });
+    const result = await interviewTurn({ llm, root, mentorDoc, mode: 'free' });
+    expect(result.placed.length).toBeGreaterThan(0);
+    const messages = asked.at(-1)?.messages ?? [];
+    expect(messages.at(-1)?.endsWith(HELENE)).toBe(true);
+    expect(messages.slice(0, -1).join('\n')).toContain('Parlez-moi de votre héroïne.');
+    expect(messages.slice(0, -1).join('\n')).not.toContain(HELENE);
+  });
+
   it('waits for the author in free mode', async () => {
     const { root, mentorDoc } = project();
     const { llm, asked } = fakeLlm({ reply: 'x', proposals: [] });

@@ -35,7 +35,8 @@ export async function answerAuthor(input: {
   if (!last || last.role !== 'author') return 'nothing-to-answer';
   const context = sceneContext(input.root, input.sceneDoc, input.sceneId);
   // One Compagnon (D-35): the interview is part of the conversation's thread, with his notebook.
-  const thread = companionThread(input.mentorDoc);
+  // The message just sent is the thread's last turn, as it is its array's (one rule, see companionThread).
+  const thread = companionThread(input.mentorDoc, last.id);
   const memory = projectMemory({
     mentorDoc: input.mentorDoc,
     root: input.root,

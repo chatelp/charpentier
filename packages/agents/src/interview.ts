@@ -295,7 +295,8 @@ export async function interviewTurn(input: {
   const language = readProjectMeta(root)?.language ?? 'fr';
   const level = readMentorLevel(root);
   // One Compagnon (D-35): what was said in the conversation is part of the interview's thread.
-  const thread = companionThread(mentorDoc);
+  // The message just sent is the thread's last turn, as it is its array's (one rule, see companionThread).
+  const thread = companionThread(mentorDoc, authorSpoke ? last.id : undefined);
   const authorMessages = messages.filter((m) => m.role === 'author').slice(-QUOTED_MESSAGES);
   const authorText = authorMessages.map((m) => m.text).join('\n');
   const memory = projectMemory({
