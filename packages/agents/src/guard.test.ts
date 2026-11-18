@@ -21,6 +21,27 @@ describe('guardrails: the Compagnon never writes the novel', () => {
     expect(narrativeProseIn(scene, author).map((v) => v.kind)).toEqual(['dialogue', 'quote']);
   });
 
+  it('tells a list of questions from dialogue written with hyphens', () => {
+    // From a live answer (18 November 2026): questions to the author, not lines of the novel.
+    const questions = [
+      'Quelques questions pour trouver votre fin :',
+      '- Que signifie un sas ouvert dans votre monde ? Qu’est-ce qui risque d’entrer ?',
+      '- Que risquent les serres si le sas reste ouvert pendant que la Loire monte ?',
+      '- Hélène va-t-elle fermer cette porte ? Le faire ou ne pas le faire est un choix.',
+    ].join('\n');
+    expect(narrativeProseIn(questions, author)).toEqual([]);
+    // Dialogue stays dialogue, whatever its dash, as soon as someone speaks.
+    for (const line of [
+      '- Je ne partirai pas, dit Hélène.',
+      '- Tu viens ? demanda-t-elle.',
+      '- Ferme cette porte ! s’écria Paul.',
+      '- Il reviendra, murmura-t-il, avant la crue.',
+      '-- Je reste.',
+      '– Je reste.',
+    ])
+      expect(narrativeProseIn(line, author).map((v) => v.kind)).toEqual(['dialogue']);
+  });
+
   it('lets the Compagnon quote the author’s own text and talk about the craft', () => {
     const answer = [
       'Votre phrase « Hélène regardait la Loire monter, sans un mot » installe bien le silence.',

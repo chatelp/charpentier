@@ -54,6 +54,21 @@ export interface ProseViolation {
   readonly excerpt: string;
 }
 
+/** A speech tag after a line of dialogue: « , dit-elle », « ? demanda Paul », « ! s’écria-t-il ». */
+const SPEECH_TAG =
+  /[,!?…]\s*(?:s['’]\s*)?(?:dit|dis|demand|répon|répond|murmur|cri|s['’]écri|souffl|lan[cç]|repri|repren|fit|ajout|chuchot|hurl|soupir|répliqu|interromp|poursuiv|continu|grogn|gémi|balbuti|bredouill|protest|insist|avou|admit|coup)\p{L}*(?:-t)?(?:-(?:il|elle|ils|elles|on|je|tu|nous|vous)\b|\s+\p{Lu})/iu;
+
+/**
+ * A line of dialogue: the dash of French dialogue (« — », « – », « -- ») then
+ * speech. A single hyphen opens a list item (the Compagnon's questions to the
+ * author), unless the line carries a speech tag (choice of the author,
+ * 18 November 2026: a list of questions is not dialogue).
+ */
+function isDialogueLine(line: string): boolean {
+  if (/^(?:—|–|-{2})\s*\p{Lu}/u.test(line)) return true;
+  return /^-\s*\p{Lu}/u.test(line) && SPEECH_TAG.test(line);
+}
+
 /**
  * Narrative text the Compagnon must not produce: lines of dialogue, or
  * passages presented as text (quotes, quoted blocks) that are not the
@@ -67,7 +82,7 @@ export function narrativeProseIn(answer: string, authorText: string): ProseViola
   for (const line of answer.split('\n')) {
     const trimmed = line.trim();
     // A dialogue line: dash then speech.
-    if (/^(?:—|–|-{1,2})\s*\p{Lu}/u.test(trimmed) && !fromAuthor(trimmed.replace(/^[—–-]+\s*/, '')))
+    if (isDialogueLine(trimmed) && !fromAuthor(trimmed.replace(/^[—–-]+\s*/, '')))
       violations.push({ kind: 'dialogue', excerpt: trimmed.slice(0, 120) });
     // A quoted block.
     if (/^>/.test(trimmed)) {
