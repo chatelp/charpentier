@@ -421,7 +421,7 @@ Texte admis : pas de caractères de contrôle, hormis la tabulation. Partout où
 ## 16. Persistance desktop
 
 - Bibliothèque : un dossier choisi par l'auteur (par défaut `~/Documents/Charpentier`) ; un projet = un dossier, identifié par `.charpentier/project.json` (id, titre, type, dates, corbeille). Les documents d'un projet sont dans `.charpentier/root`, `.charpentier/scenes/<sid>`, `.charpentier/scenes/<sid>.history`, `.charpentier/mentor`.
-- Par document Yjs : journal append-only des mises à jour (`journal.bin`, enregistrements `[longueur][octets]`, un dernier enregistrement tronqué est ignoré), compacté périodiquement en un état complet (`state.bin`) ; écritures atomiques (fichier temporaire + `fsync` + renommage). Objectif testé : aucune perte après un arrêt brutal du processus.
+- Par document Yjs : journal append-only des mises à jour (`journal.bin`, enregistrements `[longueur][CRC-32][octets]`, les anciens `[longueur][octets]` restant lus ; au chargement, la lecture s'arrête au premier enregistrement tronqué ou corrompu, ce qui précède est gardé et la fin illisible est mise de côté dans `journal.damaged-<date>.bin`, jamais supprimée), compacté périodiquement en un état complet (`state.bin`) ; écritures atomiques (fichier temporaire + `fsync` + renommage). Objectif testé : aucune perte après un arrêt brutal du processus.
 
 Disposition indicative d'un projet :
 
