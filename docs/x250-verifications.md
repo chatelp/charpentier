@@ -112,6 +112,11 @@ La v0.1.1 est publiée depuis le 15 novembre 2026 à 21:34 : c'est la release at
 - [ ] ⊞R puis ⏎ ⏎ : l'écran du disque porte « mise à jour x.y.z », puis « à jour · x.y.z » ; le texte écrit juste avant est là, et sur le Mac.
 - [ ] « Revenir à la version précédente » depuis « À propos » : redémarrage, « revenu à … · … mise de côté » ; puis repasser à la version mise de côté.
 
+## 7.3 · Les réglages du système
+
+- [x] ⊞, ouvre le tableau des Réglages du système, ⏎ sur Écran, l'échelle à 125 % : l'écran suit, Échap revient au tableau puis au texte. Fait le 18 novembre 2026 sur l'app 61e964a : `screenScale` enregistré à 125 à 08:54:32, eDP-1 à l'échelle 1.25 à 08:54:40 (surface 1536 × 864), la ligne affiche « 0.1.1 (61e964a) ».
+- [ ] Après un redémarrage, l'écran est toujours à 125 % (voir aussi 5.21 : l'image du démarrage peut sauter de 100 à 125 %).
+
 ## 5.10 et 5.10 bis · Depuis le Yoga L13
 
 - [x] Une mise à jour du X250 depuis le Yoga L13 (version développement), sans le toucher. Fait le 16 novembre 2026 (app a6b1421 puis c93bf0d, `switch` en 70 à 79 s), puis le 17 novembre (app 8df8efb en 57 s, puis 244f4ae en 59 s ; 4 essais sur 4 chaque fois).
@@ -122,4 +127,4 @@ La v0.1.1 est publiée depuis le 15 novembre 2026 à 21:34 : c'est la release at
 
 - Ce qui a raté, et à quelle étape :
 - Ce qui est lent ou gênant :
-- L'écran du X250 : 1920 × 1080 ou 1366 × 768 ? (voir « À propos » ou l'étiquette sous l'ordinateur)
+- L'écran du X250 : 1920 × 1080 (eDP-1, BOE 0x0691, relevé le 18 novembre 2026).
