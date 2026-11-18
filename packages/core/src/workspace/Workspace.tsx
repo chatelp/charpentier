@@ -1230,9 +1230,8 @@ export function ProjectWorkspace({
         status={status?.text}
         mentorNote={mentorNote}
         onEnterKey={
-          agentsStatus === 'unconfigured'
-            ? () => void registry.execute('setApiKey', ctx)
-            : undefined
+          // Where the key is set: Réglages › Compagnon (DESIGN 1.24).
+          agentsStatus === 'unconfigured' ? () => ctx.openSettings('compagnon') : undefined
         }
         features={<FeatureFooterItems ctx={ctx} />}
         work={

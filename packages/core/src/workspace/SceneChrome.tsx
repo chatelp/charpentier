@@ -179,7 +179,7 @@ export function WritingFooter({
           <button
             type="button"
             className="ch-footer-button is-mentor ch-footer-key"
-            title={t('commands.setApiKey')}
+            title={t('mentor.ask.toSettings')}
             onClick={onEnterKey}
           >
             {t('footer.enterKey')}

@@ -40,7 +40,7 @@
     "close": "Replier",
     "closeKey": "Échap",
     "status": {
-      "unconfigured": "Le Compagnon attend votre clé d’API (ligne de commande : « clé »).",
+      "unconfigured": "Le Compagnon attend votre clé d’API : Réglages › Compagnon.",
       "offline": "Compagnon hors ligne"
     },
     "apiKeyPlaceholder": "Clé d’API Anthropic (sk-ant-…), gardée chiffrée sur cet appareil",
@@ -62,7 +62,9 @@
     "insertExampleKey": "⌘⏎",
     "exampleInserted": "Phrase d’exemple insérée. Elle est à vous : modifiez-la à votre guise.",
     "ask": {
-      "unavailable": "Le Compagnon a besoin de votre clé d’API (ligne de commande : « clé »).",
+      "unavailable": "Le Compagnon a besoin de votre clé d’API : Réglages › Compagnon.",
+      "unavailableLead": "Le Compagnon a besoin de votre clé d’API :",
+      "toSettings": "Réglages › Compagnon",
       "offline": "Pas de réseau : le Compagnon répondra quand la connexion reviendra.",
       "refused": "Le Compagnon n’a pas pu répondre à cette demande.",
       "failed": "Le Compagnon n’a pas pu répondre. Réessayez dans un instant."

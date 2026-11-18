@@ -90,4 +90,46 @@ describe('conversation with the Compagnon', () => {
       ),
     );
   });
+
+  it('without a key, sends the author where it is set: Réglages › Compagnon (DESIGN 1.24)', async () => {
+    const platform = createTestPlatform({
+      keybindings: { primaryModifier: isMac ? 'Meta' : 'Control', reserved: [] },
+      preferences: { get: async () => undefined, set: async () => {} },
+      agents: {
+        status: () => 'unconfigured',
+        onStatusChange: () => () => {},
+        setApiKey: async () => 'saved',
+        forgetApiKey: async () => {},
+        analyze: async () => 'unavailable',
+        reviewChapter: async () => 'unavailable',
+        lightModel: async () => 'opus',
+        setLightModel: async () => {},
+        estimateDeepWork: async () => null,
+        deepWork: async () => 'unavailable',
+        stopDeepWork: async () => {},
+        chooseReference: async () => 'cancelled',
+        readReference: async () => 'empty',
+        dropReference: async () => {},
+        interview: async () => 'unavailable',
+        ask: async () => 'unavailable',
+      },
+    });
+    render(<App platform={platform} i18n={await createI18n('fr')} />);
+    await screen.findByRole('textbox', { name: 'Texte de la scène' });
+    // The footer's « Compagnon : saisir la clé » opens the section.
+    screen.getByRole('button', { name: 'Compagnon : saisir la clé' }).click();
+    await screen.findByRole('region', { name: 'Compagnon' });
+    await userEvent.keyboard('{Escape}');
+
+    await userEvent.keyboard('{ControlOrMeta>}k{/ControlOrMeta}');
+    await userEvent.keyboard('parler au compagnon{Enter}');
+    await screen.findByRole('textbox', { name: 'Votre question au Compagnon' });
+    await userEvent.keyboard('Que veut Hélène ?{Enter}');
+    const log = screen.getByRole('log');
+    await waitFor(() =>
+      expect(log.textContent).toMatch(/clé d’API : Réglages › Compagnon \((⌘|Ctrl\+),\)\./),
+    );
+    within(log).getByRole('button', { name: 'Réglages › Compagnon' }).click();
+    await screen.findByRole('region', { name: 'Compagnon' });
+  });
 });

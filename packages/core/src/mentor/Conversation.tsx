@@ -16,6 +16,7 @@ import { NotedLine } from '../atelier/NotedLine';
 import { BilanHeading, BilanLinks } from '../work/Bilan';
 import { StyleCitation } from './StyleCitation';
 import type { WorkspaceContext } from '../workspace/workspace-context';
+import type { AskResult } from '@charpentier/platform';
 
 export interface ConversationProps {
   readonly projectId: string;
@@ -48,7 +49,8 @@ export function Conversation({
   const [mentorDoc, setMentorDoc] = useState<Y.Doc | null>(null);
   const [draft, setDraft] = useState('');
   const [waiting, setWaiting] = useState(false);
-  const [problem, setProblem] = useState<string | null>(null);
+  /** Why the last question went unanswered (`mentor.ask.<problem>`). */
+  const [problem, setProblem] = useState<Exclude<AskResult, 'answered'> | null>(null);
   const field = useRef<HTMLTextAreaElement>(null);
   const transcript = useRef<HTMLDivElement>(null);
 
@@ -92,7 +94,7 @@ export function Conversation({
     setWaiting(true);
     const result = await platform.agents.ask({ projectId, sceneId });
     setWaiting(false);
-    if (result !== 'answered') setProblem(t(`mentor.ask.${result}`));
+    if (result !== 'answered') setProblem(result);
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -152,7 +154,23 @@ export function Conversation({
           </Fragment>
         ))}
         {waiting && <p className="ch-transcript-waiting">{t('mentor.thinking')}</p>}
-        {problem && <p className="ch-transcript-problem">{problem}</p>}
+        {problem === 'unavailable' && ctx ? (
+          // No key: where the author sets it, one click away (DESIGN 1.24).
+          <p className="ch-transcript-problem">
+            {t('mentor.ask.unavailableLead')}{' '}
+            <button
+              type="button"
+              tabIndex={-1}
+              className="ch-link"
+              onClick={() => ctx.openSettings('compagnon')}
+            >
+              {t('mentor.ask.toSettings')}
+            </button>
+            {((key) => (key ? ` (${key})` : ''))(ctx.shortcutLabel('openSettings'))}.
+          </p>
+        ) : (
+          problem && <p className="ch-transcript-problem">{t(`mentor.ask.${problem}`)}</p>
+        )}
       </div>
       <textarea
         ref={field}
