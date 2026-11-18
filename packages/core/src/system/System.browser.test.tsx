@@ -511,6 +511,28 @@ describe('the updates of the X250 (phase 5.12)', () => {
     await waitFor(() => expect(system.simulate.calls).toContain('reboot'));
   });
 
+  it('restarts or powers off from the command line on one ⏎, the menu opened with its line armed', async () => {
+    const system = createSimulatedSystem();
+    await start(system);
+    await userEvent.keyboard(mod('k'));
+    // Without its accent: the keyboard of the test types « é » out of place, the search folds accents.
+    await userEvent.keyboard('redemarrer{Enter}');
+    const reboot = await screen.findByRole('button', { name: /Confirmer le redémarrage/ });
+    await waitFor(() => expect(document.activeElement).toBe(reboot));
+    expect(system.simulate.calls).not.toContain('reboot');
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(system.simulate.calls).toContain('reboot'));
+
+    // `:eteindre`, the same.
+    await userEvent.keyboard('{Escape}');
+    await userEvent.keyboard(mod('k'));
+    await userEvent.keyboard(':eteindre{Enter}');
+    const off = await screen.findByRole('button', { name: /Confirmer l’extinction/ });
+    await waitFor(() => expect(document.activeElement).toBe(off));
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(system.simulate.calls).toContain('powerOff'));
+  });
+
   it('keeps a download cut short in the journal only, and says a discarded version', async () => {
     const system = createSimulatedSystem();
     await start(system);

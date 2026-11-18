@@ -41,9 +41,14 @@ interface UiState {
   readonly lit: Segment | null;
   /** The print sheet, and what it prints first. */
   readonly print: 'scene' | 'chapter' | 'manuscript' | null;
+  /**
+   * The menu opened by a command that acts (« Redémarrer… », `:eteindre`):
+   * its line already armed, so that ⏎ confirms (docs/DESIGN.md §4.12).
+   */
+  readonly armed: 'reboot' | 'off' | null;
 }
 
-let ui: UiState = { open: null, focus: 0, lit: null, print: null };
+let ui: UiState = { open: null, focus: 0, lit: null, print: null, armed: null };
 let unlight: ReturnType<typeof setTimeout> | undefined;
 const listeners = new Set<() => void>();
 const set = (next: UiState) => {
@@ -57,8 +62,11 @@ export const systemUi = {
     listeners.add(listener);
     return () => listeners.delete(listener);
   },
-  open: (segment: Segment | null) => set({ ...ui, open: segment }),
-  toggle: (segment: Segment) => set({ ...ui, open: ui.open === segment ? null : segment }),
+  open: (segment: Segment | null) => set({ ...ui, open: segment, armed: null }),
+  toggle: (segment: Segment) =>
+    set({ ...ui, open: ui.open === segment ? null : segment, armed: null }),
+  /** Opens the menu with « Redémarrer… » or « Éteindre… » armed: ⏎ confirms. */
+  confirm: (what: 'reboot' | 'off') => set({ ...ui, open: 'systeme', armed: what }),
   /** Puts the focus on the line (⊞ alone). */
   focusLine: () => set({ ...ui, focus: ui.focus + 1 }),
   print: (scope: UiState['print']) => set({ ...ui, open: null, print: scope }),

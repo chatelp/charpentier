@@ -13,7 +13,7 @@ import { CloseButton } from '../icons/CloseButton';
 import type { WorkspaceContext } from '../workspace/workspace-context';
 import { Gauge, Keys, PanelRow, Signal, Slider } from './controls';
 import { beforeRestart } from './restart';
-import { systemUi, useJournal, useSystemState, type Segment } from './system-store';
+import { systemUi, useJournal, useSystemState, useSystemUi, type Segment } from './system-store';
 
 const timers = new Map<string, ReturnType<typeof setTimeout>>();
 /** A message of a gesture, once the gesture settles (not one per step of a slider). */
@@ -26,8 +26,10 @@ export function postSoon(system: SystemService, key: string, text: string) {
 }
 
 /** A destructive item (« Redémarrer… »): a first ⏎ arms it for 3 s, a second one acts. */
-function useArmed(): [string | null, (id: string, act: () => void) => void] {
-  const [armed, setArmed] = useState<string | null>(null);
+function useArmed(
+  initial: string | null = null,
+): [string | null, (id: string, act: () => void) => void, (id: string | null) => void] {
+  const [armed, setArmed] = useState<string | null>(initial);
   useEffect(() => {
     if (!armed) return;
     const timer = setTimeout(() => setArmed(null), 3000);
@@ -41,6 +43,7 @@ function useArmed(): [string | null, (id: string, act: () => void) => void] {
         act();
       } else setArmed(id);
     },
+    setArmed,
   ];
 }
 
@@ -71,11 +74,13 @@ export function SystemPanel({
  * called once the panel is placed, a hidden element taking no focus.
  */
 export function focusFirstControl(root: HTMLElement | null) {
-  root
-    ?.querySelector<HTMLElement>(
+  // An item armed by the command that opened the panel comes first: ⏎ confirms it.
+  (
+    root?.querySelector<HTMLElement>('.is-armed') ??
+    root?.querySelector<HTMLElement>(
       'input:not([type=range]), button.is-item, [role=radio][aria-checked=true], input, button:not(.ch-close)',
     )
-    ?.focus();
+  )?.focus();
 }
 
 /** ↑ ↓ go from one line to the next in a panel. */
@@ -138,7 +143,17 @@ export const duration = (minutes: number) =>
 function MenuPanel({ ctx, onDone }: PanelProps) {
   const { platform, system, state, text } = useSys();
   const ready = state.update?.ready;
-  const [armed, arm] = useArmed();
+  // Opened by « Redémarrer… » or « Éteindre… »: that line already armed, and focused.
+  const asked = useSystemUi().armed;
+  const [armed, arm, setArmed] = useArmed(asked);
+  useEffect(() => {
+    if (!asked) return;
+    setArmed(asked);
+    requestAnimationFrame(() =>
+      document.querySelector<HTMLElement>('.ch-sys-panel-body .is-armed')?.focus(),
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only when a command asks
+  }, [asked]);
   const key = (id: string) => ctx?.shortcutLabel(id);
   const item = (
     id: string,
@@ -150,7 +165,7 @@ function MenuPanel({ ctx, onDone }: PanelProps) {
     <button
       key={id}
       type="button"
-      className="ch-sys-item is-item"
+      className={`ch-sys-item is-item${keyLabel === '⏎' ? ' is-armed' : ''}`}
       disabled={disabled}
       onClick={act}
     >

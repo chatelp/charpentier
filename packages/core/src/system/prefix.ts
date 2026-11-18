@@ -38,8 +38,6 @@ const PANEL: Partial<Record<Word, Segment>> = {
   wifi: 'wifi',
   bt: 'bt',
   nuit: 'lum',
-  eteindre: 'systeme',
-  redemarrer: 'systeme',
   usb: 'usb',
   maj: 'maj',
   journal: 'message',
@@ -136,6 +134,10 @@ export const systemPrefix: CommandPrefix = {
       }
       case 'veille':
         return void sys.suspend();
+      case 'eteindre':
+        return systemUi.confirm('off');
+      case 'redemarrer':
+        return systemUi.confirm('reboot');
       case 'reglages':
         return ctx.openSystemSettings();
       case 'moniteur':

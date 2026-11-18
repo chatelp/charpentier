@@ -65,8 +65,9 @@ export function createSystemFeature({ modifier }: { readonly modifier: SystemMod
       run: (ctx) => void system(ctx).suspend(),
     },
     // A light confirmation, in the system menu: ⏎ arms it for 3 s, a second ⏎ acts.
-    { id: 'systemReboot', scope: 'global', run: panel('systeme') },
-    { id: 'systemPowerOff', scope: 'global', run: panel('systeme') },
+    // The menu opened with the line armed: ⏎ confirms (the light confirmation, §4.12).
+    { id: 'systemReboot', scope: 'global', run: () => systemUi.confirm('reboot') },
+    { id: 'systemPowerOff', scope: 'global', run: () => systemUi.confirm('off') },
     { id: 'systemBrightness', scope: 'global', run: panel('lum') },
     { id: 'systemVolume', scope: 'global', run: panel('vol') },
     {
