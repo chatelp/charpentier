@@ -43,6 +43,24 @@ describe('the device code (phase 5.6)', () => {
     expect(keeper.retryAt()).toBeNull();
   });
 
+  it('counts parallel wrong codes one by one: the wait holds', async () => {
+    const keeper = createLockKeeper({
+      load: () => null,
+      save: () => {},
+      now: () => 0,
+      iterations: 1_000,
+    });
+    await keeper.setCode('1234');
+    const wrong = Array.from({ length: 12 }, (_, i) => keeper.check(`00${10 + i}`));
+    // The right code, sent with them, comes after the fifth failure: it waits too.
+    const results = await Promise.all([...wrong, keeper.check('1234')]);
+    expect(results).toEqual([
+      ...Array.from({ length: 4 }, () => 'wrong'),
+      ...Array.from({ length: 9 }, () => 'wait'),
+    ]);
+    expect(keeper.retryAt()).toBe(30_000);
+  });
+
   it('accepts 4 to 8 letters or digits', () => {
     expect(isValidCode('1234')).toBe(true);
     expect(isValidCode('élan2026')).toBe(true);
