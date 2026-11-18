@@ -51,10 +51,20 @@ export class IpcDocumentService implements DocumentService {
         if (closed) return;
         closed = true;
         if (--opened.refs > 0) return;
+        // The same guid may be opened again before the lines below run (a new
+        // replica, a new `doc.open`): the main process counts opens and closes,
+        // so the order in which they reach it does not matter.
         this.#replicas.delete(guid);
-        await opened.loaded.catch(() => {});
-        await this.bridge.invoke({ type: 'doc.close', guid });
-        opened.doc.destroy();
+        // An open that failed holds nothing in the main process: nothing to close.
+        const held = await opened.loaded.then(
+          () => true,
+          () => false,
+        );
+        try {
+          if (held) await this.bridge.invoke({ type: 'doc.close', guid });
+        } finally {
+          opened.doc.destroy();
+        }
       },
     };
   }

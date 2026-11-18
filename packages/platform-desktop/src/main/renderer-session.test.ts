@@ -1,7 +1,8 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import * as Y from 'yjs';
 import type { DesktopBridge, Message } from '../shared/ipc';
 import { createSimulatedSystem, type SystemService } from '@charpentier/platform';
 import { IpcDocumentService } from '../renderer/documents';
@@ -13,6 +14,7 @@ import { RendererSession } from './renderer-session';
 
 const dirs: string[] = [];
 afterEach(() => {
+  vi.restoreAllMocks();
   for (const dir of dirs.splice(0)) fs.rmSync(dir, { recursive: true, force: true });
 });
 
@@ -44,7 +46,63 @@ function renderer(main: ReturnType<typeof mainProcess> & { system?: SystemServic
   return { session, bridge, documents: new IpcDocumentService(bridge) };
 }
 
+/**
+ * The same, over one ordered asynchronous channel: requests and messages
+ * reach the main process later, in the order the renderer sent them (what
+ * Electron's IPC guarantees, and nothing more).
+ */
+function rendererOverChannel(main: ReturnType<typeof mainProcess>) {
+  const listeners = new Set<(m: Message) => void>();
+  const received: string[] = [];
+  let channel = Promise.resolve();
+  const later = <T>(deliver: () => T | Promise<T>): Promise<T> => {
+    const delivered = channel.then(() => new Promise((r) => setTimeout(r, 0))).then(deliver);
+    channel = delivered.then(
+      () => {},
+      () => {},
+    );
+    return delivered;
+  };
+  const session = new RendererSession(main, (m) =>
+    queueMicrotask(() => listeners.forEach((l) => l(m))),
+  );
+  const bridge: DesktopBridge = {
+    platform: 'darwin',
+    invoke: (request) =>
+      later(() => {
+        received.push(request.type);
+        return session.handle(request);
+      }),
+    send: (message) =>
+      void later(() => {
+        received.push(message.type);
+        session.receive(message);
+      }),
+    onMessage: (listener) => {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+  };
+  /** Everything sent so far has been handled by the main process. */
+  const settled = async () => {
+    let seen;
+    do {
+      seen = channel;
+      await seen;
+      await tick();
+    } while (seen !== channel);
+  };
+  return { session, bridge, received, settled, documents: new IpcDocumentService(bridge) };
+}
+
 const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+/** The update of one insertion in a fresh replica. */
+function editOf(guid: string, text: string): Uint8Array {
+  const doc = new Y.Doc({ guid });
+  doc.getText('t').insert(0, text);
+  return Y.encodeStateAsUpdate(doc);
+}
 
 describe('documents held by the main process', () => {
   it('syncs two windows and keeps everything on disk', async () => {
@@ -78,6 +136,96 @@ describe('documents held by the main process', () => {
     expect(
       fs.existsSync(path.join(main.library.root, 'Mon roman', '.charpentier', 'root', 'state.bin')),
     ).toBe(true);
+  });
+
+  it('keeps what is typed after a document is closed and reopened in the same tick', async () => {
+    const main = mainProcess();
+    const project = await main.library.create({ title: 'Mon roman', kind: 'novel' });
+    const guid = `project:${project.id}/scene:s1`;
+    const r = rendererOverChannel(main);
+    const first = await r.documents.open(guid);
+    await first.whenLoaded;
+    first.doc.getText('t').insert(0, 'Avant.');
+    await r.settled();
+
+    // A React effect's cleanup, then the effect again (the scene's active variant changed).
+    void first.close();
+    const second = await r.documents.open(guid);
+    await second.whenLoaded;
+    expect(second.doc).not.toBe(first.doc);
+    expect(second.doc.getText('t').toString()).toBe('Avant.');
+    second.doc.getText('t').insert(6, ' Après.');
+    await r.settled();
+
+    // The main process did receive the open before the close of the first replica.
+    expect(r.received).toEqual(['doc.open', 'doc.update', 'doc.open', 'doc.close', 'doc.update']);
+    expect(main.store.holders(guid).has(r.session)).toBe(true);
+    expect(main.store.acquire(guid, 'test').getText('t').toString()).toBe('Avant. Après.');
+
+    // Another window still follows it, and this one still hears the others.
+    const other = renderer(main);
+    const theirs = await other.documents.open(guid);
+    await theirs.whenLoaded;
+    theirs.doc.getText('t').insert(0, 'Hier. ');
+    await tick();
+    await r.settled();
+    expect(second.doc.getText('t').toString()).toBe('Hier. Avant. Après.');
+    await theirs.close();
+    main.store.release(guid, 'test');
+
+    // The last close lets go of the document, and it is all on disk.
+    await second.close();
+    await r.settled();
+    expect(main.store.isOpen(guid)).toBe(false);
+    const relaunched = new DocStore(documentLocator(main.library));
+    expect(relaunched.acquire(guid, 'test').getText('t').toString()).toBe('Hier. Avant. Après.');
+    relaunched.closeAll();
+  });
+
+  it('balances opens and closes of one document, whatever their order', async () => {
+    const main = mainProcess();
+    const project = await main.library.create({ title: 'Mon roman', kind: 'novel' });
+    const guid = `project:${project.id}`;
+    const { session } = renderer(main);
+    await session.handle({ type: 'doc.open', guid });
+    await session.handle({ type: 'doc.open', guid });
+    await session.handle({ type: 'doc.close', guid });
+    expect(main.store.holders(guid).has(session)).toBe(true);
+    const update = editOf(guid, 'Encore là.');
+    session.receive({ type: 'doc.update', guid, update });
+    expect(main.store.acquire(guid, 'test').getText('t').toString()).toBe('Encore là.');
+    main.store.release(guid, 'test');
+    await session.handle({ type: 'doc.close', guid });
+    expect(main.store.isOpen(guid)).toBe(false);
+
+    // One close too many is reported, and takes nothing away from a later open.
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+    await session.handle({ type: 'doc.close', guid });
+    expect(errors).toHaveBeenCalledTimes(1);
+    await session.handle({ type: 'doc.open', guid });
+    expect(main.store.holders(guid).has(session)).toBe(true);
+    session.dispose();
+    expect(main.store.isOpen(guid)).toBe(false);
+  });
+
+  it('never drops an update, even for a document the session does not hold', async () => {
+    const main = mainProcess();
+    const project = await main.library.create({ title: 'Mon roman', kind: 'novel' });
+    const guid = `project:${project.id}/scene:s1`;
+    const { session } = renderer(main);
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    session.receive({ type: 'doc.update', guid, update: editOf(guid, 'Sauvé.') });
+    expect(errors).toHaveBeenCalledTimes(1);
+    expect(String(errors.mock.calls[0]?.[0])).toContain(guid);
+    expect(main.store.isOpen(guid)).toBe(false);
+    const relaunched = new DocStore(documentLocator(main.library));
+    expect(relaunched.acquire(guid, 'test').getText('t').toString()).toBe('Sauvé.');
+    relaunched.closeAll();
+
+    // Where it cannot be stored (unknown project), it says so and does not throw.
+    session.receive({ type: 'doc.update', guid: 'project:unknown', update: editOf(guid, 'x') });
+    expect(errors).toHaveBeenCalledTimes(3);
   });
 
   it('places scene documents in their project and refuses unknown projects', async () => {

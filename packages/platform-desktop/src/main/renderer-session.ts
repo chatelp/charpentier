@@ -15,7 +15,14 @@ import type { SyncEngine } from './sync-engine';
  * tested in plain Node.
  */
 export class RendererSession {
-  readonly #unsubscribe = new Map<string, () => void>();
+  /**
+   * The documents this renderer has open: how many `doc.open` are not yet
+   * matched by a `doc.close`, and the subscription that forwards the others'
+   * updates. Counted, because the renderer may reopen a document before the
+   * close of its previous replica arrives (`doc.open`, then `doc.close`): the
+   * late close must not take the new replica's subscription away.
+   */
+  readonly #open = new Map<string, { count: number; unsubscribe: () => void }>();
   #unwatchSystem: (() => void) | null = null;
   #monitor: { close(): void } | null = null;
 
@@ -43,22 +50,31 @@ export class RendererSession {
     const { store, library, preferences } = this.services;
     switch (request.type) {
       case 'doc.open': {
-        const doc = store.acquire(request.guid, this);
-        if (!this.#unsubscribe.has(request.guid)) {
-          this.#unsubscribe.set(
-            request.guid,
-            store.subscribe(request.guid, (update, origin) => {
-              if (origin !== this) this.push({ type: 'doc.update', guid: request.guid, update });
+        const { guid } = request;
+        const doc = store.acquire(guid, this);
+        const open = this.#open.get(guid);
+        if (open) open.count++;
+        else
+          this.#open.set(guid, {
+            count: 1,
+            unsubscribe: store.subscribe(guid, (update, origin) => {
+              if (origin !== this) this.push({ type: 'doc.update', guid, update });
             }),
-          );
-        }
+          });
         return { state: Y.encodeStateAsUpdate(doc) };
       }
-      case 'doc.close':
-        this.#unsubscribe.get(request.guid)?.();
-        this.#unsubscribe.delete(request.guid);
+      case 'doc.close': {
+        const open = this.#open.get(request.guid);
+        if (!open) {
+          console.error(`Charpentier: doc.close for a document not open here: ${request.guid}`);
+          return null;
+        }
+        if (--open.count > 0) return null;
+        open.unsubscribe();
+        this.#open.delete(request.guid);
         store.release(request.guid, this);
         return null;
+      }
       case 'library.list':
         return library.list();
       case 'library.listTrashed':
@@ -169,10 +185,27 @@ export class RendererSession {
 
   /** An update typed in the renderer. */
   receive(message: Message): void {
-    if (message.type !== 'doc.update' || !this.#unsubscribe.has(message.guid)) return;
     // (Other messages only go from the main process to the renderer.)
-    const doc = this.services.store.acquire(message.guid, this);
-    Y.applyUpdate(doc, message.update, this);
+    if (message.type !== 'doc.update') return;
+    const { store } = this.services;
+    if (this.#open.has(message.guid)) {
+      Y.applyUpdate(store.acquire(message.guid, this), message.update, this);
+      return;
+    }
+    // The protocol never sends this (an update follows its `doc.open` and
+    // precedes its `doc.close`), but what it carries is the author's text:
+    // never drop it. Store it under a holder of its own, and say so loudly.
+    console.error(
+      `Charpentier: update for a document not open in this session, stored anyway: ${message.guid}`,
+    );
+    const holder = {};
+    try {
+      Y.applyUpdate(store.acquire(message.guid, holder), message.update, this);
+    } catch (error) {
+      console.error(`Charpentier: the update for ${message.guid} could not be stored`, error);
+    } finally {
+      store.release(message.guid, holder);
+    }
   }
 
   /** The renderer went away (window closed, reload): let go of its documents. */
@@ -181,8 +214,8 @@ export class RendererSession {
     this.#unwatchSystem = null;
     this.#monitor?.close();
     this.#monitor = null;
-    for (const unsubscribe of this.#unsubscribe.values()) unsubscribe();
-    this.#unsubscribe.clear();
+    for (const open of this.#open.values()) open.unsubscribe();
+    this.#open.clear();
     this.services.store.releaseAll(this);
   }
 }
