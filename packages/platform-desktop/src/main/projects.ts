@@ -19,6 +19,12 @@ interface ProjectFile {
    */
   titleAt?: string;
   trashedAt?: string;
+  /**
+   * When the project last went to the trash or came back from it: the trash
+   * state travels by this date (a restore leaves no `trashedAt` to compare).
+   * Absent in older libraries: `trashedAt` stands for it.
+   */
+  trashAt?: string;
 }
 
 /** A project as the library keeps it: identity, title, kind, dates. */
@@ -136,7 +142,8 @@ export class FolderLibrary implements LibraryService {
   }
 
   async trash(projectId: string): Promise<void> {
-    this.#update(projectId, (p) => ({ ...p, trashedAt: new Date().toISOString() }));
+    const now = new Date().toISOString();
+    this.#update(projectId, (p) => ({ ...p, trashedAt: now, trashAt: now }));
   }
 
   /** Every project, live and trashed, with its dates (for the account's library, D-21). */
@@ -160,6 +167,7 @@ export class FolderLibrary implements LibraryService {
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
         ...(record.titleAt && { titleAt: record.titleAt }),
+        ...(record.trashAt && { trashAt: record.trashAt }),
       };
       if (record.trashedAt) next.trashedAt = record.trashedAt;
       else delete next.trashedAt;
@@ -169,7 +177,7 @@ export class FolderLibrary implements LibraryService {
 
   async restore(projectId: string): Promise<void> {
     this.#update(projectId, (p) => {
-      const restored = { ...p };
+      const restored = { ...p, trashAt: new Date().toISOString() };
       delete restored.trashedAt;
       return restored;
     });

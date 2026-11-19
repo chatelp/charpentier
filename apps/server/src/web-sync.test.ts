@@ -111,4 +111,73 @@ describe('the app in a browser syncs with its server (phase 4.7 a)', () => {
     expect(await two.sync.account()).toBeNull();
     expect(two.jar.cookie).toBe('');
   });
+
+  it('brings a project restored from the trash back in every browser; the latest of a trash and a restore wins', async () => {
+    const db = await freshDatabase();
+    const server = createSyncServer({ db, port: 0, address: '127.0.0.1' });
+    await server.listen();
+    servers.push(server);
+    const origin = `http://127.0.0.1:${server.address.port}`;
+    const helene = await account(db);
+    const pause = () => new Promise((resolve) => setTimeout(resolve, 5));
+
+    const one = browser(origin);
+    await one.sync.signIn({ server: origin, ...helene });
+    const { id } = await one.library.create({ title: 'La batelière', kind: 'novel' });
+    await one.sync.idle();
+    const two = browser(origin);
+    await two.sync.signIn({ server: origin, ...helene });
+    await two.sync.idle();
+    const live = async (b: { library: DocumentLibrary }) =>
+      (await b.library.list()).some((p) => p.id === id);
+    expect(await live(two)).toBe(true);
+
+    await one.library.trash(id);
+    await one.sync.reconcile();
+    await expect.poll(() => live(two), { timeout: 5000 }).toBe(false);
+
+    await pause();
+    await two.library.restore(id);
+    await two.sync.reconcile();
+    expect(await live(two)).toBe(true);
+    await expect.poll(() => live(one), { timeout: 5000 }).toBe(true);
+    await one.sync.reconcile();
+    await two.sync.reconcile();
+    expect(await live(one)).toBe(true);
+    expect(await live(two)).toBe(true);
+
+    // Trashed in one, then trashed and restored in the other before they meet: restored.
+    one.sync.stop();
+    two.sync.stop();
+    await pause();
+    await one.library.trash(id);
+    await pause();
+    await two.library.trash(id);
+    await pause();
+    await two.library.restore(id);
+    await one.sync.start();
+    await two.sync.start();
+    await one.sync.reconcile();
+    await two.sync.reconcile();
+    await expect.poll(() => live(one), { timeout: 5000 }).toBe(true);
+    expect(await live(two)).toBe(true);
+
+    // Restored in one, trashed after in the other: trashed.
+    await pause();
+    await two.library.trash(id);
+    await two.sync.reconcile();
+    await expect.poll(() => live(one), { timeout: 5000 }).toBe(false);
+    one.sync.stop();
+    two.sync.stop();
+    await pause();
+    await two.library.restore(id);
+    await pause();
+    await one.library.trash(id);
+    await two.sync.start();
+    await one.sync.start();
+    await two.sync.reconcile();
+    await one.sync.reconcile();
+    await expect.poll(() => live(two), { timeout: 5000 }).toBe(false);
+    expect(await live(one)).toBe(false);
+  });
 });

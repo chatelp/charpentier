@@ -296,13 +296,23 @@ export class SyncEngine {
       // copy on the device would look like an account without projects.
       if (!this.#librarySynced) return;
       const local = new Map((await this.deps.library.all()).map((p) => [p.id, p]));
-      // Each part by its own date: the dates and the trash by the latest, the
-      // title by its own (an opening moves `updatedAt`, never the title).
+      // Each part by its own date: the dates by the latest, the title by its
+      // own (an opening moves `updatedAt`, never the title), the trash by its
+      // own (a project restored here must not be trashed again by the account).
+      const trashDate = (p: ProjectRecord) => p.trashAt ?? p.trashedAt ?? '';
       const merged = (a: ProjectRecord, b: ProjectRecord | undefined): ProjectRecord => {
         if (!b) return a;
         const latest = a.updatedAt >= b.updatedAt ? a : b;
         const titled = (a.titleAt ?? a.createdAt) >= (b.titleAt ?? b.createdAt) ? a : b;
-        const trashed = (a.trashedAt ?? '') >= (b.trashedAt ?? '') ? a : b;
+        // The trash by the date it was last entered or left; at the same date, the trash keeps it.
+        const trashed =
+          trashDate(a) === trashDate(b)
+            ? a.trashedAt
+              ? a
+              : b
+            : trashDate(a) > trashDate(b)
+              ? a
+              : b;
         return {
           id: latest.id,
           kind: latest.kind,
@@ -311,6 +321,7 @@ export class SyncEngine {
           title: titled.title,
           ...(titled.titleAt && { titleAt: titled.titleAt }),
           ...(trashed.trashedAt && { trashedAt: trashed.trashedAt }),
+          ...(trashed.trashAt && { trashAt: trashed.trashAt }),
         };
       };
       const same = (a: ProjectRecord, b: ProjectRecord | undefined) =>
@@ -318,7 +329,8 @@ export class SyncEngine {
         a.title === b.title &&
         a.updatedAt === b.updatedAt &&
         (a.titleAt ?? '') === (b.titleAt ?? '') &&
-        (a.trashedAt ?? '') === (b.trashedAt ?? '');
+        (a.trashedAt ?? '') === (b.trashedAt ?? '') &&
+        (a.trashAt ?? '') === (b.trashAt ?? '');
       const newer = (a: ProjectRecord, b: ProjectRecord | undefined) => !same(merged(a, b), b);
       const accountHasProjects = [...projects.values()].some((p) => !p.trashedAt);
       this.#withheld.clear();
