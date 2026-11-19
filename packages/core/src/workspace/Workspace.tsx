@@ -382,7 +382,7 @@ export function ProjectWorkspace({
   );
   const syncStatus = useSyncExternalStore(subscribeSync, () => sync?.status() ?? 'off');
   const words = useWordCount(editor);
-  const storedTexts = useSceneTexts(platform, projectId, outline);
+  const storedTexts = useSceneTexts(platform, projectId, outline, sceneId);
   const storedWords = useWordsOf(storedTexts);
   // The open scene's text is live (its word count changes with every edit).
   const sceneTexts = useMemo(

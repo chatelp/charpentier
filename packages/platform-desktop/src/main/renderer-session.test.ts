@@ -259,6 +259,7 @@ describe('documents held by the main process', () => {
   it('remembers preferences', () => {
     const main = mainProcess();
     main.preferences.set('lastProjectId', 'p1');
+    main.preferences.flush();
     expect(new PreferencesFile(main.preferences.file).get('lastProjectId')).toBe('p1');
   });
 });

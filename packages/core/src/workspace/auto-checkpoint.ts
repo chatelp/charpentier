@@ -38,7 +38,6 @@ export class AutoCheckpointer {
     createCheckpoint(this.sceneDoc, this.historyDoc, {
       variantId: this.variantId,
       reason: 'interval',
-      skipIfUnchanged: true,
     });
   }
 
