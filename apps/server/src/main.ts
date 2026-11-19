@@ -1,6 +1,5 @@
-import pg from 'pg';
 import { COMMANDS, runCommand } from './cli';
-import { migrate } from './database';
+import { createPool, migrate } from './database';
 import { defaultWebDir } from './web-app';
 import { createSyncServer } from './sync-server';
 
@@ -14,7 +13,7 @@ if (!databaseUrl) {
   console.error('DATABASE_URL is missing.');
   process.exit(1);
 }
-const db = new pg.Pool({ connectionString: databaseUrl });
+const db = createPool(databaseUrl);
 await migrate(db);
 
 const [command, ...args] = process.argv.slice(2);

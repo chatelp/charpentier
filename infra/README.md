@@ -8,10 +8,11 @@ Depuis la racine du dépôt, sur le Mac :
 
 ```bash
 CHARPENTIER_HOST=charpentier.chatel.pm BACKUP_ARCHIVE=/mnt/WD1000/Backups/Docker_volumes/charpentier \
+ADMIN_NETWORKS=192.168.1.0/24,100.64.0.0/10,fd7a:115c:a1e0::/48 \
   scripts/deploy-server.sh prodesk2021.local /home/pierre/Docker/charpentier
 ```
 
-Le script construit le serveur (`pnpm --filter @charpentier/server build`), copie `docker-compose.yml`, le `Dockerfile` et le serveur dans `/home/pierre/Docker/charpentier`, puis lance `docker compose up -d --build`. Au premier déploiement, il écrit le `.env` de la machine (mot de passe Postgres tiré au hasard, qui ne quitte pas la machine) ; ensuite, il ne le touche plus et les deux variables ne sont plus nécessaires.
+Le script construit le serveur (`pnpm --filter @charpentier/server build`), copie `docker-compose.yml`, le `Dockerfile` et le serveur dans `/home/pierre/Docker/charpentier`, puis lance `docker compose up -d --build`. Au premier déploiement, il écrit le `.env` de la machine (mot de passe Postgres tiré au hasard, qui ne quitte pas la machine) ; ensuite, il ne le touche plus et les trois variables ne sont plus nécessaires. `ADMIN_NETWORKS` n'a pas de valeur par défaut, exprès (voir « Administration », le piège d'IPv6) : sans elle au premier déploiement, ou si le `.env` de la machine ne la contient pas, le script s'arrête avant de construire quoi que ce soit et le dit.
 
 Ce que fait le `docker-compose.yml` :
 

@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createCiToken, revokeCiToken } from './ci-tokens';
+import type { Database } from './database';
 import { account, cleanUp, freshDatabase, startServer } from './testing';
 
 const dirs: string[] = [];
@@ -11,8 +12,8 @@ afterEach(async () => {
   for (const dir of dirs.splice(0)) await rm(dir, { recursive: true, force: true });
 });
 
-async function setUp() {
-  const db = await freshDatabase();
+async function setUp(wrap: (db: Database) => Database = (db) => db) {
+  const db = wrap(await freshDatabase());
   const cacheDir = await mkdtemp(join(tmpdir(), 'charpentier-cache-'));
   dirs.push(cacheDir);
   const { http } = await startServer(db, cacheDir);
@@ -238,5 +239,41 @@ describe('the X250’s development channel (D-42, phase 5.12 bis)', () => {
     }
     const ci2 = await fetch(`${http}/api/updates/latest`, { headers: bearer(ci) });
     expect(await ci2.json()).toMatchObject({ version: '0.6.0' });
+  });
+
+  it('publishes one version at a time: a release keeps what a development version forgets', async () => {
+    // The release's row is written late: after the development version's
+    // answer if nothing makes that one wait, after half a second otherwise.
+    let reached = () => {};
+    const writing = new Promise<void>((resolve) => (reached = resolve));
+    let open = () => {};
+    const gate = new Promise<void>((resolve) => (open = resolve));
+    const { http, ci, cacheDir } = await setUp((db) => ({
+      query: async (text, params) => {
+        if (text.startsWith('insert into updates') && params?.[3] === 'release') {
+          reached();
+          await Promise.race([gate, new Promise((resolve) => setTimeout(resolve, 500))]);
+        }
+        return db.query(text, params);
+      },
+    }));
+    await upload(http, ci, B, []);
+    await upload(http, ci, A, [B]);
+    await upload(http, ci, D1, [B]);
+    await upload(http, ci, D2, []);
+    expect((await publish(http, ci, 'dev', '0.6.0-dev.1', D1)).status).toBe(201);
+
+    // The release has found its closure (A, B) whole; the next development
+    // version no longer uses B, and arrives before the release's row.
+    const release = publish(http, ci, 'latest', '0.6.0', A);
+    await writing;
+    const dev = publish(http, ci, 'dev', '0.6.0-dev.2', D2).finally(open);
+    expect((await release).status).toBe(201);
+    expect((await dev).status).toBe(201);
+
+    const files = await readdir(cacheDir);
+    for (const kept of [A, B, D2]) expect(files).toContain(`${hash(kept)}.narinfo`);
+    expect(files).not.toContain(`${hash(D1)}.narinfo`);
+    expect(await readdir(join(cacheDir, 'nar'))).toContain(`${hash(B)}.nar.zst`);
   });
 });

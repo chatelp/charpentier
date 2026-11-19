@@ -98,6 +98,20 @@ export function parseVersion(
   return { version, notes, systems: checked };
 }
 
+/**
+ * One publication at a time, of either channel (the server is one process):
+ * between the moment a version's closure is found whole in the cache and the
+ * moment its row is written, a development version published next to it
+ * would not count it among the versions kept, and could delete its files.
+ */
+let publishing: Promise<unknown> = Promise.resolve();
+function oneAtATime<T>(task: () => Promise<T>): Promise<T> {
+  const run = publishing.then(task);
+  // The next one waits for this one, whether it failed or not.
+  publishing = run.catch(() => {});
+  return run;
+}
+
 /** Answers the version pointer. Returns false for any other path. */
 export async function handleUpdates(
   db: Database,
@@ -135,31 +149,33 @@ export async function handleUpdates(
       send(response, 409, { error: 'not-in-cache', path: systems[0] });
       return true;
     }
-    const { missing } = await closure(cacheDir, systems);
-    if (missing.size) {
-      send(response, 409, { error: 'not-in-cache', path: [...missing][0] });
-      return true;
-    }
-    const before =
-      channel === 'dev'
-        ? (
-            await db.query<{ systems: Record<string, string> }>(
-              "select systems from updates where channel = 'dev'",
-            )
-          ).rows.flatMap((row) => Object.values(row.systems))
-        : [];
-    const { rows } = await db.query<{ id: string }>(
-      'insert into updates (version, notes, systems, channel) values ($1, $2, $3, $4) returning id',
-      [parsed.version, parsed.notes, JSON.stringify(parsed.systems), channel],
-    );
-    if (channel === 'dev') {
-      await db.query("delete from updates where channel = 'dev' and id <> $1", [rows[0]?.id]);
-      const kept = (
-        await db.query<{ systems: Record<string, string> }>('select systems from updates')
-      ).rows.flatMap((row) => Object.values(row.systems));
-      await forget(cacheDir, before, kept);
-    }
-    send(response, 201, await latestVersion(db, channel));
+    await oneAtATime(async () => {
+      const { missing } = await closure(cacheDir, systems);
+      if (missing.size) {
+        send(response, 409, { error: 'not-in-cache', path: [...missing][0] });
+        return;
+      }
+      const before =
+        channel === 'dev'
+          ? (
+              await db.query<{ systems: Record<string, string> }>(
+                "select systems from updates where channel = 'dev'",
+              )
+            ).rows.flatMap((row) => Object.values(row.systems))
+          : [];
+      const { rows } = await db.query<{ id: string }>(
+        'insert into updates (version, notes, systems, channel) values ($1, $2, $3, $4) returning id',
+        [parsed.version, parsed.notes, JSON.stringify(parsed.systems), channel],
+      );
+      if (channel === 'dev') {
+        await db.query("delete from updates where channel = 'dev' and id <> $1", [rows[0]?.id]);
+        const kept = (
+          await db.query<{ systems: Record<string, string> }>('select systems from updates')
+        ).rows.flatMap((row) => Object.values(row.systems));
+        await forget(cacheDir, before, kept);
+      }
+      send(response, 201, await latestVersion(db, channel));
+    });
     return true;
   }
   send(response, 405, { error: 'method' });

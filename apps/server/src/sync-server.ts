@@ -1,3 +1,4 @@
+import type { IncomingMessage, ServerResponse } from 'node:http';
 import { Database as DatabaseExtension } from '@hocuspocus/extension-database';
 import { Server } from '@hocuspocus/server';
 import { claimProject, sessionFor } from './accounts';
@@ -5,7 +6,7 @@ import { createAdmin } from './admin/routes';
 import { DEFAULT_ADMIN_NETWORKS, networkList } from './admin/network';
 import { loadDocument, storeDocument, type Database } from './database';
 import { documentOwner } from './document-names';
-import { cookieToken, COOKIE_TOKEN, handleApi, LoginLimiter, sameOrigin } from './http-api';
+import { cookieToken, COOKIE_TOKEN, handleApi, LoginLimiter, sameOrigin, send } from './http-api';
 import { createWebApp } from './web-app';
 import { handleInstaller } from './installer';
 import { handleCache } from './nix-cache';
@@ -106,18 +107,40 @@ export function createSyncServer(options: SyncServerOptions): Server<ConnectionC
       return session;
     },
     async onRequest({ request, response }) {
+      // Hocuspocus rethrows what a hook throws, outside any handler: an error
+      // escaping from here would be an unhandled rejection, which ends the
+      // process. So nothing escapes: a failure is logged and answered.
+      let answered: boolean;
+      try {
+        answered = await answer(request, response);
+      } catch (error) {
+        // Not the URL: a path may carry a secret (the network boot's).
+        console.error('[http]', request.method, error);
+        if (response.headersSent) response.destroy();
+        else send(response, 500, { error: 'server' });
+        answered = true;
+      }
       // The API answers, then the rejection (without an error) stops Hocuspocus's own answer.
-      if (
-        (await handleCache(db, cacheDir, request, response)) ||
-        (await handleUpdates(db, cacheDir, request, response)) ||
-        (await handleInstaller(db, cacheDir, request, response)) ||
-        (await handleNetboot(db, cacheDir, netboot, request, response)) ||
-        (await admin.handle(request, response)) ||
-        (await handleApi(db, limiter, request, response)) ||
-        (await web.handle(request, response))
-      )
-        return Promise.reject();
+      if (answered) return Promise.reject();
     },
   });
+
+  /** Answers a request of the server's own routes; false leaves it to Hocuspocus. */
+  async function answer(request: IncomingMessage, response: ServerResponse): Promise<boolean> {
+    // A request target no handler could parse (`//`): each of them builds this URL.
+    if (!URL.canParse(request.url ?? '/', 'http://localhost')) {
+      send(response, 400, { error: 'path' });
+      return true;
+    }
+    return (
+      (await handleCache(db, cacheDir, request, response)) ||
+      (await handleUpdates(db, cacheDir, request, response)) ||
+      (await handleInstaller(db, cacheDir, request, response)) ||
+      (await handleNetboot(db, cacheDir, netboot, request, response)) ||
+      (await admin.handle(request, response)) ||
+      (await handleApi(db, limiter, request, response)) ||
+      (await web.handle(request, response))
+    );
+  }
   return server;
 }

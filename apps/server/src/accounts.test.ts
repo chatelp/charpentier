@@ -67,6 +67,42 @@ describe('sign-in limits', () => {
     now += 15 * 60_000;
     expect(limiter.allow('ip|helene')).toBe(true);
   });
+
+  it('forgets the attempts whose window has ended', () => {
+    let now = 0;
+    const limiter = new LoginLimiter(() => now);
+    for (let i = 0; i < 100; i++) limiter.allow(`ip|inconnu-${i}@example.org`);
+    expect(limiter.size).toBe(100);
+    now += 15 * 60_000;
+    expect(limiter.allow('ip|helene')).toBe(true);
+    expect(limiter.size).toBe(1);
+    // A window still open is kept.
+    now += 60_000;
+    limiter.allow('ip|paul');
+    now += 14 * 60_000;
+    limiter.allow('ip|louise');
+    expect(limiter.size).toBe(2);
+    expect(limiter.attempts('ip|paul')).toBe(1);
+  });
+
+  it('counts per client behind the proxy, not per proxy', async () => {
+    const db = await freshDatabase();
+    const { http } = await startServer(db);
+    const { email, password } = await account(db);
+    // Every request comes from the same socket address (Traefik's, here the test's).
+    const signIn = (from: string, pass: string) =>
+      fetch(`${http}/api/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Forwarded-For': from },
+        body: JSON.stringify({ email, password: pass, device: 'Mac' }),
+      });
+    for (let i = 0; i < 10; i++) expect((await signIn('203.0.113.5', 'faux')).status).toBe(401);
+    expect((await signIn('203.0.113.5', password)).status).toBe(429);
+    // What the client wrote before Traefik's address does not get it another count.
+    expect((await signIn('198.51.100.7, 203.0.113.5', password)).status).toBe(429);
+    // The author, elsewhere, still signs in.
+    expect((await signIn('192.168.1.36', password)).status).toBe(200);
+  });
 });
 
 describe('HTTP API', () => {
