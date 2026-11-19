@@ -8,6 +8,7 @@ import {
   listNotes,
   NoteRefused,
   noteNatures,
+  notebookStarted,
   type Note,
   type NotedChange,
 } from '@charpentier/schema';
@@ -68,6 +69,10 @@ export interface MemoryStore {
   entries(): ReadonlyMap<string, string>;
   /** What this call wrote, corrected or removed (« Noté au carnet »). */
   changes(): readonly NotedChange[];
+  /**
+   * The notebook was never written in (the first reading takes the whole
+   * thread). False once a note existed, even if all are in the trash since.
+   */
   isEmpty(): boolean;
   /** Runs one command of the memory tool; the text goes back to the model. */
   run(input: Readonly<Record<string, unknown>>): {
@@ -94,6 +99,10 @@ export function projectMemory(input: {
     changes.set(path, changes.get(path) === 'created' && change === 'updated' ? 'created' : change);
   const atelier = () => (root ? atelierFiles(root) : new Map<string, string>());
   const inAtelier = (path: string) => path === ATELIER_DIR || path.startsWith(`${ATELIER_DIR}/`);
+  /** Where a note may be written or moved to: a file of one of the two notebooks, nowhere else. */
+  const inNotebook = (path: string) =>
+    [PROJECT_DIR, AUTHOR_DIR].some((dir) => path.startsWith(`${dir}/`));
+  const elsewhere = `a note is a file under ${PROJECT_DIR}/ or ${AUTHOR_DIR}/`;
   const origin = agentOrigin(MEMORY_AGENT);
   const notes = () => listNotes(mentorDoc);
   const ok = (text: string) => ({ text, isError: false });
@@ -146,7 +155,7 @@ export function projectMemory(input: {
   };
 
   return {
-    isEmpty: () => notes().length === 0,
+    isEmpty: () => !notebookStarted(mentorDoc),
     whole: () => notes().map(noteEntry).join('\n\n'),
     index() {
       const all = notes();
@@ -175,8 +184,10 @@ export function projectMemory(input: {
     run(command) {
       const path = normalizePath(command['path']);
       // The Atelier is read here, changed only through proposals the author validates.
-      const target = path ?? normalizePath(command['old_path']);
-      if (command['command'] !== 'view' && target && inAtelier(target))
+      // Every path a command names: a rename's `new_path` too, or a note
+      // moved there would stand in the tree as one of the author's sheets.
+      const named = [path, normalizePath(command['old_path']), normalizePath(command['new_path'])];
+      if (command['command'] !== 'view' && named.some((p) => p !== null && inAtelier(p)))
         return fail(
           "the Atelier is the author's, read only: propose a change instead (in the interview, PROPOSALS)",
         );
@@ -185,8 +196,7 @@ export function projectMemory(input: {
           case 'view':
             return path ? view(path) : fail('the path must be under /memories');
           case 'create': {
-            if (!path || path === MEMORY_ROOT)
-              return fail('the path must be a file under /memories');
+            if (!path || !inNotebook(path)) return fail(elsewhere);
             const problem = checkText(command['file_text']);
             if (problem) return fail(problem);
             const exists = !!findNote(mentorDoc, path);
@@ -203,7 +213,9 @@ export function projectMemory(input: {
             const count = oldStr ? note.text.split(oldStr).length - 1 : 0;
             if (count !== 1)
               return fail(count === 0 ? 'old_str was not found' : 'old_str appears more than once');
-            const text = note.text.replace(oldStr, String(command['new_str'] ?? ''));
+            // A function: `$&`, `$'` and the like in new_str are text, not patterns.
+            const newStr = String(command['new_str'] ?? '');
+            const text = note.text.replace(oldStr, () => newStr);
             const problem = checkText(text);
             if (problem) return fail(problem);
             write(path, text);
@@ -232,6 +244,7 @@ export function projectMemory(input: {
             const from = normalizePath(command['old_path']);
             const to = normalizePath(command['new_path']);
             if (!from || !to) return fail('both paths must be under /memories');
+            if (!inNotebook(to)) return fail(elsewhere);
             agentRenameNote(mentorDoc, from, to, origin);
             changes.delete(from);
             changed(to, 'updated');

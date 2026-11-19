@@ -4,6 +4,7 @@ import {
   addInterviewMessage,
   AUTHOR,
   authorEditNote,
+  authorTrashNote,
   chatMessages,
   createEntity,
   findNote,
@@ -14,7 +15,14 @@ import { describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
 import { answerAuthor } from './conversation';
 import { interviewTurn } from './interview';
-import { atelierContext, generateWithMemory, projectMemory, threadWindow } from './memory';
+import {
+  atelierContext,
+  generateWithMemory,
+  memoryContext,
+  projectMemory,
+  threadWindow,
+  windowStart,
+} from './memory';
 
 function project() {
   const root = new Y.Doc({ guid: 'project:p' });
@@ -101,6 +109,72 @@ describe('the notebook as the memory tool sees it (phase 6.5)', () => {
     const refused = memory.run({ command: 'delete', path: '/memories/auteur/accompagnement.md' });
     expect(refused).toMatchObject({ isError: true });
     expect(memory.index()).toContain('(author, read only)');
+  });
+
+  it('keeps notes in the two notebooks: nowhere else, never among the author’s sheets', () => {
+    const { root, mentorDoc } = project();
+    createEntity(root, 'characters', { name: 'Hélène' }, AUTHOR);
+    const memory = projectMemory({ mentorDoc, root });
+    const sheet = '/memories/atelier/personnages/helene.md';
+    memory.run({ command: 'create', path: '/memories/projet/x.md', file_text: 'Un fait.' });
+    // Renamed onto a sheet's path, the note would be read in its place.
+    const shadow = memory.run({
+      command: 'rename',
+      old_path: '/memories/projet/x.md',
+      new_path: sheet,
+    });
+    expect(shadow).toMatchObject({ isError: true });
+    expect(shadow.text).toContain('read only');
+    expect(memory.run({ command: 'view', path: sheet }).text).toContain('name (validated): Hélène');
+    for (const path of ['/memories/x.md', '/memories/ailleurs/x.md', '/memories/projet'])
+      expect(memory.run({ command: 'create', path, file_text: 'Un fait.' })).toMatchObject({
+        isError: true,
+      });
+    expect(
+      memory.run({
+        command: 'rename',
+        old_path: '/memories/projet/x.md',
+        new_path: '/memories/x.md',
+      }),
+    ).toMatchObject({ isError: true });
+    expect(listNotes(mentorDoc).map((n) => n.path)).toEqual(['/memories/projet/x.md']);
+  });
+
+  it("replaces text as text: `$&` and `$'` in new_str are not patterns", () => {
+    const { mentorDoc } = project();
+    const memory = projectMemory({ mentorDoc });
+    const path = '/memories/projet/prix.md';
+    memory.run({ command: 'create', path, file_text: 'Le manuscrit vaut PRIX, dit-elle.' });
+    memory.run({ command: 'str_replace', path, old_str: 'PRIX', new_str: "$& $' $` $$ 5 $" });
+    expect(findNote(mentorDoc, path)?.text).toBe("Le manuscrit vaut $& $' $` $$ 5 $, dit-elle.");
+  });
+
+  it('does not take a notebook whose notes were all removed for one never begun', () => {
+    const { mentorDoc } = project();
+    const memory = projectMemory({ mentorDoc });
+    expect(memory.isEmpty()).toBe(true);
+    expect(windowStart(500, memory, 30)).toBe(100); // the first reading: the whole thread
+    const path = '/memories/projet/decisions/fin-ouverte.md';
+    memory.run({ command: 'create', path, file_text: '# La fin reste ouverte' });
+    authorTrashNote(mentorDoc, findNote(mentorDoc, path)?.id ?? '');
+    expect(listNotes(mentorDoc)).toEqual([]);
+    // No first reading again, no « YOUR NOTEBOOK IS EMPTY ».
+    expect(memory.isEmpty()).toBe(false);
+    expect(windowStart(500, memory, 30)).toBe(460);
+    expect(memoryContext(memory)).not.toContain('YOUR NOTEBOOK IS EMPTY');
+    // The author's refusal holds under another spelling of the path, and through a rename.
+    const again = (p: string) =>
+      memory.run({ command: 'create', path: p, file_text: '# La fin reste ouverte' });
+    expect(again(path)).toMatchObject({ isError: true });
+    expect(again('/memories/projet/decisions/Fin_Ouverte.md')).toMatchObject({ isError: true });
+    expect(again('/memories/projet/decisions/autre.md')).toMatchObject({ isError: false });
+    expect(
+      memory.run({
+        command: 'rename',
+        old_path: '/memories/projet/decisions/autre.md',
+        new_path: '/memories/projet/decisions/fin ouverte.md',
+      }),
+    ).toMatchObject({ isError: true });
   });
 
   it('runs the model’s calls, sends its turn back, and returns its answer', async () => {
