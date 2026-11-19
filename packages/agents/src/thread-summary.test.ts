@@ -24,7 +24,7 @@ import {
   stableThread,
   windowStart,
 } from './memory';
-import { keepThreadSummary } from './thread-summary';
+import { keepThreadSummary, MAX_SUMMARY } from './thread-summary';
 
 /** A model that summarizes (light calls) and answers the interview (deep ones). */
 function model(fail = false) {
@@ -66,6 +66,27 @@ const withNote = () => {
 };
 
 describe('the thread’s rolling summary (phase 6.5)', () => {
+  it('marks a summary cut at its bound, never in silence', async () => {
+    const mentorDoc = new Y.Doc();
+    const llm: LlmService = {
+      status: () => 'available',
+      onStatusChange: () => () => {},
+      generate: async () => ({
+        text: JSON.stringify({ summary: 'L’auteur a décidé la fin. '.repeat(400) }),
+      }),
+    };
+    const text = await keepThreadSummary({
+      llm,
+      mentorDoc,
+      thread: thread(40),
+      start: 20,
+      language: 'fr',
+    });
+    expect(text?.length).toBeLessThanOrEqual(MAX_SUMMARY);
+    expect(text?.endsWith('la fin. […]')).toBe(true);
+    expect(readThreadSummary(mentorDoc)?.text).toBe(text);
+  });
+
   it('summarizes what left the window, a block at a time, from the summary so far', async () => {
     const mentorDoc = new Y.Doc();
     const { llm, requests } = model();

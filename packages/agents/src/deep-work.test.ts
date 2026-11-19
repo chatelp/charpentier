@@ -17,7 +17,13 @@ import {
 } from '@charpentier/schema';
 import { describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
-import { deepWork, estimateDeepWork, MAX_DEEP_VALUE, type DeepWorkOutput } from './deep-work';
+import {
+  deepWork,
+  estimateDeepWork,
+  MAX_DEEP_REVIEW,
+  MAX_DEEP_VALUE,
+  type DeepWorkOutput,
+} from './deep-work';
 
 const SCENES = [
   [
@@ -305,6 +311,31 @@ describe('specialised agents on the whole manuscript (D-27)', () => {
     expect(chatMessages(m.mentorDoc)).toHaveLength(0);
     const act = listEntities(m.root, 'acts')[0];
     expect(act?.fields['summary']).toBeUndefined(); // Too long: left out, the act stays.
+  });
+
+  it('keeps plain narration out of the review, and marks a review cut at its bound', async () => {
+    const empty = { narrativeModel: null, acts: [], arcs: [], signals: [] };
+    const told = manuscript();
+    await deepWork({
+      llm: fakeLlm({
+        ...empty,
+        review:
+          'Hélène referma la porte. Le fleuve grondait derrière elle. Elle ne se retourna pas.',
+      }).llm,
+      ...told,
+      task: 'structure',
+    });
+    expect(chatMessages(told.mentorDoc)).toHaveLength(0);
+
+    const long = manuscript();
+    await deepWork({
+      llm: fakeLlm({ ...empty, review: 'Votre structure tient bien. '.repeat(200) }).llm,
+      ...long,
+      task: 'structure',
+    });
+    const review = chatMessages(long.mentorDoc)[0]?.text ?? '';
+    expect(review.length).toBeLessThanOrEqual(MAX_DEEP_REVIEW);
+    expect(review.endsWith('tient bien. […]')).toBe(true);
   });
 
   it('estimates the cost before the work, and has nothing to read in an empty project', () => {
