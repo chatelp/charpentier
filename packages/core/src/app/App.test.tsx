@@ -79,7 +79,7 @@ describe('a project that does not open', () => {
     render(<App platform={platform} i18n={await createI18n('fr')} />);
     expect(screen.getByRole('status').textContent).toBe('Ouverture…');
     const alert = await screen.findByRole('alert');
-    expect(alert.textContent).toContain("Impossible d'ouvrir le projet.");
+    expect(alert.textContent).toContain('Impossible d’ouvrir le projet.');
     expect(screen.queryByRole('status')).toBeNull();
 
     disk.broken = false;

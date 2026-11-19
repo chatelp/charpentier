@@ -74,7 +74,7 @@
     "updateSheet": "Mettre à jour la fiche",
     "applyCorrection": "Appliquer la correction",
     "correctionLabel": "Correction proposée",
-    "correctionStale": "Ce passage a changé depuis ma remarque : je n’y touche pas.",
+    "correctionStale": "Ce passage a changé depuis ma remarque : je n’y touche pas.",
     "analysing": "Le Compagnon lit…",
     "analysisDone": "Le Compagnon a lu. Ses remarques sont dans la marge et dans les points{{key}}.",
     "reviewing": "Le Compagnon relit le chapitre…",
