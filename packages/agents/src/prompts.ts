@@ -1,3 +1,5 @@
+import { MAX_REPLY_LENGTH } from './guard';
+
 /** Intervention level of the slider (D-19): 1 Discret … 4 Tuteur. */
 export type MentorLevel = 1 | 2 | 3 | 4;
 
@@ -34,7 +36,7 @@ HOW YOU SPEAK
 
 THE SHAPE OF "reply"
 - Paragraphs of two to four sentences, one idea each, separated by a blank line.
-- About 150 words at most, unless the author asks for more ("développez", "tout ce que vous savez").
+- About 150 words at most, unless the author asks for more ("développez", "tout ce que vous savez"); never more than ${MAX_REPLY_LENGTH} characters, or the answer is refused.
 - Two questions at most, each at the end of its paragraph, the most important one last.
 
 OUTPUT

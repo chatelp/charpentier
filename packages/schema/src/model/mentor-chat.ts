@@ -1,4 +1,5 @@
 import * as Y from 'yjs';
+import { exampleSentence } from './example-sentence';
 import { newId, nowIso } from './ids';
 import type { Origin } from './origins';
 
@@ -95,6 +96,7 @@ export function addChatMessage(
   origin: Origin,
 ): string {
   const id = newId();
+  const example = exampleSentence(message.example);
   mentorDoc.transact(() => {
     chat(mentorDoc).push([
       {
@@ -102,7 +104,8 @@ export function addChatMessage(
         at: nowIso(),
         role: message.role,
         text: message.text,
-        ...(message.example !== undefined && { example: message.example }),
+        // D-11: one bounded sentence, checked again where it is stored; any other is left out whole.
+        ...(example !== undefined && { example }),
         ...(message.sceneId !== undefined && { sceneId: message.sceneId }),
         ...(message.work !== undefined && { work: { ...message.work } }),
         ...(message.styleChoiceId !== undefined && { styleChoiceId: message.styleChoiceId }),

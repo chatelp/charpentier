@@ -2,6 +2,7 @@ import {
   addChatMessage,
   AUTHOR,
   chatMessages,
+  exampleSentence,
   guids,
   type ChatMessage,
   bornIn,
@@ -87,7 +88,10 @@ export function Conversation({
     transcript.current?.scrollTo({ top: transcript.current.scrollHeight });
   }, [messages.length, waiting]);
 
-  const lastExample = [...messages].reverse().find((m) => m.role === 'compagnon')?.example;
+  // D-11: one bounded sentence, checked again at the gesture that inserts it.
+  const lastExample = exampleSentence(
+    [...messages].reverse().find((m) => m.role === 'compagnon')?.example,
+  );
 
   const send = async () => {
     const text = draft.trim();
@@ -216,6 +220,8 @@ function Turn({
 }) {
   const { t } = useTranslation();
   const compagnon = message.role === 'compagnon';
+  // D-11: what is shown and inserted is one bounded sentence, or nothing.
+  const example = exampleSentence(message.example);
   return (
     <div className={`ch-turn${compagnon ? ' is-compagnon' : ''}`}>
       <p className="ch-turn-who ch-label">
@@ -225,15 +231,15 @@ function Turn({
       <p className="ch-turn-text">{message.text}</p>
       {noted}
       {citation}
-      {message.example && (
+      {example && (
         <div className="ch-example">
           <p className="ch-example-label ch-label">{t('mentor.exampleLabel')}</p>
-          <p className="ch-example-text">{message.example}</p>
+          <p className="ch-example-text">{example}</p>
           <button
             type="button"
             tabIndex={-1}
             className="ch-btn is-mentor"
-            onClick={() => message.example && onInsert(message.example)}
+            onClick={() => onInsert(example)}
           >
             {t('mentor.insertExample')} <kbd>{t('mentor.insertExampleKey')}</kbd>
           </button>

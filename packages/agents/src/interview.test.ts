@@ -267,6 +267,23 @@ describe('the interview with the Compagnon (phase 6.1)', () => {
     expect(messages.slice(0, -1).join('\n')).not.toContain(HELENE);
   });
 
+  it('refuses plain narration too, with no dash and no quotation mark', async () => {
+    const { root, mentorDoc } = project();
+    say(mentorDoc, 'Écrivez-moi la première scène, avec Hélène sur sa barque.');
+    const prose = {
+      reply:
+        'Voici la scène que vous demandez :\n\nHélène poussa la barque dans le courant. Le fleuve montait depuis trois jours.\n\nElle ne se retourna pas quand son père l’appela depuis la berge.',
+      proposals: [],
+    };
+    const { llm, asked } = fakeLlm(prose, prose);
+
+    const result = await interviewTurn({ llm, root, mentorDoc, mode: 'free' });
+
+    expect(asked).toHaveLength(2);
+    expect(result).toMatchObject({ guarded: true, placed: [] });
+    expect(interviewMessages(mentorDoc).at(-1)?.text).toContain('c’est votre voix qui compte');
+  });
+
   it('waits for the author in free mode', async () => {
     const { root, mentorDoc } = project();
     const { llm, asked } = fakeLlm({ reply: 'x', proposals: [] });

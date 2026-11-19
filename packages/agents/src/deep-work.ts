@@ -30,7 +30,7 @@ import type * as Y from 'yjs';
 import { answerJson } from './answer';
 import { sceneContext, sheetsSummary } from './context';
 import { notebookForReading } from './memory';
-import { narrativeProseIn } from './guard';
+import { cutMarked, narrativeProseIn } from './guard';
 
 /**
  * Specialised agents on demand (D-27, docs/PLAN.md §6.3): background work on
@@ -442,7 +442,7 @@ export function applyDeepWork(
   const noteOk = (value: string) =>
     value.trim().length > 0 &&
     value.length <= MAX_DEEP_VALUE &&
-    narrativeProseIn(value, authorText).length === 0;
+    narrativeProseIn(value, authorText, { notes: true }).length === 0;
 
   let proposals = 0;
   const propose = (ref: FieldRef, value: string | readonly string[], evidence: SceneEvidence) => {
@@ -607,7 +607,8 @@ export function applyDeepWork(
 
   // ─── The review, in the Compagnon's voice ───
   // The interface names and dates it (« Bilan de la structure »): the text is the review alone.
-  const review = output.review.trim().slice(0, MAX_DEEP_REVIEW);
+  // Over its bound, the review is cut where a sentence ends and says so (« […] »), never in silence.
+  const review = cutMarked(output.review.trim(), MAX_DEEP_REVIEW);
   const origin = agentOrigin(agent);
   mentorDoc.transact(() => {
     const reviewId =

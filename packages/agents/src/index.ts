@@ -4,14 +4,19 @@ export { UnusableAnswerError } from './answer';
 export { compagnonChat, type ChatAnswer, type ChatContext, type ChatTurn } from './chat';
 export {
   changeRatio,
+  CUT_MARK,
+  cutMarked,
   isBoundedCorrection,
   isOneSentence,
   MAX_CORRECTION_GROWTH,
   MAX_CORRECTION_LENGTH,
   MAX_CORRECTION_RATIO,
   MAX_EXAMPLE_LENGTH,
+  MAX_REPLY_LENGTH,
   narrativeProseIn,
+  narrativeSentencesIn,
   sentencesOf,
+  type ProseOptions,
   type ProseViolation,
 } from './guard';
 export { chatAnswerSchema, compagnonSystemPrompt, type MentorLevel } from './prompts';

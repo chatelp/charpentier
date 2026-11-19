@@ -3,6 +3,7 @@ export * from './agent-writer';
 export * from './anchors';
 export * from './authorship-guard';
 export * from './dictionary';
+export * from './example-sentence';
 export * from './fields';
 export * from './history';
 export * from './ids';

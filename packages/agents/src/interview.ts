@@ -467,7 +467,7 @@ export function fileProposals(
       value.length > MAX_INTERVIEW_VALUE ||
       (choices && !choices.includes(value)) ||
       !evidence ||
-      narrativeProseIn(value, authorText).length > 0
+      narrativeProseIn(value, authorText, { notes: true }).length > 0
     ) {
       dropped++;
       continue;

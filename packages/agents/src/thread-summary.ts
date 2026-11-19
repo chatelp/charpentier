@@ -6,6 +6,7 @@ import {
   type ThreadMessage,
 } from '@charpentier/schema';
 import type * as Y from 'yjs';
+import { cutMarked } from './guard';
 
 /**
  * The rolling summary of the thread (docs/PLAN.md phase 6.5, D-35): what
@@ -73,7 +74,8 @@ export async function keepThreadSummary(input: {
     );
     const summary = (JSON.parse(response.text) as { summary?: unknown }).summary;
     if (typeof summary !== 'string' || !summary.trim()) return current?.text;
-    const text = summary.trim().slice(0, MAX_SUMMARY);
+    // Over its bound, the summary says where it was cut (« […] ») : the next one is built on it.
+    const text = cutMarked(summary.trim(), MAX_SUMMARY);
     const last = left.at(-1);
     if (last)
       writeThreadSummary(

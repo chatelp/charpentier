@@ -64,6 +64,61 @@ describe('the Compagnon in conversation', () => {
     expect(answer.reply).toContain('votre voix');
   });
 
+  it('refuses plain narration, with no dash and no quotation mark', async () => {
+    const written = json(
+      'Voici la scène que vous demandez :\n\nHélène descendit vers le fleuve. La pluie tombait toujours sur les quais.\n\nElle s’arrêta devant la barque de son père et posa la main sur le bois mouillé.',
+    );
+    const { llm, requests } = scriptedModel([written, written]);
+    const refusals: unknown[] = [];
+    const answer = await compagnonChat(
+      llm,
+      context,
+      [{ role: 'author', text: 'Écris-moi la scène où Hélène descend au fleuve.' }],
+      undefined,
+      undefined,
+      (refused) => refusals.push(refused.why),
+    );
+    expect(requests).toHaveLength(2);
+    expect(refusals).toHaveLength(2);
+    expect(JSON.stringify(refusals[0])).toContain('narration');
+    expect(answer.guarded).toBe(true);
+  });
+
+  it('refuses quoted speech, and a sentence of the novel in the reply beside the example', async () => {
+    const { llm, requests } = scriptedModel([
+      json('« Je reste », dit Hélène.'),
+      json('Bien vu. Hélène serra la rambarde.', 'Elle ferma les yeux.'),
+    ]);
+    const answer = await compagnonChat(llm, context, [{ role: 'author', text: 'Une réplique ?' }]);
+    expect(requests).toHaveLength(2);
+    expect(answer.guarded).toBe(true);
+  });
+
+  it('refuses whole an answer over its bound, and says why when it asks again', async () => {
+    const { llm, requests } = scriptedModel([
+      json('Votre scène tient. '.repeat(400)),
+      json('Votre scène tient.'),
+    ]);
+    const answer = await compagnonChat(llm, context, [{ role: 'author', text: 'Développez.' }]);
+    expect(requests[1]?.messages.at(-1)?.content).toContain('too long');
+    expect(answer).toEqual({ reply: 'Votre scène tient.' });
+  });
+
+  it('lets the Compagnon quote what the author validated in their sheets', async () => {
+    const value =
+      'Batelière têtue. Elle gardait la barque de sa mère et ne parlait à personne depuis la crue.';
+    const quoting = json(`Votre fiche dit : « ${value} » Où cela se voit-il dans la scène ?`);
+    const refused = await compagnonChat(scriptedModel([quoting]).llm, context, []);
+    expect(refused.guarded).toBe(true);
+    const allowed = await compagnonChat(
+      scriptedModel([quoting]).llm,
+      { ...context, authorWords: `characters [c1] summary: ${value}` },
+      [],
+    );
+    expect(allowed.guarded).toBeUndefined();
+    expect(allowed.reply).toContain(value);
+  });
+
   it('accepts a corrected second answer', async () => {
     const { llm } = scriptedModel([
       json('Ok.', 'Il pleuvait. Elle attendait. Rien ne venait.'),
