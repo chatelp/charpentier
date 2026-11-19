@@ -494,6 +494,7 @@ function CheckpointPreview({
               ? 'overview.previewWordsMore'
               : 'overview.previewWordsSame',
           {
+            count: words,
             words: number.format(words),
             delta: number.format(Math.abs(delta)),
             variant,
