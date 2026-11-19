@@ -114,6 +114,40 @@ describe('library of projects', () => {
   });
 });
 
+describe('a project that fails to open', () => {
+  it('is not the one opened at the next start, until it opens again', async () => {
+    const base = withPreferences();
+    let broken: string | undefined;
+    const platform = {
+      ...base,
+      documents: {
+        open: async (guid: string) => {
+          if (guid === broken) throw new Error('unreadable');
+          return base.documents.open(guid);
+        },
+      },
+    };
+    const first = await openDefaultProject(platform, titles);
+    // Alone, it is still the one to open: the app says what happened and offers the library.
+    broken = guids.project(first.projectId);
+    await expect(openProject(platform, first.projectId, titles)).rejects.toThrow('unreadable');
+    expect(await initialProjectId(platform, titles)).toBe(first.projectId);
+    broken = undefined;
+
+    const story = await platform.library.create({ title: 'La serre', kind: 'short-story' });
+    await openProject(platform, story.id, titles);
+    expect(await initialProjectId(platform, titles)).toBe(story.id);
+
+    broken = guids.project(story.id);
+    await expect(openProject(platform, story.id, titles)).rejects.toThrow('unreadable');
+    expect(await initialProjectId(platform, titles)).toBe(first.projectId);
+
+    broken = undefined;
+    await openProject(platform, story.id, titles);
+    expect(await initialProjectId(platform, titles)).toBe(story.id);
+  });
+});
+
 describe('ensureScene', () => {
   it('creates a scene in an existing empty chapter', async () => {
     const platform = withPreferences();

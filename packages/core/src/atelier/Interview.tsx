@@ -269,14 +269,24 @@ export function Interview({
     }
     const inField = event.target === field.current;
     const line = focusedLine(event.target);
-    // V, X, ⌘↑ ⌘↓ act on the proposals when the field is empty or a proposal has the focus.
+    // ⌘↑ ⌘↓ move among the proposals when the field is empty or a proposal has the focus.
     const free = (inField && draft === '') || line !== undefined;
     const mod = event.metaKey || event.ctrlKey;
-    if (free && !mod && !event.altKey && !event.shiftKey && /^[vx]$/i.test(event.key)) {
+    // V and X decide on the proposal that has the focus. In the field they are
+    // letters (« voilà »): there, ⌥V and ⌥X decide on the last proposal waiting.
+    // With ⌥ the letter comes from the physical key (⌥V types « ◊ » on a Mac).
+    const alt = event.altKey && !mod && !event.shiftKey;
+    const plain = !mod && !event.altKey && !event.shiftKey;
+    const letter = alt
+      ? /^Key([VX])$/.exec(event.code)?.[1]?.toLowerCase()
+      : plain && /^[vx]$/i.test(event.key)
+        ? event.key.toLowerCase()
+        : undefined;
+    if (letter && (line !== undefined || (inField && alt))) {
       const target = line ?? pending.at(-1);
       if (!target || stateOf(root, target) !== 'pending') return;
       event.preventDefault();
-      decide(target, event.key.toLowerCase() === 'v');
+      decide(target, letter === 'v');
     } else if (free && mod && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
       event.preventDefault();
       moveLine(line, event.key === 'ArrowDown' ? 1 : -1);

@@ -146,9 +146,15 @@ describe('the interview page of the Atelier (phase 6.2)', () => {
         field: 'occupation',
       });
 
-    // V in the empty field validates the last proposal waiting: the occupation.
+    // In the field, V and X are letters, even when it is empty: « voilà » decides nothing.
     await waitFor(() => expect(document.activeElement).toBe(field));
-    await userEvent.keyboard('v');
+    await userEvent.keyboard('vx');
+    expect((field as HTMLTextAreaElement).value).toBe('vx');
+    expect(occupation().status).toBe('proposed');
+    screen.getByText(/⌥V ⌥X valider, rejeter la dernière proposition/);
+    await userEvent.keyboard('{Backspace}{Backspace}');
+    // ⌥V validates the last proposal waiting: the occupation.
+    await userEvent.keyboard('{Alt>}v{/Alt}');
     await waitFor(() => expect(occupation().status).toBe('validated'));
     // It stays under its answer, « validée »; and keeping her occupation kept Hélène.
     await waitFor(() => expect(screen.getAllByText('validée')).toHaveLength(2));

@@ -46,6 +46,36 @@ describe('keybindings', () => {
     expect(eventKey(event({ key: 'a', code: 'KeyQ' }))).toBe('a');
   });
 
+  it('matches a digit shortcut by its physical key (AZERTY: the 1 key gives & unshifted)', () => {
+    const one = parseKeybinding('Mod-1', 'Meta');
+    expect(matches(one, event({ key: '&', code: 'Digit1', metaKey: true }))).toBe(true);
+    expect(matches(one, event({ key: '1', code: 'Digit1', metaKey: true }))).toBe(true);
+    // A numeric keypad gives the digit itself.
+    expect(matches(one, event({ key: '1', code: 'Numpad1', metaKey: true }))).toBe(true);
+    expect(
+      matches(
+        parseKeybinding('Mod-0', 'Control'),
+        event({ key: 'à', code: 'Digit0', ctrlKey: true }),
+      ),
+    ).toBe(true);
+    // The modifiers stay those declared: ⇧ gives the digit on AZERTY, and is not ⌘1.
+    expect(matches(one, event({ key: '1', code: 'Digit1', metaKey: true, shiftKey: true }))).toBe(
+      false,
+    );
+    expect(matches(one, event({ key: '&', code: 'Digit1' }))).toBe(false);
+    expect(matches(one, event({ key: 'é', code: 'Digit2', metaKey: true }))).toBe(false);
+    expect(
+      matches(
+        parseKeybinding('Mod-Shift-1', 'Meta'),
+        event({ key: '1', code: 'Digit1', metaKey: true, shiftKey: true }),
+      ),
+    ).toBe(true);
+    // Only digits go by the physical key: a letter keeps the layout's character.
+    expect(
+      matches(parseKeybinding('Mod-q', 'Meta'), event({ key: 'a', code: 'KeyQ', metaKey: true })),
+    ).toBe(false);
+  });
+
   it('formats shortcuts for each platform, in French', () => {
     expect(formatChord(parseKeybinding('Mod-Alt-Shift-ArrowUp', 'Meta'), 'Meta')).toBe('⌥⇧⌘↑');
     expect(formatChord(parseKeybinding('Mod-Shift-Enter', 'Control'), 'Control')).toBe(
@@ -123,6 +153,32 @@ describe('CommandRegistry', () => {
     enabled = true;
     expect(registry.forEvent(event({ key: 'k', metaKey: true }), null)?.id).toBe('g');
     expect(registry.forEvent(event({ key: 'i', metaKey: true }), null)).toBeUndefined();
+  });
+});
+
+describe('CommandRegistry on AZERTY', () => {
+  const registry = new CommandRegistry<null>('Meta')
+    .register({ id: 'module1', scope: 'global', keybinding: 'Mod-1', run: () => {} })
+    .register({ id: 'module4', scope: 'global', keybinding: 'Mod-4', run: () => {} })
+    .register({ id: 'remark', scope: 'global', keybinding: "Mod-'", run: () => {} });
+
+  it('dispatches ⌘1 from the unshifted digit row', () => {
+    expect(registry.forEvent(event({ key: '&', code: 'Digit1', metaKey: true }), null)?.id).toBe(
+      'module1',
+    );
+  });
+
+  it("keeps a shortcut on the character typed before the digit of its key (⌘' is on the 4)", () => {
+    expect(registry.forEvent(event({ key: "'", code: 'Digit4', metaKey: true }), null)?.id).toBe(
+      'remark',
+    );
+    // QWERTY: the apostrophe has its own key, the 4 its own.
+    expect(registry.forEvent(event({ key: "'", code: 'Quote', metaKey: true }), null)?.id).toBe(
+      'remark',
+    );
+    expect(registry.forEvent(event({ key: '4', code: 'Digit4', metaKey: true }), null)?.id).toBe(
+      'module4',
+    );
   });
 });
 

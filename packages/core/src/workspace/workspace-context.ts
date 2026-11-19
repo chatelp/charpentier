@@ -35,6 +35,8 @@ export interface WorkspaceContext {
   /** The right panel of the Compagnon, if open, on which tab. */
   readonly mentorPanel: 'points' | 'conversation' | null;
   toggleMentorPanel(tab?: 'points' | 'conversation'): void;
+  /** The author's gestures to enter a panel so far (`usePanelEntry`). */
+  readonly panelEntry: number;
   /** Unfolds a remark's note in the margin and gives it the focus. */
   openSignalNote(signalId: string): void;
   /** Opens a sheet beside the text (« fiche en volet »). */

@@ -97,4 +97,17 @@ describe('the close cross (docs/DESIGN.md §4.8 « Sortie à la souris »)', () 
     crossIn(view, 'Revenir au texte').click();
     await back(() => screen.queryByRole('region', { name: 'Vue de la sonde' }));
   });
+
+  it('closes the command line with Échap from its cross too, not only from its field', async () => {
+    const editor = await start();
+    await userEvent.keyboard('{ControlOrMeta>}k{/ControlOrMeta}');
+    const line = await screen.findByRole('dialog', { name: 'Ligne de commande' });
+    // ⇥ leaves the field for the cross: Échap still closes the line.
+    crossIn(line, 'Fermer la ligne de commande').focus();
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: 'Ligne de commande' })).toBeNull(),
+    );
+    await waitFor(() => expect(document.activeElement).toBe(editor));
+  });
 });

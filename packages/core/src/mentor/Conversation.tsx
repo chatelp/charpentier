@@ -7,7 +7,15 @@ import {
   bornIn,
   bornInName,
 } from '@charpentier/schema';
-import { Fragment, useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import {
+  Fragment,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 import * as Y from 'yjs';
 import { usePlatform } from '../app/platform-context';
@@ -17,6 +25,7 @@ import { BilanHeading, BilanLinks } from '../work/Bilan';
 import { StyleCitation } from './StyleCitation';
 import type { WorkspaceContext } from '../workspace/workspace-context';
 import type { AskResult } from '@charpentier/platform';
+import { PanelEntryContext, usePanelEntry } from '../workspace/panel-entry';
 
 export interface ConversationProps {
   readonly projectId: string;
@@ -71,9 +80,8 @@ export function Conversation({
 
   const messages = useDocSnapshot(mentorDoc ?? empty, chatMessages);
 
-  useEffect(() => {
-    if (active) field.current?.focus();
-  }, [active]);
+  // The field takes the focus when the author enters the panel, never by itself.
+  usePanelEntry(useContext(PanelEntryContext), active, () => field.current?.focus());
 
   useEffect(() => {
     transcript.current?.scrollTo({ top: transcript.current.scrollHeight });

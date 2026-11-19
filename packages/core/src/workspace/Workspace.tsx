@@ -150,9 +150,13 @@ export function ProjectWorkspace({
   const [mentorPanel, setMentorPanelState] = useState<'points' | 'conversation' | null>(null);
   // The sheet beside the text (« fiche en volet »): shares the right side with the Compagnon's panel.
   const [sheetPanel, setSheetPanel] = useState<SheetTarget | null>(null);
+  // The author's gestures to enter a panel: the only thing that gives it the
+  // focus (`usePanelEntry`). Reopening with the project is not one.
+  const [panelEntry, setPanelEntry] = useState(0);
   const setMentorPanel = useCallback((tab: SetStateAction<'points' | 'conversation' | null>) => {
     setSheetPanel(null);
     setMentorPanelState(tab);
+    if (tab !== null) setPanelEntry((n) => n + 1);
   }, []);
   // Open panels stay open the next time the project opens (docs/DESIGN.md §4.8):
   // an interface preference per project, not project content.
@@ -663,7 +667,9 @@ export function ProjectWorkspace({
       playSound('tic');
       setMentorPanelState(null);
       setSheetPanel(target);
+      setPanelEntry((n) => n + 1);
     },
+    panelEntry,
     mentorLevel,
     analyze,
     reviewChapter,
@@ -790,7 +796,8 @@ export function ProjectWorkspace({
       editor !== lastFocusedEditor.current &&
       !palette &&
       !navigatorOpen &&
-      !mentorPanel &&
+      // A panel the author is in keeps the focus; one that merely reopened with the project does not.
+      !document.activeElement?.closest('.ch-mentor-panel') &&
       view === 'write'
     ) {
       lastFocusedEditor.current = editor;
@@ -832,8 +839,10 @@ export function ProjectWorkspace({
     if (navigatorOpen) return;
     const back = paletteReturn.current;
     paletteReturn.current = null;
-    if (view === 'write') focusTextIfIdle();
-    else if (back instanceof HTMLElement && back.isConnected) back.focus();
+    // Back where the focus was: a panel the author was in, else the text.
+    const there = back instanceof HTMLElement && back.isConnected ? back : null;
+    if (view === 'write' && !there?.closest('.ch-mentor-panel')) focusTextIfIdle();
+    else if (there) there.focus();
     else if (view === 'atelier') setAtelierFocus((n) => n + 1);
   };
 
@@ -1123,6 +1132,7 @@ export function ProjectWorkspace({
             />
           }
           active={palette === null}
+          entry={panelEntry}
           onGoTo={(signal) => {
             const target = signal.textAnchor?.sceneId;
             if (target) {

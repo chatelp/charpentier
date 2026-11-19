@@ -74,12 +74,19 @@ export function FieldRow({
   const [draft, setDraft] = useState<string | null>(null);
   // Enter commits, then the textarea goes away and may also blur: commit once.
   const editing = useRef(false);
+  /** The text the edition started from. */
+  const initial = useRef('');
   const actualStatus = shownStatus(state, conflict);
   // Rejections hidden: a field whose only value was rejected looks empty.
   const status = actualStatus === 'rejected' && !showRejected ? 'empty' : actualStatus;
   const value = status === 'empty' ? undefined : shownValue(state);
 
-  const write = (next: FieldValue | undefined) => {
+  /**
+   * `taken` is the author's gesture on the value itself (↵, a choice picked).
+   * Leaving the field (a click elsewhere, Échap) saves what was changed but
+   * never validates a proposal left as it was: validating is a decision.
+   */
+  const write = (next: FieldValue | undefined, taken = true) => {
     if (next === undefined || next === '' || (Array.isArray(next) && next.length === 0)) {
       if (state.status === 'validated') clearField(ctx.root, fieldRef);
       return;
@@ -87,19 +94,20 @@ export function FieldRow({
     const same = (a: unknown) => JSON.stringify(a) === JSON.stringify(next);
     if (state.status === 'validated' && same(state.value)) return;
     // Taking the proposal as is validates it; any change makes it the author's own.
-    if (state.status === 'proposed' && same(state.proposal?.value))
-      acceptAndKeep(ctx.root, fieldRef);
-    else {
+    if (state.status === 'proposed' && same(state.proposal?.value)) {
+      if (taken) acceptAndKeep(ctx.root, fieldRef);
+    } else {
       setField(ctx.root, fieldRef, next);
       keepSheetOf(ctx.root, fieldRef);
     }
   };
 
-  const commitDraft = () => {
+  const commitDraft = (taken: boolean) => {
     if (draft === null || !editing.current) return;
     editing.current = false;
     setDraft(null);
-    write(def.kind === 'line' ? draft.replace(/\s*\n\s*/g, ' ').trim() : draft.trim());
+    if (!taken && draft === initial.current) return;
+    write(def.kind === 'line' ? draft.replace(/\s*\n\s*/g, ' ').trim() : draft.trim(), taken);
   };
 
   const optionLabel = (option: string) =>
@@ -160,7 +168,8 @@ export function FieldRow({
       });
     } else {
       editing.current = true;
-      setDraft(asText(base));
+      initial.current = asText(base);
+      setDraft(initial.current);
     }
   };
 
@@ -188,13 +197,14 @@ export function FieldRow({
     event.stopPropagation();
     if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
       event.preventDefault();
-      commitDraft();
+      commitDraft(true);
       // Back on the value, so ↑↓ keep moving through the sheet.
       requestFocus(event.currentTarget.parentElement);
     } else if (event.key === 'Escape') {
+      // Échap leaves the field as a click elsewhere does: a long draft is
+      // never thrown away (there is no undo), and nothing is validated.
       event.preventDefault();
-      editing.current = false;
-      setDraft(null);
+      commitDraft(false);
       requestFocus(event.currentTarget.parentElement);
     }
   };
@@ -244,12 +254,13 @@ export function FieldRow({
             aria-labelledby={labelId}
             value={draft}
             rows={def.kind === 'line' ? 1 : 3}
+            title={t(def.kind === 'line' ? 'atelier.lineDraftHint' : 'atelier.textDraftHint')}
             autoFocus
             spellCheck
             lang={ctx.language}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={onDraftKeyDown}
-            onBlur={commitDraft}
+            onBlur={() => commitDraft(false)}
           />
         </div>
       ) : (
