@@ -197,6 +197,8 @@ export function buildMenuModel<Ctx>(
   /** Commands shown as ticked settings (Présentation › sounds…). */
   checked: Readonly<Record<string, boolean>> = {},
   features: readonly Feature[] = [],
+  /** The words a command's title takes from the host (« {{fileManager}} »). */
+  words: { readonly fileManager?: string } = {},
 ): MenuModel {
   const entry = (item: Item): MenuEntry => {
     if (item === '-') return { kind: 'separator' };
@@ -212,7 +214,7 @@ export function buildMenuModel<Ctx>(
       label:
         item === 'openPalette'
           ? t('menu.whatToDo')
-          : t(`commands.${item}` as 'commands.openPalette'),
+          : t(`commands.${item}` as 'commands.openPalette', words),
       ...(shortcut && { shortcut }),
       ...(item in checked && { checked: checked[item] ?? false }),
     };

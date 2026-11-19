@@ -399,7 +399,7 @@ export const systemTexts: TextTree = {
         noCode: 'sans code',
       },
       title: 'réglages du système',
-      hint: '↑↓ sections · tab réglages\néchap revenir au texte',
+      hint: '↑↓ sections · tab réglages\nÉchap revenir au texte',
       intro: {
         network:
           'le wi-fi sert au Compagnon et à la synchronisation. l’écriture n’en a pas besoin.',

@@ -34,6 +34,7 @@ import {
 } from '../commands/workspace-commands';
 import type { WorkspaceContext } from '../workspace/workspace-context';
 import './navigator.css';
+import { useHostWords } from '../app/host-words';
 
 type Item =
   | {
@@ -82,6 +83,7 @@ function flatten(outline: readonly OutlineChapter[]): Item[] {
  */
 export function Navigator({ ctx, outline, active, onClose, signals }: NavigatorProps) {
   const { t } = useTranslation();
+  const host = useHostWords();
   const items = flatten(outline);
   const [focusedId, setFocusedId] = useState(ctx.sceneId);
   const [focusTick, setFocusTick] = useState(0);
@@ -437,7 +439,7 @@ export function Navigator({ ctx, outline, active, onClose, signals }: NavigatorP
             ))}
         </div>
       )}
-      <p className="ch-nav-hint">{t('navigator.hint')}</p>
+      <p className="ch-nav-hint">{t('navigator.hint', { move: `${host.key('Alt-ArrowUp')}↓` })}</p>
     </aside>
   );
 }

@@ -6,6 +6,7 @@ import { renameProjectEverywhere } from '../workspace/default-scene';
 import { projectStatsPref, readProjectStats, type ProjectStats } from './project-stats';
 import './library.css';
 import { CloseButton } from '../icons/CloseButton';
+import { useHostWords } from '../app/host-words';
 
 export interface LibraryProps {
   readonly currentProjectId: string | undefined;
@@ -340,6 +341,7 @@ export function Library({ currentProjectId, creating = false, onOpen, onClose }:
 /** Where the projects are on disk (desktop), with the way to change it. */
 function LibraryFolder({ service }: { readonly service: LibraryFolderService }) {
   const { t } = useTranslation();
+  const { fileManager } = useHostWords();
   const [folder, setFolder] = useState<string>();
   useEffect(() => {
     let cancelled = false;
@@ -357,7 +359,7 @@ function LibraryFolder({ service }: { readonly service: LibraryFolderService }) 
       </button>
       {' · '}
       <button type="button" className="ch-link" onClick={() => void service.reveal()}>
-        {t('library.revealFolder')}
+        {t('library.revealFolder', { fileManager })}
       </button>
     </span>
   );

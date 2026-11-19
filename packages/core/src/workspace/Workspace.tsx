@@ -45,6 +45,7 @@ import { placedSignals } from '../mentor/signal-decorations';
 import { useMentorMarks } from '../mentor/use-mentor-marks';
 import '../mentor/mentor.css';
 import { variantLabel } from '../commands/variant-commands';
+import { bracketed, fileManagerName } from '../app/host-words';
 import { buildMenuModel } from '../commands/menu-model';
 import { keySoundOf, playKeySound, playSound, setSoundSettings } from '../sound/sounds';
 import { createWorkspaceRegistry } from '../commands/workspace-commands';
@@ -272,6 +273,11 @@ export function ProjectWorkspace({
       ),
     [platform, features],
   );
+  // What a command's title takes from the host (« Afficher … dans le Finder »).
+  const hostWords = useMemo(
+    () => ({ fileManager: fileManagerName(t, platform.keybindings.primaryModifier) }),
+    [t, platform],
+  );
   const outline = useDocSnapshot(root, readOutline);
   const mentorLevel = useDocSnapshot(root, readMentorLevel);
   // The editor is rebuilt only when the language check turns on or off, not at every level.
@@ -478,10 +484,15 @@ export function ProjectWorkspace({
         if (!automatic && result !== 'answered')
           setStatus({ key: ++paletteSequence, text: t(`mentor.ask.${result}`) });
         if (!automatic && result === 'answered')
-          setStatus({ key: ++paletteSequence, text: t('mentor.analysisDone') });
+          setStatus({
+            key: ++paletteSequence,
+            text: t('mentor.analysisDone', {
+              key: bracketed(registry.shortcutLabel('toggleMentorPanel')),
+            }),
+          });
       });
     },
-    [platform, projectId, t],
+    [platform, projectId, t, registry],
   );
   const reviewChapter = useCallback(
     (chapterId: string, automatic: boolean) => {
@@ -489,11 +500,16 @@ export function ProjectWorkspace({
         if (!automatic)
           setStatus({
             key: ++paletteSequence,
-            text: t(result === 'answered' ? 'mentor.reviewDone' : `mentor.ask.${result}`),
+            text:
+              result === 'answered'
+                ? t('mentor.reviewDone', {
+                    key: bracketed(registry.shortcutLabel('toggleMentorPanel')),
+                  })
+                : t(`mentor.ask.${result}`),
           });
       });
     },
-    [platform, projectId, t],
+    [platform, projectId, t, registry],
   );
   // Leaving a scene (level 2 and up) analyses it. Leaving the last scene of a
   // chapter for another chapter (level 4) also brings the chapter's review.
@@ -757,9 +773,10 @@ export function ProjectWorkspace({
           toggleRejected: prefs.showRejected,
         },
         features,
+        hostWords,
       ),
     );
-  }, [platform, registry, t, uiSounds, typingSounds, prefs.showRejected, features]);
+  }, [platform, registry, t, uiSounds, typingSounds, prefs.showRejected, features, hostWords]);
   useEffect(
     () => setSoundSettings({ ui: uiSounds, typing: typingSounds }),
     [uiSounds, typingSounds],
@@ -843,7 +860,7 @@ export function ProjectWorkspace({
       const shortcut = registry.shortcutLabel(command.id);
       return {
         id: command.id,
-        label: t(`commands.${command.id}` as 'commands.openPalette'),
+        label: t(`commands.${command.id}` as 'commands.openPalette', hostWords),
         ...(shortcut && { shortcut }),
         run: () => {
           rememberCommand(command.id);

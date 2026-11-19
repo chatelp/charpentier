@@ -37,6 +37,7 @@ import { CloseButton } from '../icons/CloseButton';
 import { renameProjectEverywhere } from '../workspace/default-scene';
 import '../workspace/novel.css';
 import { useActiveVersionName } from '../workspace/NovelTitle';
+import { useHostWords } from '../app/host-words';
 
 const readCheckpoints = (doc: Y.Doc) => listCheckpoints(doc);
 /** Restore points shown in the strip; the others through « Tous (N)… ». */
@@ -69,6 +70,7 @@ export interface OverviewProps {
  */
 export function Overview({ ctx, active, onOpen, onClose, compagnon }: OverviewProps) {
   const { t, i18n } = useTranslation();
+  const host = useHostWords();
   const { outline } = ctx;
   const words = ctx.sceneWords;
   const numbers = useMemo(() => sceneNumbers(outline), [outline]);
@@ -407,7 +409,7 @@ export function Overview({ ctx, active, onOpen, onClose, compagnon }: OverviewPr
             )}
           </div>
           {compagnon}
-          <span className="ch-overview-hint">{t('overview.hint')}</span>
+          <span className="ch-overview-hint">{t('overview.hint', { alt: host.alt })}</span>
         </footer>
       )}
     </section>

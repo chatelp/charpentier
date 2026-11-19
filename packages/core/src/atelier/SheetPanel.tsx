@@ -8,6 +8,7 @@ import { Sheet } from './Atelier';
 import { moduleDefs } from './module-defs';
 import './atelier.css';
 import { CloseButton } from '../icons/CloseButton';
+import { useHostWords } from '../app/host-words';
 
 export interface SheetPanelProps {
   readonly ctx: WorkspaceContext;
@@ -27,6 +28,7 @@ export function SheetPanel({ ctx, target, active, onOpenInAtelier, onClose }: Sh
   const data = useDocSnapshot(ctx.root, readAtelier);
   const numbers = useMemo(() => sceneNumbers(ctx.outline), [ctx.outline]);
   const panel = useRef<HTMLElement>(null);
+  const host = useHostWords();
   const def = moduleDefs[target.module];
   const entity =
     target.entityId !== undefined && def.kind === 'entity'
@@ -95,7 +97,9 @@ export function SheetPanel({ ctx, target, active, onOpenInAtelier, onClose }: Sh
           }}
         />
       </div>
-      <p className="ch-panel-hint">{t('atelier.sheetPanelHint')}</p>
+      <p className="ch-panel-hint">
+        {t('atelier.sheetPanelHint', { open: host.key('Mod-Enter') })}
+      </p>
       <CloseButton purpose="panel" onClose={onClose} corner />
     </aside>
   );

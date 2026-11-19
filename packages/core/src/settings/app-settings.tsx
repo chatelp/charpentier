@@ -11,6 +11,7 @@ import {
 } from '../workspace/writing-prefs';
 import type { WorkspaceContext } from '../workspace/workspace-context';
 import './app-settings.css';
+import { useHostWords } from '../app/host-words';
 
 type Ctx = WorkspaceContext;
 
@@ -462,6 +463,7 @@ function useLibrary(ctx: Ctx): { folder: string | null; novels: number | null } 
 
 function Library({ ctx }: { readonly ctx: Ctx }) {
   const { t } = useTranslation();
+  const { fileManager } = useHostWords();
   const { folder } = useLibrary(ctx);
   const service = ctx.platform.libraryFolder;
   return (
@@ -472,7 +474,7 @@ function Library({ ctx }: { readonly ctx: Ctx }) {
             {t('appSettings.library.change')}
           </button>
           <button type="button" className="ch-btn" onClick={() => void service.reveal()}>
-            {t('appSettings.library.reveal')}
+            {t('appSettings.library.reveal', { fileManager })}
           </button>
         </Line>
       )}

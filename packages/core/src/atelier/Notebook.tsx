@@ -37,6 +37,7 @@ import {
 import { SLOT, withSlot } from './NotedLine';
 import './interview.css';
 import './notebook.css';
+import { useHostWords } from '../app/host-words';
 
 const BOOKS: readonly NoteBook[] = ['projet', 'auteur'];
 
@@ -118,6 +119,7 @@ export function Notebook({
   readonly onOpen: (location: AtelierLocation) => void;
 }) {
   const { t } = useTranslation();
+  const host = useHostWords();
   const { platform, projectId, root } = ctx;
   const doc = useLoadedMentorDoc(projectId);
   const data = useDocSnapshot(doc ?? empty, readNotebook);
@@ -524,7 +526,9 @@ export function Notebook({
         )}
       </div>
       {!(isEmpty && !draft) && (
-        <p className="ch-interview-hint">{draft ? t('notebook.editHint') : t('notebook.hint')}</p>
+        <p className="ch-interview-hint">
+          {draft ? t('notebook.editHint', { save: host.key('Mod-Enter') }) : t('notebook.hint')}
+        </p>
       )}
     </div>
   );
@@ -597,6 +601,7 @@ function NoteForm({
   readonly onCancel: () => void;
 }) {
   const { t } = useTranslation();
+  const host = useHostWords();
   const text = useRef<HTMLTextAreaElement>(null);
   const inert = draft.title.trim() === '';
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -675,7 +680,7 @@ function NoteForm({
             aria-disabled={inert || undefined}
             onClick={() => !inert && onSave()}
           >
-            {t('notebook.save')} <kbd>{t('notebook.saveKey')}</kbd>
+            {t('notebook.save')} <kbd>{host.key('Mod-Enter')}</kbd>
           </button>
           <button type="button" className="ch-btn" onClick={onCancel}>
             {t('notebook.cancel')} <kbd>{t('notebook.cancelKey')}</kbd>
