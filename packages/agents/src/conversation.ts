@@ -10,7 +10,7 @@ import {
 import type * as Y from 'yjs';
 import { bookContext } from './book-context';
 import { compagnonChat } from './chat';
-import { sceneContext, validatedStyleChoice } from './context';
+import { sceneContext, sheetsSummary, validatedStyleChoice } from './context';
 import { leavingAlert, leavingSoon, projectMemory, windowStart } from './memory';
 import { keepThreadSummary } from './thread-summary';
 
@@ -66,6 +66,11 @@ export async function answerAuthor(input: {
       ...(earlier && { earlier }),
       ...(alert && { alert }),
       book: bookContext({ mentorDoc: input.mentorDoc, store: memory, key: 'chat', start }),
+      // What the author validated and said before the window: theirs to be quoted.
+      authorWords: [
+        sheetsSummary(input.root),
+        ...thread.filter((m) => m.role === 'author').map((m) => m.text),
+      ].join('\n'),
     },
     window.map((m) => ({
       role: m.role,

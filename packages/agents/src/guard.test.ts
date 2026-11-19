@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { changeRatio, isOneSentence, narrativeProseIn, sentencesOf } from './guard';
+import {
+  changeRatio,
+  cutMarked,
+  isOneSentence,
+  narrativeProseIn,
+  narrativeSentencesIn,
+  sentencesOf,
+} from './guard';
 
 const author = 'Il pleuvait sur Nantes. Hélène regardait la Loire monter, sans un mot.';
 
@@ -18,7 +25,11 @@ describe('guardrails: the Compagnon never writes the novel', () => {
       '— Je ne partirai pas, dit Hélène.',
       '> La pluie tombait toujours sur Nantes quand Hélène descendit vers le fleuve, les mains dans les poches.',
     ].join('\n');
-    expect(narrativeProseIn(scene, author).map((v) => v.kind)).toEqual(['dialogue', 'quote']);
+    expect(narrativeProseIn(scene, author).map((v) => v.kind)).toEqual([
+      'dialogue',
+      'quote',
+      'narration',
+    ]);
   });
 
   it('tells a list of questions from dialogue written with hyphens', () => {
@@ -49,6 +60,84 @@ describe('guardrails: the Compagnon never writes the novel', () => {
       '> Il pleuvait sur Nantes.',
     ].join('\n');
     expect(narrativeProseIn(answer, author)).toEqual([]);
+  });
+
+  it('spots plain narration, with no dash and no quotation mark', () => {
+    const kinds = (answer: string) => narrativeProseIn(answer, author).map((v) => v.kind);
+    expect(
+      kinds(
+        'Voici la scène que vous demandez :\n\nHélène descendit vers le fleuve. La pluie tombait toujours.\n\nElle s’arrêta devant la barque et posa la main sur le bois.',
+      ),
+    ).toEqual(['narration']);
+    // One sentence is not a passage, unless it is announced as one.
+    expect(kinds('Hélène descendit vers le fleuve.')).toEqual([]);
+    expect(kinds('Voici le début :\n\nHélène descendit vers le fleuve.')).toEqual(['narration']);
+    // The first person, and English.
+    expect(kinds('Je poussai la porte. La pièce était vide.')).toEqual(['narration']);
+    expect(kinds('She walked to the river. Paul waited on the bridge.')).toEqual(['narration']);
+    // The author's own sentences, repeated, are theirs.
+    expect(kinds('Il pleuvait sur Nantes. Hélène regardait la Loire monter, sans un mot.')).toEqual(
+      [],
+    );
+    // What the Compagnon says of the book in the past is not the book.
+    expect(
+      kinds(
+        'Dans la version précédente, Hélène partait à la fin. Maintenant elle reste : qu’y gagnez-vous ?',
+      ),
+    ).toEqual([]);
+    expect(narrativeSentencesIn('Bien vu. Hélène serra la rambarde.', author)).toEqual([
+      'Hélène serra la rambarde.',
+    ]);
+  });
+
+  it('spots short dialogue, whatever its marks', () => {
+    for (const line of [
+      '« Je reste », dit Hélène.',
+      '« Tu viens ? » demanda-t-elle.',
+      '— je reste, dit-elle.',
+      '"I’m not leaving," she said.',
+      '— Vous ne partirez pas.',
+    ])
+      expect(narrativeProseIn(line, author).map((v) => v.kind)).toEqual(['dialogue']);
+    // The author's own line, quoted with its tag.
+    expect(narrativeProseIn('« Je reste », dit Hélène.', '— Je reste, dit Hélène.')).toEqual([]);
+  });
+
+  it('spots a long invented sentence between quotation marks', () => {
+    const invented = `« ${'Hélène descendit vers le fleuve sans se presser, '.repeat(5)}et se tut. »`;
+    expect(invented.length).toBeGreaterThan(250);
+    expect(narrativeProseIn(`Essayez : ${invented}`, author).map((v) => v.kind)).toEqual(['quote']);
+  });
+
+  it('takes a list for a list, whatever its dash', () => {
+    const list = [
+      'Trois pistes :',
+      '– Que risque Hélène si elle reste ?',
+      '– Le désir d’Hélène : il n’apparaît qu’à la fin.',
+      '– Resserrer l’ouverture.',
+      '– Son père veut qu’elle parte.',
+    ].join('\n');
+    expect(narrativeProseIn(list, author)).toEqual([]);
+  });
+
+  it('lets a note tell a backstory, never a dialogue', () => {
+    const backstory = 'Hélène était batelière. Son père mourut pendant la crue de 1910.';
+    expect(narrativeProseIn(backstory, '').map((v) => v.kind)).toEqual(['narration']);
+    expect(narrativeProseIn(backstory, '', { notes: true })).toEqual([]);
+    expect(
+      narrativeProseIn('— Je reste, dit Hélène.', '', { notes: true }).map((v) => v.kind),
+    ).toEqual(['dialogue']);
+  });
+
+  it('never cuts in silence', () => {
+    expect(cutMarked('Un point. Deux points.', 100)).toBe('Un point. Deux points.');
+    const cut = cutMarked(
+      'Le départ tient bien. La lettre disparaît après la crue. Est-ce voulu ?',
+      70,
+    );
+    expect(cut).toBe('Le départ tient bien. La lettre disparaît après la crue. […]');
+    expect(cutMarked('x'.repeat(100), 20)).toBe(`${'x'.repeat(16)} […]`);
+    expect(cutMarked('x'.repeat(100), 20)).toHaveLength(20);
   });
 
   it('splits French sentences', () => {

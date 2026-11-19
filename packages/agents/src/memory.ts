@@ -103,7 +103,7 @@ export function projectMemory(input: {
     if (typeof text !== 'string') return 'the text is missing';
     if (text.length > MAX_NOTE) return `a note is at most ${MAX_NOTE} characters: split it`;
     if (SECRET.test(text)) return 'no secret (key, password) in the notebook';
-    if (narrativeProseIn(text, input.authorText ?? '').length > 0)
+    if (narrativeProseIn(text, input.authorText ?? '', { notes: true }).length > 0)
       return 'a note describes; it never holds lines of the novel or dialogue';
     return null;
   };

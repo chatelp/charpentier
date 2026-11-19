@@ -1,6 +1,6 @@
 import type { LlmService } from '@charpentier/platform';
 import type { BookContext } from './book-context';
-import { isOneSentence, narrativeProseIn } from './guard';
+import { isOneSentence, MAX_REPLY_LENGTH, narrativeProseIn, narrativeSentencesIn } from './guard';
 import {
   atelierContext,
   generateWithMemory,
@@ -28,6 +28,12 @@ export interface ChatContext {
   readonly alert?: string;
   /** The Atelier and the notebook, before the thread (cached), and what changed since. */
   readonly book?: BookContext;
+  /**
+   * More of the author's own words than the scene and the messages sent:
+   * what they validated in their sheets, their older messages. Never sent to
+   * the model: the guardrails read it, so that quoting them is not refused.
+   */
+  readonly authorWords?: string;
 }
 
 export interface ChatTurn {
@@ -52,6 +58,7 @@ const FALLBACK: Record<string, string> = {
 };
 
 const CORRECTION = `Your previous answer broke THE RULE: it contained text written for the novel (dialogue, narrative passages, or more than one example sentence). Answer again without any of it. At most one example sentence, in "example" only.`;
+const TOO_LONG = `Your previous answer was too long: "reply" is at most ${MAX_REPLY_LENGTH} characters. Answer again, shorter: keep what matters most.`;
 
 function contextMessage(context: ChatContext): string {
   const parts = [`<project title="${context.projectTitle}" />`];
@@ -98,9 +105,12 @@ export async function compagnonChat(
   /** An answer the guardrails refused, and why (the live tests show it). */
   onRefused?: (refused: { readonly answer: unknown; readonly why: readonly unknown[] }) => void,
 ): Promise<ChatAnswer> {
+  // Everything of the author's the Compagnon may quote: the scene, their messages, their validated sheets.
   const authorText = [
     context.scene?.text ?? '',
     ...history.filter((t) => t.role === 'author').map((t) => t.text),
+    context.sheets ?? '',
+    context.authorWords ?? '',
   ].join('\n');
   // From the most stable to the most changing (the prompt cache, phase 6.5):
   // the Atelier and the notebook as they stood when the thread sent began,
@@ -135,11 +145,12 @@ export async function compagnonChat(
     ? `${compagnonSystemPrompt(context)}\n\n${MEMORY_INSTRUCTIONS}`
     : compagnonSystemPrompt(context);
 
+  let correction = CORRECTION;
   for (let attempt = 0; attempt < 2; attempt++) {
     const request = {
       system,
       messages:
-        attempt === 0 ? messages : [...messages, { role: 'user' as const, content: CORRECTION }],
+        attempt === 0 ? messages : [...messages, { role: 'user' as const, content: correction }],
       responseSchema: chatAnswerSchema,
       maxOutputTokens: 16000,
       tier: 'deep' as const,
@@ -152,7 +163,18 @@ export async function compagnonChat(
       onRefused?.({ answer: response.text, why: ['unreadable'] });
       continue;
     }
-    const exampleOk = answer.example === null || isOneSentence(answer.example);
+    // An answer over its bound is refused whole, never cut (docs/SPEC.md §18).
+    if (answer.reply.length > MAX_REPLY_LENGTH) {
+      onRefused?.({ answer, why: ['reply: too long'] });
+      correction = TOO_LONG;
+      continue;
+    }
+    correction = CORRECTION;
+    // One sentence for the book at most: the example, and then none told in the reply.
+    const exampleOk =
+      answer.example === null ||
+      (isOneSentence(answer.example) &&
+        narrativeSentencesIn(answer.reply, authorText).length === 0);
     const inReply = narrativeProseIn(answer.reply, authorText);
     const inExample =
       answer.example === null
