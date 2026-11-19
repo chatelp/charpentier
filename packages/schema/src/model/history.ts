@@ -29,7 +29,7 @@ export interface CheckpointInfo {
 
 interface StoredCheckpoint extends CheckpointInfo {
   readonly state: Uint8Array;
-  /** Fingerprint of the content, to skip automatic checkpoints that change nothing. */
+  /** Fingerprint of the content, to skip a checkpoint that changes nothing. */
   readonly digest?: string;
 }
 
@@ -60,23 +60,25 @@ function decodeFragment(state: Uint8Array): Y.XmlFragment {
 }
 
 /**
- * Saves the variant's current content. With `skipIfUnchanged`, nothing is
- * saved (and undefined returned) when the content equals the variant's latest
- * checkpoint: automatic checkpoints use it, manual ones never do.
+ * Saves the variant's current content. Nothing is saved (and undefined
+ * returned) when the content equals the variant's latest checkpoint, whatever
+ * the reason of either: that point already restores this very text, and a
+ * second full copy would only make the history heavier (the author saving
+ * twice, a safety point right after a manual one). A point the author names
+ * is always saved: the name is theirs.
  */
 export function createCheckpoint(
   sceneDoc: Y.Doc,
   historyDoc: Y.Doc,
-  input: { variantId: string; reason: CheckpointReason; label?: string; skipIfUnchanged?: boolean },
+  input: { variantId: string; reason: CheckpointReason; label?: string },
   origin: Origin = AUTHOR,
 ): string | undefined {
   const fragment = variantFragment(sceneDoc, input.variantId);
   const digest = digestOf(fragment);
-  if (input.skipIfUnchanged) {
+  if (input.label === undefined) {
     const latest = checkpoints(historyDoc)
       .toArray()
-      .filter((c) => c.variantId === input.variantId)
-      .at(-1);
+      .findLast((c) => c.variantId === input.variantId);
     if (latest?.digest === digest) return undefined;
   }
   const id = newId();

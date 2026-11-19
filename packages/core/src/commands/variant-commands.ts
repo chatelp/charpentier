@@ -183,6 +183,7 @@ export const variantCommands: readonly (Command<Ctx> & { readonly id: CommandId 
         variantId: current.activeVariantId,
         reason: 'manual',
       });
+      // Told even when the latest point already holds this text (nothing new is stored then).
       ctx.notify(ctx.t('status.checkpointCreated'));
     },
   },

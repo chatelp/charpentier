@@ -182,6 +182,11 @@ describe('the system line of the X250 (phase 5.3)', () => {
       [...docs.entries()]
         .filter(([guid]) => guid.endsWith('/history'))
         .reduce((n, [, doc]) => n + listCheckpoints(doc).length, 0);
+    // The author has written since the last restore point (unchanged, the text is not stored again).
+    const editor = document.querySelector<HTMLElement>('.ProseMirror');
+    if (!editor) throw new Error('No editor');
+    await userEvent.click(editor);
+    await userEvent.keyboard('Il pleuvait sur Nantes.');
     const before = checkpoints();
     system.simulate.battery(14);
     await waitFor(() =>

@@ -126,30 +126,53 @@ describe('automatic checkpoints', () => {
   it('skip saving when nothing changed since the variant’s last checkpoint', () => {
     const { variantId, sceneDoc, historyDoc } = setup();
     appendParagraph(variantFragment(sceneDoc, variantId), 'Un.');
+    expect(createCheckpoint(sceneDoc, historyDoc, { variantId, reason: 'interval' })).toBeDefined();
     expect(
-      createCheckpoint(sceneDoc, historyDoc, {
-        variantId,
-        reason: 'interval',
-        skipIfUnchanged: true,
-      }),
-    ).toBeDefined();
-    expect(
-      createCheckpoint(sceneDoc, historyDoc, {
-        variantId,
-        reason: 'interval',
-        skipIfUnchanged: true,
-      }),
+      createCheckpoint(sceneDoc, historyDoc, { variantId, reason: 'interval' }),
     ).toBeUndefined();
-    // A manual checkpoint is always saved.
-    expect(createCheckpoint(sceneDoc, historyDoc, { variantId, reason: 'manual' })).toBeDefined();
     appendParagraph(variantFragment(sceneDoc, variantId), 'Deux.');
+    expect(createCheckpoint(sceneDoc, historyDoc, { variantId, reason: 'interval' })).toBeDefined();
+  });
+
+  it('stores no second copy of an unchanged text, whatever the reasons (the author saving again)', () => {
+    const { root, sceneId, variantId, sceneDoc, historyDoc } = setup();
+    appendParagraph(variantFragment(sceneDoc, variantId), 'Il pleuvait sur Nantes.');
+    expect(createCheckpoint(sceneDoc, historyDoc, { variantId, reason: 'interval' })).toBeDefined();
+    const size = Y.encodeStateAsUpdate(historyDoc).length;
+    // The author saves, again and again, a text the last point already holds.
+    for (let i = 0; i < 50; i++)
+      expect(
+        createCheckpoint(sceneDoc, historyDoc, { variantId, reason: 'manual' }),
+      ).toBeUndefined();
     expect(
-      createCheckpoint(sceneDoc, historyDoc, {
-        variantId,
-        reason: 'interval',
-        skipIfUnchanged: true,
-      }),
+      createCheckpoint(sceneDoc, historyDoc, { variantId, reason: 'before-external-merge' }),
+    ).toBeUndefined();
+    expect(listCheckpoints(historyDoc).map((c) => c.reason)).toEqual(['interval']);
+    expect(Y.encodeStateAsUpdate(historyDoc).length).toBe(size);
+
+    // A changed text is saved; then the same manual point is not saved twice.
+    appendParagraph(variantFragment(sceneDoc, variantId), 'Hélène attendait.');
+    const saved = createCheckpoint(sceneDoc, historyDoc, { variantId, reason: 'manual' });
+    expect(saved).toBeDefined();
+    expect(createCheckpoint(sceneDoc, historyDoc, { variantId, reason: 'manual' })).toBeUndefined();
+    expect(listCheckpoints(historyDoc).map((c) => c.reason)).toEqual(['manual', 'interval']);
+
+    // A point the author names is theirs: always saved.
+    expect(
+      createCheckpoint(sceneDoc, historyDoc, { variantId, reason: 'manual', label: 'Avant coupe' }),
     ).toBeDefined();
+
+    // Only the same variant counts: another one with the same text gets its own point.
+    const copy = createVariant(root, sceneDoc, sceneId, { name: 'Copie', copyOf: variantId });
+    expect(
+      createCheckpoint(sceneDoc, historyDoc, { variantId: copy, reason: 'manual' }),
+    ).toBeDefined();
+
+    // Restoring a text the latest point already holds adds no « before restore » copy, and still restores.
+    const before = listCheckpoints(historyDoc).length;
+    restoreCheckpoint(sceneDoc, historyDoc, saved ?? '');
+    expect(listCheckpoints(historyDoc)).toHaveLength(before);
+    expect(variantFragment(sceneDoc, variantId).toString()).toContain('Hélène attendait.');
   });
 
   it('gives a plain-text preview of a checkpoint', () => {
