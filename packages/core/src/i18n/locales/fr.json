@@ -723,7 +723,9 @@
     "inScene": "scène {{number}}",
     "filterKey": "/",
     "sheetPanel": "Fiche",
-    "sheetPanelHint": "↑↓ parcourir · ↵ modifier · ⌘⏎ ouvrir dans l’Atelier · Échap fermer",
+    "sheetPanelHint": "↑↓ parcourir · ↵ modifier · ⇧↵ à la ligne · ⌘⏎ ouvrir dans l’Atelier · Échap fermer",
+    "lineDraftHint": "↵ enregistrer · Échap quitter le champ (enregistre aussi)",
+    "textDraftHint": "↵ enregistrer · ⇧↵ à la ligne · Échap quitter le champ (enregistre aussi)",
     "newEntry": {
       "characters": "+ Nouveau personnage",
       "acts": "+ Nouvel acte",

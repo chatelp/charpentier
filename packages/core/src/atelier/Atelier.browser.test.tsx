@@ -110,6 +110,55 @@ describe('Atelier', () => {
     );
   });
 
+  it('never validates a proposal by leaving its field, and keeps a draft left with Échap', async () => {
+    const host = createHost();
+    await host.start();
+    const root = host.root();
+    const writer = createAgentWriter(root, 'bottom-up');
+    const id = writer.proposeEntity(
+      'characters',
+      { name: 'Paul Vasseur', residence: 'Anneau B', fear: 'La surface' },
+      [],
+    );
+    const residence = { module: 'characters', entityId: id, field: 'residence' } as const;
+    const fear = { module: 'characters', entityId: id, field: 'fear' } as const;
+    await userEvent.keyboard(mod('2'));
+    await screen.findByRole('option', { name: /Paul Vasseur/ });
+
+    // Opened to read it, left by a click elsewhere, then by Échap: still a proposal.
+    field('Lieu de vie').focus();
+    await userEvent.keyboard('{Enter}');
+    const input = await screen.findByRole('textbox', { name: 'Lieu de vie' });
+    expect((input as HTMLTextAreaElement).value).toBe('Anneau B');
+    input.blur();
+    await waitFor(() => expect(screen.queryByRole('textbox', { name: 'Lieu de vie' })).toBeNull());
+    expect(readFieldRef(root, residence).status).toBe('proposed');
+    field('Lieu de vie').focus();
+    await userEvent.keyboard('{Enter}');
+    await screen.findByRole('textbox', { name: 'Lieu de vie' });
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('textbox', { name: 'Lieu de vie' })).toBeNull());
+    expect(readFieldRef(root, residence).status).toBe('proposed');
+    // ↵ on the value as it is takes it: the author's gesture.
+    await waitFor(() => expect(document.activeElement).toBe(field('Lieu de vie')));
+    await userEvent.keyboard('{Enter}');
+    await screen.findByRole('textbox', { name: 'Lieu de vie' });
+    await userEvent.keyboard('{Enter}');
+    expect(readFieldRef(root, residence).status).toBe('validated');
+
+    // A draft left with Échap is kept, as when the field loses the focus; ⇧↵ is a new line.
+    field('Peur').focus();
+    await userEvent.keyboard('{Enter}');
+    const draft = await screen.findByRole('textbox', { name: 'Peur' });
+    expect(draft.title).toContain('⇧↵ à la ligne');
+    await userEvent.keyboard(' du monde,{Shift>}{Enter}{/Shift}et le vide.{Escape}');
+    await waitFor(() => expect(screen.queryByRole('textbox', { name: 'Peur' })).toBeNull());
+    expect(readFieldRef(root, fear)).toMatchObject({
+      status: 'validated',
+      value: expect.stringContaining('du monde,\net le vide.'),
+    });
+  });
+
   it('shows the Compagnon’s proposals in relief and lets the author validate or reject them', async () => {
     const host = createHost();
     await host.start();
