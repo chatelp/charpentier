@@ -114,7 +114,7 @@ describe('signing in to the sync server (step 4.4)', () => {
     // Signed out from elsewhere: the footer offers to sign in again.
     setStatus('unauthorized');
     const resume = await screen.findByRole('button', {
-      name: 'Synchro en pause\u00A0: se reconnecter',
+      name: 'Synchronisation en pause\u00A0: se reconnecter',
     });
     await userEvent.click(resume);
     await screen.findByRole('textbox', { name: 'Adresse du serveur (https://…)' });

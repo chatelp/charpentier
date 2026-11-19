@@ -83,7 +83,7 @@ describe('variants and restore points, keyboard only', () => {
     await waitFor(() => expect(editorText()).toBe('Premier jet.'));
     expect(
       await screen.findByText(
-        /^Version restaurée \(.+\)\. L’état précédent reste dans l’historique\.$/,
+        /^Retour au point de restauration \(.+\)\. Le texte d’avant reste dans les points de restauration\.$/,
       ),
     ).toBeTruthy();
 

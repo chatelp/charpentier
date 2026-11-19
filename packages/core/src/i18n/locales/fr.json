@@ -209,7 +209,7 @@
     "toggleUiSounds": "Sons de l’interface",
     "toggleTypingSounds": "Son de frappe",
     "toggleRejected": "Afficher les rejets",
-    "syncSignIn": "Se connecter à un serveur de synchro…",
+    "syncSignIn": "Se connecter à un serveur de synchronisation…",
     "syncSignOut": "Se déconnecter du serveur",
     "syncDevices": "Appareils connectés…",
     "adminPage": "Administrer le serveur…",
@@ -369,7 +369,7 @@
     "library": {
       "intro": "Où vivent vos romans, et comment les retrouver.",
       "folder": "Dossier",
-      "folderHelp": "Un dossier par roman, ses scènes en Markdown à côté.",
+      "folderHelp": "Un dossier par roman ; chaque scène y est aussi un fichier texte, lisible sans l’app.",
       "change": "Changer…",
       "reveal": "Afficher dans {{fileManager}}",
       "all": "Tous vos romans",
@@ -379,9 +379,9 @@
       "novels_other": "{{count}} romans"
     },
     "about": {
-      "intro": "La version de l’app et le commit dont elle est construite.",
+      "intro": "La version de l’app installée sur cet appareil.",
       "version": "Version",
-      "help": "Une version de développement garde le numéro de la dernière version publiée ; le commit dit laquelle c’est."
+      "help": "Le code entre parenthèses distingue une version d’essai de la dernière version publiée, dont elle garde le numéro."
     }
   },
   "navigator": {
@@ -448,7 +448,7 @@
   },
   "status": {
     "checkpointCreated": "Point de restauration créé.",
-    "checkpointRestored": "Version restaurée ({{date}}). L’état précédent reste dans l’historique.",
+    "checkpointRestored": "Retour au point de restauration ({{date}}). Le texte d’avant reste dans les points de restauration.",
     "variantCreated": "Variante « {{name}} » créée.",
     "theme": {
       "system": "Thème : celui du système.",
@@ -457,7 +457,7 @@
     },
     "motionReduced": "Animations réduites.",
     "motionNormal": "Animations rétablies.",
-    "entityTrashed": "« {{title}} » mis à la corbeille. « Restaurer depuis la corbeille… » le ramène.",
+    "entityTrashed": "Mis à la corbeille : « {{title}} ». Pour revenir en arrière : « Restaurer depuis la corbeille… ».",
     "uiSoundsOn": "Sons de l’interface activés.",
     "uiSoundsOff": "Sons de l’interface désactivés.",
     "typingSoundsOn": "Son de frappe activé.",
@@ -849,9 +849,9 @@
     "cancel": "Annuler",
     "novel": "Roman",
     "shortStory": "Nouvelle",
-    "others": "Vos autres romans",
-    "alone": "C’est votre seul roman pour l’instant.",
-    "all": "Tous les romans…",
+    "others": "Vos autres projets",
+    "alone": "C’est votre seul projet pour l’instant.",
+    "all": "Tous les projets…",
     "new": "+ Nouveau roman",
     "titleField": "Titre du roman",
     "hint": "↑↓ choisir · ⏎ ouvrir · R renommer · Échap fermer",
@@ -923,7 +923,7 @@
   "tour": {
     "manuscript": {
       "title": "Le manuscrit",
-      "text": "Vos chapitres et vos scènes. Cliquez une scène pour l’ouvrir ; « Plan » montre tout le roman d’un coup."
+      "text": "Vos chapitres et vos scènes. Cliquez sur une scène pour l’ouvrir ; « Plan » montre tout le roman d’un coup."
     },
     "compagnon": {
       "title": "Le Compagnon",
@@ -991,12 +991,12 @@
       "syncing": "Synchronisation…",
       "synced": "Synchronisé",
       "offline": "Hors ligne",
-      "unauthorized": "Synchro en pause : se reconnecter"
+      "unauthorized": "Synchronisation en pause : se reconnecter"
     },
     "admin": {
       "opened": "La page d’administration s’ouvre.",
       "not-admin": "Ce compte n’administre pas le serveur.",
-      "out-of-reach": "La page d’administration ne répond que depuis la maison ou par Tailscale.",
+      "out-of-reach": "La page d’administration ne répond que depuis la maison, ou à distance par le réseau privé (Tailscale).",
       "unreachable": "Le serveur ne répond pas."
     }
   },

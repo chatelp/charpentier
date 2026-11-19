@@ -69,7 +69,7 @@ describe('the novel’s title (docs/DESIGN.md §4.8, 1.19)', () => {
     await waitFor(() => expect(document.activeElement).toBe(others[0]));
     await userEvent.keyboard('{ArrowDown}');
     expect(document.activeElement).toBe(others[1]);
-    within(sheet).getByRole('button', { name: /Tous les romans…/ });
+    within(sheet).getByRole('button', { name: /Tous les projets…/ });
     within(sheet).getByRole('button', { name: '+ Nouveau roman' });
 
     // Échap closes it, and the text has the focus again.
@@ -118,7 +118,7 @@ describe('the novel’s title (docs/DESIGN.md §4.8, 1.19)', () => {
     await start();
     await userEvent.keyboard(mod('{Shift>}p{/Shift}'));
     const overview = await screen.findByRole('region', { name: 'Vue d’ensemble du manuscrit' });
-    within(overview).getByRole('button', { name: /Tous les romans…/ });
+    within(overview).getByRole('button', { name: /Tous les projets…/ });
     await waitFor(() => expect(document.activeElement?.closest('.ch-card')).not.toBeNull());
     await userEvent.keyboard('r');
     const field = await within(overview).findByRole('textbox', { name: 'Titre du roman' });
