@@ -118,6 +118,22 @@ describe('the specialised agents in the main process (D-27)', () => {
     expect(chatMessages(store.acquire(guids.mentor(projectId), 'test'))).toEqual([]);
   });
 
+  it('stops the running work when another is queued behind it', async () => {
+    const { host, store, projectId, seen } = await setUp();
+    const running = host.handle({ type: 'agents.deepWork', projectId, task: 'structure' });
+    const queued = host.handle({ type: 'agents.deepWork', projectId, task: 'clues' });
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    await host.handle({ type: 'agents.stopDeepWork', projectId });
+    expect(await Promise.all([running, queued])).toEqual(['stopped', 'stopped']);
+    // The queued one never reached the model.
+    expect(seen.calls).toBe(1);
+    expect(chatMessages(store.acquire(guids.mentor(projectId), 'test'))).toEqual([]);
+    // Nothing is left stopped: the next work runs.
+    expect(await host.handle({ type: 'agents.deepWork', projectId, task: 'structure' })).toBe(
+      'answered',
+    );
+  });
+
   it('has nothing to estimate for a character that does not exist', async () => {
     const { host, projectId } = await setUp();
     expect(
