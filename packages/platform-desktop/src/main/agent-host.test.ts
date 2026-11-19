@@ -3,6 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import type Anthropic from '@anthropic-ai/sdk';
 import {
+  agentOrigin,
   chatMessages,
   interviewMessages,
   createChapter,
@@ -12,6 +13,7 @@ import {
   parseSceneMarkdown,
   variantFragment,
   writeSceneDocToFragment,
+  type AuthorshipViolation,
 } from '@charpentier/schema';
 import { afterEach, describe, expect, it } from 'vitest';
 import { AgentHost } from './agent-host';
@@ -27,7 +29,14 @@ afterEach(() => {
 
 /** A model that answers every task with a review, and counts how many run at once. */
 function fakeClient() {
-  const seen = { calls: 0, atOnce: 0, maxAtOnce: 0, prompts: [] as string[] };
+  const seen = {
+    calls: 0,
+    atOnce: 0,
+    maxAtOnce: 0,
+    prompts: [] as string[],
+    /** Run in the middle of a call: while the agent holds its documents. */
+    during: undefined as (() => void) | undefined,
+  };
   const create = async (
     body: { messages: { content: string }[] },
     options?: { signal?: AbortSignal },
@@ -37,6 +46,7 @@ function fakeClient() {
     seen.maxAtOnce = Math.max(seen.maxAtOnce, seen.atOnce);
     seen.prompts.push(body.messages.map((m) => m.content).join('\n'));
     await new Promise((resolve) => setTimeout(resolve, 30));
+    seen.during?.();
     seen.atOnce--;
     if (options?.signal?.aborted) throw new Error('Request was aborted.');
     const text = JSON.stringify({
@@ -66,8 +76,10 @@ async function setUp() {
   const root = store.acquire(guids.project(project.id), 'test');
   initProject(root, { id: project.id, title: 'Les serres', kind: 'novel' });
   const chapterId = createChapter(root, { title: 'La serre' });
+  const sceneIds: string[] = [];
   for (const text of ['Il pleuvait sur Nantes.', 'Hélène poussa la porte du bureau.']) {
     const { sceneId, variantId } = createScene(root, { chapterId, title: 'Scène' });
+    sceneIds.push(sceneId);
     const scene = store.acquire(guids.scene(project.id, sceneId), 'test');
     scene.transact(() =>
       writeSceneDocToFragment(parseSceneMarkdown(text), variantFragment(scene, variantId)),
@@ -79,8 +91,9 @@ async function setUp() {
     models: () => ({ deep: 'claude-opus-5-5', fast: 'claude-opus-5-5' }),
     createClient: () => client,
   });
-  const host = new AgentHost(llm, {} as SecretStore, store);
-  return { host, store, projectId: project.id, seen };
+  const violations: AuthorshipViolation[] = [];
+  const host = new AgentHost(llm, {} as SecretStore, store, undefined, (v) => violations.push(v));
+  return { host, store, projectId: project.id, seen, violations, sceneIds };
 }
 
 describe('the specialised agents in the main process (D-27)', () => {
@@ -104,6 +117,29 @@ describe('the specialised agents in the main process (D-27)', () => {
     expect(seen.prompts[0]).toContain('Hélène poussa la porte du bureau.');
     const mentor = store.acquire(guids.mentor(projectId), 'test');
     expect(chatMessages(mentor).map((m) => m.work?.task)).toEqual(['structure', 'clues']);
+  });
+
+  it('reports an agent write to a scene document, and nothing of an honest work', async () => {
+    const { host, store, projectId, seen, violations, sceneIds } = await setUp();
+    expect(await host.handle({ type: 'agents.deepWork', projectId, task: 'structure' })).toBe(
+      'answered',
+    );
+    // What the agents legitimately write (root proposals, the mentor document) is no violation.
+    expect(violations).toEqual([]);
+
+    const sceneGuid = guids.scene(projectId, sceneIds[0] ?? '');
+    const scene = store.acquire(sceneGuid, 'test');
+    const rogue = () =>
+      scene.transact(
+        () => scene.getMap('leak').set('prose', 'Écrit par un agent.'),
+        agentOrigin('rogue'),
+      );
+    seen.during = rogue;
+    await host.handle({ type: 'agents.deepWork', projectId, task: 'clues' });
+    seen.during = undefined;
+    expect(violations).toHaveLength(1);
+    expect(violations[0]).toMatchObject({ docGuid: sceneGuid, origin: agentOrigin('rogue') });
+    expect(violations[0]?.reason).toMatch(/scene/);
   });
 
   it('stops a running work: nothing is filed', async () => {

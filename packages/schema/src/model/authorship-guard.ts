@@ -8,7 +8,15 @@ import { isAgentOrigin, type Origin } from './origins';
  * Runtime check of the authorship rules (docs/SPEC.md §15.5), as a second
  * line of defence behind AgentWriter: after every transaction whose origin is
  * an agent, it inspects what changed and reports anything an agent may not
- * do. Install it on root and scene documents (in development and tests).
+ * do. Install it on every document an agent is handed (the desktop main does,
+ * in `AgentHost`): root, mentor, scene.
+ *
+ * - root (`project:<pid>`): proposal slots, new entities, its own signals;
+ * - mentor (`project:<pid>/mentor`): the Compagnon's own document
+ *   (conversation, interview, notebook, digests of what it read). It holds no
+ *   field the author validates and no text of the novel, so agents write
+ *   there freely, under their origin;
+ * - anything else (scene, history, unknown): never.
  */
 
 export interface AuthorshipViolation {
@@ -40,6 +48,8 @@ function check(doc: Y.Doc, tr: Y.Transaction): AuthorshipViolation[] {
   const report = (location: string, key: string | null, reason: string) =>
     violations.push({ origin, docGuid: doc.guid, location, key, reason });
 
+  // The mentor document is the agents' own: nothing to check there.
+  if (/^project:[^/]+\/mentor$/.test(doc.guid)) return violations;
   const isRoot = /^project:[^/]+$/.test(doc.guid);
   for (const [type, keys] of tr.changed) {
     const top = topLevelName(doc, type as AnyType);
