@@ -267,6 +267,8 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
     ...(options.lockIterations !== undefined && { iterations: options.lockIterations }),
   });
   let sleptAt: number | null = null;
+  /** Whether the sleep in progress is what locked the device (it was open before). */
+  let lockedBySleep = false;
   let usbKey: UsbKey | null = null;
   let stopNight: (() => void) | null = null;
   const setLocked = (locked: boolean) => {
@@ -1231,15 +1233,21 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
       save();
     },
     sleeping: () => {
+      // Told twice about the same sleep: the first call knows what it locked.
+      const pending = sleptAt !== null && lockedBySleep;
+      const was = state.lock.locked;
       sleptAt = now().getTime();
       if (state.settings.askCode !== 'never') setLocked(true);
+      lockedBySleep = pending || (!was && state.lock.locked);
     },
     woke: async () => {
       const slept = sleptAt === null ? Infinity : now().getTime() - sleptAt;
+      const bySleep = lockedBySleep;
       sleptAt = null;
-      // « After 15 min of sleep »: a shorter one opens on the text again.
-      if (state.settings.askCode === 'after15' && slept < 15 * 60_000 && state.lock.locked)
-        setLocked(false);
+      lockedBySleep = false;
+      // « After 15 min of sleep »: a shorter one opens on the text again, but
+      // only undoes its own lock, never one that was already set before it.
+      if (state.settings.askCode === 'after15' && slept < 15 * 60_000 && bySleep) setLocked(false);
       await refresh();
     },
     suspend: async () => {

@@ -63,6 +63,23 @@ export function createLockKeeper(options: {
   let record = options.load();
   let failures = 0;
   let waitUntil: number | null = null;
+  let queue: Promise<unknown> = Promise.resolve();
+  const checkOne = async (code: string): Promise<UnlockResult> => {
+    if (!record) return 'ok';
+    if (waitUntil !== null && now() < waitUntil) return 'wait';
+    const hash = await fingerprint(code, unhex(record.salt), record.iterations);
+    if (hash === record.hash) {
+      failures = 0;
+      waitUntil = null;
+      return 'ok';
+    }
+    failures++;
+    if (failures % SERIES === 0) {
+      waitUntil = now() + FIRST_WAIT * 2 ** (failures / SERIES - 1);
+      return 'wait';
+    }
+    return 'wrong';
+  };
   return {
     hasCode: () => record !== null,
     setCode: async (code) => {
@@ -77,21 +94,13 @@ export function createLockKeeper(options: {
       waitUntil = null;
       options.save(record);
     },
-    check: async (code) => {
-      if (!record) return 'ok';
-      if (waitUntil !== null && now() < waitUntil) return 'wait';
-      const hash = await fingerprint(code, unhex(record.salt), record.iterations);
-      if (hash === record.hash) {
-        failures = 0;
-        waitUntil = null;
-        return 'ok';
-      }
-      failures++;
-      if (failures % SERIES === 0) {
-        waitUntil = now() + FIRST_WAIT * 2 ** (failures / SERIES - 1);
-        return 'wait';
-      }
-      return 'wrong';
+    // One check at a time: the fingerprint is awaited between the test of the
+    // wait and the count of the failure, so parallel checks would all pass the
+    // wait. Each one starts only when the previous one has counted.
+    check: (code) => {
+      const result = queue.then(() => checkOne(code));
+      queue = result.catch(() => {});
+      return result;
     },
     retryAt: () => (waitUntil !== null && now() < waitUntil ? waitUntil : null),
   };
