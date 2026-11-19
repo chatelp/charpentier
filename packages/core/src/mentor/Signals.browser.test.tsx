@@ -38,9 +38,19 @@ async function startApp() {
       },
     },
   });
-  render(<App platform={platform} i18n={await createI18n('fr')} />);
-  const editor = await screen.findByRole('textbox', { name: 'Texte de la scène' });
-  await waitFor(() => expect(document.activeElement).toBe(editor));
+  const i18n = await createI18n('fr');
+  const launch = async () => {
+    render(<App platform={platform} i18n={i18n} />);
+    const editor = await screen.findByRole('textbox', { name: 'Texte de la scène' });
+    await waitFor(() => expect(document.activeElement).toBe(editor));
+    return editor;
+  };
+  const editor = await launch();
+  /** Quits the app and starts it again on the same device. */
+  const relaunch = () => {
+    cleanup();
+    return launch();
+  };
   const projectId = String(prefs.get('lastProjectId'));
   const root = docs.get(guids.project(projectId)) as Y.Doc;
   const [scene] = listAllScenes(root);
@@ -57,7 +67,7 @@ async function startApp() {
       textAnchor,
     });
   };
-  return { editor, root, remark };
+  return { editor, root, remark, relaunch };
 }
 
 describe('the Compagnon’s remarks in the text', () => {
@@ -155,5 +165,64 @@ describe('the Compagnon’s remarks in the text', () => {
     within(panel).getAllByRole('option')[0]?.focus();
     await userEvent.keyboard('x');
     expect(getEntity(root, 'characters', helene)?.fields['residence']?.status).toBe('rejected');
+  });
+
+  it('leaves the focus in the text when a point arrives or the command line closes', async () => {
+    const { editor, root, remark } = await startApp();
+    await userEvent.keyboard('Il pleuvait sur Nantes.');
+    await userEvent.keyboard(mod('l'));
+    const panel = await screen.findByRole('complementary', { name: 'Le Compagnon' });
+    await waitFor(() => expect(panel.contains(document.activeElement)).toBe(true));
+    // The author goes back to the text, the panel stays open beside it.
+    await userEvent.click(editor.querySelector('p') as HTMLElement, { position: { x: 4, y: 4 } });
+    remark('Il pleuvait', 'Ouverture météorologique : attendue.');
+    await within(panel).findByRole('option');
+    await new Promise((r) => setTimeout(r, 50));
+    expect(document.activeElement).toBe(editor);
+
+    await userEvent.keyboard(mod('k'));
+    await screen.findByRole('dialog', { name: 'Ligne de commande' });
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    await new Promise((r) => setTimeout(r, 50));
+    expect(document.activeElement).toBe(editor);
+
+    // The next sentence is text: R and I resolve nothing.
+    await userEvent.keyboard(' rien ici');
+    await waitFor(() => expect(editor.textContent).toContain('rien ici'));
+    expect(listSignals(root, { state: 'open' })).toHaveLength(1);
+  });
+
+  it('gives the focus back to the panel when the command line was opened from it', async () => {
+    const { remark } = await startApp();
+    await userEvent.keyboard('Il pleuvait sur Nantes.');
+    remark('Il pleuvait', 'Ouverture météorologique : attendue.');
+    await userEvent.keyboard(mod('l'));
+    const panel = await screen.findByRole('complementary', { name: 'Le Compagnon' });
+    const point = await within(panel).findByRole('option');
+    await waitFor(() => expect(document.activeElement).toBe(point));
+    await userEvent.keyboard(mod('k'));
+    await screen.findByRole('dialog', { name: 'Ligne de commande' });
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(document.activeElement).toBe(point));
+  });
+
+  it('reopens with the panel open and the focus in the text', async () => {
+    const { root, remark, relaunch } = await startApp();
+    await userEvent.keyboard('Il pleuvait sur Nantes.');
+    remark('Il pleuvait', 'Ouverture météorologique : attendue.');
+    await userEvent.keyboard(mod('l'));
+    await screen.findByRole('complementary', { name: 'Le Compagnon' });
+    // The panel is saved open with the project's interface preferences.
+    await new Promise((r) => setTimeout(r, 50));
+
+    const editor = await relaunch();
+    const panel = await screen.findByRole('complementary', { name: 'Le Compagnon' });
+    await within(panel).findByRole('option');
+    await new Promise((r) => setTimeout(r, 50));
+    expect(document.activeElement).toBe(editor);
+    await userEvent.keyboard(' rien ici');
+    await waitFor(() => expect(editor.textContent).toContain('rien ici'));
+    expect(listSignals(root, { state: 'open' })).toHaveLength(1);
   });
 });

@@ -24,6 +24,7 @@ import { toRoman } from '../workspace/roman';
 import { signalLevel } from './signal-decorations';
 import { StyleCitation } from './StyleCitation';
 import { PanelTitle } from '../icons/Pictogram';
+import { PanelEntryContext, usePanelEntry } from '../workspace/panel-entry';
 
 export interface MentorPanelProps {
   readonly root: Y.Doc;
@@ -44,6 +45,8 @@ export interface MentorPanelProps {
   readonly conversation?: ReactNode;
   readonly header?: ReactNode;
   readonly active: boolean;
+  /** The author's gestures to enter the panel so far: each one gives it the focus, nothing else does. */
+  readonly entry: number;
   /** Nothing to deal with: what to do instead (ask for the Compagnon's opinion on the scene). */
   readonly onAnalyze?: () => void;
   readonly analyzeShortcut?: string | undefined;
@@ -197,12 +200,21 @@ export function MentorPanel(props: MentorPanelProps) {
   const flat = groups.flatMap((g) => g.points);
   const selected = flat.find((p) => p.id === selectedId) ?? flat[0];
 
-  useEffect(() => {
-    if (!props.active || props.tab !== 'points') return;
+  const focusSelected = () => {
     const item = list.current?.querySelector<HTMLElement>('[aria-selected="true"]');
     // Nothing to deal with: the panel itself takes the focus (Échap still closes it).
     (item ?? panel.current)?.focus();
-  }, [props.active, props.tab, selected?.id]);
+  };
+  // The points take the focus when the author enters the panel, and never by
+  // themselves: R, I, V and X act here, and must not catch a sentence meant for the text.
+  usePanelEntry(props.entry, props.active && props.tab === 'points', focusSelected);
+  // The focus follows the selection the author moves with the keys of the list.
+  const follow = useRef(false);
+  useEffect(() => {
+    if (!follow.current) return;
+    follow.current = false;
+    focusSelected();
+  }, [selected?.id]);
 
   const decide = (proposal: Proposal, accept: boolean) => {
     playSound(accept ? 'click' : 'toc');
@@ -247,6 +259,7 @@ export function MentorPanel(props: MentorPanelProps) {
     const move = (step: number) => {
       const target = flat[Math.max(0, Math.min(flat.length - 1, index + step))];
       if (target) setSelectedId(target.id);
+      follow.current = true;
     };
     if (event.key === 'Escape') {
       event.preventDefault();
@@ -266,10 +279,12 @@ export function MentorPanel(props: MentorPanelProps) {
       if (key === 'r') resolveSignal(root, selected.id);
       else dismissSignal(root, selected.id);
       setSelectedId(next?.id);
+      follow.current = true;
     } else if ((key === 'v' || key === 'x') && selected?.kind === 'proposal') {
       event.preventDefault();
       decide(selected.proposal, key === 'v');
       setSelectedId(next?.id);
+      follow.current = true;
     }
   };
 
@@ -315,7 +330,9 @@ export function MentorPanel(props: MentorPanelProps) {
       </div>
       {props.header}
       {props.tab === 'conversation' ? (
-        props.conversation
+        <PanelEntryContext.Provider value={props.entry}>
+          {props.conversation}
+        </PanelEntryContext.Provider>
       ) : (
         <>
           <ul

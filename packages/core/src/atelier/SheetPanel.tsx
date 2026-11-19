@@ -1,5 +1,6 @@
 import type { KeyboardEvent } from 'react';
-import { useEffect, useMemo, useRef } from 'react';
+import { useMemo, useRef } from 'react';
+import { usePanelEntry } from '../workspace/panel-entry';
 import { useTranslation } from 'react-i18next';
 import { useDocSnapshot } from '../hooks/use-doc-snapshot';
 import type { WorkspaceContext } from '../workspace/workspace-context';
@@ -39,9 +40,11 @@ export function SheetPanel({ ctx, target, active, onOpenInAtelier, onClose }: Sh
         )
       : (data.project?.title ?? '');
 
-  useEffect(() => {
-    if (active) panel.current?.querySelector<HTMLElement>('[data-field-value]')?.focus();
-  }, [active, target.entityId]);
+  // The first field takes the focus when the author opens the sheet, not when
+  // it reopens with the project or when the command line closes.
+  usePanelEntry(ctx.panelEntry, active, () =>
+    panel.current?.querySelector<HTMLElement>('[data-field-value]')?.focus(),
+  );
 
   const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
     if (event.defaultPrevented) return;
