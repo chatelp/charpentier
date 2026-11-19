@@ -21,6 +21,11 @@ import type * as Y from 'yjs';
 export const LAST_PROJECT_PREF = 'lastProjectId';
 /** The single project of phases 1.5–1.9, adopted into the library on first start. */
 export const LEGACY_PROJECT_PREF = 'lastProjectId';
+/**
+ * The project that could not be opened last time, until one opens again: the
+ * next start goes to another one rather than fail on the same, launch after launch.
+ */
+export const FAILED_PROJECT_PREF = 'failedProjectId';
 export const lastScenePref = (projectId: string) => `lastScene:${projectId}`;
 
 export interface DefaultTitles {
@@ -53,7 +58,8 @@ export function initialProjectId(platform: Platform, titles: DefaultTitles): Pro
       const { library, preferences } = platform;
       const live = await library.list();
       const last = await preferences.get<string>(LAST_PROJECT_PREF);
-      if (last && live.some((p) => p.id === last)) return last;
+      const failed = await preferences.get<string | null>(FAILED_PROJECT_PREF);
+      if (last && last !== failed && live.some((p) => p.id === last)) return last;
       const legacy = await preferences.get<string>(LEGACY_PROJECT_PREF);
       if (legacy && !live.some((p) => p.id === legacy)) {
         const trashed = await library.listTrashed();
@@ -63,7 +69,8 @@ export function initialProjectId(platform: Platform, titles: DefaultTitles): Pro
           return legacy;
         }
       }
-      const recent = live[0];
+      // The one that failed only when it is the only one: the app then says so and offers the library.
+      const recent = live.find((p) => p.id !== failed) ?? live[0];
       if (recent) return recent.id;
       return (await library.create({ title: titles.project, kind: 'novel' })).id;
     })();
@@ -113,6 +120,8 @@ export async function openProject(
       await platform.library.rename(projectId, meta.title);
     else if (summary) await platform.library.touch(projectId);
     await platform.preferences.set(LAST_PROJECT_PREF, projectId);
+    if (await platform.preferences.get<string | null>(FAILED_PROJECT_PREF))
+      await platform.preferences.set(FAILED_PROJECT_PREF, null);
     const fallback = ensureScene(root, titles);
     const last = await platform.preferences.get<string>(lastScenePref(projectId));
     const live = new Set(listVersionScenes(root).map((s) => s.id));
@@ -125,7 +134,8 @@ export async function openProject(
       close: () => opened.close(),
     };
   } catch (error) {
-    await handle?.close();
+    await handle?.close().catch(() => {});
+    await platform.preferences.set(FAILED_PROJECT_PREF, projectId).catch(() => {});
     throw error;
   }
 }

@@ -3,7 +3,9 @@
     "name": "Charpentier",
     "windowTitle": "{{novel}} — {{scene}}",
     "loading": "Ouverture…",
-    "openError": "Impossible d'ouvrir le projet."
+    "openError": "Impossible d'ouvrir le projet.",
+    "retry": "Réessayer",
+    "library": "Tous les romans…"
   },
   "editor": {
     "emptyScene": "Écrivez ici. Le titre de la scène, celui du chapitre, tout se change plus tard.",

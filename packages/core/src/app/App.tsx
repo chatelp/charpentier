@@ -68,8 +68,16 @@ function Root() {
     [t],
   );
 
+  // Asked again after a failure (« Réessayer »).
+  const [attempt, setAttempt] = useState(0);
+  const retry = () => {
+    setOpening({ state: 'loading' });
+    setAttempt((n) => n + 1);
+  };
+
   // Which project to open at start.
   useEffect(() => {
+    if (projectId) return;
     let cancelled = false;
     initialProjectId(platform, titles).then(
       (id) => !cancelled && setProjectId(id),
@@ -81,7 +89,7 @@ function Root() {
     return () => {
       cancelled = true;
     };
-  }, [platform, titles]);
+  }, [platform, titles, projectId, attempt]);
 
   // Opens it, and closes it when another one is chosen.
   useEffect(() => {
@@ -105,7 +113,7 @@ function Root() {
       cancelled = true;
       void opened?.close();
     };
-  }, [platform, projectId, titles]);
+  }, [platform, projectId, titles, attempt]);
 
   // Signed in on a new device: once the account's projects have come, its
   // blank start goes to the trash and the library opens, to open one of them
@@ -183,6 +191,8 @@ function Root() {
           creating={library.creating}
           onOpen={(id) => {
             setLibrary(null);
+            // The one that just failed, chosen again: another try.
+            if (opening.state === 'error') retry();
             setProjectId(id);
           }}
           onClose={() => setLibrary(null)}
@@ -202,7 +212,18 @@ function Root() {
           titleSlot={titleBarHeight ? titleSlot : null}
         />
       )}
-      {shown.state === 'error' && <p role="alert">{t('app.openError')}</p>}
+      {shown.state === 'loading' && <p role="status">{t('app.loading')}</p>}
+      {shown.state === 'error' && (
+        <div role="alert">
+          <p>{t('app.openError')}</p>
+          <button type="button" className="ch-btn" autoFocus onClick={retry}>
+            {t('app.retry')}
+          </button>
+          <button type="button" className="ch-btn" onClick={() => setLibrary({ creating: false })}>
+            {t('app.library')}
+          </button>
+        </div>
+      )}
     </FeatureCovers>
   );
 }
