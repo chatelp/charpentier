@@ -230,7 +230,7 @@ export interface SystemSettings {
   readonly nightWarmth: NightWarmth;
 }
 
-export type NightWarmth = 4600 | 4000 | 3400;
+export type NightWarmth = 5500 | 4800 | 4000;
 
 export interface SystemState {
   readonly device: {
@@ -332,7 +332,7 @@ export const DEFAULT_SYSTEM_SETTINGS: SystemSettings = {
   showCpu: true,
   externalScale: 100,
   screenScale: 100,
-  nightWarmth: 4000,
+  nightWarmth: 4800,
 };
 
 /** Below this level, on battery, the device saves the scene and sleeps (§4.12). */

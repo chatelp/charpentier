@@ -250,9 +250,9 @@ function Display() {
         <Row label={s('rows.nightWarmth')} help={s('rows.nightWarmthHelp')}>
           <Keys
             options={[
-              { value: 4600 as const, label: s('values.warmthLight') },
-              { value: 4000 as const, label: s('values.warmthMedium') },
-              { value: 3400 as const, label: s('values.warmthStrong') },
+              { value: 5500 as const, label: s('values.warmthLight') },
+              { value: 4800 as const, label: s('values.warmthMedium') },
+              { value: 4000 as const, label: s('values.warmthStrong') },
             ]}
             value={state.settings.nightWarmth}
             label={s('rows.nightWarmth')}

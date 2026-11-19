@@ -139,6 +139,8 @@ interface Stored {
   readonly firstStartDone?: boolean;
   /** The version the app saw last: a new one at start is an update (phase 5.12). */
   readonly lastVersion?: string;
+  /** 2 since the night mode's warmths changed (see `knownWarmth`). */
+  readonly warmths?: 2;
 }
 
 function loadStored(file: string): Stored {
@@ -159,6 +161,30 @@ function knownLayout(settings: SystemSettings, installed?: SystemSettings['keybo
   return settings.keyboardLayout in XKB_LAYOUTS
     ? settings
     : { ...settings, keyboardLayout: installed ?? DEFAULT_SYSTEM_SETTINGS.keyboardLayout };
+}
+
+/**
+ * The night mode's warmths before 19 November 2026 (too yellow, said the
+ * author) map to the same step today. A file saved since says so
+ * (`warmths: 2`): 4000 was « moyenne » before and is « forte » now.
+ */
+const OLD_WARMTHS: Readonly<Record<number, SystemSettings['nightWarmth']>> = {
+  4600: 5500,
+  4000: 4800,
+  3400: 4000,
+};
+const WARMTHS: readonly number[] = [5500, 4800, 4000];
+
+function knownWarmth(settings: SystemSettings, current: boolean): SystemSettings {
+  const warmth: number = settings.nightWarmth;
+  const known = current
+    ? WARMTHS.includes(warmth)
+      ? settings.nightWarmth
+      : undefined
+    : OLD_WARMTHS[warmth];
+  return known === warmth
+    ? settings
+    : { ...settings, nightWarmth: known ?? DEFAULT_SYSTEM_SETTINGS.nightWarmth };
 }
 
 export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
@@ -212,13 +238,16 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
     cpu: { load: 0, temperature: 0, history: [] },
     printers: [],
     timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    settings: knownLayout(
-      {
-        ...DEFAULT_SYSTEM_SETTINGS,
-        ...(options.keyboard && { keyboardLayout: options.keyboard }),
-        ...stored.settings,
-      },
-      options.keyboard,
+    settings: knownWarmth(
+      knownLayout(
+        {
+          ...DEFAULT_SYSTEM_SETTINGS,
+          ...(options.keyboard && { keyboardLayout: options.keyboard }),
+          ...stored.settings,
+        },
+        options.keyboard,
+      ),
+      stored.warmths === 2 || stored.settings?.nightWarmth === undefined,
     ),
     lock: { locked: false, hasCode: !!stored.lock, retryAt: null },
     firstStart: stored.firstStartDone !== true,
@@ -288,6 +317,7 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
       night: state.night.mode,
       lock: lockRecord,
       firstStartDone: !state.firstStart,
+      warmths: 2,
       ...(lastVersion && { lastVersion }),
     });
   };

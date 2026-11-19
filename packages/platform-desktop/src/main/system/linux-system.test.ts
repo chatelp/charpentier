@@ -477,10 +477,10 @@ describe('the System service of the X250 (phase 5.4)', () => {
     expect(ran(x250.runs, 'timedatectl', 'set-ntp', 'false')).toBe(true);
     await system.setNightMode('on');
     const night = () => x250.daemons.filter((d) => d.command === 'wlsunset').at(-1);
-    expect(night()?.args).toEqual(['-T', '4001', '-t', '4000']);
+    expect(night()?.args).toEqual(['-T', '4801', '-t', '4800']);
     // A stronger warmth: wlsunset starts again at it.
-    await system.setSetting('nightWarmth', 3400);
-    expect(night()?.args).toEqual(['-T', '3401', '-t', '3400']);
+    await system.setSetting('nightWarmth', 4000);
+    expect(night()?.args).toEqual(['-T', '4001', '-t', '4000']);
 
     system.dispose();
     const again = await start(fakeX250(), dir);
@@ -637,10 +637,10 @@ describe('the System service of the X250 (phase 5.4)', () => {
     );
 
     const night = () => x250.daemons.filter((d) => d.command === 'wlsunset');
-    expect(night()[0]?.args).toEqual(['-S', '07:00', '-s', '21:00', '-t', '4000']);
+    expect(night()[0]?.args).toEqual(['-S', '07:00', '-s', '21:00', '-t', '4800']);
     await system.setNightMode('on');
     expect(night()[0]?.stopped).toBe(true);
-    expect(night().at(-1)?.args).toEqual(['-T', '4001', '-t', '4000']);
+    expect(night().at(-1)?.args).toEqual(['-T', '4801', '-t', '4800']);
     expect(system.state().night).toEqual({ mode: 'on', active: true });
     await system.setNightMode('off');
     expect(night().at(-1)?.stopped).toBe(true);
@@ -659,6 +659,26 @@ describe('the System service of the X250 (phase 5.4)', () => {
       keyboardLayout: 'qwerty',
       naturalScrolling: true,
     });
+  });
+  it('maps the night warmths saved before 19 November 2026 to the same step', async () => {
+    const warmthAfter = async (stored: object) => {
+      const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'charpentier-system-'));
+      folders.push(dir);
+      fs.writeFileSync(path.join(dir, 'system.json'), JSON.stringify(stored));
+      const { system } = await start(fakeX250(), dir);
+      const warmth = system.state().settings.nightWarmth;
+      system.dispose();
+      return warmth;
+    };
+    // Before: 4600 / 4000 / 3400, anything else the default.
+    expect(await warmthAfter({ settings: { nightWarmth: 4600 } })).toBe(5500);
+    expect(await warmthAfter({ settings: { nightWarmth: 4000 } })).toBe(4800);
+    expect(await warmthAfter({ settings: { nightWarmth: 3400 } })).toBe(4000);
+    expect(await warmthAfter({ settings: { nightWarmth: 4200 } })).toBe(4800);
+    // Saved since: 4000 is « forte ».
+    expect(await warmthAfter({ settings: { nightWarmth: 4000 }, warmths: 2 })).toBe(4000);
+    expect(await warmthAfter({ settings: { nightWarmth: 4600 }, warmths: 2 })).toBe(4800);
+    expect(await warmthAfter({})).toBe(4800);
   });
   it('prints through CUPS, on the default printer of the network (phase 5.7)', async () => {
     const { system, x250 } = await start();
