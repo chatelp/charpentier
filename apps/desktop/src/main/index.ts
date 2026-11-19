@@ -197,12 +197,14 @@ const spell = new SpellClient(spellWorkerPath, {
 
 // ─── Markdown mirror: runs while a window has the project open (docs/SPEC.md §17) ───
 
-// The main process has no i18n catalogue yet: the two texts it writes into a project.
+// The main process has no i18n catalogue yet: the texts it writes into a project.
 const mirrorStrings: MirrorStrings = {
   externalVariant: (date) =>
     `Modif. externe du ${new Intl.DateTimeFormat('fr', { dateStyle: 'short', timeStyle: 'short' }).format(date)}`,
   externalSignal: (name) =>
     `Le fichier de cette scène a été modifié hors de l’app au même endroit que le texte : sa version est conservée dans la variante « ${name} ».`,
+  keptAside: (file) =>
+    `Un fichier modifié hors de l’app n’a pas pu être repris dans le manuscrit : il est conservé sous le nom « ${file} ».`,
 };
 const system = deviceSystem();
 const mirrors = new Map<string, ProjectMirror>();

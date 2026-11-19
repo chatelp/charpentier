@@ -21,7 +21,11 @@ export async function exportTexts(
     for (let n = 2; used.has(name); n++) name = `${folderName(project.title)} ${n}`;
     used.add(name);
     const target = path.join(folder, name);
-    const mirror = new ProjectMirror(store, project.id, target, { strings, watch: false });
+    const mirror = new ProjectMirror(store, project.id, target, {
+      strings,
+      watch: false,
+      takeOutsideEdits: false,
+    });
     mirror.start();
     mirror.stop();
     fs.rmSync(path.join(target, STATE_DIR), { recursive: true, force: true });
