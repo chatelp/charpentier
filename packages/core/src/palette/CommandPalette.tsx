@@ -161,12 +161,16 @@ export function CommandPalette({
     entry.section.pick(entry.item);
   };
 
+  // Échap closes the line from anywhere in it: the field, or its cross after ⇥.
+  const onDialogKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== 'Escape') return;
+    event.preventDefault();
+    event.stopPropagation();
+    onClose();
+  };
+
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     switch (event.key) {
-      case 'Escape':
-        event.preventDefault();
-        onClose();
-        break;
       case 'Enter':
         event.preventDefault();
         if (request.kind === 'input') {
@@ -201,6 +205,7 @@ export function CommandPalette({
         aria-modal="true"
         aria-label={t('palette.label')}
         onMouseDown={(e) => e.stopPropagation()}
+        onKeyDown={onDialogKeyDown}
       >
         <div className="ch-cmd-field">
           <span className="ch-cmd-prompt" aria-hidden="true">
