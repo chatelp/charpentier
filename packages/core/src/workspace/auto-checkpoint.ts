@@ -23,6 +23,7 @@ export class AutoCheckpointer {
     private readonly historyDoc: Y.Doc,
     private readonly variantId: string,
     intervalMs = AUTO_CHECKPOINT_INTERVAL_MS,
+    // eslint-disable-next-line charpentier/no-host-global-access -- typed as Timers: only setInterval and clearInterval are read
     private readonly timers: Timers = globalThis,
   ) {
     this.#save(); // the state before this writing session

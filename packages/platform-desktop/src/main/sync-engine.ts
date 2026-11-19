@@ -337,6 +337,7 @@ export class SyncEngine {
       for (const record of local.values())
         if (!projects.has(record.id) && accountHasProjects && this.#pristine(record.id))
           this.#withheld.add(record.id);
+      // eslint-disable-next-line charpentier/transact-origin -- library index (host document): onRemote tells this write by its null origin
       libraryDoc.transact(() => {
         for (const record of local.values())
           if (!this.#withheld.has(record.id) && newer(record, projects.get(record.id)))

@@ -62,6 +62,7 @@ export class DocumentLibrary implements LibraryService {
     const projects = await this.#projects();
     const entry = projects.get(projectId);
     if (!entry) throw new Error(`Unknown project: ${projectId}`);
+    // eslint-disable-next-line charpentier/transact-origin -- the library index is a host document, outside the project model and its origins
     projects.doc?.transact(() => change(entry));
   }
 
@@ -132,6 +133,7 @@ export class DocumentLibrary implements LibraryService {
     const existing = projects.get(id);
     if (existing) return toSummary(id, existing);
     const entry = new Y.Map<unknown>();
+    // eslint-disable-next-line charpentier/transact-origin -- the library index is a host document, outside the project model and its origins
     projects.doc?.transact(() => {
       projects.set(id, entry);
       entry.set('title', input.title);
