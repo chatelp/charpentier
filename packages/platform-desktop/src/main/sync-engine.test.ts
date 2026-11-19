@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import type { Socket } from 'node:net';
 import os from 'node:os';
 import path from 'node:path';
 import { PGlite } from '@electric-sql/pglite';
@@ -39,12 +40,28 @@ async function server() {
   await createUser(db, EMAIL, PASSWORD);
   const sync = createSyncServer({ db, port: 0, address: '127.0.0.1' });
   await sync.listen();
-  cleanups.push(() => sync.destroy());
-  return Object.assign(`http://127.0.0.1:${sync.address.port}`, { db });
+  const sockets = new Set<Socket>();
+  sync.httpServer.on('connection', (socket) => {
+    sockets.add(socket);
+    socket.on('close', () => sockets.delete(socket));
+  });
+  let stopped = false;
+  const stop = async () => {
+    if (stopped) return;
+    stopped = true;
+    // Destroying alone leaves the devices connected for a while: cut them off.
+    for (const socket of sockets) socket.destroy();
+    await sync.destroy();
+  };
+  cleanups.push(stop);
+  return Object.assign(`http://127.0.0.1:${sync.address.port}`, { db, stop });
 }
 
 /** A device: its own library folder, documents and sync engine. */
-function device(name: string, { keychain = true } = {}) {
+function device(
+  name: string,
+  { keychain = true, syncingDelayMs }: { keychain?: boolean; syncingDelayMs?: number } = {},
+) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), `charpentier-sync-${name}-`));
   const library = new FolderLibrary(path.join(dir, 'Bibliothèque'));
   const store = new DocStore(documentLocator(library));
@@ -64,6 +81,7 @@ function device(name: string, { keychain = true } = {}) {
     stateDir: path.join(dir, 'sync'),
     device: name,
     WebSocket,
+    ...(syncingDelayMs !== undefined && { syncingDelayMs }),
   });
   cleanups.push(() => {
     engine.stop();
@@ -277,5 +295,64 @@ describe('sync between two desktop apps (step 4.3)', { timeout: 20_000 }, () => 
     await mac.engine.signOut();
     expect(mac.engine.status()).toBe('off');
     expect(mac.engine.account()).toBeNull();
+  });
+
+  /** A signed-in device with a scene to type in, and the states it tells from then on. */
+  async function typing(url: string, options: { syncingDelayMs?: number } = {}) {
+    const mac = device('Mac', options);
+    const { id } = await mac.library.create({ title: 'Les serres', kind: 'novel' });
+    const root = mac.doc(guids.project(id));
+    initProject(root, { id, title: 'Les serres', kind: 'novel' });
+    const chapterId = createChapter(root, { title: 'La serre' });
+    const { sceneId, variantId } = createScene(root, { chapterId, title: 'Le sas' });
+    const scene = mac.doc(guids.scene(id, sceneId));
+    await mac.engine.signIn(url, EMAIL, PASSWORD);
+    expect(await mac.engine.idle()).toBe(true);
+    const told: string[] = [];
+    mac.engine.onStatusChange((status) => told.push(status));
+    return { mac, told, type: (text: string) => write(scene, variantId, text) };
+  }
+
+  it('does not tell a state per keystroke: what the server acknowledges at once stays « synced »', async () => {
+    const { mac, told, type } = await typing(String(await server()));
+    for (let i = 0; i < 30; i++) {
+      type(`Frappe ${i}.`);
+      // Sent, not acknowledged yet: nothing is told, but the engine is not idle.
+      expect(mac.engine.status()).toBe('synced');
+      await new Promise((resolve) => setTimeout(resolve, 15));
+    }
+    expect(await mac.engine.idle()).toBe(true);
+    expect(told).toEqual([]);
+    expect(mac.engine.status()).toBe('synced');
+  });
+
+  it('tells « syncing » once changes have stayed unsent for the delay, then « synced »', async () => {
+    const { mac, told, type } = await typing(String(await server()), { syncingDelayMs: 0 });
+    // No delay: a fast server may still acknowledge before « syncing » is told, so type until it is.
+    for (let i = 0; !told.includes('syncing'); i++) {
+      type(`Phrase ${i}.`);
+      await new Promise((resolve) => setTimeout(resolve, 5));
+    }
+    expect(await mac.engine.idle()).toBe(true);
+    await until(() => told.at(-1) === 'synced');
+    // Each state told once, in turn: never the same twice in a row.
+    expect(told.slice(0, 2)).toEqual(['syncing', 'synced']);
+    expect(told.every((status, i) => status === (i % 2 ? 'synced' : 'syncing'))).toBe(true);
+  });
+
+  it('tells at once that the device is offline, and forgets the account before telling « off »', async () => {
+    const url = await server();
+    const { mac, told, type } = await typing(String(url));
+    await url.stop();
+    type('Écrit hors ligne.');
+    await until(() => told.includes('offline'), 5000);
+    // Well under the delay of « syncing »: « offline » did not wait.
+    expect(told[0]).toBe('offline');
+    expect(told).not.toContain('syncing');
+    // The listener of « off » (the update service's access) finds no account.
+    const accounts: unknown[] = [];
+    mac.engine.onStatusChange((status) => status === 'off' && accounts.push(mac.engine.account()));
+    await mac.engine.signOut();
+    expect(accounts).toEqual([null]);
   });
 });

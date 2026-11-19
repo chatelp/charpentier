@@ -43,7 +43,11 @@ export class SyncEngine {
   readonly #providers = new Map<string, HocuspocusProvider>();
   #libraryDoc: Y.Doc | null = null;
   #libraryFile: DocFile | null = null;
+  /** The state as it is, at once: what `idle` and the engine itself go by. */
   #status: SyncStatus = 'off';
+  /** The state as it is told (`status`, the listeners): see `#setStatus`. */
+  #reported: SyncStatus = 'off';
+  #reporting: ReturnType<typeof setTimeout> | null = null;
   #connected = false;
   /** The account's library heard from the server at least once since starting. */
   #librarySynced = false;
@@ -64,11 +68,14 @@ export class SyncEngine {
       /** For Node without a global WebSocket (tests). */
       readonly WebSocket?: unknown;
       readonly fetch?: typeof fetch;
+      /** How long changes stay unsent before « syncing » is told (default: one second). */
+      readonly syncingDelayMs?: number;
     },
   ) {}
 
+  /** The state as it is told to the listeners (a keystroke being sent is still « synced »). */
   status(): SyncStatus {
-    return this.#status;
+    return this.#reported;
   }
 
   onStatusChange(listener: (status: SyncStatus) => void): () => void {
@@ -83,9 +90,32 @@ export class SyncEngine {
       : null;
   }
 
+  /**
+   * Each keystroke leaves the document unsent for the few milliseconds the
+   * server takes to acknowledge it: told as it is, the state would flip twice
+   * per keystroke, and every listener with it (the windows, the footer).
+   * So « syncing » after « synced » is told only once it has lasted; anything
+   * else (offline, refused, signed out, synced again) is told at once.
+   */
   #setStatus(status: SyncStatus) {
-    if (status === this.#status) return;
     this.#status = status;
+    if (this.#reporting) clearTimeout(this.#reporting);
+    this.#reporting = null;
+    if (status === this.#reported) return;
+    if (status === 'syncing' && this.#reported === 'synced') {
+      this.#reporting = setTimeout(() => {
+        this.#reporting = null;
+        this.#report(status);
+      }, this.deps.syncingDelayMs ?? 1000);
+      // A pending « syncing » never keeps the app from quitting.
+      this.#reporting.unref();
+      return;
+    }
+    this.#report(status);
+  }
+
+  #report(status: SyncStatus) {
+    this.#reported = status;
     for (const listener of this.#listeners) listener(status);
   }
 
@@ -130,8 +160,9 @@ export class SyncEngine {
   /** Signs this device out: the sync stops, the projects stay on the device. */
   async signOut(): Promise<void> {
     const account = this.deps.credentials.load();
-    this.stop();
+    // Forgotten before the state is told: a listener of « off » finds no account.
     this.deps.credentials.save(null);
+    this.stop();
     this.#setStatus('off');
     if (!account) return;
     try {

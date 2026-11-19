@@ -34,7 +34,7 @@ import {
   SpellClient,
   type MirrorStrings,
   createLinuxSystem,
-  shareUpdateAccess,
+  createUpdateAccessSharer,
   type LinuxSystem,
   exportTexts,
   nodeTools,
@@ -279,6 +279,9 @@ const sync = new SyncEngine({
  * The X250's update service reads the cache with this device's token
  * (docs/x250-update-contract.md): given at each sign-in, taken back at sign-out.
  */
+const shareUpdateAccess = createUpdateAccessSharer(
+  path.join(app.getPath('appData'), 'charpentier', 'update-access.json'),
+);
 function shareAccountWithUpdates() {
   if (process.platform !== 'linux' || !appliance) return;
   let account: SyncAccount | null;
@@ -289,15 +292,16 @@ function shareAccountWithUpdates() {
     account = null;
   }
   try {
-    shareUpdateAccess(
-      path.join(app.getPath('appData'), 'charpentier', 'update-access.json'),
-      account,
-    );
+    shareUpdateAccess(account);
   } catch (error) {
     console.error('Charpentier: the update service cannot read the account', error);
   }
 }
-sync.onStatusChange(() => shareAccountWithUpdates());
+// The account only changes when the sync stops (« off ») or starts (« connecting »):
+// the other states (a keystroke sent, the network gone) leave the secrets unread.
+sync.onStatusChange((status) => {
+  if (status === 'off' || status === 'connecting') shareAccountWithUpdates();
+});
 sync.onStatusChange((status) => {
   syncMirrors();
   for (const contents of sessions.keys())
