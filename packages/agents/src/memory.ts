@@ -416,11 +416,22 @@ export async function generateWithMemory(
   let messages = [...request.messages];
   let response: LlmResponse | undefined;
   for (let round = 0; round < MAX_ROUNDS; round++) {
-    // The last round has no tool: it must answer.
-    const tools = round < MAX_ROUNDS - 1 ? [{ kind: 'memory' as const }] : [];
-    response = await llm.generate({ ...request, messages, ...(tools.length && { tools }) }, signal);
+    // The last round must answer. The tool stays declared (the history holds
+    // its calls and results: without it the provider refuses the request),
+    // but it may not be called.
+    const last = round === MAX_ROUNDS - 1;
+    response = await llm.generate(
+      {
+        ...request,
+        messages,
+        tools: [{ kind: 'memory' as const }],
+        ...(last && { toolChoice: 'none' as const }),
+      },
+      signal,
+    );
     const calls: readonly LlmToolCall[] = response.toolCalls ?? [];
-    if (calls.length === 0) return response;
+    // A call on the last round all the same is not run: no answer came.
+    if (calls.length === 0 || last) return response;
     messages = [
       // One cache point in the loop: the latest results (earlier ones are dropped).
       ...messages.map((m, i) =>

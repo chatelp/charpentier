@@ -162,6 +162,8 @@ export class AnthropicLlmService implements LlmService {
           // The notebook (phase 6.5): Claude's own memory tool, run by the caller.
           ...(request.tools?.some((t) => t.kind === 'memory') && {
             tools: [{ type: 'memory_20250818' as const, name: 'memory' as const }],
+            // The loop's last round: the tool stays declared, an answer is forced.
+            ...(request.toolChoice === 'none' && { tool_choice: { type: 'none' as const } }),
           }),
           output_config: {
             effort: request.tier === 'deep' ? 'high' : 'low',

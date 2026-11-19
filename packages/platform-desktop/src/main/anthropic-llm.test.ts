@@ -109,6 +109,37 @@ describe('Anthropic LLM service', () => {
     ]);
   });
 
+  it('keeps the memory tool declared and forbids calling it on a forced answer', async () => {
+    const { client, requests } = fakeClient(() => message('ok'));
+    const llm = new AnthropicLlmService({
+      apiKey: () => 'sk-test',
+      models: () => ({ deep: OPUS, fast: OPUS }),
+      createClient: () => client,
+    });
+    const turn = [{ type: 'tool_use', id: 't1', name: 'memory', input: { command: 'view' } }];
+    const messages = [
+      { role: 'user' as const, content: 'Bonjour' },
+      { role: 'assistant' as const, content: [{ type: 'provider_turn' as const, turn }] },
+      {
+        role: 'user' as const,
+        content: [{ type: 'tool_result' as const, callId: 't1', content: '(empty)' }],
+      },
+    ];
+    await llm.generate({ ...request, messages, tools: [{ kind: 'memory' }] });
+    await llm.generate({ ...request, messages, tools: [{ kind: 'memory' }], toolChoice: 'none' });
+    const tools = [{ type: 'memory_20250818', name: 'memory' }];
+    expect(requests[0]?.['tools']).toEqual(tools);
+    expect(requests[0]).not.toHaveProperty('tool_choice');
+    // The history holds tool_use and tool_result blocks: the tool must stay.
+    expect(requests[1]?.['tools']).toEqual(tools);
+    expect(requests[1]?.['tool_choice']).toEqual({ type: 'none' });
+    expect(requests[1]?.['messages']).toEqual([
+      { role: 'user', content: 'Bonjour' },
+      { role: 'assistant', content: turn },
+      { role: 'user', content: [{ type: 'tool_result', tool_use_id: 't1', content: '(empty)' }] },
+    ]);
+  });
+
   it('sends light work to Haiku only when chosen, without fallbacks', async () => {
     const { client, requests } = fakeClient(() => message('ok'));
     const llm = new AnthropicLlmService({

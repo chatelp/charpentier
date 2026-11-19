@@ -177,6 +177,61 @@ describe('the notebook as the memory tool sees it (phase 6.5)', () => {
     ).toMatchObject({ isError: true });
   });
 
+  it('keeps the tool on the last round and forces an answer: the history holds its calls', async () => {
+    const { mentorDoc } = project();
+    const requests: LlmRequest[] = [];
+    // A model that would call its tool forever.
+    const llm: LlmService = {
+      status: () => 'available',
+      onStatusChange: () => () => {},
+      generate: async (request) => {
+        requests.push(request);
+        if (request.toolChoice === 'none') return { text: 'Voilà.' };
+        return {
+          text: '',
+          toolCalls: [
+            {
+              id: `c${requests.length}`,
+              name: 'memory',
+              input: { command: 'view', path: '/memories' },
+            },
+          ],
+          turn: [{ type: 'tool_use', id: `c${requests.length}` }],
+        };
+      },
+    };
+    const response = await generateWithMemory(
+      llm,
+      {
+        system: 's',
+        messages: [{ role: 'user', content: 'u' }],
+        maxOutputTokens: 100,
+        tier: 'deep',
+      },
+      projectMemory({ mentorDoc }),
+    );
+    expect(response.text).toBe('Voilà.');
+    expect(requests.length).toBeGreaterThan(1);
+    const final = requests.at(-1);
+    // Every request declares the tool; only the last forbids calling it.
+    expect(requests.every((r) => r.tools?.some((t) => t.kind === 'memory'))).toBe(true);
+    expect(requests.map((r) => r.toolChoice)).toEqual([
+      ...requests.slice(1).map(() => undefined),
+      'none',
+    ]);
+    // Well-formed: each call sent back is followed by its result.
+    const sent = final?.messages ?? [];
+    const turns = sent.filter(
+      (m) => typeof m.content !== 'string' && m.content.some((b) => b.type === 'provider_turn'),
+    );
+    expect(turns).toHaveLength(requests.length - 1);
+    for (const turn of turns) {
+      const next = sent[sent.indexOf(turn) + 1];
+      expect(next?.role).toBe('user');
+      expect(typeof next?.content !== 'string' && next?.content[0]?.type).toBe('tool_result');
+    }
+  });
+
   it('runs the model’s calls, sends its turn back, and returns its answer', async () => {
     const { mentorDoc } = project();
     const { llm, requests } = scriptedLlm(

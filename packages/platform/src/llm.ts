@@ -73,6 +73,12 @@ export interface LlmRequest {
   readonly tier: 'fast' | 'deep';
   /** Tools the model may call; the caller runs them and calls again. */
   readonly tools?: readonly LlmTool[];
+  /**
+   * `none`: the tools stay declared (the history holds their calls and
+   * results, which the provider refuses without them) but none may be
+   * called: the model must answer in text.
+   */
+  readonly toolChoice?: 'none';
 }
 
 export interface LlmResponse {
