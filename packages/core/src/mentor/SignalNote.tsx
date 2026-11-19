@@ -10,8 +10,11 @@ export interface SignalNoteActions {
   readonly onFixText: () => void;
   /** Opens the sheet field the remark is about, in the Atelier. */
   readonly onUpdateSheet: (ref: FieldRef) => void;
-  /** Replaces the passage with the language correction (D-11, accepted by the author). */
-  readonly onApplyCorrection: (text: string) => void;
+  /**
+   * Replaces the passage with the language correction (D-11, accepted by the
+   * author). False when it was not applied (the passage changed since).
+   */
+  readonly onApplyCorrection: (text: string) => boolean;
   /** Inserts the example sentence at the cursor (D-11, on the author's gesture). */
   readonly onInsertExample: (text: string) => void;
 }
@@ -67,7 +70,8 @@ export function SignalNote(props: SignalNoteProps) {
       label: t('mentor.applyCorrection'),
       mentor: true,
       run: () => {
-        props.onApplyCorrection(suggestion.text);
+        // Not applied (the passage changed since): the remark stays, the author decides.
+        if (!props.onApplyCorrection(suggestion.text)) return;
         done('resolved');
         onClose(false);
       },

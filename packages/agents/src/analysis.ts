@@ -1,6 +1,7 @@
 import type { LlmService } from '@charpentier/platform';
 import {
   anchorForQuote,
+  anchoredText,
   createAgentWriter,
   getScene,
   hashEvidence,
@@ -22,7 +23,7 @@ import {
 import type * as Y from 'yjs';
 import { sceneContext, sheetsSummary, validatedStyleChoice } from './context';
 import { notebookForReading } from './memory';
-import { changeRatio, isOneSentence, MAX_CORRECTION_RATIO, narrativeProseIn } from './guard';
+import { isBoundedCorrection, isOneSentence, narrativeProseIn } from './guard';
 import type { MentorLevel } from './prompts';
 
 const CHARACTER_FIELDS = [
@@ -232,7 +233,7 @@ export interface AnalysisResult {
  * proposals in the sheets, conflicts with validated facts, clue tracking and
  * remarks anchored in the text, all through the AgentWriter (statuses are
  * respected: a validated or rejected field is never overwritten). Remarks of
- * an earlier analysis of this scene that are not reported again are resolved.
+ * an earlier analysis of this variant that are not reported again are resolved.
  */
 export async function analyzeScene(input: {
   readonly llm: LlmService;
@@ -441,11 +442,16 @@ export function applyAnalysis(
   const allowed = new Set(remarkKindsFor(target.level));
   for (const remark of analysis.remarks) {
     if (!allowed.has(remark.kind)) continue;
+    // The passage as it stands in the text (its own spaces and apostrophes):
+    // what the correction replaces, and what it is checked against when applied.
+    const textAnchor = anchor(remark.quote);
+    const passage = textAnchor && anchoredText(sceneDoc, textAnchor);
     const suggestion: Signal['suggestion'] | undefined =
       remark.kind === 'language' &&
       remark.correction &&
-      changeRatio(remark.quote, remark.correction) <= MAX_CORRECTION_RATIO
-        ? { kind: 'correction', text: remark.correction }
+      passage &&
+      isBoundedCorrection(passage, remark.correction)
+        ? { kind: 'correction', text: remark.correction.trim(), quote: passage }
         : remark.example &&
             isOneSentence(remark.example) &&
             !narrativeProseIn(remark.example, sceneText).some((v) => v.kind === 'quote')
@@ -465,10 +471,13 @@ export function applyAnalysis(
     });
   }
 
-  // Earlier remarks on this scene that the text no longer calls for.
+  // Earlier remarks of this analysis on this variant that the text no longer
+  // calls for. Remarks of another work (« Vérifier la structure »), or
+  // anchored in another variant, are not this reading's to withdraw.
   let resolved = 0;
   for (const s of all) {
-    if (s.state !== 'open' || s.author !== 'mentor' || s.textAnchor?.sceneId !== sceneId) continue;
+    if (s.state !== 'open' || s.author !== 'mentor' || s.source !== writer.agent) continue;
+    if (s.textAnchor?.sceneId !== sceneId || s.textAnchor.variantId !== variantId) continue;
     if (s.fingerprint && reported.has(s.fingerprint)) continue;
     if (s.kind === 'external-edit') continue;
     if (writer.resolveOwnSignal(s.id)) resolved++;

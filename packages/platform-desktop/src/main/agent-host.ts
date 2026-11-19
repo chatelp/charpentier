@@ -32,6 +32,8 @@ import {
   readMentorLevel,
   readOutline,
   variantFragment,
+  watchAuthorship,
+  type AuthorshipViolation,
 } from '@charpentier/schema';
 import type * as Y from 'yjs';
 import type { Request } from '../shared/ipc';
@@ -62,7 +64,17 @@ export class AgentHost {
       get(): 'opus' | 'haiku';
       set(model: 'opus' | 'haiku'): void;
     } = { get: () => 'opus', set: () => {} },
+    /**
+     * Told of every write an agent may not make (to a scene above all:
+     * principle n°1). The write is not undone, AgentWriter is what prevents
+     * it; this second line of defence makes a leak loud.
+     */
+    private readonly onViolation: (violation: AuthorshipViolation) => void = (violation) =>
+      console.error('Charpentier: an agent wrote where it may not', violation),
   ) {}
+
+  /** The authorship guard of each document agents hold, shared by the works that overlap. */
+  readonly #guards = new Map<string, { holders: number; stop: () => void }>();
 
   /** One analysis at a time per project: automatic triggers queue behind it. */
   readonly #running = new Map<string, Promise<unknown>>();
@@ -431,9 +443,26 @@ export class AgentHost {
     const docs = new Map(
       guidsNeeded.map((guid) => [guid, this.store.acquire(guid, this)] as const),
     );
+    // Every agent transaction on these documents is checked while they are held.
+    for (const [guid, doc] of docs) {
+      const guard = this.#guards.get(guid);
+      if (guard) guard.holders++;
+      else
+        this.#guards.set(guid, {
+          holders: 1,
+          stop: watchAuthorship(doc, (violation) => this.onViolation(violation)),
+        });
+    }
     try {
       return await work(docs);
     } finally {
+      for (const guid of docs.keys()) {
+        const guard = this.#guards.get(guid);
+        if (guard && --guard.holders === 0) {
+          guard.stop();
+          this.#guards.delete(guid);
+        }
+      }
       for (const guid of guidsNeeded) this.store.release(guid, this);
     }
   }

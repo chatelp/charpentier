@@ -30,6 +30,11 @@ export interface Signal {
   readonly state: SignalState;
   /** `mentor`, or a person id for human annotations later. */
   readonly author: string;
+  /**
+   * The agent that raised it (`scene-analysis`, `structure`…), set by
+   * AgentWriter: an agent only withdraws remarks of its own kind of work.
+   */
+  readonly source?: string;
   /** A few words naming the remark (« Les yeux d'Hélène »). */
   readonly title?: string;
   readonly message: string;
@@ -37,7 +42,15 @@ export interface Signal {
   readonly principle?: string;
   readonly textAnchor?: TextAnchor;
   readonly fieldRef?: FieldRef;
-  readonly suggestion?: { readonly kind: 'correction' | 'example'; readonly text: string };
+  readonly suggestion?: {
+    readonly kind: 'correction' | 'example';
+    readonly text: string;
+    /**
+     * For a correction: the passage it was written for, as it stood in the
+     * text. It is applied only while the anchored text still reads this.
+     */
+    readonly quote?: string;
+  };
   /** The author's validated style choice this remark relies on (phase 6.4), shown under it. */
   readonly styleChoiceId?: string;
   /**

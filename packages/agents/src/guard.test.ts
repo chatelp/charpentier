@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { changeRatio, isOneSentence, narrativeProseIn, sentencesOf } from './guard';
+import {
+  changeRatio,
+  isBoundedCorrection,
+  isOneSentence,
+  MAX_CORRECTION_LENGTH,
+  MAX_CORRECTION_RATIO,
+  narrativeProseIn,
+  sentencesOf,
+} from './guard';
 
 const author = 'Il pleuvait sur Nantes. Hélène regardait la Loire monter, sans un mot.';
 
@@ -58,5 +66,54 @@ describe('guardrails: the Compagnon never writes the novel', () => {
   it('bounds corrections', () => {
     expect(changeRatio('Il pleuvai', 'Il pleuvait')).toBeLessThan(0.2);
     expect(changeRatio('Il pleuvait', 'La pluie tombait dru')).toBeGreaterThan(0.5);
+  });
+});
+
+describe('a language correction stays a correction (D-11)', () => {
+  it('lets through what fixes the passage', () => {
+    expect(isBoundedCorrection('Il pleuvai sur Nantes', 'Il pleuvait sur Nantes')).toBe(true);
+    expect(isBoundedCorrection('les serre était fermé', 'les serres étaient fermées')).toBe(true);
+    expect(isBoundedCorrection('Il pleuvai sur Nantes', 'Il pleuvait sur Nantes.')).toBe(true);
+    expect(isBoundedCorrection('Il sortit. elle resta', 'Il sortit. Elle resta')).toBe(true);
+  });
+
+  it('refuses a long passage with an invented sentence appended, though the ratio allows it', () => {
+    const quote = 'Le vent tournait au-dessus des serres et la pluie battait les vitres. '
+      .repeat(7)
+      .trim();
+    const correction = `${quote} Marc sortit alors un couteau de sa poche.`;
+    expect([...quote].length).toBeGreaterThan(400);
+    expect(changeRatio(quote, correction)).toBeLessThanOrEqual(MAX_CORRECTION_RATIO);
+    expect(isBoundedCorrection(quote, correction)).toBe(false);
+  });
+
+  it('caps the passage and the correction, whatever they say', () => {
+    const long = `${'a'.repeat(MAX_CORRECTION_LENGTH)}b`;
+    expect(isBoundedCorrection(long, long)).toBe(false);
+    expect(isBoundedCorrection(long.slice(1), long.slice(1))).toBe(true);
+  });
+
+  it('refuses a sentence more than the passage has', () => {
+    // Within the ratio and the length: only the count of sentences catches these.
+    const quote = 'Hélène ouvrit la porte du bureau et regarda longuement la pluie';
+    expect(isBoundedCorrection(quote, `${quote}. Elle pleura.`)).toBe(false);
+    expect(isBoundedCorrection(quote, `${quote}. elle pleura`)).toBe(false); // no capital
+    expect(isBoundedCorrection(quote, `${quote} ! Enfin…`)).toBe(false);
+    expect(isBoundedCorrection(`${quote}.`, `${quote}. Elle rit.`)).toBe(false);
+  });
+
+  it('refuses a new line or a new paragraph', () => {
+    expect(isBoundedCorrection('Il pleuvai sur Nantes', 'Il pleuvait\nsur Nantes')).toBe(false);
+    expect(isBoundedCorrection('Il pleuvai sur Nantes', 'Il pleuvait sur Nantes\n\n')).toBe(false);
+    expect(isBoundedCorrection('Il pleuvai sur Nantes', 'Il pleuvait\u2029sur Nantes')).toBe(false);
+  });
+
+  it('refuses words added beyond a few characters, a rewriting, and nothing at all', () => {
+    const quote =
+      'Le vent tournait au-dessus des serres et la pluie battait les vitres du grand hall';
+    expect(isBoundedCorrection(quote, `${quote} tandis que Marc affûtait son couteau`)).toBe(false);
+    expect(isBoundedCorrection('Il pleuvait', 'La pluie tombait dru')).toBe(false);
+    expect(isBoundedCorrection('Il pleuvait', '   ')).toBe(false);
+    expect(isBoundedCorrection('', 'Il pleuvait')).toBe(false);
   });
 });

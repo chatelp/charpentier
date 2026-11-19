@@ -97,6 +97,21 @@ describe('watchAuthorship', () => {
     expect(violations[0]?.reason).toMatch(/scene/);
   });
 
+  it('lets agents write to the mentor document, which is theirs', () => {
+    const mentorDoc = new Y.Doc({ guid: 'project:p1/mentor' });
+    const violations = watched(mentorDoc);
+    mentorDoc.transact(
+      () => mentorDoc.getMap<string>('analyses').set('s1', 'digest'),
+      agentOrigin('scene-analysis'),
+    );
+    expect(violations).toEqual([]);
+    // A history document is not the mentor's: still reported.
+    const historyDoc = new Y.Doc({ guid: 'project:p1/scene:s1/history' });
+    const reported = watched(historyDoc);
+    historyDoc.transact(() => historyDoc.getMap('x').set('a', 1), agentOrigin('rogue'));
+    expect(reported).toHaveLength(1);
+  });
+
   it('ignores the author', () => {
     const doc = newProjectDoc();
     const violations = watched(doc);

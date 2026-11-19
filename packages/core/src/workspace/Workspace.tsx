@@ -41,6 +41,7 @@ import { Conversation } from '../mentor/Conversation';
 import { InterventionSlider } from '../mentor/InterventionSlider';
 import { MentorPanel } from '../mentor/MentorPanel';
 import { SignalNote } from '../mentor/SignalNote';
+import { applyCorrection, insertExample } from '../mentor/apply-suggestion';
 import { placedSignals } from '../mentor/signal-decorations';
 import { useMentorMarks } from '../mentor/use-mentor-marks';
 import '../mentor/mentor.css';
@@ -934,15 +935,18 @@ export function ProjectWorkspace({
         })
       }
       onApplyCorrection={(text) => {
-        const placed =
-          editor && placedSignals(editor.state).find((p) => p.signal.id === noteSignalId);
-        if (editor && placed)
-          editor.chain().focus().insertContentAt({ from: placed.from, to: placed.to }, text).run();
+        if (!editor || editor.isDestroyed) return false;
+        const placed = placedSignals(editor.state).find((p) => p.signal.id === noteSignalId);
+        // Only while the passage still reads what the correction was written for.
+        const applied =
+          placed !== undefined &&
+          applyCorrection(editor, placed, placed.signal.suggestion?.quote, text);
+        if (!applied) notify(t('mentor.correctionStale'));
+        return applied;
       }}
       onInsertExample={(text) => {
         if (!editor || editor.isDestroyed) return;
-        editor.chain().focus().insertContent(text).run();
-        notify(t('mentor.exampleInserted'));
+        if (insertExample(editor, text)) notify(t('mentor.exampleInserted'));
       }}
       onClose={(backToText) => {
         marks.closeNote();
@@ -1109,8 +1113,7 @@ export function ProjectWorkspace({
               onInsertExample={(example) => {
                 // D-11: the only way an example enters the text, on the author's gesture.
                 if (!editor || editor.isDestroyed) return;
-                editor.chain().focus().insertContent(example).run();
-                notify(t('mentor.exampleInserted'));
+                if (insertExample(editor, example)) notify(t('mentor.exampleInserted'));
               }}
               onClose={() => {
                 playSound('toc');
