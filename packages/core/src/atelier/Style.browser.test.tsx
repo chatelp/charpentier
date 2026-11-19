@@ -166,7 +166,7 @@ describe('reference texts and Style et voix (phase 6.4, DESIGN §4.5 1.16)', () 
     (await screen.findByRole('button', { name: 'Texte de référence…' })).click();
     // The book, as the author's words; the Compagnon's card with what leaves and its cost.
     await screen.findByRole('group', {
-      name: /^Texte de référence : Les Eaux basses, Marthe Delorme · EPUB · 84\s300 mots\.$/,
+      name: /^Texte de référence\u00A0: Les Eaux basses, Marthe Delorme · EPUB · 84\s300 mots\.$/,
     });
     await screen.findByRole('group', { name: 'Dégager les choix de style' });
     screen.getByText(/puis lit 10 passages tirés au hasard/);
@@ -251,7 +251,7 @@ describe('reference texts and Style et voix (phase 6.4, DESIGN §4.5 1.16)', () 
     await userEvent.keyboard('parler au compagnon');
     await userEvent.keyboard('{Enter}');
     const citation = await screen.findByRole('button', {
-      name: 'Votre choix, Temps : le présent de narration. Ouvrir la fiche.',
+      name: 'Votre choix, Temps\u00A0: le présent de narration. Ouvrir la fiche.',
     });
     citation.click();
     await screen.findByRole('complementary', { name: 'Fiche' });

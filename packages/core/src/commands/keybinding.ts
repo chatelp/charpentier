@@ -94,7 +94,7 @@ const KEY_LABELS: Record<string, string> = {
   ArrowDown: '↓',
   ArrowLeft: '←',
   ArrowRight: '→',
-  Enter: '↵',
+  Enter: '⏎',
   Escape: 'Échap',
   Backspace: '⌫',
   Delete: 'Suppr',
@@ -112,3 +112,10 @@ export function formatChord(chord: Chord, primary: PrimaryModifier): string {
     .filter(Boolean)
     .join('+');
 }
+
+/** The label of a shortcut that is not a command's (a panel's own keys), for the host. */
+export const formatBinding = (binding: string, primary: PrimaryModifier): string =>
+  formatChord(parseKeybinding(binding, primary), primary);
+
+/** The Alt key alone, as the host names it (« ⌥ + flèches », « Alt + flèches »). */
+export const altLabel = (primary: PrimaryModifier): string => (primary === 'Meta' ? '⌥' : 'Alt');

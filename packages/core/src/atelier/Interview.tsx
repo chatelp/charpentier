@@ -28,6 +28,7 @@ import {
 import { useEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import * as Y from 'yjs';
+import { useHostWords } from '../app/host-words';
 import { useDocSnapshot } from '../hooks/use-doc-snapshot';
 import { Medallion } from '../icons/Pictogram';
 import { playSound } from '../sound/sounds';
@@ -309,6 +310,7 @@ export function Interview({
   };
 
   const modeKey = ctx.shortcutLabel('toggleInterviewMode') ?? '';
+  const host = useHostWords();
   const importButton = useRef<HTMLButtonElement>(null);
   const { confirm, running } = ctx.work;
   const styleWork = sameWork(confirm?.ref, STYLE_WORK) || sameWork(running?.ref, STYLE_WORK);
@@ -540,7 +542,9 @@ export function Interview({
           }}
         />
       </div>
-      {available && <p className="ch-interview-hint">{t('interview.hint', { mode: modeKey })}</p>}
+      {available && (
+        <p className="ch-interview-hint">{t('interview.hint', { mode: modeKey, alt: host.alt })}</p>
+      )}
     </div>
   );
 }

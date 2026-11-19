@@ -27,6 +27,7 @@ import { StyleCitation } from './StyleCitation';
 import type { WorkspaceContext } from '../workspace/workspace-context';
 import type { AskResult } from '@charpentier/platform';
 import { PanelEntryContext, usePanelEntry } from '../workspace/panel-entry';
+import { useHostWords } from '../app/host-words';
 
 export interface ConversationProps {
   readonly projectId: string;
@@ -55,6 +56,7 @@ export function Conversation({
   ctx,
 }: ConversationProps) {
   const { t } = useTranslation();
+  const host = useHostWords();
   const platform = usePlatform();
   const [mentorDoc, setMentorDoc] = useState<Y.Doc | null>(null);
   const [draft, setDraft] = useState('');
@@ -195,7 +197,7 @@ export function Conversation({
         onChange={(e) => setDraft(e.target.value)}
         onKeyDown={onKeyDown}
       />
-      <p className="ch-panel-hint">{t('mentor.chatHint')}</p>
+      <p className="ch-panel-hint">{t('mentor.chatHint', { insert: host.key('Mod-Enter') })}</p>
     </div>
   );
 }
@@ -219,6 +221,7 @@ function Turn({
   readonly children?: ReactNode;
 }) {
   const { t } = useTranslation();
+  const host = useHostWords();
   const compagnon = message.role === 'compagnon';
   // D-11: what is shown and inserted is one bounded sentence, or nothing.
   const example = exampleSentence(message.example);
@@ -241,7 +244,7 @@ function Turn({
             className="ch-btn is-mentor"
             onClick={() => onInsert(example)}
           >
-            {t('mentor.insertExample')} <kbd>{t('mentor.insertExampleKey')}</kbd>
+            {t('mentor.insertExample')} <kbd>{host.key('Mod-Enter')}</kbd>
           </button>
         </div>
       )}

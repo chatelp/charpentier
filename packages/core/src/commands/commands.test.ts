@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { eventKey, formatChord, matches, parseKeybinding } from './keybinding';
+import {
+  altLabel,
+  eventKey,
+  formatBinding,
+  formatChord,
+  matches,
+  parseKeybinding,
+} from './keybinding';
 import { CommandRegistry, filterByQuery } from './registry';
 
 const event = (init: Partial<KeyboardEvent>) =>
@@ -79,8 +86,16 @@ describe('keybindings', () => {
   it('formats shortcuts for each platform, in French', () => {
     expect(formatChord(parseKeybinding('Mod-Alt-Shift-ArrowUp', 'Meta'), 'Meta')).toBe('⌥⇧⌘↑');
     expect(formatChord(parseKeybinding('Mod-Shift-Enter', 'Control'), 'Control')).toBe(
-      'Ctrl+Maj+↵',
+      'Ctrl+Maj+⏎',
     );
+  });
+
+  it('names a panel’s own keys as the host’s keyboard does', () => {
+    expect(formatBinding('Mod-Enter', 'Meta')).toBe('⌘⏎');
+    expect(formatBinding('Mod-Enter', 'Control')).toBe('Ctrl+⏎');
+    expect(formatBinding('Alt-ArrowUp', 'Control')).toBe('Alt+↑');
+    expect(altLabel('Meta')).toBe('⌥');
+    expect(altLabel('Control')).toBe('Alt');
   });
 });
 

@@ -163,9 +163,12 @@ export function WorkCard({
             <p className="ch-work-what">
               {t(`work.task.${task}.what`, {
                 name,
-                scenes: estimate.scenes,
+                scenes: t('work.scenes', { count: estimate.scenes }),
                 passages,
-                words: estimate.words.toLocaleString(ctx.language),
+                words: t('work.words', {
+                  count: estimate.words,
+                  formatted: estimate.words.toLocaleString(ctx.language),
+                }),
               })}
             </p>
             {task === 'style' && (

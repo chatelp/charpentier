@@ -3,7 +3,7 @@
     "name": "Charpentier",
     "windowTitle": "{{novel}} — {{scene}}",
     "loading": "Ouverture…",
-    "openError": "Impossible d'ouvrir le projet.",
+    "openError": "Impossible d’ouvrir le projet.",
     "retry": "Réessayer",
     "library": "Tous les romans…"
   },
@@ -34,7 +34,7 @@
       "proposals": "Fiches proposées"
     },
     "noPoints": "Rien à traiter pour l’instant.",
-    "pointsHint": "↑↓ ou J K parcourir · ↵ aller au passage · R résolu · I ignorer · V valider · X rejeter · Échap fermer",
+    "pointsHint": "↑↓ ou J K parcourir · ⏎ aller au passage · R résolu · I ignorer · V valider · X rejeter · Échap fermer",
     "resolve": "Résolu",
     "resolveKey": "R",
     "dismiss": "Ignorer",
@@ -42,7 +42,7 @@
     "close": "Replier",
     "closeKey": "Échap",
     "status": {
-      "unconfigured": "Le Compagnon attend votre clé d’API : Réglages › Compagnon.",
+      "unconfigured": "Le Compagnon attend votre clé d’API : Réglages › Compagnon.",
       "offline": "Compagnon hors ligne"
     },
     "apiKeyPlaceholder": "Clé d’API Anthropic (sk-ant-…), gardée chiffrée sur cet appareil",
@@ -50,24 +50,23 @@
     "apiKey": {
       "saved": "Clé enregistrée. Le Compagnon est prêt.",
       "invalid": "Anthropic refuse cette clé. Vérifiez-la dans votre console Anthropic.",
-      "offline": "Pas de réseau : la clé n’a pas pu être vérifiée.",
-      "no-keychain": "Clé valable, mais ce système n’a pas de trousseau où la garder : elle n’est pas enregistrée."
+      "offline": "Pas de réseau : la clé n’a pas pu être vérifiée.",
+      "no-keychain": "Clé valable, mais ce système n’a pas de trousseau où la garder : elle n’est pas enregistrée."
     },
     "apiKeyForgotten": "Clé oubliée. Le Compagnon attend une nouvelle clé.",
     "you": "Vous",
     "chatEmpty": "Posez votre question sur votre scène, vos personnages, votre histoire. Le Compagnon vous aide à écrire, il n’écrit pas à votre place.",
     "chatPlaceholder": "Votre question au Compagnon",
-    "chatHint": "↵ envoyer · ⇧↵ nouvelle ligne · ⌘⏎ insérer l’exemple · Échap fermer",
+    "chatHint": "⏎ envoyer · ⇧⏎ nouvelle ligne · {{insert}} insérer l’exemple · Échap fermer",
     "thinking": "Le Compagnon réfléchit…",
     "exampleLabel": "Exemple · une phrase",
     "insertExample": "Insérer dans le texte",
-    "insertExampleKey": "⌘⏎",
-    "exampleInserted": "Phrase d’exemple insérée. Elle est à vous : modifiez-la à votre guise.",
+    "exampleInserted": "Phrase d’exemple insérée. Elle est à vous : modifiez-la à votre guise.",
     "ask": {
-      "unavailable": "Le Compagnon a besoin de votre clé d’API : Réglages › Compagnon.",
-      "unavailableLead": "Le Compagnon a besoin de votre clé d’API :",
+      "unavailable": "Le Compagnon a besoin de votre clé d’API : Réglages › Compagnon.",
+      "unavailableLead": "Le Compagnon a besoin de votre clé d’API :",
       "toSettings": "Réglages › Compagnon",
-      "offline": "Pas de réseau : le Compagnon répondra quand la connexion reviendra.",
+      "offline": "Pas de réseau : le Compagnon répondra quand la connexion reviendra.",
       "refused": "Le Compagnon n’a pas pu répondre à cette demande.",
       "failed": "Le Compagnon n’a pas pu répondre. Réessayez dans un instant."
     },
@@ -77,12 +76,12 @@
     "correctionLabel": "Correction proposée",
     "correctionStale": "Ce passage a changé depuis ma remarque : je n’y touche pas.",
     "analysing": "Le Compagnon lit…",
-    "analysisDone": "Le Compagnon a lu. Ses remarques sont dans la marge et dans les points (⌘L).",
+    "analysisDone": "Le Compagnon a lu. Ses remarques sont dans la marge et dans les points{{key}}.",
     "reviewing": "Le Compagnon relit le chapitre…",
-    "reviewDone": "Le bilan du chapitre est dans la conversation avec le Compagnon (⌘L).",
+    "reviewDone": "Le bilan du chapitre est dans la conversation avec le Compagnon{{key}}.",
     "level": {
       "label": "Intervention du Compagnon",
-      "changed": "Compagnon : {{name}}.",
+      "changed": "Compagnon : {{name}}.",
       "name": {
         "1": "Discret",
         "2": "Attentif",
@@ -90,15 +89,15 @@
         "4": "Tuteur"
       },
       "what": {
-        "1": "Rien pendant l’écriture ; l’avis seulement quand vous le demandez.",
-        "2": "La langue et les incohérences évidentes ; il lit la scène quand vous la quittez.",
-        "3": "Aussi des remarques de métier ; il lit aussi après deux minutes de pause.",
-        "4": "Pédagogie complète : questions, exemples, encouragements."
+        "1": "Rien pendant l’écriture ; l’avis seulement quand vous le demandez.",
+        "2": "La langue et les incohérences évidentes ; il lit la scène quand vous la quittez.",
+        "3": "Aussi des remarques de métier ; il lit aussi après deux minutes de pause.",
+        "4": "Pédagogie complète : questions, exemples, encouragements."
       }
     },
     "lightModel": {
-      "opus": "Remarques légères : Claude Opus.",
-      "haiku": "Remarques légères : Claude Haiku, moins cher."
+      "opus": "Remarques légères : Claude Opus.",
+      "haiku": "Remarques légères : Claude Haiku, moins cher."
     },
     "proposal": {
       "new": {
@@ -167,16 +166,16 @@
     "cycleTheme": "Changer de thème (système, clair, sombre)",
     "toggleReducedMotion": "Réduire les animations",
     "toggleAtelier": "Basculer entre Écrire et l’Atelier",
-    "atelierInterview": "Atelier : le Compagnon, mode entretien",
-    "toggleInterviewMode": "Compagnon : entretien libre / dirigé",
-    "interviewOtherSection": "Compagnon : entretien, autre section…",
-    "atelierNotebook": "Atelier : le carnet du Compagnon",
-    "atelierMeta": "Atelier : Le projet",
-    "atelierCharacters": "Atelier : Personnages",
-    "atelierStructure": "Atelier : Structure",
-    "atelierWorldRules": "Atelier : Règles du monde",
-    "atelierClues": "Atelier : Indices et révélations",
-    "atelierStyle": "Atelier : Style et voix",
+    "atelierInterview": "Atelier : le Compagnon, mode entretien",
+    "toggleInterviewMode": "Compagnon : entretien libre / dirigé",
+    "interviewOtherSection": "Compagnon : entretien, autre section…",
+    "atelierNotebook": "Atelier : le carnet du Compagnon",
+    "atelierMeta": "Atelier : Le projet",
+    "atelierCharacters": "Atelier : Personnages",
+    "atelierStructure": "Atelier : Structure",
+    "atelierWorldRules": "Atelier : Règles du monde",
+    "atelierClues": "Atelier : Indices et révélations",
+    "atelierStyle": "Atelier : Style et voix",
     "newCharacter": "Nouveau personnage…",
     "newAct": "Nouvel acte…",
     "newArc": "Nouvel arc…",
@@ -193,7 +192,7 @@
     "removeSceneFromVersion": "Retirer la scène de cette version",
     "addSceneToVersion": "Ajouter la scène à cette version",
     "chooseLibraryFolder": "Changer le dossier de la bibliothèque…",
-    "revealLibraryFolder": "Afficher la bibliothèque dans le Finder",
+    "revealLibraryFolder": "Afficher la bibliothèque dans {{fileManager}}",
     "fixAllTypography": "Corriger toute la typographie de la scène",
     "fixAllSpelling": "Accepter toutes les corrections d’orthographe de la scène",
     "passageAction": "Corriger le passage, déplier sa remarque ou ouvrir la fiche du nom",
@@ -208,12 +207,12 @@
     "analyzeChapter": "Avis du Compagnon sur tout le chapitre",
     "reviewChapter": "Bilan du chapitre par le Compagnon",
     "analyzeManuscript": "Avis du Compagnon sur tout le manuscrit",
-    "toggleLightModel": "Remarques légères : Opus ou Haiku (moins cher)",
+    "toggleLightModel": "Remarques légères : Opus ou Haiku (moins cher)",
     "replayTour": "Revoir la visite guidée",
     "toggleUiSounds": "Sons de l’interface",
     "toggleTypingSounds": "Son de frappe",
     "toggleRejected": "Afficher les rejets",
-    "syncSignIn": "Se connecter à un serveur de synchro…",
+    "syncSignIn": "Se connecter à un serveur de synchronisation…",
     "syncSignOut": "Se déconnecter du serveur",
     "syncDevices": "Appareils connectés…",
     "adminPage": "Administrer le serveur…",
@@ -225,31 +224,31 @@
   },
   "palette": {
     "label": "Ligne de commande",
-    "searchCommands": "Que voulez-vous faire ?",
+    "searchCommands": "Que voulez-vous faire ?",
     "noResults": "Aucun résultat",
     "sceneTitle": "Titre de la scène",
     "chapterTitle": "Titre du chapitre",
-    "pickChapter": "Vers quel chapitre ?",
-    "pickTrash": "Que restaurer ?",
+    "pickChapter": "Vers quel chapitre ?",
+    "pickTrash": "Que restaurer ?",
     "trashedScene": "Scène",
     "trashedChapter": "Chapitre",
     "emptyTrash": "La corbeille est vide.",
-    "pickVariant": "Quelle variante ?",
-    "pickVersion": "Quelle version ?",
+    "pickVariant": "Quelle variante ?",
+    "pickVersion": "Quelle version ?",
     "activeVersion": "version active",
-    "pickSceneToAdd": "Quelle scène ajouter à cette version ?",
+    "pickSceneToAdd": "Quelle scène ajouter à cette version ?",
     "noSceneOut": "Toutes les scènes sont dans cette version.",
     "trashedVersion": "Version de travail",
     "variantName": "Nom de la variante",
     "checkpointLabel": "Nom du point de restauration",
-    "pickCheckpoint": "Revenir à quel moment ?",
-    "pickCheckpointForVariant": "Partir de quel moment ?",
+    "pickCheckpoint": "Revenir à quel moment ?",
+    "pickCheckpointForVariant": "Partir de quel moment ?",
     "noCheckpoints": "Aucun point de restauration pour cette variante.",
     "trashedVariant": "Variante de la scène ouverte",
     "activeVariant": "variante active",
     "commandsGroup": "Commandes",
     "scenesGroup": "Scènes",
-    "prefixHint": "↑↓ choisir · ↵ exécuter · Échap fermer · > commandes @ fiches # scènes",
+    "prefixHint": "↑↓ choisir · ⏎ exécuter · Échap fermer · > commandes @ fiches # scènes",
     "sheetsGroup": "Fiches",
     "projectTitle": "Titre du projet",
     "variantCount_one": "{{count}} variante",
@@ -269,8 +268,8 @@
     "open": "ouvrir",
     "board": "tableau",
     "toBoard": "échap tableau",
-    "boardHint": "←→↑↓ choisir · ⏎ ouvrir le cadran · échap revenir au texte",
-    "sectionHint": "↑↓ choisir · ⏎ régler · ⌫ ou échap revenir au tableau"
+    "boardHint": "←→↑↓ choisir · ⏎ ouvrir le cadran · Échap revenir au texte",
+    "sectionHint": "↑↓ choisir · ⏎ régler · ⌫ ou Échap revenir au tableau"
   },
   "appSettings": {
     "yes": "oui",
@@ -312,14 +311,14 @@
       "intro": "Des sons discrets, coupés par défaut, valables partout.",
       "app": "Sons de l’app",
       "listen": "Écouter",
-      "uiHelp": "Un déclic, un toc, un tic : quand vous validez, refusez, ouvrez.",
+      "uiHelp": "Un déclic, un toc, un tic : quand vous validez, refusez, ouvrez.",
       "typingHelp": "Une frappe légère à chaque touche, dans le texte seulement."
     },
     "compagnon": {
-      "intro": "Il lit par-dessus votre épaule avec votre propre clé : vous payez Anthropic directement, à l’usage.",
+      "intro": "Il lit par-dessus votre épaule avec votre propre clé : vous payez Anthropic directement, à l’usage.",
       "key": "Clé d’API",
       "keyLabel": "Clé Anthropic",
-      "keyHelp": "Gardée dans le trousseau de l’appareil ; elle ne part que vers Anthropic.",
+      "keyHelp": "Gardée dans le trousseau de l’appareil ; elle ne part que vers Anthropic.",
       "keySaved": "enregistrée",
       "noKey": "aucune",
       "enter": "Saisir…",
@@ -328,12 +327,12 @@
       "disabled": "indisponible dans cette version",
       "models": "Modèles",
       "light": "Remarques légères et grammaire",
-      "lightHelp": "Opus 5.5 partout par défaut. Haiku 5.5 coûte bien moins cher pour les remarques pendant l’écriture ; les analyses et la conversation restent sur Opus.",
+      "lightHelp": "Opus 5.5 partout par défaut. Haiku 5.5 coûte bien moins cher pour les remarques pendant l’écriture ; les analyses et la conversation restent sur Opus.",
       "opus": "Opus 5.5",
       "haiku": "Haiku 5.5",
       "interview": "Entretien",
       "interviewLabel": "Façon de mener l’entretien",
-      "interviewHelp": "Libre : vous parlez de ce que vous voulez. Dirigé : il suit les modules dans l’ordre.",
+      "interviewHelp": "Libre : vous parlez de ce que vous voulez. Dirigé : il suit les modules dans l’ordre.",
       "free": "Libre",
       "guided": "Dirigé"
     },
@@ -361,36 +360,36 @@
         "unauthorized": "à reconnecter"
       },
       "devices": "Appareils connectés",
-      "devicesHelp": "Ceux qui synchronisent avec votre compte ; vous pouvez en retirer un.",
+      "devicesHelp": "Ceux qui synchronisent avec votre compte ; vous pouvez en retirer un.",
       "see": "Voir…",
       "admin": "Administrer le serveur",
-      "adminHelp": "Comptes, appareils, sauvegardes : la page d’administration.",
+      "adminHelp": "Comptes, appareils, sauvegardes : la page d’administration.",
       "open": "Ouvrir…",
       "leave": "Quitter",
       "signOut": "Se déconnecter",
-      "signOutHelp": "Vos romans restent sur cet appareil ; ils ne se synchronisent plus."
+      "signOutHelp": "Vos romans restent sur cet appareil ; ils ne se synchronisent plus."
     },
     "library": {
       "intro": "Où vivent vos romans, et comment les retrouver.",
       "folder": "Dossier",
-      "folderHelp": "Un dossier par roman, ses scènes en Markdown à côté.",
+      "folderHelp": "Un dossier par roman ; chaque scène y est aussi un fichier texte, lisible sans l’app.",
       "change": "Changer…",
-      "reveal": "Afficher dans le Finder",
+      "reveal": "Afficher dans {{fileManager}}",
       "all": "Tous vos romans",
-      "allHelp": "La bibliothèque : ouvrir, renommer, la corbeille.",
+      "allHelp": "La bibliothèque : ouvrir, renommer, la corbeille.",
       "novelsTitle": "Romans",
       "novels_one": "{{count}} roman",
       "novels_other": "{{count}} romans"
     },
     "about": {
-      "intro": "La version de l’app et le commit dont elle est construite.",
+      "intro": "La version de l’app installée sur cet appareil.",
       "version": "Version",
-      "help": "Une version de développement garde le numéro de la dernière version publiée ; le commit dit laquelle c’est."
+      "help": "Le code entre parenthèses distingue une version d’essai de la dernière version publiée, dont elle garde le numéro."
     }
   },
   "navigator": {
     "label": "Plan du manuscrit",
-    "hint": "↑↓ parcourir · ↵ ouvrir · ⌥↑↓ déplacer · V variantes · R renommer · N scène · ⇧N chapitre · ⌫ corbeille · Échap fermer",
+    "hint": "↑↓ parcourir · ⏎ ouvrir · {{move}} déplacer · V variantes · R renommer · N scène · ⇧N chapitre · ⌫ corbeille · Échap fermer",
     "current": "scène ouverte",
     "title": "Manuscrit",
     "variants": "Variantes",
@@ -413,9 +412,9 @@
     "own_other": "{{count}} scènes à elle",
     "when": "{{what}} · {{when}}",
     "new": "+ Nouvelle version…",
-    "single": "Essayez une autre fin sans toucher au roman : une version de travail choisit, pour chaque scène, quelle variante lire.",
+    "single": "Essayez une autre fin sans toucher au roman : une version de travail choisit, pour chaque scène, quelle variante lire.",
     "nameField": "Nom de la version",
-    "from": "Elle part de « {{version}} », telle qu’elle est. Rien n’est copié : chaque scène reste commune, jusqu’à ce que vous lui donniez une variante pour cette version, par « Nouvelle variante »{{shortcut}}.",
+    "from": "Elle part de « {{version}} », telle qu’elle est. Rien n’est copié : chaque scène reste commune, jusqu’à ce que vous lui donniez une variante pour cette version, par « Nouvelle variante »{{shortcut}}.",
     "create": "Créer",
     "rename": "Renommer",
     "renameKey": "R",
@@ -423,7 +422,7 @@
     "trashKey": "⌫",
     "stats": "Version « {{version}} »",
     "common": "commune",
-    "commonTitle": "Scène commune : ce que vous écrivez vaut pour toutes les versions qui la partagent",
+    "commonTitle": "Scène commune : ce que vous écrivez vaut pour toutes les versions qui la partagent",
     "commonLabel": "scène commune",
     "ownTitle": "Variante de cette scène pour la version {{version}}",
     "ownLabel": "variante propre à {{version}}",
@@ -432,8 +431,8 @@
     "show": "afficher",
     "hide": "masquer",
     "addHere": "Ajouter à cette version",
-    "firstTypingTwo": "Cette scène est commune à 2 versions : ce que vous écrivez vaut pour les deux. Pour la changer ici seulement : Nouvelle variante{{shortcut}}.",
-    "firstTypingMany": "Cette scène est commune à {{count}} versions : ce que vous écrivez vaut pour toutes. Pour la changer ici seulement : Nouvelle variante{{shortcut}}.",
+    "firstTypingTwo": "Cette scène est commune à 2 versions : ce que vous écrivez vaut pour les deux. Pour la changer ici seulement : Nouvelle variante{{shortcut}}.",
+    "firstTypingMany": "Cette scène est commune à {{count}} versions : ce que vous écrivez vaut pour toutes. Pour la changer ici seulement : Nouvelle variante{{shortcut}}.",
     "switched": "Version « {{version}} ».",
     "removed": "Scène retirée de « {{version}} ».",
     "trashed": "Version « {{version}} » mise à la corbeille."
@@ -452,16 +451,16 @@
   },
   "status": {
     "checkpointCreated": "Point de restauration créé.",
-    "checkpointRestored": "Version restaurée ({{date}}). L’état précédent reste dans l’historique.",
-    "variantCreated": "Variante « {{name}} » créée.",
+    "checkpointRestored": "Retour au point de restauration ({{date}}). Le texte d’avant reste dans les points de restauration.",
+    "variantCreated": "Variante « {{name}} » créée.",
     "theme": {
-      "system": "Thème : celui du système.",
+      "system": "Thème : celui du système.",
       "light": "Thème clair.",
       "dark": "Thème sombre."
     },
     "motionReduced": "Animations réduites.",
     "motionNormal": "Animations rétablies.",
-    "entityTrashed": "« {{title}} » mis à la corbeille. « Restaurer depuis la corbeille… » le ramène.",
+    "entityTrashed": "Mis à la corbeille : « {{title}} ». Pour revenir en arrière : « Restaurer depuis la corbeille… ».",
     "uiSoundsOn": "Sons de l’interface activés.",
     "uiSoundsOff": "Sons de l’interface désactivés.",
     "typingSoundsOn": "Son de frappe activé.",
@@ -473,7 +472,7 @@
     "today_one": "+{{count, number}} aujourd’hui",
     "today_other": "+{{count, number}} aujourd’hui",
     "saved": "Enregistré",
-    "enterKey": "Compagnon : saisir la clé"
+    "enterKey": "Compagnon : saisir la clé"
   },
   "atelier": {
     "label": "Atelier",
@@ -498,15 +497,15 @@
       "style": "Choix de style"
     },
     "railHint": "{{toggle}} écrire · {{interview}} entretien · {{notebook}} carnet · {{modules}} modules · Échap revenir au texte",
-    "listHint": "↑↓ parcourir · ↵ fiche · N nouveau · ⌫ corbeille · V valider · X rejeter · / filtrer",
+    "listHint": "↑↓ parcourir · ⏎ fiche · N nouveau · ⌫ corbeille · V valider · X rejeter · / filtrer",
     "filter": "Filtrer…",
     "emptyList": {
-      "characters": "Aucun personnage pour l’instant. Créez-en un avec « + Nouveau personnage » ou la touche N.",
+      "characters": "Aucun personnage pour l’instant. Créez-en un avec « + Nouveau personnage » ou la touche N.",
       "structure": "",
-      "worldRules": "Aucune règle du monde pour l’instant. Créez-en une avec « + Nouvelle règle du monde » ou la touche N.",
-      "clues": "Aucun indice pour l’instant. Créez-en un avec « + Nouvel indice » ou la touche N.",
+      "worldRules": "Aucune règle du monde pour l’instant. Créez-en une avec « + Nouvelle règle du monde » ou la touche N.",
+      "clues": "Aucun indice pour l’instant. Créez-en un avec « + Nouvel indice » ou la touche N.",
       "meta": "",
-      "style": "Aucun choix de style pour l’instant. Importez un texte que vous admirez depuis la page du Compagnon, ou créez-en un avec « + Nouveau choix » ou la touche N."
+      "style": "Aucun choix de style pour l’instant. Importez un texte que vous admirez depuis la page du Compagnon, ou créez-en un avec « + Nouveau choix » ou la touche N."
     },
     "structureModel": "Modèle narratif",
     "groups": {
@@ -550,12 +549,12 @@
       "arcs": "Arc",
       "worldRules": "Règle du monde",
       "clues": "Indice, fausse piste ou révélation",
-      "style": "Ce que vous retenez pour votre propre texte : point de vue, temps, phrases, dialogue, registre…"
+      "style": "Ce que vous retenez pour votre propre texte : point de vue, temps, phrases, dialogue, registre…"
     },
     "legend": {
-      "proposed": "en relief : proposée",
-      "validated": "gravée : validée",
-      "rejected": "estompée : rejetée",
+      "proposed": "en relief : proposée",
+      "validated": "gravée : validée",
+      "rejected": "estompée : rejetée",
       "contradicted": "contredite",
       "show": "afficher ({{count}})",
       "hide": "masquer",
@@ -573,17 +572,17 @@
     "proposed": "Proposée",
     "proposedFrom": "Proposée · d’après la scène {{scenes}}",
     "proposedFromInterview": "Proposée · d’après l’entretien",
-    "proposedFromReference": "Proposée · d’après « {{title}} »",
+    "proposedFromReference": "Proposée · d’après « {{title}} »",
     "accept": "Valider",
     "reject": "Rejeter",
     "rejectedOn": "Rejetée le {{date}} · conservée pour ne pas être reproposée",
-    "contradicted": "Contredite : {{message}}",
+    "contradicted": "Contredite : {{message}}",
     "showPassage": "Voir le passage",
     "current": "valeur actuelle",
     "clearChoice": "Aucun",
-    "pickScenes": "{{field}} : ajouter ou retirer une scène",
+    "pickScenes": "{{field}} : ajouter ou retirer une scène",
     "sceneChosen": "choisie · la choisir à nouveau la retire",
-    "pickFromScene": "{{who}} le sait à partir de quelle scène ?",
+    "pickFromScene": "{{who}} le sait à partir de quelle scène ?",
     "doesNotKnow": "Ne le sait pas",
     "fromScene": "dès la scène {{number}} · {{title}}",
     "reader": "Le lecteur",
@@ -724,9 +723,9 @@
     "inScene": "scène {{number}}",
     "filterKey": "/",
     "sheetPanel": "Fiche",
-    "sheetPanelHint": "↑↓ parcourir · ↵ modifier · ⇧↵ à la ligne · ⌘⏎ ouvrir dans l’Atelier · Échap fermer",
-    "lineDraftHint": "↵ enregistrer · Échap quitter le champ (enregistre aussi)",
-    "textDraftHint": "↵ enregistrer · ⇧↵ à la ligne · Échap quitter le champ (enregistre aussi)",
+    "sheetPanelHint": "↑↓ parcourir · ⏎ modifier · ⇧⏎ à la ligne · {{open}} ouvrir dans l’Atelier · Échap fermer",
+    "lineDraftHint": "⏎ enregistrer · Échap quitter le champ (enregistre aussi)",
+    "textDraftHint": "⏎ enregistrer · ⇧⏎ à la ligne · Échap quitter le champ (enregistre aussi)",
     "newEntry": {
       "characters": "+ Nouveau personnage",
       "acts": "+ Nouvel acte",
@@ -739,7 +738,7 @@
     "rejectCount_one": "{{count}} rejet",
     "rejectCount_other": "{{count}} rejets",
     "useValue": "Utiliser cette valeur",
-    "rejectedPrefix": "Rejetée : ",
+    "rejectedPrefix": "Rejetée : ",
     "rejectedSuffix": ", le {{date}}",
     "rejectedEntries_one": "{{count}} proposition rejetée",
     "rejectedEntries_other": "{{count}} propositions rejetées",
@@ -748,10 +747,10 @@
     "rejectedEntry": "Rejetée",
     "styleFrom": "d’après",
     "styleYours": "Votre choix",
-    "styleNote": "Le Compagnon s’en sert pour vous relire : il vous dit quand une scène s’en écarte, sans jamais vous corriger d’office.",
+    "styleNote": "Le Compagnon s’en sert pour vous relire : il vous dit quand une scène s’en écarte, sans jamais vous corriger d’office.",
     "styleEmpty": {
       "title": "Style et voix",
-      "body": "Ici vivent les choix de style de votre livre : le point de vue, le temps, le rythme des phrases, la place du dialogue. Importez un texte que vous admirez pour que le Compagnon en dégage les choix, ou écrivez les vôtres.",
+      "body": "Ici vivent les choix de style de votre livre : le point de vue, le temps, le rythme des phrases, la place du dialogue. Importez un texte que vous admirez pour que le Compagnon en dégage les choix, ou écrivez les vôtres.",
       "kept": "Le texte importé n’est pas gardé, et rien n’en est cité.",
       "newKey": "N"
     },
@@ -759,19 +758,23 @@
   },
   "overview": {
     "label": "Vue d’ensemble du manuscrit",
-    "variants": "{{count}} variantes",
-    "variantsOf": "Variantes de « {{title}} »",
-    "hint": "←↑↓→ parcourir · ⌥ + flèches déplacer · V variantes · H restauration · ↵ écrire · Échap revenir",
-    "stripOf": "Variantes et restauration de « {{title}} »",
+    "variants_one": "{{count}} variante",
+    "variants_other": "{{count}} variantes",
+    "variantsOf": "Variantes de « {{title}} »",
+    "hint": "←↑↓→ parcourir · {{alt}} + flèches déplacer · V variantes · H restauration · ⏎ écrire · Échap revenir",
+    "stripOf": "Variantes et restauration de « {{title}} »",
     "variantsGroup": "Variantes",
     "variantsKey": "V",
     "restoreGroup": "Restauration",
     "restoreKey": "H",
     "noCheckpoint": "Aucun point pour l’instant",
     "allCheckpoints": "Tous ({{count}})…",
-    "previewWordsLess": "{{words}} mots, soit {{delta}} de moins qu’aujourd’hui · {{variant}}",
-    "previewWordsMore": "{{words}} mots, soit {{delta}} de plus qu’aujourd’hui · {{variant}}",
-    "previewWordsSame": "{{words}} mots, comme aujourd’hui · {{variant}}",
+    "previewWordsLess_one": "{{words}} mot, soit {{delta}} de moins qu’aujourd’hui · {{variant}}",
+    "previewWordsLess_other": "{{words}} mots, soit {{delta}} de moins qu’aujourd’hui · {{variant}}",
+    "previewWordsMore_one": "{{words}} mot, soit {{delta}} de plus qu’aujourd’hui · {{variant}}",
+    "previewWordsMore_other": "{{words}} mots, soit {{delta}} de plus qu’aujourd’hui · {{variant}}",
+    "previewWordsSame_one": "{{words}} mot, comme aujourd’hui · {{variant}}",
+    "previewWordsSame_other": "{{words}} mots, comme aujourd’hui · {{variant}}",
     "restore": "Restaurer",
     "restoreActionKey": "⏎",
     "toVariant": "En faire une variante",
@@ -788,18 +791,22 @@
   "library": {
     "label": "Bibliothèque",
     "projects": "Projets",
-    "hint": "↑↓ parcourir · ↵ ouvrir · N nouveau roman · ⇧N nouvelle · R renommer · ⌫ corbeille · Échap revenir",
+    "hint": "↑↓ parcourir · ⏎ ouvrir · N nouveau roman · ⇧N nouvelle · R renommer · ⌫ corbeille · Échap revenir",
     "new": "Nouveau projet",
     "titlePlaceholder": "Titre du projet",
     "kind": "Type de projet",
     "create": "Créer",
-    "enterKey": "↵",
+    "enterKey": "⏎",
     "untitled": "Sans titre",
-    "trash": "Corbeille · ↵ restaure",
+    "trash": "Corbeille · ⏎ restaure",
     "trashedOn": "Mis à la corbeille le {{date}}",
-    "folder": "Dossier : {{folder}}",
+    "folder": "Dossier : {{folder}}",
     "chooseFolder": "Changer…",
-    "revealFolder": "Afficher dans le Finder",
+    "revealFolder": "Afficher dans {{fileManager}}",
+    "fileManager": {
+      "mac": "le Finder",
+      "other": "le gestionnaire de fichiers"
+    },
     "newNovel": "+ Nouveau roman",
     "newNovelKey": "N",
     "newStory": "+ Nouvelle",
@@ -827,9 +834,9 @@
     "empty": "Aucun projet pour l’instant. Commencez un roman ou une nouvelle."
   },
   "language": {
-    "fixWord": "Remplacer « {{word}} » par…",
-    "addToDictionary": "Ajouter « {{word}} » au dictionnaire du projet",
-    "added": "« {{word}} » ajouté au dictionnaire du projet.",
+    "fixWord": "Remplacer « {{word}} » par…",
+    "addToDictionary": "Ajouter « {{word}} » au dictionnaire du projet",
+    "added": "« {{word}} » ajouté au dictionnaire du projet.",
     "noIssue": "Aucune correction à proposer dans cette scène.",
     "fixedTypography_one": "{{count}} correction typographique appliquée.",
     "fixedTypography_other": "{{count}} corrections typographiques appliquées.",
@@ -837,10 +844,10 @@
     "fixedSpelling_other": "{{count}} corrections d’orthographe appliquées."
   },
   "novel": {
-    "button": "Le roman : renommer, changer de roman",
-    "buttonVersions": "Le roman : renommer, changer de version ou de roman",
-    "buttonLabelVersion": "{{title}}, version {{version}}, le roman : renommer, changer de version ou de roman",
-    "buttonLabel": "{{title}}, le roman : renommer, changer de roman",
+    "button": "Le roman : renommer, changer de roman",
+    "buttonVersions": "Le roman : renommer, changer de version ou de roman",
+    "buttonLabelVersion": "{{title}}, version {{version}}, le roman : renommer, changer de version ou de roman",
+    "buttonLabel": "{{title}}, le roman : renommer, changer de roman",
     "sheet": "Le roman",
     "rename": "Renommer",
     "renameKey": "R",
@@ -852,8 +859,8 @@
     "all": "Tous les romans…",
     "new": "+ Nouveau roman",
     "titleField": "Titre du roman",
-    "hint": "↑↓ choisir · ↵ ouvrir · R renommer · Échap fermer",
-    "hintVersion": "↑↓ · ↵ passer · R renommer la version · Échap fermer",
+    "hint": "↑↓ choisir · ⏎ ouvrir · R renommer · Échap fermer",
+    "hintVersion": "↑↓ · ⏎ passer · R renommer la version · Échap fermer",
     "today": "aujourd’hui",
     "yesterday": "hier",
     "on": "le {{date}}"
@@ -865,16 +872,16 @@
   },
   "entry": {
     "manuscript": "Manuscrit",
-    "manuscriptTitle": "Manuscrit : chapitres et scènes",
+    "manuscriptTitle": "Manuscrit : chapitres et scènes",
     "compagnon": "Compagnon",
-    "compagnonTitle": "Compagnon : points à traiter et conversation",
+    "compagnonTitle": "Compagnon : points à traiter et conversation",
     "modes": "Écrire ↔ Atelier",
     "write": "Écrire",
     "atelier": "Atelier",
-    "commandZone": "Que voulez-vous faire ?",
+    "commandZone": "Que voulez-vous faire ?",
     "commandZoneTitle": "Ligne de commande",
     "display": "Aa",
-    "displayTitle": "Affichage : taille, colonne, focus, thème"
+    "displayTitle": "Affichage : taille, colonne, focus, thème"
   },
   "display": {
     "title": "Affichage",
@@ -898,19 +905,19 @@
   "welcome": {
     "kind": "Bienvenue",
     "title": "Je lis par-dessus votre épaule",
-    "body": "Je n’écrirai jamais une ligne de votre roman : je signale, j’explique, je pose des questions. Trois endroits à connaître :",
+    "body": "Je n’écrirai jamais une ligne de votre roman : je signale, j’explique, je pose des questions. Trois endroits à connaître :",
     "places": {
       "left": {
         "where": "le livre",
-        "what": ", en bas à gauche : le manuscrit, chapitres et scènes ;"
+        "what": ", en bas à gauche : le manuscrit, chapitres et scènes ;"
       },
       "right": {
         "where": "le compas",
-        "what": ", en bas à droite : mes remarques et notre conversation ;"
+        "what": ", en bas à droite : mes remarques et notre conversation ;"
       },
       "bottom": {
         "where": "entre les deux",
-        "what": ", « Que voulez-vous faire ? » : tapez ce que vous cherchez, tout y est."
+        "what": ", « Que voulez-vous faire ? » : tapez ce que vous cherchez, tout y est."
       }
     },
     "tour": "Faire le tour",
@@ -921,15 +928,15 @@
   "tour": {
     "manuscript": {
       "title": "Le manuscrit",
-      "text": "Vos chapitres et vos scènes. Cliquez une scène pour l’ouvrir ; « Plan » montre tout le roman d’un coup."
+      "text": "Vos chapitres et vos scènes. Cliquez sur une scène pour l’ouvrir ; « Plan » montre tout le roman d’un coup."
     },
     "compagnon": {
       "title": "Le Compagnon",
       "text": "Mes remarques sur la scène et le chapitre, et un fil pour me poser vos questions. Le chiffre dit combien de points attendent."
     },
     "commands": {
-      "title": "Que voulez-vous faire ?",
-      "text": "Tapez un mot : « variante », « Hélène », « chapitre 3 »… Toute action de l’app est là, avec son raccourci, pour l’apprendre en passant."
+      "title": "Que voulez-vous faire ?",
+      "text": "Tapez un mot : « variante », « Hélène », « chapitre 3 »… Toute action de l’app est là, avec son raccourci, pour l’apprendre en passant."
     },
     "next": "Suivant",
     "done": "Terminer",
@@ -946,7 +953,7 @@
     "view": "Présentation",
     "window": "Fenêtre",
     "help": "Aide",
-    "whatToDo": "Que voulez-vous faire ?",
+    "whatToDo": "Que voulez-vous faire ?",
     "roles": {
       "about": "À propos de Charpentier",
       "hide": "Masquer Charpentier",
@@ -972,9 +979,9 @@
     "signIn": {
       "ok": "Connecté. Vos projets se synchronisent.",
       "invalid": "E-mail ou mot de passe incorrect.",
-      "too-many-attempts": "Trop de tentatives : réessayez dans un quart d’heure.",
+      "too-many-attempts": "Trop de tentatives : réessayez dans un quart d’heure.",
       "unreachable": "Le serveur ne répond pas. Vérifiez l’adresse et le réseau.",
-      "no-keychain": "Connecté, mais ce système n’a pas de trousseau où garder la connexion : la synchronisation reste éteinte."
+      "no-keychain": "Connecté, mais ce système n’a pas de trousseau où garder la connexion : la synchronisation reste éteinte."
     },
     "signedOut": "Déconnecté du serveur. Vos projets restent sur cet appareil.",
     "unreachable": "Le serveur ne répond pas.",
@@ -982,19 +989,19 @@
     "unnamedDevice": "Appareil sans nom",
     "thisDevice": "cet appareil",
     "lastSeen": "vu le {{date}}",
-    "useSignOut": "Pour cet appareil, utilisez « Se déconnecter du serveur ».",
+    "useSignOut": "Pour cet appareil, utilisez « Se déconnecter du serveur ».",
     "deviceRevoked": "Appareil déconnecté.",
     "status": {
       "connecting": "Synchronisation…",
       "syncing": "Synchronisation…",
       "synced": "Synchronisé",
       "offline": "Hors ligne",
-      "unauthorized": "Synchro en pause : se reconnecter"
+      "unauthorized": "Synchronisation en pause : se reconnecter"
     },
     "admin": {
       "opened": "La page d’administration s’ouvre.",
       "not-admin": "Ce compte n’administre pas le serveur.",
-      "out-of-reach": "La page d’administration ne répond que depuis la maison ou par Tailscale.",
+      "out-of-reach": "La page d’administration ne répond que depuis la maison, ou à distance par le réseau privé (Tailscale).",
       "unreachable": "Le serveur ne répond pas."
     }
   },
@@ -1003,7 +1010,7 @@
     "free": "Libre",
     "guided": "Dirigé",
     "modesLabel": "Mode de l’entretien",
-    "freeLine": "Mode entretien · parlez de votre roman : il range ce que vous dites dans l’Atelier et se souvient de tout.",
+    "freeLine": "Mode entretien · parlez de votre roman : il range ce que vous dites dans l’Atelier et se souvient de tout.",
     "guidedLine": "Mode entretien dirigé · il vous pose ses questions une à une, en commençant par ce qui est vide.",
     "you": "Vous",
     "freePlaceholder": "Parlez de votre roman…",
@@ -1022,11 +1029,11 @@
     "pass": "Passer",
     "later": "Plus tard",
     "otherSection": "Autre section…",
-    "pickSection": "Quelle section ?",
-    "hint": "↵ envoyer · ⇧↵ à la ligne · ⌥V ⌥X valider, rejeter la dernière proposition · {{mode}} libre / dirigé · Échap revenir au texte",
-    "welcome": "Racontez-moi votre roman comme il vous vient : je range ce que vous dites dans l’Atelier, en propositions que vous validez ou non. En mode dirigé, je vous pose mes questions une à une, section par section. Voulez-vous commencer par « Le projet » ?",
+    "pickSection": "Quelle section ?",
+    "hint": "⏎ envoyer · ⇧⏎ à la ligne · {{alt}}V {{alt}}X valider, rejeter la dernière proposition · {{mode}} libre / dirigé · Échap revenir au texte",
+    "welcome": "Racontez-moi votre roman comme il vous vient : je range ce que vous dites dans l’Atelier, en propositions que vous validez ou non. En mode dirigé, je vous pose mes questions une à une, section par section. Voulez-vous commencer par « Le projet » ?",
     "startGuided": "Commencer en dirigé",
-    "unavailable": "Le Compagnon n’est pas disponible dans cette version : l’entretien demande l’app de bureau.",
+    "unavailable": "Le Compagnon n’est pas disponible dans cette version : l’entretien demande l’app de bureau.",
     "newSheet": "nouvelle fiche",
     "short": {
       "meta": "Le projet",
@@ -1043,7 +1050,7 @@
   "notebook": {
     "label": "Carnet",
     "line": "Ce que le Compagnon retient de vos échanges. Il le relit avant chaque réponse.",
-    "lineUnavailable": "Le Compagnon n’écrit pas dans cette version ; vous pouvez lire et corriger son carnet.",
+    "lineUnavailable": "Le Compagnon n’écrit pas dans cette version ; vous pouvez lire et corriger son carnet.",
     "new": "+ Nouvelle note",
     "newKey": "N",
     "filter": "Chercher dans le carnet…",
@@ -1058,9 +1065,9 @@
     "readEverywhere": "relu dans tous vos romans",
     "emptyBook": {
       "projet": "Rien encore.",
-      "auteur": "Ce qui vous suit d’un roman à l’autre : votre façon d’écrire, d’être accompagné."
+      "auteur": "Ce qui vous suit d’un roman à l’autre : votre façon d’écrire, d’être accompagné."
     },
-    "noMatch": "Aucune note ne contient « {{query}} ».",
+    "noMatch": "Aucune note ne contient « {{query}} ».",
     "natures": {
       "a-reprendre": "À reprendre",
       "decisions": "Décisions",
@@ -1097,8 +1104,8 @@
       "updated": "mise à jour"
     },
     "noteLabel": {
-      "compagnon": "Note du Compagnon, {{nature}} : {{title}}",
-      "author": "Votre note, {{nature}} : {{title}}"
+      "compagnon": "Note du Compagnon, {{nature}} : {{title}}",
+      "author": "Votre note, {{nature}} : {{title}}"
     },
     "correct": "Corriger",
     "correctKey": "⏎",
@@ -1107,7 +1114,6 @@
     "trash": "Corbeille",
     "trashKey": "⌫",
     "save": "Enregistrer",
-    "saveKey": "⌘⏎",
     "cancel": "Annuler",
     "cancelKey": "Échap",
     "natureLabel": "Nature",
@@ -1116,28 +1122,28 @@
     "textField": "Texte de la note",
     "correctLabel": "Corriger la note",
     "newLabel": "Nouvelle note",
-    "becomesYours": "Corrigée, cette note devient la vôtre : le Compagnon la lit, il ne la réécrit plus.",
+    "becomesYours": "Corrigée, cette note devient la vôtre : le Compagnon la lit, il ne la réécrit plus.",
     "trashLink": "Corbeille ({{count}})",
     "trashLine": "notes que le Compagnon ne relit plus et ne réécrira pas",
     "trashedByAuthor": "Mise à la corbeille par vous {{when}}",
     "trashedByCompagnon": "Retirée par le Compagnon {{when}}",
     "restore": "Remettre",
-    "trashed": "Note mise à la corbeille : {{title}}",
+    "trashed": "Note mise à la corbeille : {{title}}",
     "noted": {
-      "created": "Noté au carnet :",
-      "updated": "Carnet mis à jour :",
-      "removed": "Retiré du carnet :"
+      "created": "Noté au carnet :",
+      "updated": "Carnet mis à jour :",
+      "removed": "Retiré du carnet :"
     },
     "and": "et",
     "others_one": "et {{count}} autre",
     "others_other": "et {{count}} autres",
     "origin": "La note {{title}} vient de ce message, {{when}}.",
     "backToNotebook": "Revenir au carnet",
-    "emptyIntro": "Le Compagnon note ici ce qu’il retient de vos échanges : votre histoire, vos décisions, vos doutes, ce qu’il faudra reprendre, la façon dont vous aimez être accompagné. Il relit ce carnet avant chaque réponse, dans l’entretien comme dans la conversation.",
-    "emptyQuiet": "Corrigez ou mettez à la corbeille ce qui ne vous ressemble pas : une note que vous corrigez devient la vôtre, et il ne la réécrit plus. Ce qui vous suit d’un roman à l’autre va dans le carnet « Vous ».",
+    "emptyIntro": "Le Compagnon note ici ce qu’il retient de vos échanges : votre histoire, vos décisions, vos doutes, ce qu’il faudra reprendre, la façon dont vous aimez être accompagné. Il relit ce carnet avant chaque réponse, dans l’entretien comme dans la conversation.",
+    "emptyQuiet": "Corrigez ou mettez à la corbeille ce qui ne vous ressemble pas : une note que vous corrigez devient la vôtre, et il ne la réécrit plus. Ce qui vous suit d’un roman à l’autre va dans le carnet « Vous ».",
     "openInterview": "Ouvrir l’entretien",
-    "hint": "J K parcourir · ↵ corriger · V garder telle quelle · ⌫ corbeille · O voir l’échange · N nouvelle note · / chercher · Échap revenir au texte",
-    "editHint": "⌘↵ enregistrer · Échap annuler"
+    "hint": "J K parcourir · ⏎ corriger · V garder telle quelle · ⌫ corbeille · O voir l’échange · N nouvelle note · / chercher · Échap revenir au texte",
+    "editHint": "{{save}} enregistrer · Échap annuler"
   },
   "close": {
     "panel": "Fermer le panneau",
@@ -1150,7 +1156,7 @@
   },
   "work": {
     "heading": "Le Compagnon",
-    "never": "Dernière fois : jamais",
+    "never": "Dernière fois : jamais",
     "cost": "Coût estimé",
     "about": "environ {{amount}}",
     "atMost": "au plus {{amount}} · {{duration}}",
@@ -1182,7 +1188,8 @@
     "stop": "Arrêter",
     "retry": "Réessayer",
     "estimating": "Estimation du coût…",
-    "read": "{{read}} scènes lues sur {{total}}",
+    "read_one": "{{count}} scène lue sur {{total}}",
+    "read_other": "{{count}} scènes lues sur {{total}}",
     "proposals_one": "{{count}} proposition",
     "proposals_other": "{{count}} propositions",
     "signals_one": "{{count}} signalement",
@@ -1194,69 +1201,74 @@
     "proposalsInSheet_one": "{{count}} proposition dans sa fiche ›",
     "proposalsInSheet_other": "{{count}} propositions dans sa fiche ›",
     "signalAt": "1 signalement · {{scene}} ›",
-    "others": "et {{count}} autres ›",
+    "others_one": "et {{count}} autre ›",
+    "others_other": "et {{count}} autres ›",
+    "scenes_one": "{{count}} scène",
+    "scenes_other": "{{count}} scènes",
+    "words_one": "{{formatted}} mot",
+    "words_other": "{{formatted}} mots",
     "unchanged": "Le manuscrit n’a pas changé depuis la dernière fois ({{when}}).",
     "noKey": "Le Compagnon a besoin de votre clé d’API.",
     "enterKey": "Saisir la clé",
-    "offline": "Pas de réseau : ce travail attendra la connexion.",
-    "empty": "Rien à relire pour l’instant : écrivez d’abord quelques scènes.",
-    "pickCharacter": "Faire le point sur quel personnage ?",
-    "noCharacter": "Aucun personnage pour l’instant : créez-en un dans l’Atelier.",
+    "offline": "Pas de réseau : ce travail attendra la connexion.",
+    "empty": "Rien à relire pour l’instant : écrivez d’abord quelques scènes.",
+    "pickCharacter": "Faire le point sur quel personnage ?",
+    "noCharacter": "Aucun personnage pour l’instant : créez-en un dans l’Atelier.",
     "task": {
       "structure": {
         "name": "Vérifier la structure",
         "sub": "Actes, arcs et tension",
         "title": "Vérifier la structure",
-        "what": "Le Compagnon relit tout le manuscrit ({{scenes}} scènes, {{words}} mots) pour voir ses actes, ses arcs et sa tension. Il propose, vous décidez.",
+        "what": "Le Compagnon relit tout le manuscrit ({{scenes}}, {{words}}) pour voir ses actes, ses arcs et sa tension. Il propose, vous décidez.",
         "doing": "Le Compagnon vérifie la structure…",
         "done": "Vérifiée {{when}}",
         "bilan": "Bilan de la structure",
         "footerDone": "Le bilan de la structure est dans la conversation avec le Compagnon{{key}}.",
-        "busy": "Un travail à la fois : le Compagnon vérifie la structure ({{elapsed}}).",
+        "busy": "Un travail à la fois : le Compagnon vérifie la structure ({{elapsed}}).",
         "failed": "La vérification n’a pas abouti.",
-        "stopped": "Arrêtée à {{elapsed}} : rien n’a été rangé."
+        "stopped": "Arrêtée à {{elapsed}} : rien n’a été rangé."
       },
       "clues": {
         "name": "Suivre les indices",
         "sub": "Posés, exploités, révélations préparées",
         "title": "Suivre les indices",
-        "what": "Le Compagnon relit tout le manuscrit ({{scenes}} scènes, {{words}} mots) pour suivre chaque indice : où il est posé, où il resservira, si les révélations sont préparées. Il propose, vous décidez.",
+        "what": "Le Compagnon relit tout le manuscrit ({{scenes}}, {{words}}) pour suivre chaque indice : où il est posé, où il resservira, si les révélations sont préparées. Il propose, vous décidez.",
         "doing": "Le Compagnon suit les indices…",
         "done": "Suivis {{when}}",
         "bilan": "Bilan des indices",
         "footerDone": "Le bilan des indices est dans la conversation avec le Compagnon{{key}}.",
-        "busy": "Un travail à la fois : le Compagnon suit les indices ({{elapsed}}).",
+        "busy": "Un travail à la fois : le Compagnon suit les indices ({{elapsed}}).",
         "failed": "Le suivi des indices n’a pas abouti.",
-        "stopped": "Arrêté à {{elapsed}} : rien n’a été rangé."
+        "stopped": "Arrêté à {{elapsed}} : rien n’a été rangé."
       },
       "character": {
         "name": "Faire le point",
         "sub": "sur {{name}}, scène par scène",
         "title": "Faire le point sur {{name}}",
-        "what": "Le Compagnon relit tout le manuscrit ({{scenes}} scènes, {{words}} mots) pour suivre {{name}} scène par scène : ce que ce personnage veut, ce qu’il sait, comment il change. Il propose, vous décidez.",
+        "what": "Le Compagnon relit tout le manuscrit ({{scenes}}, {{words}}) pour suivre {{name}} scène par scène : ce que ce personnage veut, ce qu’il sait, comment il change. Il propose, vous décidez.",
         "doing": "Le Compagnon fait le point sur {{name}}…",
         "done": "Point fait {{when}}",
         "bilan": "Point sur {{name}}",
         "footerDone": "Le point sur {{name}} est dans la conversation avec le Compagnon{{key}}.",
-        "busy": "Un travail à la fois : le Compagnon fait le point sur {{name}} ({{elapsed}}).",
+        "busy": "Un travail à la fois : le Compagnon fait le point sur {{name}} ({{elapsed}}).",
         "failed": "Le point sur {{name}} n’a pas abouti.",
-        "stopped": "Arrêté à {{elapsed}} : rien n’a été rangé."
+        "stopped": "Arrêté à {{elapsed}} : rien n’a été rangé."
       },
       "style": {
         "name": "Importer un texte…",
         "sub": "Un livre que vous admirez, ou un des vôtres",
         "title": "Dégager les choix de style",
         "what": "Le Compagnon mesure tout le livre sur cet appareil (longueur des phrases, part du dialogue, temps, personne), puis lit {{passages}} passages tirés au hasard pour le registre, les descriptions, les débuts et les fins de chapitre. Il propose, vous décidez.",
-        "leaves": "Seuls ces {{passages}} passages partent vers le Compagnon. Le livre n’est pas gardé dans votre projet, et rien n’en sera cité : il ne reste que des choix, dits avec ses mots.",
+        "leaves": "Seuls ces {{passages}} passages partent vers le Compagnon. Le livre n’est pas gardé dans votre projet, et rien n’en sera cité : il ne reste que des choix, dits avec ses mots.",
         "reading": "Lecture du fichier…",
         "doing": "Le Compagnon lit {{name}}…",
         "measured": "Mesures faites · {{passages}} passages en lecture",
-        "done": "Lu {{when}} : {{name}}",
+        "done": "Lu {{when}} : {{name}}",
         "bilan": "Style · d’après {{name}}",
         "footerDone": "Les choix de style tirés de {{name}} sont dans l’entretien{{key}}.",
-        "busy": "Un travail à la fois : le Compagnon lit {{name}} ({{elapsed}}).",
+        "busy": "Un travail à la fois : le Compagnon lit {{name}} ({{elapsed}}).",
         "failed": "La lecture n’a pas abouti.",
-        "stopped": "Arrêtée à {{elapsed}} : rien n’a été rangé.",
+        "stopped": "Arrêtée à {{elapsed}} : rien n’a été rangé.",
         "never": "Aucun texte lu pour l’instant.",
         "inInterview": "dans l’entretien"
       }
@@ -1268,7 +1280,7 @@
     "frame": "Texte de référence",
     "meta": "{{author}} · {{format}} · {{words}} mots",
     "metaNoAuthor": "{{format}} · {{words}} mots",
-    "frameLabel": "Texte de référence : {{title}}, {{meta}}.",
+    "frameLabel": "Texte de référence : {{title}}, {{meta}}.",
     "format": {
       "txt": "Texte",
       "md": "Markdown",
@@ -1280,14 +1292,14 @@
     "close": "Fermer",
     "closeKey": "Échap",
     "refused": {
-      "image-pdf": "Ce PDF ne contient que des images de pages : il n’y a pas de texte à lire.",
+      "image-pdf": "Ce PDF ne contient que des images de pages : il n’y a pas de texte à lire.",
       "image-pdfHint": "C’est le cas d’un livre scanné. Essayez plutôt l’EPUB, ou un PDF dont on peut sélectionner le texte.",
-      "protected": "Ce livre est protégé contre la copie : Charpentier ne peut pas l’ouvrir.",
-      "too-short": "Trop court pour y voir un style : il faut au moins 2 000 mots (celui-ci en a {{words}}).",
+      "protected": "Ce livre est protégé contre la copie : Charpentier ne peut pas l’ouvrir.",
+      "too-short": "Trop court pour y voir un style : il faut au moins 2 000 mots (celui-ci en a {{words}}).",
       "unreadable": "Ce fichier ne se lit pas comme un texte."
     },
-    "chose": "Vous aviez choisi : « {{choice}} »",
+    "chose": "Vous aviez choisi : « {{choice}} »",
     "yourChoice": "Votre choix · {{category}}",
-    "yourChoiceLabel": "Votre choix, {{category}} : {{choice}}. Ouvrir la fiche."
+    "yourChoiceLabel": "Votre choix, {{category}} : {{choice}}. Ouvrir la fiche."
   }
 }

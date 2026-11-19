@@ -117,7 +117,7 @@ describe('conversation with the Compagnon', () => {
     render(<App platform={platform} i18n={await createI18n('fr')} />);
     await screen.findByRole('textbox', { name: 'Texte de la scène' });
     // The footer's « Compagnon : saisir la clé » opens the section.
-    screen.getByRole('button', { name: 'Compagnon : saisir la clé' }).click();
+    screen.getByRole('button', { name: 'Compagnon\u00A0: saisir la clé' }).click();
     await screen.findByRole('region', { name: 'Compagnon' });
     await userEvent.keyboard('{Escape}');
 
@@ -127,7 +127,7 @@ describe('conversation with the Compagnon', () => {
     await userEvent.keyboard('Que veut Hélène ?{Enter}');
     const log = screen.getByRole('log');
     await waitFor(() =>
-      expect(log.textContent).toMatch(/clé d’API : Réglages › Compagnon \((⌘|Ctrl\+),\)\./),
+      expect(log.textContent).toMatch(/clé d’API\u00A0: Réglages › Compagnon \((⌘|Ctrl\+),\)\./),
     );
     within(log).getByRole('button', { name: 'Réglages › Compagnon' }).click();
     await screen.findByRole('region', { name: 'Compagnon' });

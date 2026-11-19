@@ -124,7 +124,7 @@ describe('the Carnet of the Compagnon (phase 6.5)', () => {
     });
     // Never visited: the Compagnon's notes are new, and the first has the focus.
     expect(note(/Ce qui attend Hélène à Nantes/).getAttribute('aria-label')).toBe(
-      'Note du Compagnon, À reprendre : Ce qui attend Hélène à Nantes, nouvelle',
+      'Note du Compagnon, À reprendre\u00A0: Ce qui attend Hélène à Nantes, nouvelle',
     );
     await waitFor(() => expect(document.activeElement).toBe(note(/Ce qui attend/)));
 
@@ -136,7 +136,7 @@ describe('the Carnet of the Compagnon (phase 6.5)', () => {
     expect(findNote(mentor, GRAND_PERE)?.authorship).toBe('kept');
     within(note(/Le grand-père batelier/)).getByText(/Gardée par vous/);
     expect(note(/Le grand-père batelier/).getAttribute('aria-label')).toBe(
-      'Votre note, Histoire : Le grand-père batelier',
+      'Votre note, Histoire\u00A0: Le grand-père batelier',
     );
 
     // K, ⏎: corrected in place, title, text and nature; ⌘⏎ saves, the note is the author's.

@@ -11,7 +11,7 @@ afterEach(cleanup);
 const isMac = /Mac/.test(navigator.platform);
 const editor = () => screen.getByRole('textbox', { name: 'Texte de la scène' });
 const header = () => document.querySelector('.ch-scene-header')?.textContent ?? '';
-const novelButton = () => screen.getByRole('button', { name: /le roman : renommer/ });
+const novelButton = () => screen.getByRole('button', { name: /le roman\u00A0: renommer/ });
 
 async function start() {
   const prefs = new Map<string, unknown>([['welcomed', true]]);
