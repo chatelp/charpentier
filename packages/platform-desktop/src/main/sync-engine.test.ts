@@ -83,6 +83,9 @@ function write(sceneDoc: Y.Doc, variantId: string, text: string) {
   fragment.insert(fragment.length, [paragraph]);
 }
 
+/** Lets the clock move: two changes a date tells apart. */
+const pause = () => new Promise((resolve) => setTimeout(resolve, 5));
+
 const until = async (check: () => boolean | Promise<boolean>, timeout = 10_000) => {
   const deadline = Date.now() + timeout;
   while (!(await check())) {
@@ -252,6 +255,95 @@ describe('sync between two desktop apps (step 4.3)', { timeout: 20_000 }, () => 
     await mac.library.trash(id);
     await mac.engine.reconcile();
     await until(async () => (await x250.library.listTrashed()).some((p) => p.id === id));
+  });
+
+  it('brings a project restored from the trash back on every device', async () => {
+    const url = await server();
+    const mac = device('Mac');
+    const x250 = device('X250');
+    const { id } = await mac.library.create({ title: 'Les serres', kind: 'novel' });
+    initProject(mac.doc(guids.project(id)), { id, title: 'Les serres', kind: 'novel' });
+    await mac.engine.signIn(url, EMAIL, PASSWORD);
+    await x250.engine.signIn(url, EMAIL, PASSWORD);
+    await until(async () => (await x250.library.list()).some((p) => p.id === id));
+    const live = async (d: { library: FolderLibrary }) =>
+      (await d.library.list()).some((p) => p.id === id);
+
+    await mac.library.trash(id);
+    await mac.engine.reconcile();
+    await until(async () => (await x250.library.listTrashed()).some((p) => p.id === id));
+
+    await pause();
+    await x250.library.restore(id);
+    await x250.engine.reconcile();
+    // Restored here, it stays so: the account's trash date is older than the restore.
+    expect(await live(x250)).toBe(true);
+    await until(() => live(mac));
+    await mac.engine.reconcile();
+    await x250.engine.reconcile();
+    expect(await live(mac)).toBe(true);
+    expect(await live(x250)).toBe(true);
+    expect(await mac.library.listTrashed()).toEqual([]);
+  });
+
+  it('settles a trash and a restore made apart by the latest of the two', async () => {
+    const url = await server();
+    const mac = device('Mac');
+    const x250 = device('X250');
+    const { id } = await mac.library.create({ title: 'Les serres', kind: 'novel' });
+    initProject(mac.doc(guids.project(id)), { id, title: 'Les serres', kind: 'novel' });
+    await mac.engine.signIn(url, EMAIL, PASSWORD);
+    await x250.engine.signIn(url, EMAIL, PASSWORD);
+    await until(async () => (await x250.library.list()).some((p) => p.id === id));
+    const trashed = async (d: { library: FolderLibrary }) =>
+      (await d.library.listTrashed()).some((p) => p.id === id);
+
+    // The Mac trashes it; the X250, later, trashes it too then changes its mind.
+    await mac.library.trash(id);
+    await pause();
+    await x250.library.trash(id);
+    await pause();
+    await x250.library.restore(id);
+    await mac.engine.reconcile();
+    await x250.engine.reconcile();
+    await until(async () => !(await trashed(mac)));
+    expect(await trashed(x250)).toBe(false);
+
+    // The X250 restored it first, the Mac trashes it after: the trash wins.
+    await pause();
+    await x250.library.trash(id);
+    await x250.engine.reconcile();
+    await until(() => trashed(mac));
+    await pause();
+    await x250.library.restore(id);
+    await pause();
+    await mac.library.trash(id);
+    await x250.engine.reconcile();
+    await mac.engine.reconcile();
+    await until(() => trashed(x250));
+    expect(await trashed(mac)).toBe(true);
+  });
+
+  it('reads a library written before the trash had its own date', async () => {
+    const url = await server();
+    const mac = device('Mac');
+    const x250 = device('X250');
+    const { id } = await mac.library.create({ title: 'Les serres', kind: 'novel' });
+    initProject(mac.doc(guids.project(id)), { id, title: 'Les serres', kind: 'novel' });
+    // As an older version left it: in the trash, with `trashedAt` only.
+    const [old] = await mac.library.all();
+    if (!old) throw new Error('no project');
+    await mac.library.adopt({ ...old, trashedAt: new Date().toISOString() });
+    expect((await mac.library.all())[0]?.trashAt).toBeUndefined();
+    await mac.engine.signIn(url, EMAIL, PASSWORD);
+    await x250.engine.signIn(url, EMAIL, PASSWORD);
+    await until(async () => (await x250.library.listTrashed()).some((p) => p.id === id));
+
+    await pause();
+    await x250.library.restore(id);
+    await x250.engine.reconcile();
+    await until(async () => (await mac.library.list()).some((p) => p.id === id));
+    expect((await x250.library.list()).some((p) => p.id === id)).toBe(true);
   });
 
   it('says so when the system has no keychain to keep the connection in', async () => {

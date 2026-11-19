@@ -20,7 +20,7 @@ afterEach(() => {
   for (const dir of dirs.splice(0)) fs.rmSync(dir, { recursive: true, force: true });
 });
 
-const strings = { externalVariant: () => 'x', externalSignal: () => 'x' };
+const strings = { externalVariant: () => 'x', externalSignal: () => 'x', keptAside: () => 'x' };
 
 describe('copying the texts to a USB key (phase 5.7)', () => {
   it('writes every project in Markdown, without the mirror state, and erases nothing', async () => {
@@ -53,5 +53,11 @@ describe('copying the texts to a USB key (phase 5.7)', () => {
     expect(fs.readFileSync(scene, 'utf8')).toContain('Il pleuvait sur Nouvelles.');
     expect(fs.existsSync(path.join(target, 'Nouvelles', '.charpentier'))).toBe(false);
     expect(fs.readFileSync(path.join(key, 'à garder.txt'), 'utf8')).toBe('rien n’est effacé');
+
+    // A copy is not a mirror: copying again writes over it and reads nothing back.
+    fs.writeFileSync(scene, fs.readFileSync(scene, 'utf8').replace('pleuvait', 'neigeait'));
+    await exportTexts(store, library, target, strings);
+    expect(fs.readFileSync(scene, 'utf8')).toContain('Il pleuvait sur Nouvelles.');
+    expect(fs.readdirSync(path.dirname(scene))).toEqual(['01-il-pleut.md']);
   });
 });

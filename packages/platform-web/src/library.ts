@@ -17,6 +17,8 @@ export interface LibraryRecord extends ProjectSummary {
   readonly createdAt: string;
   /** When the title last changed: a title travels by this date, never by an opening's. */
   readonly titleAt?: string;
+  /** When the project last went to the trash or came back: the trash state travels by this date. */
+  readonly trashAt?: string;
 }
 
 /** Origin of the changes that come from the account (not to be sent back). */
@@ -68,10 +70,12 @@ export class DocumentLibrary implements LibraryService {
     const projects = await this.#projects();
     return [...projects.entries()].map(([id, entry]) => {
       const titleAt = entry.get('titleAt');
+      const trashAt = entry.get('trashAt');
       return {
         ...toSummary(id, entry),
         createdAt: String(entry.get('createdAt') ?? ''),
         ...(typeof titleAt === 'string' && { titleAt }),
+        ...(typeof trashAt === 'string' && { trashAt }),
       };
     });
   }
@@ -90,6 +94,7 @@ export class DocumentLibrary implements LibraryService {
       entry.set('createdAt', record.createdAt);
       entry.set('updatedAt', record.updatedAt);
       if (record.titleAt) entry.set('titleAt', record.titleAt);
+      if (record.trashAt) entry.set('trashAt', record.trashAt);
       if (record.trashedAt) entry.set('trashedAt', record.trashedAt);
       else entry.delete('trashedAt');
     }, ADOPTED);
@@ -151,10 +156,17 @@ export class DocumentLibrary implements LibraryService {
   }
 
   trash(projectId: string): Promise<void> {
-    return this.#update(projectId, (entry) => entry.set('trashedAt', now()));
+    return this.#update(projectId, (entry) => {
+      const at = now();
+      entry.set('trashedAt', at);
+      entry.set('trashAt', at);
+    });
   }
 
   restore(projectId: string): Promise<void> {
-    return this.#update(projectId, (entry) => entry.delete('trashedAt'));
+    return this.#update(projectId, (entry) => {
+      entry.delete('trashedAt');
+      entry.set('trashAt', now());
+    });
   }
 }

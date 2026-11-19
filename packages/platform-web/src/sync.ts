@@ -332,12 +332,21 @@ export class WebSync implements SyncService {
       for (const p of local.values())
         if (!projects.has(p.id) && accountHasProjects && (await this.#pristine(p.id)))
           this.#withheld.add(p.id);
-      // Each part by its own date, as on the desktop: the title by its own.
+      // Each part by its own date, as on the desktop: the title by its own, the trash by its own.
+      const trashDate = (p: LibraryRecord) => p.trashAt ?? p.trashedAt ?? '';
       const merged = (a: LibraryRecord, b: LibraryRecord | undefined): LibraryRecord => {
         if (!b) return record(a);
         const latest = a.updatedAt >= b.updatedAt ? a : b;
         const titled = (a.titleAt ?? a.createdAt) >= (b.titleAt ?? b.createdAt) ? a : b;
-        const trashed = (a.trashedAt ?? '') >= (b.trashedAt ?? '') ? a : b;
+        // The trash by the date it was last entered or left; at the same date, the trash keeps it.
+        const trashed =
+          trashDate(a) === trashDate(b)
+            ? a.trashedAt
+              ? a
+              : b
+            : trashDate(a) > trashDate(b)
+              ? a
+              : b;
         return {
           id: latest.id,
           kind: latest.kind,
@@ -346,6 +355,7 @@ export class WebSync implements SyncService {
           title: titled.title,
           ...(titled.titleAt && { titleAt: titled.titleAt }),
           ...(trashed.trashedAt && { trashedAt: trashed.trashedAt }),
+          ...(trashed.trashAt && { trashAt: trashed.trashAt }),
         };
       };
       const record = (p: LibraryRecord): LibraryRecord => ({
@@ -356,13 +366,15 @@ export class WebSync implements SyncService {
         updatedAt: p.updatedAt,
         ...(p.titleAt && { titleAt: p.titleAt }),
         ...(p.trashedAt && { trashedAt: p.trashedAt }),
+        ...(p.trashAt && { trashAt: p.trashAt }),
       });
       const same = (a: LibraryRecord, b: LibraryRecord | undefined) =>
         !!b &&
         a.title === b.title &&
         a.updatedAt === b.updatedAt &&
         (a.titleAt ?? '') === (b.titleAt ?? '') &&
-        (a.trashedAt ?? '') === (b.trashedAt ?? '');
+        (a.trashedAt ?? '') === (b.trashedAt ?? '') &&
+        (a.trashAt ?? '') === (b.trashAt ?? '');
       const newer = (a: LibraryRecord, b: LibraryRecord | undefined) => !same(merged(a, b), b);
       libraryDoc.transact(() => {
         for (const p of local.values())

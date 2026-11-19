@@ -441,6 +441,8 @@ Mon roman/
 - Les modules sont écrits en YAML (valeur, statut, source par champ).
 - Écriture différée (debounce) après chaque modification.
 - **Réimport** d'un `.md` modifié hors de l'app : fusion à trois voies entre la base (dernier contenu écrit par l'app), le fichier et l'état courant du CRDT, appliquée en transaction d'origine `mirror` après un point de restauration. Si les modifications se chevauchent : la version externe devient une nouvelle variante « Modif. externe du … » et un signalement `external-edit` est créé. Rien n'est perdu.
+- **Un fichier de scène qui n'est plus ce que l'app a écrit n'est jamais réécrit avant d'avoir été repris**, quel que soit le moment de la modification : app fermée ou projet non ouvert (réimport à l'ouverture du projet, avant toute écriture), ou à l'instant (l'écriture attend que le fichier soit stable, puis le réimport passe d'abord ; à la fermeture, le fichier est laissé tel quel pour la prochaine ouverture). La base n'avance qu'avec l'écriture du fichier.
+- La modification va à la variante que montre le fichier (ligne `variant:` du frontmatter), même si elle n'est plus la variante active. Un BOM ou des fins de ligne Windows sont lus sans effet. Un fichier dont l'en-tête a disparu est apparié par son emplacement et, s'il diffère, n'est jamais fusionné : il devient une variante « Modif. externe » avec signalement. Un fichier que le miroir ne peut ni reprendre ni écraser (scène partie à la corbeille, fichier étranger à l'emplacement d'une scène) est conservé à côté sous le nom `….externe.md`, avec signalement.
 - En v1, les YAML de modules sont en écriture seule (le réimport des modules est une question ouverte, §22).
 
 ### 17.1 Dialecte Markdown d'une scène
