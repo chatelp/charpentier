@@ -376,6 +376,7 @@ export class WebSync implements SyncService {
         (a.trashedAt ?? '') === (b.trashedAt ?? '') &&
         (a.trashAt ?? '') === (b.trashAt ?? '');
       const newer = (a: LibraryRecord, b: LibraryRecord | undefined) => !same(merged(a, b), b);
+      // eslint-disable-next-line charpentier/transact-origin -- library index (host document): onRemote tells this write by its null origin
       libraryDoc.transact(() => {
         for (const p of local.values())
           if (!this.#withheld.has(p.id) && newer(p, projects.get(p.id)))

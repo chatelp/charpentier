@@ -119,6 +119,7 @@ describe('writing surface', () => {
     await screen.findByRole('tree');
     // Hold animation frames: a deferred focus of the text would land after ⌘K.
     const frames: FrameRequestCallback[] = [];
+    // eslint-disable-next-line charpentier/no-host-global-access -- a spy needs the object that holds the method
     const raf = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
       frames.push(callback);
       return frames.length;
