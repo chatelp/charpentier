@@ -43,7 +43,7 @@ describe('entry points (docs/DESIGN.md §4.8)', () => {
     // The console (DESIGN 1.25): the manuscript's key opens the drawer and stays pressed;
     // a second click closes it.
     const manuscript = screen.getByRole('button', { name: 'Manuscrit' });
-    expect(manuscript.title).toMatch(/^Manuscrit : chapitres et scènes \(.+J\)$/);
+    expect(manuscript.title).toMatch(/^Manuscrit\u00A0: chapitres et scènes \(.+J\)$/);
     expect(manuscript.getAttribute('aria-pressed')).toBe('false');
     await userEvent.click(manuscript);
     await screen.findByRole('complementary', { name: 'Plan du manuscrit' });
@@ -124,7 +124,7 @@ describe('entry points (docs/DESIGN.md §4.8)', () => {
     await userEvent.keyboard('{Enter}');
     await screen.findByRole('dialog', { name: 'Le Compagnon' });
     await userEvent.keyboard('{Enter}');
-    await screen.findByRole('dialog', { name: 'Que voulez-vous faire ?' });
+    await screen.findByRole('dialog', { name: 'Que voulez-vous faire\u202F?' });
     await userEvent.keyboard('{Enter}');
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     expect(screen.queryByRole('complementary', { name: 'Bienvenue' })).toBeNull();

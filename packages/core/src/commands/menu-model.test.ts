@@ -40,7 +40,7 @@ describe('application menu', () => {
     expect(help?.[0]).toEqual({
       kind: 'command',
       id: 'openPalette',
-      label: 'Que voulez-vous faire ?',
+      label: 'Que voulez-vous faire\u202F?',
       shortcut: { key: 'k', meta: true, ctrl: false, alt: false, shift: false },
     });
     expect(model.menus[0]?.entries.at(-1)).toEqual({

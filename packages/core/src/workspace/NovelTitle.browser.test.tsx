@@ -44,7 +44,8 @@ async function start() {
   return { platform, editor };
 }
 
-const button = () => screen.getByRole('button', { name: /le roman : renommer, changer de roman/ });
+const button = () =>
+  screen.getByRole('button', { name: /le roman\u00A0: renommer, changer de roman/ });
 
 describe('the novel’s title (docs/DESIGN.md §4.8, 1.19)', () => {
   it('opens the novel’s sheet: its figures, the three novels opened last, the library', async () => {
