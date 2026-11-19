@@ -221,7 +221,10 @@ const llm = new AnthropicLlmService({
 });
 const agents = new AgentHost(llm, secrets, store, {
   get: () => (preferences.get(LIGHT_MODEL_PREF) === 'haiku' ? 'haiku' : 'opus'),
-  set: (model) => preferences.set(LIGHT_MODEL_PREF, model),
+  set: (model) => {
+    preferences.set(LIGHT_MODEL_PREF, model);
+    preferences.flush();
+  },
 });
 // ─── Sync with the author's server (step 4.3); signing in comes with phase 4.4 ───
 
@@ -442,6 +445,7 @@ ipcMain.handle(IPC_INVOKE, async (event, request: Request) => {
       const chosen = result.filePaths[0];
       if (result.canceled || !chosen || chosen === libraryFolder) return false;
       preferences.set(LIBRARY_PREF, chosen);
+      preferences.flush();
       // Documents are compacted on quit; the app starts again on the new folder.
       app.relaunch();
       app.quit();
@@ -557,5 +561,11 @@ app.on('will-quit', () => {
   for (const mirror of mirrors.values()) mirror.stop();
   mirrors.clear();
   store.closeAll();
+  // What the interface saved in the last seconds (the words of the day, the scene open).
+  try {
+    preferences.flush();
+  } catch (error) {
+    console.error('Charpentier: the preferences could not be saved', error);
+  }
   void spell.close();
 });
