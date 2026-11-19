@@ -197,9 +197,9 @@ describe('reference texts and Style et voix (phase 6.4, DESIGN §4.5 1.16)', () 
     screen.getByText('11 mots par phrase en moyenne');
     screen.getByText('Vous aviez choisi : « le présent de narration »');
 
-    // V keeps the whole sheet of the last proposal: its choice, its category, its book.
+    // ⌥V keeps the whole sheet of the last proposal: its choice, its category, its book.
     (await screen.findByRole('textbox', { name: 'Parlez de votre roman…' })).focus();
-    await userEvent.keyboard('v');
+    await userEvent.keyboard('{Alt>}v{/Alt}');
     await waitFor(() => {
       const kept = listEntities(project().root, 'style').find(
         (e) => e.fields['choice']?.value === 'Le passé simple, sans retour en arrière.',
