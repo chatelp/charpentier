@@ -1,6 +1,5 @@
 import type { LlmService } from '@charpentier/platform';
 import {
-  anchoredText,
   anchorForQuote,
   anchoredText,
   anchorsOverlap,
