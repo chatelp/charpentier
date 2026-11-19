@@ -307,8 +307,7 @@ export class AgentHost {
   ): Promise<DeepWorkOutcome> {
     if (this.llm.status() === 'unconfigured') return 'unavailable';
     const previous = this.#running.get(projectId) ?? Promise.resolve();
-    const controller = new AbortController();
-    this.#works.set(projectId, controller);
+    const controller = this.#startWork(projectId);
     const run = previous.then(async (): Promise<DeepWorkOutcome> => {
       if (controller.signal.aborted) return 'stopped';
       try {
@@ -336,12 +335,30 @@ export class AgentHost {
       run.catch(() => {}),
     );
     return run.finally(() => {
-      if (this.#works.get(projectId) === controller) this.#works.delete(projectId);
+      this.#endWork(projectId, controller);
     });
   }
 
-  /** The background work of each project, to stop it (« Arrêter »). */
-  readonly #works = new Map<string, AbortController>();
+  /**
+   * The background works of each project, running or queued, each with its
+   * own controller: « Arrêter » stops them all (a work queued behind another
+   * must not take the running one's place here, or it could not be stopped).
+   */
+  readonly #works = new Map<string, Set<AbortController>>();
+
+  #startWork(projectId: string): AbortController {
+    const controller = new AbortController();
+    const works = this.#works.get(projectId) ?? new Set();
+    works.add(controller);
+    this.#works.set(projectId, works);
+    return controller;
+  }
+
+  #endWork(projectId: string, controller: AbortController): void {
+    const works = this.#works.get(projectId);
+    works?.delete(controller);
+    if (works?.size === 0) this.#works.delete(projectId);
+  }
 
   /**
    * The reference texts chosen and not read yet (docs/PLAN.md §6.4), in
@@ -397,8 +414,7 @@ export class AgentHost {
     if (this.llm.status() === 'unconfigured') return 'unavailable';
     this.#dropReference(token);
     const previous = this.#running.get(projectId) ?? Promise.resolve();
-    const controller = new AbortController();
-    this.#works.set(projectId, controller);
+    const controller = this.#startWork(projectId);
     const rootGuid = guids.project(projectId);
     const mentorGuid = guids.mentor(projectId);
     const run = previous.then(async (): Promise<DeepWorkOutcome> => {
@@ -431,7 +447,7 @@ export class AgentHost {
       run.catch(() => {}),
     );
     return run.finally(() => {
-      if (this.#works.get(projectId) === controller) this.#works.delete(projectId);
+      this.#endWork(projectId, controller);
     });
   }
 
@@ -543,7 +559,7 @@ export class AgentHost {
         this.#dropReference(request.token);
         return null;
       case 'agents.stopDeepWork':
-        this.#works.get(request.projectId)?.abort();
+        for (const work of this.#works.get(request.projectId) ?? []) work.abort();
         return null;
       case 'agents.lightModel':
         return this.lightModel.get();

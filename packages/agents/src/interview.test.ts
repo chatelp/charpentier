@@ -14,6 +14,7 @@ import {
 import { describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
 import { nextSection } from '@charpentier/schema';
+import { UnusableAnswerError } from './answer';
 import { interviewTurn, SECTION_SPECIALISTS } from './interview';
 
 function project() {
@@ -198,6 +199,72 @@ describe('the interview with the Compagnon (phase 6.1)', () => {
     expect(result).toMatchObject({ guarded: true, placed: [] });
     expect(listEntities(root, 'characters')).toEqual([]);
     expect(interviewMessages(mentorDoc).at(-1)?.text).toContain('c’est votre voix qui compte');
+  });
+
+  it('fails without a word of the Compagnon or a proposal when the answer cannot be read', async () => {
+    const { root, mentorDoc } = project();
+    say(mentorDoc, HELENE);
+    const turn = {
+      reply: 'Hélène, batelière : je le range.',
+      proposals: [
+        {
+          module: 'characters',
+          entityId: null,
+          entityName: 'Hélène',
+          field: 'occupation',
+          value: 'batelière',
+          quote: 'Hélène, est batelière',
+        },
+      ],
+    };
+    // Cut at the output limit (even where it parses), then not JSON at all.
+    let calls = 0;
+    const llm: LlmService = {
+      status: () => 'available',
+      onStatusChange: () => () => {},
+      generate: async () =>
+        calls++ === 0 ? { text: JSON.stringify(turn), truncated: true } : { text: '{"reply":' },
+    };
+    await expect(interviewTurn({ llm, root, mentorDoc, mode: 'free' })).rejects.toBeInstanceOf(
+      UnusableAnswerError,
+    );
+    expect(calls).toBe(2);
+    expect(interviewMessages(mentorDoc).map((m) => m.role)).toEqual(['author']);
+    expect(listEntities(root, 'characters')).toEqual([]);
+  });
+
+  it('answers the message just sent, even after a message another device dated in the future', async () => {
+    const { root, mentorDoc } = project();
+    // Written on a device whose clock runs ahead.
+    mentorDoc.getArray('interview').push([
+      {
+        id: 'ahead',
+        at: '2999-01-01T00:00:00.000Z',
+        role: 'compagnon',
+        text: 'Parlez-moi de votre héroïne.',
+        mode: 'free',
+      },
+    ]);
+    say(mentorDoc, HELENE);
+    const { llm, asked } = fakeLlm({
+      reply: 'Je le range.',
+      proposals: [
+        {
+          module: 'characters',
+          entityId: null,
+          entityName: 'Hélène',
+          field: 'occupation',
+          value: 'batelière',
+          quote: 'Hélène, est batelière',
+        },
+      ],
+    });
+    const result = await interviewTurn({ llm, root, mentorDoc, mode: 'free' });
+    expect(result.placed.length).toBeGreaterThan(0);
+    const messages = asked.at(-1)?.messages ?? [];
+    expect(messages.at(-1)?.endsWith(HELENE)).toBe(true);
+    expect(messages.slice(0, -1).join('\n')).toContain('Parlez-moi de votre héroïne.');
+    expect(messages.slice(0, -1).join('\n')).not.toContain(HELENE);
   });
 
   it('waits for the author in free mode', async () => {

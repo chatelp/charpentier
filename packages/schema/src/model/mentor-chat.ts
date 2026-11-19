@@ -206,6 +206,12 @@ export function addInterviewMessage(
  * keeps its own array in the mentor document, as it always did: nothing
  * moves, nothing is copied, and a device of an older version still finds its
  * own; this is a reading of the two.
+ *
+ * `answering` (companionThread): the author's message being answered, the
+ * last of its own array, where it was just appended. It comes last whatever
+ * the clocks say: a message another device dated in the future, or one of
+ * the same millisecond, must not pass after the question just asked, which
+ * would then no longer be the one answered.
  */
 export type ThreadMode = 'conversation' | 'interview';
 
@@ -219,7 +225,7 @@ export interface ThreadMessage {
   readonly note?: string;
 }
 
-export function companionThread(mentorDoc: Y.Doc): ThreadMessage[] {
+export function companionThread(mentorDoc: Y.Doc, answering?: string): ThreadMessage[] {
   const conversation = chatMessages(mentorDoc).map((m): ThreadMessage => ({
     id: m.id,
     at: m.at,
@@ -236,7 +242,9 @@ export function companionThread(mentorDoc: Y.Doc): ThreadMessage[] {
     text: [m.text, m.question].filter(Boolean).join('\n'),
     ...(m.reference && { note: `reference text: ${m.reference.title}` }),
   }));
-  return [...conversation, ...interview].sort((a, b) =>
+  const thread = [...conversation, ...interview].sort((a, b) =>
     a.at < b.at ? -1 : a.at > b.at ? 1 : a.id < b.id ? -1 : 1,
   );
+  const asked = thread.find((m) => m.id === answering);
+  return asked ? [...thread.filter((m) => m !== asked), asked] : thread;
 }

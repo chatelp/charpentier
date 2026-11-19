@@ -73,6 +73,12 @@ export interface LlmRequest {
   readonly tier: 'fast' | 'deep';
   /** Tools the model may call; the caller runs them and calls again. */
   readonly tools?: readonly LlmTool[];
+  /**
+   * `none`: the tools stay declared (the history holds their calls and
+   * results, which the provider refuses without them) but none may be
+   * called: the model must answer in text.
+   */
+  readonly toolChoice?: 'none';
 }
 
 export interface LlmResponse {
@@ -82,6 +88,8 @@ export interface LlmResponse {
   readonly toolCalls?: readonly LlmToolCall[];
   /** Its turn as the provider gave it, to send back with the tools' results. */
   readonly turn?: unknown;
+  /** The answer stopped at `maxOutputTokens`: incomplete, not to be used as it is. */
+  readonly truncated?: boolean;
   readonly usage?: {
     readonly inputTokens: number;
     readonly outputTokens: number;

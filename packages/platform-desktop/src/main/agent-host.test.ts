@@ -4,7 +4,10 @@ import path from 'node:path';
 import type Anthropic from '@anthropic-ai/sdk';
 import {
   agentOrigin,
+  addChatMessage,
+  AUTHOR,
   chatMessages,
+  addInterviewMessage,
   interviewMessages,
   createChapter,
   createScene,
@@ -15,7 +18,7 @@ import {
   writeSceneDocToFragment,
   type AuthorshipViolation,
 } from '@charpentier/schema';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AgentHost } from './agent-host';
 import { AnthropicLlmService } from './anthropic-llm';
 import { DocStore } from './doc-store';
@@ -67,7 +70,7 @@ function fakeClient() {
   return { client, seen };
 }
 
-async function setUp() {
+async function setUp(other?: Anthropic) {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'charpentier-agents-'));
   dirs.push(tmp);
   const library = new FolderLibrary(path.join(tmp, 'Bibliothèque'));
@@ -89,7 +92,7 @@ async function setUp() {
   const llm = new AnthropicLlmService({
     apiKey: () => 'sk-test',
     models: () => ({ deep: 'claude-opus-5-5', fast: 'claude-opus-5-5' }),
-    createClient: () => client,
+    createClient: () => other ?? client,
   });
   const violations: AuthorshipViolation[] = [];
   const host = new AgentHost(llm, {} as SecretStore, store, undefined, (v) => violations.push(v));
@@ -151,6 +154,22 @@ describe('the specialised agents in the main process (D-27)', () => {
     expect(chatMessages(store.acquire(guids.mentor(projectId), 'test'))).toEqual([]);
   });
 
+  it('stops the running work when another is queued behind it', async () => {
+    const { host, store, projectId, seen } = await setUp();
+    const running = host.handle({ type: 'agents.deepWork', projectId, task: 'structure' });
+    const queued = host.handle({ type: 'agents.deepWork', projectId, task: 'clues' });
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    await host.handle({ type: 'agents.stopDeepWork', projectId });
+    expect(await Promise.all([running, queued])).toEqual(['stopped', 'stopped']);
+    // The queued one never reached the model.
+    expect(seen.calls).toBe(1);
+    expect(chatMessages(store.acquire(guids.mentor(projectId), 'test'))).toEqual([]);
+    // Nothing is left stopped: the next work runs.
+    expect(await host.handle({ type: 'agents.deepWork', projectId, task: 'structure' })).toBe(
+      'answered',
+    );
+  });
+
   it('has nothing to estimate for a character that does not exist', async () => {
     const { host, projectId } = await setUp();
     expect(
@@ -161,6 +180,33 @@ describe('the specialised agents in the main process (D-27)', () => {
         characterId: 'nobody',
       }),
     ).toBeNull();
+  });
+});
+
+describe('an answer that cannot be used (cut at the output limit)', () => {
+  it('is reported as a failure: the Compagnon says nothing he did not say', async () => {
+    const create = async () => ({
+      stop_reason: 'max_tokens',
+      content: [{ type: 'text', text: '{"reply":"Que veut' }],
+      usage: { input_tokens: 10, output_tokens: 10 },
+    });
+    const { host, store, projectId } = await setUp({
+      beta: { messages: { create } },
+    } as unknown as Anthropic);
+    const mentor = store.acquire(guids.mentor(projectId), 'test');
+    addChatMessage(mentor, { role: 'author', text: 'Ma scène est-elle trop lente ?' }, AUTHOR);
+    addInterviewMessage(mentor, { role: 'author', text: 'Hélène est batelière.' }, AUTHOR);
+    const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      expect(await host.handle({ type: 'agents.ask', projectId })).toBe('failed');
+      expect(await host.handle({ type: 'agents.interview', projectId, mode: 'free' })).toBe(
+        'failed',
+      );
+    } finally {
+      logged.mockRestore();
+    }
+    expect(chatMessages(mentor).map((m) => m.role)).toEqual(['author']);
+    expect(interviewMessages(mentor).map((m) => m.role)).toEqual(['author']);
   });
 });
 

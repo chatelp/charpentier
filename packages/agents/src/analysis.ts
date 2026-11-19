@@ -1,7 +1,9 @@
 import type { LlmService } from '@charpentier/platform';
 import {
+  anchoredText,
   anchorForQuote,
   anchoredText,
+  anchorsOverlap,
   createAgentWriter,
   getScene,
   hashEvidence,
@@ -11,6 +13,7 @@ import {
   listTrashedEntities,
   readFieldRef,
   readOutline,
+  stableStringify,
   type AgentWriter,
   type EntityInfo,
   type EntityModule,
@@ -21,6 +24,7 @@ import {
   type SignalKind,
 } from '@charpentier/schema';
 import type * as Y from 'yjs';
+import { answerJson } from './answer';
 import { sceneContext, sheetsSummary, validatedStyleChoice } from './context';
 import { notebookForReading } from './memory';
 import { isBoundedCorrection, isOneSentence, narrativeProseIn } from './guard';
@@ -166,6 +170,9 @@ WHAT TO REPORT
 - conflicts: places where the scene contradicts a VALIDATED fact of the sheets (module, entityId, field as given in the sheets). A character acting on information before the scene where they learn it is a conflict on the clue's knownBy field. Say what differs; do not decide which is right.
 - remarks: ${kinds.length ? `only of these kinds: ${kinds.join(', ')}.` : 'none (leave the list empty).'} "craft" = a point about the writing (stakes, point of view, rhythm, showing vs telling, dialogue); "clue" = a clue never exploited, a revelation not prepared, a red herring never resolved; "language" = a grammar or agreement error, with its "correction"; "encouragement" = something that works, said simply. Each remark has a "title" of 2 to 6 words naming it, and gives the craft "principle" behind it (the why). A remark that relies on one of the style choices the author adopted (the sheets' "style [id]" lines: "vous aviez choisi le présent") gives that id in "styleChoiceId", else null. Few and important beats many and minor: at most 5 remarks.
 
+WHAT THE AUTHOR REFUSED
+<refused> lists what the author already said no to: sheets and values they rejected, remarks on this scene they dismissed. These are their decisions. Never report any of them again, in other words or with another quote; a different value for the same field is fine when the scene states it.
+
 STYLE
 Messages are in ${language}, address the author formally ("vous"), short sentences, no exclamation marks, questions rather than verdicts where you can.`;
 }
@@ -194,12 +201,50 @@ function contextMessage(root: Y.Doc, sceneDoc: Y.Doc, sceneId: string): string {
     )
     .join('\n');
   const { scene } = sceneContext(root, sceneDoc, sceneId);
+  const refused = refusedSummary(root, sceneDoc, sceneId);
   return [
     `<outline>\n${outline}\n</outline>`,
     `<sheet_ids>\ncharacters:\n${characters}\nclues:\n${clues}\n</sheet_ids>`,
     `<validated_sheets>\n${sheetsSummary(root)}\n</validated_sheets>`,
+    ...(refused ? [`<refused>\n${refused}\n</refused>`] : []),
     `<scene title="${scene?.title ?? ''}">\n${scene?.text ?? ''}\n</scene>`,
   ].join('\n\n');
+}
+
+/**
+ * What the author refused, for the model to leave alone: the sheets and the
+ * values they rejected (as the interview shows them), the remarks on this
+ * scene they dismissed. The writer refuses them anyway; saying it spares the
+ * attempt, and the same thing said otherwise.
+ */
+function refusedSummary(root: Y.Doc, sceneDoc: Y.Doc, sceneId: string): string {
+  const lines: string[] = [];
+  for (const module of ['characters', 'worldRules', 'clues'] as const) {
+    const title = module === 'characters' ? 'name' : 'title';
+    for (const entity of allEntities(root, module)) {
+      const name = nameOf(entity, title) || '?';
+      if (entity.status === 'rejected') {
+        lines.push(`${module} [${entity.id}] "${name}": sheet rejected`);
+        continue;
+      }
+      for (const [field, state] of Object.entries(entity.fields))
+        if (state.rejected.length)
+          lines.push(
+            `${module} [${entity.id}] "${name}" ${field}: rejected ${state.rejected
+              .map((r) => JSON.stringify(r.value))
+              .join(', ')}`,
+          );
+    }
+  }
+  for (const signal of listSignals(root, { state: 'dismissed', sceneId })) {
+    if (signal.author !== 'mentor' || !signal.textAnchor) continue;
+    const passage = anchoredText(sceneDoc, signal.textAnchor);
+    if (passage)
+      lines.push(
+        `remark dismissed (${signal.kind}) on "${passage}": ${signal.title ?? signal.message}`,
+      );
+  }
+  return lines.join('\n');
 }
 
 const normalizeName = (s: string) =>
@@ -272,7 +317,17 @@ export async function analyzeScene(input: {
     },
     input.signal,
   );
-  const analysis = JSON.parse(response.text) as Analysis;
+  // Whole or not at all: a cut answer would file half an analysis as a complete one.
+  const read = answerJson<Partial<Analysis>>(response);
+  const list = <T>(value: T[] | undefined): T[] => (Array.isArray(value) ? value : []);
+  const analysis: Analysis = {
+    characters: list(read.characters),
+    worldRules: list(read.worldRules),
+    clues: list(read.clues),
+    knowledge: list(read.knowledge),
+    conflicts: list(read.conflicts),
+    remarks: list(read.remarks),
+  };
   return applyAnalysis(
     createAgentWriter(root, 'scene-analysis'),
     { root, sceneDoc, sceneId, variantId, level },
@@ -359,10 +414,14 @@ export function applyAnalysis(
     if (existing.status === 'rejected') continue;
     const ref: FieldRef = { module: 'clues', entityId: existing.id, field: roleField[clue.role] };
     const current = readFieldRef(root, ref);
+    const ids = (value: FieldValue | undefined) =>
+      Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : [];
+    // The author refused a list with this scene in it: not proposed for it again.
+    if (current.rejected.some((r) => ids(r.value).includes(sceneId))) continue;
+    // On top of what is there: the author's list, else the proposal still
+    // waiting (an earlier scene's), which this one extends instead of replacing.
     const scenes = new Set<string>(
-      Array.isArray(current.value)
-        ? current.value.filter((v): v is string => typeof v === 'string')
-        : [],
+      ids(current.status === 'validated' ? current.value : current.proposal?.value),
     );
     if (scenes.has(sceneId)) continue;
     const order = readOutline(root).flatMap((ch) => ch.scenes.map((s) => s.id));
@@ -404,6 +463,22 @@ export function applyAnalysis(
     reported.add(fingerprint);
     // Raised before and still open, or dismissed by the author: not again.
     if (all.some((s) => s.fingerprint === fingerprint && s.state !== 'resolved')) return;
+    // Dismissed, and said again with other words quoted: a remark of the same
+    // kind (on the same field, for a conflict) about a passage that overlaps.
+    const sameField = (ref: FieldRef | undefined) =>
+      stableStringify(ref ?? null) === stableStringify(signal.fieldRef ?? null);
+    if (
+      all.some(
+        (s) =>
+          s.state === 'dismissed' &&
+          s.author === 'mentor' &&
+          s.kind === signal.kind &&
+          sameField(s.fieldRef) &&
+          s.textAnchor !== undefined &&
+          anchorsOverlap(sceneDoc, s.textAnchor, textAnchor),
+      )
+    )
+      return;
     writer.raiseSignal({
       kind: signal.kind,
       message: signal.message,

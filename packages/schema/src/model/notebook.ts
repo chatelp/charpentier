@@ -144,6 +144,40 @@ export function listTrashedNotes(doc: Y.Doc): Note[] {
 export const findNote = (doc: Y.Doc, path: string): Note | undefined =>
   listNotes(doc).find((n) => n.path === path);
 
+/**
+ * Whether the notebook was ever written in: a note exists, live or in the
+ * trash (nothing is deleted). A notebook whose notes were all removed is not
+ * a notebook never begun: the Compagnon does not read the whole thread and
+ * take his first notes all over again.
+ */
+export const notebookStarted = (doc: Y.Doc): boolean => notebook(doc).size > 0;
+
+/** A path as a refusal remembers it: case, accents and punctuation aside, folder by folder. */
+const pathKey = (path: string) =>
+  path
+    .split('/')
+    .map((part) =>
+      part
+        .normalize('NFD')
+        .replace(/\p{Diacritic}/gu, '')
+        .toLowerCase()
+        .replace(/\.md$/, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, ''),
+    )
+    .join('/');
+
+/**
+ * A note the author put in the trash is their refusal: the Compagnon does not
+ * write it again, there or under a path that only differs by its spelling
+ * (`Fin_ouverte.md` for `fin-ouverte.md`).
+ */
+function assertNotRefused(doc: Y.Doc, path: string): void {
+  const key = pathKey(path);
+  if (listTrashedNotes(doc).some((n) => n.trashedBy === 'author' && pathKey(n.path) === key))
+    throw new NoteRefused('author', `the author removed ${path}: do not write it again.`);
+}
+
 /** Why the Compagnon may not change a note. */
 export class NoteRefused extends Error {
   constructor(
@@ -200,12 +234,7 @@ export function agentWriteNote(
   const existing = findNote(doc, input.path);
   if (existing?.by === 'author')
     throw new NoteRefused('author', `${input.path} is the author's note: read only.`);
-  // A note the author put in the trash is their refusal: not written again.
-  if (
-    !existing &&
-    listTrashedNotes(doc).some((n) => n.path === input.path && n.trashedBy === 'author')
-  )
-    throw new NoteRefused('author', `the author removed ${input.path}: do not write it again.`);
+  if (!existing) assertNotRefused(doc, input.path);
   return write(doc, { ...input, by: 'compagnon' }, origin, existing);
 }
 
@@ -214,6 +243,8 @@ export function agentRenameNote(doc: Y.Doc, from: string, to: string, origin: Or
   if (!note) throw new NoteRefused('missing', `${from} does not exist.`);
   if (note.by === 'author') throw new NoteRefused('author', `${from} is the author's note.`);
   if (findNote(doc, to)) throw new NoteRefused('exists', `${to} already exists.`);
+  // Not a way around the author's refusal either.
+  assertNotRefused(doc, to);
   doc.transact(() => {
     const m = mapOf(doc, note.id);
     m?.set('path', to);

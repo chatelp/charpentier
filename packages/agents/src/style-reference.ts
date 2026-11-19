@@ -13,6 +13,7 @@ import {
   bornIn,
 } from '@charpentier/schema';
 import type * as Y from 'yjs';
+import { answerJson } from './answer';
 import { sceneContext } from './context';
 import { narrativeProseIn } from './guard';
 import { DEEP_PRICES } from './deep-work';
@@ -512,5 +513,5 @@ export async function readReference(input: {
     },
     input.signal,
   );
-  return applyStyle(input, JSON.parse(response.text) as StyleOutput);
+  return applyStyle(input, answerJson<StyleOutput>(response));
 }

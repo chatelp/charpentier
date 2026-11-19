@@ -1,4 +1,4 @@
-import type { LlmService } from '@charpentier/platform';
+import type { LlmRequest, LlmService } from '@charpentier/platform';
 import {
   addChatMessage,
   AUTHOR,
@@ -13,6 +13,7 @@ import {
 } from '@charpentier/schema';
 import { describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
+import { UnusableAnswerError } from './answer';
 import { answerAuthor } from './conversation';
 
 describe('conversation with the Compagnon', () => {
@@ -61,5 +62,56 @@ describe('conversation with the Compagnon', () => {
     expect(await answerAuthor({ llm, root, mentorDoc, sceneDoc, sceneId })).toBe(
       'nothing-to-answer',
     );
+  });
+
+  it('stores no message of the Compagnon when the model’s answer cannot be read', async () => {
+    const root = new Y.Doc({ guid: 'project:p3' });
+    initProject(root, { id: 'p3', title: 'Les serres', kind: 'novel' });
+    const mentorDoc = new Y.Doc();
+    addChatMessage(mentorDoc, { role: 'author', text: 'Ma scène est-elle trop lente ?' }, AUTHOR);
+    const llm: LlmService = {
+      status: () => 'available',
+      onStatusChange: () => () => {},
+      generate: async () => ({ text: '{"reply":"Que se passe-t-il pour', truncated: true }),
+    };
+    await expect(answerAuthor({ llm, root, mentorDoc })).rejects.toBeInstanceOf(
+      UnusableAnswerError,
+    );
+    // No refusal he did not make: the author's question still waits for its answer.
+    expect(chatMessages(mentorDoc).map((m) => m.role)).toEqual(['author']);
+  });
+
+  it('answers the message just sent, even after a message another device dated in the future', async () => {
+    const root = new Y.Doc({ guid: 'project:p4' });
+    initProject(root, { id: 'p4', title: 'Les serres', kind: 'novel' });
+    const mentorDoc = new Y.Doc();
+    addChatMessage(mentorDoc, { role: 'author', text: 'Bonjour.' }, AUTHOR);
+    // Written on a device whose clock runs ahead.
+    mentorDoc
+      .getArray('chat')
+      .push([
+        { id: 'ahead', at: '2999-01-01T00:00:00.000Z', role: 'compagnon', text: 'Réponse d’hier.' },
+      ]);
+    addChatMessage(mentorDoc, { role: 'author', text: 'Ma scène est-elle trop lente ?' }, AUTHOR);
+
+    const requests: LlmRequest[] = [];
+    const llm: LlmService = {
+      status: () => 'available',
+      onStatusChange: () => () => {},
+      generate: async (request) => {
+        requests.push(request);
+        return { text: JSON.stringify({ reply: 'Que s’y passe-t-il ?', example: null }) };
+      },
+    };
+    expect(await answerAuthor({ llm, root, mentorDoc })).toBe('answered');
+    const messages = requests.at(-1)?.messages ?? [];
+    // The question is the final turn; the message from the future is part of the past.
+    expect(String(messages.at(-1)?.content).endsWith('Ma scène est-elle trop lente ?')).toBe(true);
+    const past = messages
+      .slice(0, -1)
+      .map((m) => m.content)
+      .join('\n');
+    expect(past).toContain('Réponse d’hier.');
+    expect(past).not.toContain('Ma scène est-elle trop lente ?');
   });
 });

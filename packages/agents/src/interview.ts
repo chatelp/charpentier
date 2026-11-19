@@ -1,3 +1,4 @@
+import { UnusableAnswerError } from './answer';
 import type { LlmService } from '@charpentier/platform';
 import {
   addInterviewMessage,
@@ -294,7 +295,8 @@ export async function interviewTurn(input: {
   const language = readProjectMeta(root)?.language ?? 'fr';
   const level = readMentorLevel(root);
   // One Compagnon (D-35): what was said in the conversation is part of the interview's thread.
-  const thread = companionThread(mentorDoc);
+  // The message just sent is the thread's last turn, as it is its array's (one rule, see companionThread).
+  const thread = companionThread(mentorDoc, authorSpoke ? last.id : undefined);
   const authorMessages = messages.filter((m) => m.role === 'author').slice(-QUOTED_MESSAGES);
   const authorText = authorMessages.map((m) => m.text).join('\n');
   const memory = projectMemory({
@@ -353,12 +355,15 @@ export async function interviewTurn(input: {
   const system = interviewSystemPrompt({ language, level, mode, section });
 
   let turn: Turn | undefined;
+  // How the last attempt ended: the rule broken (a refusal follows), or no answer to read.
+  let failed: 'guarded' | 'truncated' | 'unreadable' | undefined;
   for (let attempt = 0; attempt < 2 && !turn; attempt++) {
     const response = await generateWithMemory(
       llm,
       {
         system,
-        messages: attempt === 0 ? turns : [...turns, { role: 'user', content: CORRECTION }],
+        // The correction only after an answer that broke the rule.
+        messages: failed === 'guarded' ? [...turns, { role: 'user', content: CORRECTION }] : turns,
         responseSchema: interviewSchema,
         maxOutputTokens: 16000,
         tier: 'deep',
@@ -366,15 +371,18 @@ export async function interviewTurn(input: {
       memory,
       input.signal,
     );
-    const parsed = parseTurn(response.text);
-    if (
-      parsed &&
+    const parsed = response.truncated ? undefined : parseTurn(response.text);
+    if (!parsed) failed = response.truncated ? 'truncated' : 'unreadable';
+    else if (
       [parsed.reply, parsed.question ?? '', parsed.why ?? ''].every(
         (t) => narrativeProseIn(t, authorText).length === 0,
       )
     )
       turn = parsed;
+    else failed = 'guarded';
   }
+  // No answer to read is a failure, not a refusal: nothing is said in his name.
+  if (!turn && failed !== 'guarded') throw new UnusableAnswerError(failed ?? 'unreadable');
   if (!turn) {
     addInterviewMessage(
       mentorDoc,
