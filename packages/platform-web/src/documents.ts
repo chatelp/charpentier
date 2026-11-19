@@ -35,6 +35,8 @@ export class IndexedDbDocumentService implements DocumentService {
         closed = true;
         current.refs--;
         if (current.refs > 0) return;
+        // The guid may be opened again before the lines below run: that is a new
+        // replica on a connection of its own, which reads what this one wrote.
         this.#open.delete(guid);
         // Edits made before the first load completed are written by that load:
         // wait for it, then close the database (pending writes finish; data stays).
@@ -48,22 +50,28 @@ export class IndexedDbDocumentService implements DocumentService {
 
 /** In-memory documents, for tests and for browsers without IndexedDB. */
 export class MemoryDocumentService implements DocumentService {
-  readonly #open = new Map<string, Y.Doc>();
+  readonly #open = new Map<string, { doc: Y.Doc; refs: number }>();
 
   async open(guid: string): Promise<DocumentHandle> {
-    let doc = this.#open.get(guid);
-    if (!doc) {
-      doc = new Y.Doc({ guid });
-      this.#open.set(guid, doc);
+    let entry = this.#open.get(guid);
+    if (!entry) {
+      entry = { doc: new Y.Doc({ guid }), refs: 0 };
+      this.#open.set(guid, entry);
     }
-    const current = doc;
+    entry.refs++;
+    const current = entry;
+    let closed = false;
     return {
       guid,
-      doc: current,
+      doc: current.doc,
       whenLoaded: Promise.resolve(),
       close: async () => {
-        current.destroy();
-        this.#open.delete(guid);
+        if (closed) return;
+        closed = true;
+        if (--current.refs > 0) return;
+        // Only its own entry: the guid may have been opened again since.
+        if (this.#open.get(guid) === current) this.#open.delete(guid);
+        current.doc.destroy();
       },
     };
   }

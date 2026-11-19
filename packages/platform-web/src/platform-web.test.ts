@@ -46,8 +46,20 @@ describe('MemoryDocumentService', () => {
     expect(a.doc).toBe(b.doc);
     expect(a.doc.guid).toBe('project:p1');
     await a.close();
-    const c = await service.open('project:p1');
-    expect(c.doc).not.toBe(a.doc);
+    await a.close(); // closing twice is harmless
+    b.doc.getText('t').insert(0, 'encore ouvert');
+    expect((await service.open('project:p1')).doc).toBe(b.doc);
+  });
+
+  it('lets go of a document at its last close, without touching one opened since', async () => {
+    const service = new MemoryDocumentService();
+    const a = await service.open('project:p1');
+    const closing = a.close();
+    const b = await service.open('project:p1');
+    await closing;
+    await a.close();
+    expect(b.doc).not.toBe(a.doc);
+    expect((await service.open('project:p1')).doc).toBe(b.doc);
   });
 });
 

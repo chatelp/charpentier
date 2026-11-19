@@ -141,6 +141,29 @@ describe('desktop app', () => {
       .toBe('Il pleuvait sur Nantes depuis trois jours.');
   });
 
+  it('keeps what is typed after a new variant (the scene document reopened at once)', async () => {
+    const dirs = folders();
+    const first = await launch(dirs);
+    await first.editor.click();
+    await first.window.keyboard.type('Il pleuvait.');
+    // ⌘⇧N: a copy becomes the active variant, the scene's documents are closed
+    // and reopened in the same tick; Escape leaves the name it was given.
+    await first.window.keyboard.press('ControlOrMeta+Shift+N');
+    await first.window.keyboard.press('Escape');
+    await expect.poll(() => first.editor.textContent()).toBe('Il pleuvait.');
+    await first.editor.click();
+    await first.window.keyboard.press('ControlOrMeta+ArrowDown');
+    await first.window.keyboard.type(' Encore.');
+    await expect.poll(() => first.editor.textContent()).toBe('Il pleuvait. Encore.');
+    await first.window.waitForTimeout(300);
+    first.app.process().kill('SIGKILL');
+    await new Promise((resolve) => first.app.process().once('exit', resolve));
+    apps.splice(apps.indexOf(first.app), 1);
+
+    const second = await launch(dirs);
+    await expect.poll(() => second.editor.textContent()).toBe('Il pleuvait. Encore.');
+  });
+
   it('mirrors the scene in Markdown and takes in a correction made in another editor', async () => {
     const dirs = folders();
     const { editor, window } = await launch(dirs);
