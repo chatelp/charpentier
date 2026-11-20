@@ -196,6 +196,16 @@ L'auteur est membre de l'Apple Developer Program : signée « Developer ID Appli
 
 Ordre retenu (20 novembre 2026) : 4.7 a (l'écran de connexion du web), 4.7 b avec 4.8, un essai complet avec un second compte de l'auteur, puis 4.10 ; 4.9 une fois la mémoire du dictionnaire allégée.
 
+**Bascules sans perte** (règle de l'auteur, 20 novembre 2026 : « surtout pas de corruption de données pendant les bascules »). Une bascule est tout changement qui touche des données existantes : une nouvelle version du serveur, l'administration qui change d'adresse, l'app qui se met à exiger le compte. Pour chacune :
+- **une à la fois**, avec l'accord de l'auteur, jamais deux changements dans le même déploiement ;
+- **la base ne change que par ajout** (nouvelles tables, nouvelles colonnes) : aucune migration ne réécrit ni ne supprime un document, un projet ou un compte existant ;
+- **une sauvegarde juste avant**, faite à la demande (pas seulement celle de la nuit, 3 h 30), et le moyen de revenir à la version d'avant noté avant de commencer ;
+- **un essai sur une copie d'abord** : le serveur sur une sauvegarde restaurée dans une base à part, l'app du Mac sur une copie de la bibliothèque de l'auteur ; la restauration d'une sauvegarde, jamais essayée (4.5), se fait une première fois avant le premier déploiement de 4.8 ;
+- **un contrôle juste après** : mêmes comptes, mêmes projets et mêmes documents qu'avant (comptés avant et après), les romans de l'auteur s'ouvrent sur le Mac avec le même nombre de mots, une phrase tapée passe dans les deux sens ;
+- le serveur n'est jamais la seule copie : le Mac et le X250 gardent tout sur leur disque, et le Mac a en plus les fichiers Markdown.
+
+État le 20 novembre 2026 (lecture seule) : sauvegardes de nuit présentes et à jour (la dernière à 3 h 30 le jour même, huit archives gardées), un compte, trois projets, dix documents.
+
 ## Étape 5 : le X250, appareil d'écriture
 
 But : un ThinkPad X250 dédié qui démarre directement dans Charpentier, sans rien d'autre à l'écran, et retrouve le roman par la synchro (étape 4a). Sur cet appareil, l'app est la partie visible de l'OS [D-24] : tout ce qu'offrirait un gestionnaire de fenêtres est dans son interface. Référence : SPEC §13 (hôte `appliance`, service `System`) et le chapitre « Mode appareil » de la spec technique d'origine ; apparence et périmètre validés avec la session de design : DESIGN §4.12 (ligne système, réglages, verrou, premier démarrage), §3.1 (matière du système), §3.2 (JetBrains Mono), rendus dans `docs/design/x250/`.
