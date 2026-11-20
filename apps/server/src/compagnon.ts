@@ -12,6 +12,15 @@ import { clientAddress } from './admin/network';
 import type { Database } from './database';
 import { readJson, send, type LoginLimiter } from './http-api';
 import { keyFromPassword, verifyPassword } from './passwords';
+import {
+  addSpend,
+  costMicros,
+  monthOf,
+  providedFor,
+  providedKey,
+  spendOf,
+  type PricedModel,
+} from './provided';
 
 /**
  * The Compagnon of the app in the browser (docs/PLAN.md phase 4.7 b, the
@@ -33,7 +42,23 @@ import { keyFromPassword, verifyPassword } from './passwords';
  *   POST   /api/compagnon/generate  { request: LlmRequest, light?: opus | haiku } → LlmResponse
  */
 
-export type CompagnonStatus = 'available' | 'unconfigured' | 'locked';
+/** `ceiling`: the account's Compagnon is provided, and its spending reached the month's ceiling. */
+export type CompagnonStatus = 'available' | 'unconfigured' | 'locked' | 'ceiling';
+
+/** Where the account's Compagnon stands, and whether the account provides it (phase 4.8). */
+export interface CompagnonState {
+  readonly status: CompagnonStatus;
+  readonly provided: boolean;
+}
+
+export interface CompagnonOptions {
+  /** For tests: the model, played without the network. */
+  readonly createLlm?: CreateLlm;
+  /** The secret that seals the keys the accounts provide (`COMPAGNON_SECRET`); without it, none. */
+  readonly secret?: Buffer | null;
+  readonly timeZone?: string;
+  readonly now?: () => Date;
+}
 
 /** A whole manuscript goes in a deep work's request. */
 const MAX_REQUEST = 16 * 1024 * 1024;
@@ -88,10 +113,65 @@ export class CompagnonKeys {
   /** The sessions whose password the server has seen since it started. */
   readonly #unlocked = new Map<string, Unlocked>();
 
+  readonly createLlm: CreateLlm;
+  readonly #secret: Buffer | null;
+  readonly #month: () => string;
+
   constructor(
     private readonly db: Database,
-    readonly createLlm: CreateLlm = defaultLlm,
-  ) {}
+    options: CompagnonOptions = {},
+  ) {
+    this.createLlm = options.createLlm ?? defaultLlm;
+    this.#secret = options.secret ?? null;
+    const now = options.now ?? (() => new Date());
+    this.#month = () => monthOf(now(), options.timeZone);
+  }
+
+  /** The account's provided key, if it has one the server can open (phase 4.8). */
+  async #provided(userId: string) {
+    const provided = await providedFor(this.db, userId);
+    if (!provided) return null;
+    const apiKey = await providedKey(this.db, this.#secret, userId);
+    return apiKey ? { ...provided, apiKey } : null;
+  }
+
+  /** The spending of the month has reached the account's ceiling. */
+  async #atCeiling(userId: string, ceilingCents: number | null): Promise<boolean> {
+    if (ceilingCents === null) return false;
+    const { micros } = await spendOf(this.db, userId, this.#month());
+    return micros >= ceilingCents * 10_000;
+  }
+
+  /** Counts a call against the account, in the month it was made. */
+  async spend(session: Session, model: PricedModel, usage: Parameters<typeof costMicros>[1]) {
+    await addSpend(this.db, session.userId, this.#month(), costMicros(model, usage));
+  }
+
+  async state(session: Session): Promise<CompagnonState> {
+    const provided = await this.#provided(session.userId);
+    if (provided)
+      return {
+        status: (await this.#atCeiling(session.userId, provided.ceilingCents))
+          ? 'ceiling'
+          : 'available',
+        provided: true,
+      };
+    return { status: this.#ownStatus(session), provided: false };
+  }
+
+  /** The key a call goes with: the provided one first, else the account's own, opened. */
+  async keyFor(
+    session: Session,
+  ): Promise<{ apiKey: string } | { refused: 'locked' | 'no-key' | 'ceiling' }> {
+    const provided = await this.#provided(session.userId);
+    if (provided)
+      return (await this.#atCeiling(session.userId, provided.ceilingCents))
+        ? { refused: 'ceiling' }
+        : { apiKey: provided.apiKey };
+    const apiKey = this.apiKey(session);
+    if (apiKey) return { apiKey };
+    return { refused: this.#ownStatus(session) === 'locked' ? 'locked' : 'no-key' };
+  }
 
   async #row(userId: string) {
     const { rows } = await this.db.query<{ salt: Buffer; nonce: Buffer; sealed: Buffer }>(
@@ -119,7 +199,7 @@ export class CompagnonKeys {
     this.#unlocked.set(session.sessionId, { userId: session.userId, kek, salt, apiKey });
   }
 
-  status(session: Session): CompagnonStatus {
+  #ownStatus(session: Session): 'available' | 'unconfigured' | 'locked' {
     const unlocked = this.#unlocked.get(session.sessionId);
     if (!unlocked || unlocked.userId !== session.userId) return 'locked';
     return unlocked.apiKey ? 'available' : 'unconfigured';
@@ -189,7 +269,7 @@ export async function handleCompagnon(
   const route = `${request.method ?? 'GET'} ${url.pathname}`;
 
   if (route === 'GET /api/compagnon') {
-    send(response, 200, { status: keys.status(session) });
+    send(response, 200, await keys.state(session));
   } else if (route === 'POST /api/compagnon/unlock') {
     const body = await readJson(request);
     const password = typeof body?.['password'] === 'string' ? body['password'] : '';
@@ -208,12 +288,15 @@ export async function handleCompagnon(
     }
     limiter.reset(key);
     await keys.unlock(session, password);
-    send(response, 200, { status: keys.status(session) });
+    send(response, 200, await keys.state(session));
   } else if (route === 'POST /api/compagnon/key') {
     const body = await readJson(request);
     const apiKey = typeof body?.['key'] === 'string' ? body['key'].trim() : '';
+    const { status, provided } = await keys.state(session);
     if (!apiKey) send(response, 400, { error: 'key' });
-    else if (keys.status(session) === 'locked') send(response, 409, { error: 'locked' });
+    // The account's Compagnon is provided: no key of its own (phase 4.8).
+    else if (provided) send(response, 409, { error: 'provided' });
+    else if (status === 'locked') send(response, 409, { error: 'locked' });
     else {
       const check = await keys.createLlm(apiKey, 'opus').checkKey(apiKey);
       if (check === 'valid') await keys.save(session, apiKey);
@@ -234,9 +317,10 @@ async function generate(
   request: IncomingMessage,
   response: ServerResponse,
 ) {
-  const status = keys.status(session);
-  const apiKey = keys.apiKey(session);
-  if (!apiKey) return send(response, 409, { error: status === 'locked' ? 'locked' : 'no-key' });
+  const key = await keys.keyFor(session);
+  if ('refused' in key)
+    return send(response, key.refused === 'ceiling' ? 429 : 409, { error: key.refused });
+  const { apiKey } = key;
   const body = await readJson(request, MAX_REQUEST);
   const llmInput = llmRequest(body?.['request']);
   if (!llmInput) return send(response, 400, { error: 'request' });
@@ -248,7 +332,9 @@ async function generate(
   });
   try {
     const answer = await keys.createLlm(apiKey, light).generate(llmInput, controller.signal);
-    // What each account spends, for the record (the ceiling of phase 4.8 will count it).
+    // What each account spends, counted against its ceiling (phase 4.8).
+    const model: PricedModel = llmInput.tier === 'fast' && light === 'haiku' ? HAIKU : OPUS;
+    await keys.spend(session, model, answer.usage);
     console.info(
       `[compagnon] ${session.userId} · ${llmInput.tier} · ${answer.usage?.inputTokens ?? 0} in, ${answer.usage?.cacheReadTokens ?? 0} cached, ${answer.usage?.outputTokens ?? 0} out`,
     );

@@ -26,6 +26,8 @@ export interface SyncServerOptions {
   readonly webDir?: string | null;
   /** For tests: the model of the browser's Compagnon, played without the network. */
   readonly createLlm?: CreateLlm;
+  /** The secret that seals the keys the accounts provide (phase 4.8, `COMPAGNON_SECRET`). */
+  readonly compagnonSecret?: Buffer | null;
   /** The administration page (phase 4.6). */
   readonly admin?: {
     /** CIDRs allowed to reach /admin (default: the home network and Tailscale). */
@@ -59,7 +61,12 @@ export function createSyncServer(options: SyncServerOptions): Server<ConnectionC
   const cacheDir = options.cacheDir ?? null;
   const netboot = options.netboot ?? { secret: null, macs: [] };
   const limiter = new LoginLimiter();
-  const compagnon = new CompagnonKeys(db, options.createLlm);
+  const compagnon = new CompagnonKeys(db, {
+    ...(options.createLlm && { createLlm: options.createLlm }),
+    secret: options.compagnonSecret ?? null,
+    ...(options.admin?.timeZone && { timeZone: options.admin.timeZone }),
+    ...(options.admin?.now && { now: options.admin.now }),
+  });
   const web = createWebApp(options.webDir ?? null);
   const admin = createAdmin(db, {
     networks: networkList(options.admin?.networks ?? DEFAULT_ADMIN_NETWORKS),

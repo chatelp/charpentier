@@ -2,6 +2,7 @@ import { COMMANDS, runCommand } from './cli';
 import { createPool, migrate } from './database';
 import { defaultWebDir } from './web-app';
 import { createSyncServer } from './sync-server';
+import { providedSecret } from './provided';
 
 /**
  * Entry point of the server's Docker image: Postgres from DATABASE_URL, port
@@ -44,6 +45,17 @@ const admin = {
 };
 // The app for the browser (phase 4.7 a): next to main.js in the image, or WEB_DIR.
 const webDir = process.env['WEB_DIR'] || defaultWebDir();
-const server = createSyncServer({ db, port, address: '0.0.0.0', cacheDir, netboot, admin, webDir });
+// The secret that seals the keys the accounts provide (phase 4.8): in the host's .env, never in the base.
+const compagnonSecret = providedSecret(process.env['COMPAGNON_SECRET']);
+const server = createSyncServer({
+  db,
+  port,
+  address: '0.0.0.0',
+  cacheDir,
+  netboot,
+  admin,
+  webDir,
+  compagnonSecret,
+});
 await server.listen();
 console.log(`Charpentier sync server listening on port ${port}.`);

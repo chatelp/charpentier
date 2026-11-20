@@ -18,6 +18,8 @@ services:
       # ranges, since an IPv6 client comes through Docker's proxy with the
       # address of the bridge (infra/README.md, Administration).
       ADMIN_NETWORKS: ${ADMIN_NETWORKS:?set ADMIN_NETWORKS in .env}
+      # Seals the API keys attached to accounts (phase 4.8): in .env only, never in the base.
+      COMPAGNON_SECRET: ${COMPAGNON_SECRET:-}
     # The X250's binary cache (D-31): rebuilt by the CI if lost, so not backed up.
     volumes:
       - cache:/data/nix-cache

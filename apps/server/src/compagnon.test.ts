@@ -146,7 +146,7 @@ describe('the browser’s Compagnon through the server (phase 4.7 b)', () => {
     ).toBe(401);
     expect(
       (await page.call('POST', '/api/compagnon/unlock', { password: helene.password })).body,
-    ).toEqual({ status: 'available' });
+    ).toEqual({ status: 'available', provided: false });
     expect((await page.ask()).status).toBe(200);
     expect(model.calls.at(-1)?.apiKey).toBe(GOOD_KEY);
   });

@@ -62,6 +62,11 @@ if [ ! -f .env ]; then
   } > .env
   mkdir -p "$3"
 fi
+# The secret that seals the keys the accounts provide (phase 4.8): drawn once, kept in
+# this .env only (never in the base nor its backups). Lost, the keys must be pasted again.
+if ! grep -q '^COMPAGNON_SECRET=.' .env; then
+  echo "COMPAGNON_SECRET=$(openssl rand -hex 32)" >> .env
+fi
 docker compose up -d --build
 docker compose ps
 REMOTE

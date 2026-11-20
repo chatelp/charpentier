@@ -62,6 +62,27 @@ export async function migrate(db: Database): Promise<void> {
       updated_at timestamptz not null default now()
     )
   `);
+  // The Compagnon provided by an account (phase 4.8): its key sealed by a secret of
+  // the server kept out of the base, its ceiling per month; and what each account spends.
+  await db.query(`
+    create table if not exists provided_compagnons (
+      user_id uuid primary key references users (id),
+      nonce bytea not null,
+      sealed bytea not null,
+      ceiling_cents integer,
+      created_at timestamptz not null default now(),
+      updated_at timestamptz not null default now()
+    )
+  `);
+  await db.query(`
+    create table if not exists compagnon_spend (
+      user_id uuid not null references users (id),
+      month text not null,
+      micros bigint not null default 0,
+      calls integer not null default 0,
+      primary key (user_id, month)
+    )
+  `);
   await db.query(`
     create table if not exists projects (
       id text primary key,

@@ -44,6 +44,18 @@ Une page du serveur (docs/DESIGN.md §4.13) : comptes (créer, réinitialiser le
 - **Sauvegardes** : le dossier `BACKUP_ARCHIVE` est monté en lecture seule dans le serveur (`BACKUP_DIR=/backups`) ; la page ne restaure jamais (voir plus bas).
 - **Heures** : `ADMIN_TIMEZONE` (par défaut `Europe/Paris`).
 
+## Compagnon fourni par le compte (phase 4.8)
+
+Une clé d'API Anthropic s'attache à un compte de testeur, avec un plafond de dépense par mois (en dollars, la monnaie d'Anthropic, compté par le serveur à chaque appel ; le mois suit l'heure de Paris). La clé se tape sans écho et n'est jamais réaffichée :
+
+```sh
+ssh -t prodesk2021.local 'cd ~/Docker/charpentier && docker compose exec server node main.js provide-compagnon --ceiling-usd=5 testeur@exemple.fr'
+ssh -t prodesk2021.local 'cd ~/Docker/charpentier && docker compose exec server node main.js compagnon-spend'
+ssh -t prodesk2021.local 'cd ~/Docker/charpentier && docker compose exec server node main.js withdraw-compagnon testeur@exemple.fr'
+```
+
+Elle est scellée (AES-256-GCM) par `COMPAGNON_SECRET`, tiré une fois par `scripts/deploy-server.sh` dans le `.env` de l'hôte : ni la base ni ses sauvegardes ne la contiennent en clair. Sans ce secret (`.env` perdu), les clés sont illisibles et sont à recoller ; le reste ne change pas. La clé saisie par un compte lui-même (4.7 b) est scellée, elle, par son mot de passe.
+
 ## API
 
 À côté de la synchro (WebSocket à la racine) : `POST /api/login`, `POST /api/logout`, `GET /api/devices`, `DELETE /api/devices/<id>`, `GET /api/health`.
