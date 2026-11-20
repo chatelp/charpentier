@@ -12,6 +12,13 @@ export interface LlmService {
   generate(request: LlmRequest, signal?: AbortSignal): Promise<LlmResponse>;
 }
 
+/** The model declined the request for safety reasons (and so did its fallbacks). */
+export class LlmRefusalError extends Error {}
+/** No key, or the key was refused. */
+export class LlmUnconfiguredError extends Error {}
+/** The provider (or the relay to it) could not be reached. */
+export class LlmOfflineError extends Error {}
+
 export type LlmStatus =
   /** Ready to take requests. */
   | 'available'

@@ -5,7 +5,13 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { AgentHost, API_KEY_SECRET } from './agent-host';
 import { DocStore } from './doc-store';
-import { AnthropicLlmService, HAIKU, LlmRefusalError, OPUS } from './anthropic-llm';
+import {
+  AnthropicLlmService,
+  HAIKU,
+  LlmOfflineError,
+  LlmRefusalError,
+  OPUS,
+} from './anthropic-llm';
 import { SecretStore } from './secret-store';
 
 /** A fake SDK client: records requests, answers or fails as told. */
@@ -179,7 +185,7 @@ describe('Anthropic LLM service', () => {
     });
     const statuses: string[] = [];
     llm.onStatusChange((s) => statuses.push(s));
-    await expect(llm.generate(request)).rejects.toBeInstanceOf(Anthropic.APIConnectionError);
+    await expect(llm.generate(request)).rejects.toBeInstanceOf(LlmOfflineError);
     fail = message('', 'refusal');
     await expect(llm.generate(request)).rejects.toBeInstanceOf(LlmRefusalError);
     key = undefined;

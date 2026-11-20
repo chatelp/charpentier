@@ -1,11 +1,16 @@
 import Anthropic from '@anthropic-ai/sdk';
-import type {
-  LlmMessage,
-  LlmRequest,
-  LlmResponse,
-  LlmService,
-  LlmStatus,
+import {
+  LlmOfflineError,
+  LlmRefusalError,
+  LlmUnconfiguredError,
+  type LlmMessage,
+  type LlmRequest,
+  type LlmResponse,
+  type LlmService,
+  type LlmStatus,
 } from '@charpentier/platform';
+
+export { LlmOfflineError, LlmRefusalError, LlmUnconfiguredError };
 
 /** The model behind each tier (D-20): Opus everywhere; Haiku for light work when chosen. */
 export interface ModelChoice {
@@ -15,11 +20,6 @@ export interface ModelChoice {
 
 export const OPUS = 'claude-opus-5-5';
 export const HAIKU = 'claude-haiku-5-5';
-
-/** The model declined the request for safety reasons (and so did its fallbacks). */
-export class LlmRefusalError extends Error {}
-/** No key, or the key was refused. */
-export class LlmUnconfiguredError extends Error {}
 
 /**
  * The LLM service of the desktop main process (docs/SPEC.md §14, D-12):
@@ -210,8 +210,10 @@ export class AnthropicLlmService implements LlmService {
         },
       };
     } catch (error) {
-      if (error instanceof Anthropic.APIConnectionError) this.#setStatus('offline');
-      else if (error instanceof Anthropic.AuthenticationError) {
+      if (error instanceof Anthropic.APIConnectionError) {
+        this.#setStatus('offline');
+        throw new LlmOfflineError('The provider cannot be reached', { cause: error });
+      } else if (error instanceof Anthropic.AuthenticationError) {
         this.#setStatus('unconfigured');
         throw new LlmUnconfiguredError('API key refused');
       }

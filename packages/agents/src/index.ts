@@ -83,3 +83,4 @@ export {
 } from './interview';
 // The progress of the interview lives in the schema (the interface reads it too).
 export { nextSection, sectionStates } from '@charpentier/schema';
+export { AgentWorks, type AgentDocuments } from './works';
