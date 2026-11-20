@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import type { SignInResult, SyncService, SyncStatus } from '@charpentier/platform';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createI18n } from '../i18n/i18n';
 import { createTestPlatform } from '../testing/test-platform';
@@ -51,8 +51,8 @@ describe('the app the server serves (phase 4.7 a)', () => {
     const { service } = webSync();
     const platform = createTestPlatform({ sync: service });
     render(<App platform={platform} i18n={await createI18n('fr')} />);
-    expect(await screen.findByText('Connectez-vous pour retrouver vos romans.')).toBeTruthy();
-    expect(screen.getByLabelText('Adresse e-mail').getAttribute('autocomplete')).toBe('username');
+    expect(await screen.findByText('Vos romans vous attendent.')).toBeTruthy();
+    expect(screen.getByLabelText('E-mail').getAttribute('autocomplete')).toBe('username');
     expect(screen.getByLabelText('Mot de passe').getAttribute('autocomplete')).toBe(
       'current-password',
     );
@@ -65,16 +65,19 @@ describe('the app the server serves (phase 4.7 a)', () => {
     const { service, calls, setStatus } = webSync();
     const platform = createTestPlatform({ sync: service });
     render(<App platform={platform} i18n={await createI18n('fr')} />);
-    await screen.findByLabelText('Adresse e-mail');
-    fill('Adresse e-mail', ' p@example.org ');
+    await screen.findByLabelText('E-mail');
+    fill('E-mail', ' p@example.org ');
     fill('Mot de passe', 'mauvais');
-    fireEvent.click(screen.getByRole('button', { name: 'Se connecter' }));
-    expect((await screen.findByRole('alert')).textContent).toBe(
+    fireEvent.click(screen.getByRole('button', { name: /^Se connecter/ }));
+    expect((await screen.findByRole('alert')).textContent).toContain(
       'E-mail ou mot de passe incorrect.',
     );
+    // The e-mail stays, the password is typed again.
+    expect((screen.getByLabelText('E-mail') as HTMLInputElement).value).toBe('p@example.org');
+    expect((screen.getByLabelText('Mot de passe') as HTMLInputElement).value).toBe('');
 
     fill('Mot de passe', 'bon mot de passe');
-    fireEvent.click(screen.getByRole('button', { name: 'Se connecter' }));
+    fireEvent.click(screen.getByRole('button', { name: /^Se connecter/ }));
     expect(await screen.findByText('Vos romans arrivent…')).toBeTruthy();
     expect(calls.at(-1)).toBe('signIn https://ecrire.example.org p@example.org');
     // The account's novel comes with the sync.
@@ -89,6 +92,48 @@ describe('the app the server serves (phase 4.7 a)', () => {
     render(<App platform={createTestPlatform({ sync: service })} i18n={await createI18n('fr')} />);
     await screen.findByRole('textbox', { name: 'Texte de la scène' });
     await service.signOut();
-    expect(await screen.findByLabelText('Adresse e-mail')).toBeTruthy();
+    expect(await screen.findByLabelText('E-mail')).toBeTruthy();
+  });
+
+  it('remembers the e-mail of the account, and opens on the password', async () => {
+    const { service, setStatus } = webSync();
+    const platform = createTestPlatform({ sync: service });
+    render(<App platform={platform} i18n={await createI18n('fr')} />);
+    await screen.findByLabelText('E-mail');
+    fill('E-mail', 'p@example.org');
+    fill('Mot de passe', 'bon mot de passe');
+    fireEvent.click(screen.getByRole('button', { name: /^Se connecter/ }));
+    await platform.library.create({ title: 'Avant Nantes', kind: 'novel' });
+    setStatus('synced');
+    await screen.findByRole('heading', { name: 'Bibliothèque' });
+    await service.signOut();
+    const email = (await screen.findByLabelText('E-mail')) as HTMLInputElement;
+    await waitFor(() => expect(email.value).toBe('p@example.org'));
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByLabelText('Mot de passe')));
+  });
+
+  it('says what stops the sign-in: too many attempts, a server that does not answer, no network', async () => {
+    const { service } = webSync();
+    let answer: SignInResult = 'too-many-attempts';
+    service.signIn = async () => answer;
+    render(<App platform={createTestPlatform({ sync: service })} i18n={await createI18n('fr')} />);
+    await screen.findByLabelText('E-mail');
+    fill('E-mail', 'p@example.org');
+    fill('Mot de passe', 'x');
+    fireEvent.click(screen.getByRole('button', { name: /^Se connecter/ }));
+    expect((await screen.findByRole('alert')).textContent).toContain('Trop de tentatives.');
+
+    answer = 'unreachable';
+    fireEvent.click(screen.getByRole('button', { name: /^Se connecter/ }));
+    await screen.findByText('Le serveur ne répond pas.');
+    expect(screen.getByRole('button', { name: /^Réessayer/ })).toBeTruthy();
+
+    Object.defineProperty(navigator, 'onLine', { configurable: true, get: () => false });
+    window.dispatchEvent(new Event('offline'));
+    await screen.findByText('Hors ligne.');
+    expect((screen.getByLabelText('E-mail') as HTMLInputElement).disabled).toBe(true);
+    Object.defineProperty(navigator, 'onLine', { configurable: true, get: () => true });
+    window.dispatchEvent(new Event('online'));
+    await waitFor(() => expect(screen.queryByText('Hors ligne.')).toBeNull());
   });
 });

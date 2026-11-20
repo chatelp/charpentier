@@ -32,6 +32,9 @@ export interface AppProps {
 
 const NO_FEATURES: readonly Feature[] = [];
 
+/** The e-mail of the last account signed in on this device (the web app's door). */
+const LAST_EMAIL = 'signIn.email';
+
 /** Root of the application, identical in every host. */
 export function App({ platform, i18n, features = NO_FEATURES }: AppProps) {
   const active = useMemo(() => {
@@ -66,9 +69,14 @@ function Root() {
   const [gate, setGate] = useState<'checking' | 'sign-in' | 'arriving' | 'open'>(
     sync?.accountRequired ? 'checking' : 'open',
   );
+  // The e-mail of the last account signed in here: the door opens on the password.
+  const [lastEmail, setLastEmail] = useState<string>();
   useEffect(() => {
     if (!sync?.accountRequired) return;
     let cancelled = false;
+    void platform.preferences.get<string>(LAST_EMAIL).then((email) => {
+      if (!cancelled && typeof email === 'string') setLastEmail(email);
+    });
     void sync.account().then((account) => {
       if (!cancelled) setGate((g) => (g === 'checking' ? (account ? 'open' : 'sign-in') : g));
     });
@@ -85,7 +93,7 @@ function Root() {
       cancelled = true;
       stop();
     };
-  }, [sync]);
+  }, [sync, platform]);
   // Signed in: once the account's library is heard (or after a while, offline),
   // the library opens on the account's novels.
   useEffect(() => {
@@ -237,7 +245,18 @@ function Root() {
   ) : null;
 
   if (gate === 'sign-in' && sync)
-    return <SignIn sync={sync} onSignedIn={() => setGate('arriving')} />;
+    return (
+      <SignIn
+        key={lastEmail ?? ''}
+        sync={sync}
+        {...(lastEmail && { email: lastEmail })}
+        onSignedIn={(email) => {
+          setLastEmail(email);
+          void platform.preferences.set(LAST_EMAIL, email);
+          setGate('arriving');
+        }}
+      />
+    );
   if (gate === 'checking' || gate === 'arriving')
     return <p role="status">{t(gate === 'arriving' ? 'sync.screen.arriving' : 'app.loading')}</p>;
 

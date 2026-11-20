@@ -971,13 +971,25 @@
   },
   "sync": {
     "screen": {
-      "lead": "Connectez-vous pour retrouver vos romans.",
-      "email": "Adresse e-mail",
+      "lead": "Vos romans vous attendent.",
+      "email": "E-mail",
       "password": "Mot de passe",
+      "bang": "!",
+      "show": "afficher",
+      "hide": "masquer",
       "submit": "Se connecter",
+      "retry": "Réessayer",
       "signingIn": "Connexion…",
       "arriving": "Vos romans arrivent…",
-      "unreachable": "Le serveur ne répond pas. Vérifiez le réseau."
+      "invalid": "E-mail ou mot de passe incorrect.",
+      "tooMany": "Trop de tentatives.",
+      "tooManyHelp": "Réessayez dans un quart d’heure.",
+      "unreachable": "Le serveur ne répond pas.",
+      "unreachableHelp": "Vérifiez la connexion, puis réessayez.",
+      "offline": "Hors ligne.",
+      "offlineHelp": "La première connexion demande le réseau ; ensuite, vos romans s’ouvrent même sans.",
+      "account": "Compte sur <host>{{host}}</host>.",
+      "forgotten": "Mot de passe oublié : demandez à l’administrateur du serveur."
     },
     "serverPrompt": "Adresse du serveur (https://…)",
     "emailPrompt": "Adresse e-mail du compte",
