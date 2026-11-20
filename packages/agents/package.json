@@ -14,6 +14,8 @@
   "dependencies": {
     "@charpentier/platform": "workspace:*",
     "@charpentier/schema": "workspace:*",
+    "fflate": "^0.8.3",
+    "unpdf": "^2.2.1",
     "yjs": "^13.6.33"
   }
 }

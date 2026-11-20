@@ -187,6 +187,12 @@ importers:
       '@charpentier/schema':
         specifier: workspace:*
         version: link:../schema
+      fflate:
+        specifier: ^0.8.3
+        version: 0.8.3
+      unpdf:
+        specifier: ^2.2.1
+        version: 2.2.1
       yjs:
         specifier: ^13.6.33
         version: 13.6.33
@@ -315,15 +321,9 @@ importers:
       '@tiptap/y-tiptap':
         specifier: ^3.3.0
         version: 3.3.0(prosemirror-model@1.25.13)(prosemirror-state@1.4.4)(prosemirror-view@1.42.9)(y-protocols@1.0.7(yjs@13.6.33))(yjs@13.6.33)
-      fflate:
-        specifier: ^0.8.3
-        version: 0.8.3
       nspell:
         specifier: 2.1.5
         version: 2.1.5
-      unpdf:
-        specifier: ^2.2.1
-        version: 2.2.1
       yjs:
         specifier: ^13.6.33
         version: 13.6.33
@@ -343,12 +343,18 @@ importers:
       '@types/ws':
         specifier: ^8.18.2
         version: 8.18.2
+      fflate:
+        specifier: ^0.8.3
+        version: 0.8.3
       ws:
         specifier: ^8.23.0
         version: 8.23.0
 
   packages/platform-web:
     dependencies:
+      '@charpentier/agents':
+        specifier: workspace:*
+        version: link:../agents
       '@charpentier/platform':
         specifier: workspace:*
         version: link:../platform
