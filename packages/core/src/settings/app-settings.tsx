@@ -307,7 +307,11 @@ function Compagnon({ ctx }: { readonly ctx: Ctx }) {
       <Group title={t('appSettings.compagnon.key')}>
         <Line
           label={t('appSettings.compagnon.keyLabel')}
-          help={t('appSettings.compagnon.keyHelp')}
+          help={t(
+            ctx.platform.agents.keyOnServer
+              ? 'appSettings.compagnon.keyHelpServer'
+              : 'appSettings.compagnon.keyHelp',
+          )}
           sunk={hasKey}
         >
           {status === 'disabled' ? (
@@ -315,8 +319,23 @@ function Compagnon({ ctx }: { readonly ctx: Ctx }) {
           ) : (
             <>
               <span className="ch-aset-value">
-                {t(hasKey ? 'appSettings.compagnon.keySaved' : 'appSettings.compagnon.noKey')}
+                {t(
+                  status === 'locked'
+                    ? 'appSettings.compagnon.keyLocked'
+                    : hasKey
+                      ? 'appSettings.compagnon.keySaved'
+                      : 'appSettings.compagnon.noKey',
+                )}
               </span>
+              {status === 'locked' && (
+                <button
+                  type="button"
+                  className="ch-btn"
+                  onClick={() => void ctx.runCommand('unlockCompagnon')}
+                >
+                  {t('appSettings.compagnon.unlock')}
+                </button>
+              )}
               <button
                 type="button"
                 className="ch-btn"

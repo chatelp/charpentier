@@ -8,13 +8,15 @@ import { IndexedDbDocumentService, MemoryDocumentService } from './documents';
 import { DocumentLibrary } from './library';
 import { LocalStoragePreferences } from './preferences';
 import { WebSync } from './sync';
+import { pickReferenceFile, WebCompagnon } from './compagnon';
 
 export { IndexedDbDocumentService, MemoryDocumentService } from './documents';
 export { DocumentLibrary, LIBRARY_GUID } from './library';
 export { LocalStoragePreferences } from './preferences';
 export { WebSync, type WebSyncDeps } from './sync';
+export { WebCompagnon, type WebCompagnonDeps } from './compagnon';
 
-/** No AI on the web host until the server proxy exists (step 4). */
+/** No AI where the page was not served by the author's server (development, a copy). */
 const disabledAgents: AgentsService = {
   status: () => 'disabled',
   onStatusChange: () => () => {},
@@ -131,6 +133,22 @@ export function createWebPlatform(
         })
       : null;
   void sync?.start();
+  // The Compagnon through the server that served the page (phase 4.7 b).
+  const compagnon = sync
+    ? new WebCompagnon({
+        documents,
+        origin: globalThis.location.origin,
+        storage: globalThis.localStorage ?? null,
+        pickFile: pickReferenceFile,
+      })
+    : null;
+  if (sync && compagnon) {
+    // Signed in (or still signed in from before): where the key stands.
+    sync.onStatusChange((status) => {
+      if (status === 'connecting') void compagnon.refresh();
+    });
+    void sync.account().then((account) => account && compagnon.refresh());
+  }
   return {
     host: 'web',
     about: options.about ?? null,
@@ -139,7 +157,7 @@ export function createWebPlatform(
     libraryFolder: null,
     preferences: new LocalStoragePreferences(),
     keybindings: createWebKeybindings(globalThis.navigator?.userAgent ?? ''),
-    agents: disabledAgents,
+    agents: compagnon ?? disabledAgents,
     sync,
     llm: null,
     fileMirror: null,

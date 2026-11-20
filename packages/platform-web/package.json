@@ -12,6 +12,7 @@
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.test.json"
   },
   "dependencies": {
+    "@charpentier/agents": "workspace:*",
     "@charpentier/platform": "workspace:*",
     "@charpentier/schema": "workspace:*",
     "@hocuspocus/provider": "^4.8.0",

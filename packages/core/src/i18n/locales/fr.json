@@ -43,9 +43,18 @@
     "closeKey": "Échap",
     "status": {
       "unconfigured": "Le Compagnon attend votre clé d’API : Réglages › Compagnon.",
+      "locked": "Le Compagnon attend votre mot de passe.",
       "offline": "Compagnon hors ligne"
     },
     "apiKeyPlaceholder": "Clé d’API Anthropic (sk-ant-…), gardée chiffrée sur cet appareil",
+    "apiKeyPlaceholderServer": "Clé d’API Anthropic (sk-ant-…), gardée chiffrée sur votre serveur",
+    "unlockPrompt": "Mot de passe de votre compte, pour réveiller le Compagnon",
+    "unlock": {
+      "unlocked": "Le Compagnon est prêt.",
+      "invalid": "Ce n’est pas le mot de passe du compte.",
+      "too-many-attempts": "Trop de tentatives : réessayez dans un quart d’heure.",
+      "offline": "Le serveur ne répond pas."
+    },
     "apiKeyChecking": "Vérification de la clé auprès d’Anthropic…",
     "apiKey": {
       "saved": "Clé enregistrée. Le Compagnon est prêt.",
@@ -114,7 +123,8 @@
     "context": {
       "reading": "lit la scène…",
       "offline": "hors ligne",
-      "noKey": "sans clé"
+      "noKey": "sans clé",
+      "locked": "en attente du mot de passe"
     }
   },
   "manuscript": {
@@ -200,6 +210,7 @@
     "toggleMentorPanel": "Points à traiter et conversation",
     "setApiKey": "Saisir la clé d’API Anthropic du Compagnon…",
     "forgetApiKey": "Oublier la clé d’API Anthropic",
+    "unlockCompagnon": "Réveiller le Compagnon (mot de passe du compte)…",
     "talkToMentor": "Parler au Compagnon",
     "moreHelp": "Plus d’aide du Compagnon",
     "lessHelp": "Moins d’aide du Compagnon",
@@ -319,7 +330,10 @@
       "key": "Clé d’API",
       "keyLabel": "Clé Anthropic",
       "keyHelp": "Gardée dans le trousseau de l’appareil ; elle ne part que vers Anthropic.",
+      "keyHelpServer": "Gardée sur votre serveur, chiffrée par votre mot de passe ; elle ne part que vers Anthropic.",
       "keySaved": "enregistrée",
+      "keyLocked": "en attente du mot de passe",
+      "unlock": "Réveiller…",
       "noKey": "aucune",
       "enter": "Saisir…",
       "change": "Changer…",

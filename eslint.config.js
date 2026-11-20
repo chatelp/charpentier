@@ -184,9 +184,10 @@ export const layers = [
     network: false,
     browser: false,
   },
+  // The browser runs the agents in the page, the server relaying the calls (phase 4.7 b).
   {
     files: ['packages/platform-web/**'],
-    forbidden: ['@charpentier/core', '@charpentier/agents', '@charpentier/platform-desktop'],
+    forbidden: ['@charpentier/core', '@charpentier/platform-desktop'],
   },
   { files: ['apps/web/src/**'], forbidden: ['@charpentier/platform-desktop'] },
   // The renderer side of the desktop platform runs in the sandboxed renderer.

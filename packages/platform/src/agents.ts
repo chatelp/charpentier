@@ -66,6 +66,9 @@ export interface ReferenceRefusal {
 /** How a background work ended: `stopped` by the author, `empty` with nothing to read. */
 export type DeepWorkOutcome = AskResult | 'stopped' | 'empty';
 
+/** Opening the key again with the account's password. */
+export type CompagnonUnlockResult = 'unlocked' | 'invalid' | 'too-many-attempts' | 'offline';
+
 /** Outcome of asking the Compagnon to answer (its answer lands in the mentor document). */
 export type AskResult = 'answered' | 'unavailable' | 'offline' | 'refused' | 'failed';
 
@@ -154,6 +157,16 @@ export interface AgentsService {
   }): Promise<DeepWorkOutcome>;
   /** The author changed their mind: the text is dropped unread. */
   dropReference(input: { readonly token: string }): Promise<void>;
+  /**
+   * Where the key lives, for the words of the interface: the device's
+   * keychain (desktop), or the author's server (the browser, phase 4.7 b).
+   */
+  readonly keyOnServer?: boolean;
+  /**
+   * « locked » (the key on the server, sealed by the password): the account's
+   * password opens it again for this session. Absent where no key is locked.
+   */
+  unlock?(password: string): Promise<CompagnonUnlockResult>;
   /** D-20: the model of the light, frequent work. */
   lightModel(): Promise<'opus' | 'haiku'>;
   setLightModel(model: 'opus' | 'haiku'): Promise<void>;

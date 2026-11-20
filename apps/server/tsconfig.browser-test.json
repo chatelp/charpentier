@@ -4,5 +4,5 @@
     "lib": ["ES2023", "DOM"],
     "types": ["node"]
   },
-  "include": ["src/web-sync.test.ts"]
+  "include": ["src/web-sync.test.ts", "src/web-compagnon.test.ts"]
 }

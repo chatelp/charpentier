@@ -294,13 +294,23 @@ export function WorkBlock({
     );
 
   const ended = ctx.work.ended.get(workKey(work));
-  const inert = !!running || status === 'unconfigured';
+  const inert = !!running || status === 'unconfigured' || status === 'locked';
   const note = () => {
     if (running)
       return t(`work.task.${running.ref.task}.busy`, {
         name: running.reference?.title ?? workName(ctx.root, running.ref),
         elapsed: formatElapsed(elapsed),
       });
+    if (status === 'locked')
+      return (
+        <button
+          type="button"
+          className="ch-link"
+          onClick={() => void ctx.runCommand('unlockCompagnon')}
+        >
+          {t('mentor.status.locked')}
+        </button>
+      );
     if (status === 'unconfigured' || ended?.outcome === 'unavailable')
       return (
         <>

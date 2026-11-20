@@ -158,6 +158,7 @@ export const MENU_LAYOUT: readonly { readonly menu: string; readonly items: read
       '-',
       'setApiKey',
       'forgetApiKey',
+      'unlockCompagnon',
       'toggleLightModel',
     ],
   },

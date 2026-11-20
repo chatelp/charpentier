@@ -6,5 +6,5 @@
   },
   "include": ["src", "vitest.config.ts"],
   // The browser's sync against this server: it imports the web platform, which needs the DOM.
-  "exclude": ["src/web-sync.test.ts"]
+  "exclude": ["src/web-sync.test.ts", "src/web-compagnon.test.ts"]
 }

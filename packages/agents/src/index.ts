@@ -84,3 +84,15 @@ export {
 // The progress of the interview lives in the schema (the interface reads it too).
 export { nextSection, sectionStates } from '@charpentier/schema';
 export { AgentWorks, type AgentDocuments } from './works';
+export {
+  cleanPdfPages,
+  fromEpub,
+  fromMarkdown,
+  MAX_REFERENCE_BYTES,
+  parseReferenceFile,
+  REFERENCE_EXTENSIONS,
+  referenceFormat,
+  UnreadableReferenceError,
+  xhtmlToText,
+  type ReferenceFormat,
+} from './reference-file';

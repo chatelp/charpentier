@@ -27,7 +27,12 @@ export type LlmStatus =
   /** No provider or key configured yet. */
   | 'unconfigured'
   /** Not offered by this host (e.g. the web host before step 4). */
-  | 'disabled';
+  | 'disabled'
+  /**
+   * The key is on the server, sealed by the account's password, and this
+   * session must give the password again (the server restarted, phase 4.7 b).
+   */
+  | 'locked';
 
 export interface LlmMessage {
   readonly role: 'user' | 'assistant';

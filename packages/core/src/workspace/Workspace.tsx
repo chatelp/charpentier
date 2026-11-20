@@ -924,6 +924,7 @@ export function ProjectWorkspace({
   const mentorNote = {
     disabled: t('mentor.unavailableOnHost'),
     unconfigured: t('mentor.status.unconfigured'),
+    locked: t('mentor.status.locked'),
     offline: t('mentor.status.offline'),
     available: undefined,
   }[agentsStatus];
@@ -1126,9 +1127,11 @@ export function ProjectWorkspace({
               ? t('mentor.context.offline')
               : agentsStatus === 'unconfigured'
                 ? t('mentor.context.noKey')
-                : reading > 0
-                  ? t('mentor.context.reading')
-                  : undefined
+                : agentsStatus === 'locked'
+                  ? t('mentor.context.locked')
+                  : reading > 0
+                    ? t('mentor.context.reading')
+                    : undefined
           }
           conversation={
             <Conversation
@@ -1264,7 +1267,11 @@ export function ProjectWorkspace({
         mentorNote={mentorNote}
         onEnterKey={
           // Where the key is set: Réglages › Compagnon (DESIGN 1.24).
-          agentsStatus === 'unconfigured' ? () => ctx.openSettings('compagnon') : undefined
+          agentsStatus === 'unconfigured'
+            ? () => ctx.openSettings('compagnon')
+            : agentsStatus === 'locked'
+              ? () => void ctx.runCommand('unlockCompagnon')
+              : undefined
         }
         features={<FeatureFooterItems ctx={ctx} />}
         work={
@@ -1377,7 +1384,9 @@ export function ProjectWorkspace({
           suggested={
             agentsStatus === 'unconfigured'
               ? ['setApiKey', ...SUGGESTED_COMMANDS]
-              : SUGGESTED_COMMANDS
+              : agentsStatus === 'locked'
+                ? ['unlockCompagnon', ...SUGGESTED_COMMANDS]
+                : SUGGESTED_COMMANDS
           }
           onClose={closePalette}
         />

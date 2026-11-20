@@ -108,7 +108,11 @@ export const languageCommands: readonly LanguageCommand[] = [
     run: (ctx) =>
       ctx.openPalette({
         kind: 'input',
-        placeholder: ctx.t('mentor.apiKeyPlaceholder'),
+        placeholder: ctx.t(
+          ctx.platform.agents.keyOnServer
+            ? 'mentor.apiKeyPlaceholderServer'
+            : 'mentor.apiKeyPlaceholder',
+        ),
         initial: '',
         secret: true,
         onSubmit: (key) => {
@@ -131,6 +135,26 @@ export const languageCommands: readonly LanguageCommand[] = [
       await ctx.platform.agents.forgetApiKey();
       ctx.notify(ctx.t('mentor.apiKeyForgotten'));
     },
+  },
+  {
+    // The key on the server, sealed by the password: after a restart of the server (phase 4.7 b).
+    id: 'unlockCompagnon',
+    scope: 'global',
+    isEnabled: (ctx) =>
+      ctx.platform.agents.status() === 'locked' && ctx.platform.agents.unlock !== undefined,
+    run: (ctx) =>
+      ctx.openPalette({
+        kind: 'input',
+        placeholder: ctx.t('mentor.unlockPrompt'),
+        initial: '',
+        secret: true,
+        onSubmit: (password) => {
+          if (!password) return;
+          void ctx.platform.agents
+            .unlock?.(password)
+            .then((result) => ctx.notify(ctx.t(`mentor.unlock.${result}`)));
+        },
+      }),
   },
   {
     id: 'toggleMentorPanel',
