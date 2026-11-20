@@ -4,9 +4,7 @@
     {
       "name": "web",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": [
-        "dev:web"
-      ],
+      "runtimeArgs": ["dev:web"],
       "port": 5173
     },
     {
