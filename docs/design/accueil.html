@@ -279,7 +279,7 @@
       const PAGES = [
         {
           k: 'Bienvenue',
-          t: 'Un atelier pour écrire votre roman',
+          t: 'Un atelier pour écrire votre projet',
           p: [
             'Charpentier vous accompagne pendant que vous écrivez : il range ce que vous inventez, vérifie la cohérence, explique le métier.',
             'Sept choses à savoir avant de commencer. Deux minutes ; vous pourrez tout relire plus tard, par la ligne de commande : « Revoir l’accueil ».',
@@ -304,19 +304,19 @@
           k: 'Scène par scène',
           t: 'Une scène à la fois',
           p: [
-            'Votre roman se compose de chapitres, et chaque chapitre de scènes. Vous écrivez une scène à la fois, sur une page calme.',
+            'Votre projet se compose de chapitres, et chaque chapitre de scènes. Vous écrivez une scène à la fois, sur une page calme.',
             'Le livre, en bas à gauche, ouvre le manuscrit : on y passe d’une scène à l’autre, on y crée, déplace et renomme.',
           ],
           keys: [
             '<kbd>⌘J</kbd> le manuscrit',
             '<kbd>⌘N</kbd> nouvelle scène',
-            '<kbd>⇧⌘P</kbd> le plan du roman',
+            '<kbd>⇧⌘P</kbd> le plan du projet',
           ],
           img: 'manuscrit',
         },
         {
           k: 'L’Atelier',
-          t: 'Ce que vous savez de votre roman',
+          t: 'Ce que vous savez de votre projet',
           p: [
             'Personnages, structure, règles de votre monde : des fiches que vous remplissez, ou que le Compagnon vous propose d’après ce que vous écrivez.',
             'Rien n’y entre sans vous : une proposition est en relief ; vous la validez, ou vous l’écartez.',
@@ -331,7 +331,7 @@
             'Il signale une incohérence, explique un point de métier, pose une question. Vous réglez combien il intervient, du discret au tuteur.',
           ],
           never:
-            'Il n’écrit jamais une ligne de votre roman. Au plus une phrase d’exemple, que vous insérez vous-même si vous le voulez.',
+            'Il n’écrit jamais une ligne de votre projet. Au plus une phrase d’exemple, que vous insérez vous-même si vous le voulez.',
           keys: ['<kbd>⌘L</kbd> ses remarques et la conversation'],
           img: 'compagnon',
         },
@@ -370,8 +370,9 @@
           k: 'Vos textes',
           t: 'Où sont vos textes, et qui les lit',
           p: [
-            'Sur cet appareil d’abord : vous écrivez même hors ligne. Puis sur le serveur de Pierre Chatel, qui vous a invité, et dans ses sauvegardes. Pierre administre ce serveur.',
-            'Le Compagnon envoie à Anthropic les passages qu’il lit, sous le compte de Pierre, pour vous répondre.',
+            'Vos textes sont enregistrés sur cet appareil, et sur le serveur de Pierre Chatel (charpentier.chatel.pm), qui en garde des sauvegardes. Pierre administre ce serveur.',
+            'Quand le Compagnon vous répond, il envoie à Anthropic les passages qu’il lit, sous le compte de Pierre.',
+            'Un problème, une question : écrivez à Pierre.<br />Une précaution : exportez vos textes de temps en temps (« Exporter » dans la ligne de commande).',
           ],
           diagram: true,
           last: true,
@@ -395,7 +396,7 @@
         root.innerHTML = `<div class="letter">
           <img src="icon/charpentier.svg" alt="" style="width:72px;margin:-6px 0" />
           <h1>Bienvenue dans Charpentier</h1>
-          <p style="color:var(--ch-muted);font:italic 17px/1.5 var(--ch-font-text);margin:0">Un atelier pour écrire votre roman. Sept choses à savoir.</p>
+          <p style="color:var(--ch-muted);font:italic 17px/1.5 var(--ch-font-text);margin:0">Un atelier pour écrire votre projet. Sept choses à savoir.</p>
           ${PAGES.slice(1)
             .map(
               (pg) =>

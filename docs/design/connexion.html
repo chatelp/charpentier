@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Charpentier · connexion (web)</title>
-    <!-- Les tokens et les éléments de base de l'app : la porte des romans est dans la perle. -->
+    <!-- Les tokens et les éléments de base de l'app : la porte des projets est dans la perle. -->
     <link rel="stylesheet" href="../../packages/core/src/styles/base.css" />
     <style>
       /* Maquette de l'écran de connexion de l'app web (DESIGN §4.9 bis, PLAN 4.7 a).
@@ -166,7 +166,7 @@
     <main class="door">
       <img src="icon/charpentier-petit.svg" alt="" />
       <h1>Charpentier</h1>
-      <p class="lead">Vos romans vous attendent.</p>
+      <p class="lead">Vos projets vous attendent.</p>
       <form class="card" id="card" onsubmit="return false;"></form>
       <p class="foot" id="foot"></p>
     </main>
@@ -190,7 +190,7 @@
         serveur: ['Le serveur ne répond pas.', 'Vérifiez la connexion, puis réessayez.'],
         horsligne: [
           'Hors ligne.',
-          'La première connexion demande le réseau ; ensuite, vos romans s’ouvrent même sans.',
+          'La première connexion demande le réseau ; ensuite, vos projets s’ouvrent même sans.',
         ],
       };
       const m = MSG[etat];
