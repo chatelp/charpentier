@@ -67,10 +67,21 @@ export function Library({ currentProjectId, creating = false, onOpen, onClose }:
       setRows(loaded.rows);
       setStats(loaded.stats);
     });
+    // The account's projects keep arriving after a sign-in: each time the sync
+    // is up to date, the list is read again.
+    const stop = platform.sync?.onStatusChange((status) => {
+      if (status !== 'synced') return;
+      void load().then((loaded) => {
+        if (cancelled) return;
+        setRows(loaded.rows);
+        setStats(loaded.stats);
+      });
+    });
     return () => {
       cancelled = true;
+      stop?.();
     };
-  }, [load]);
+  }, [load, platform]);
 
   const all = rows ?? [];
   const trashCount = all.filter((r) => r.trashed).length;

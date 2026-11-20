@@ -33,6 +33,11 @@ export interface SyncDevice {
 export interface SyncService {
   /** The one server this host syncs with (the app in a browser: the server that served it); not asked. */
   readonly server?: string;
+  /**
+   * Nothing opens before signing in (the app the server serves, phase 4.7 a):
+   * the author's novels are on the account, the core shows a sign-in screen.
+   */
+  readonly accountRequired?: boolean;
   status(): SyncStatus;
   onStatusChange(listener: (status: SyncStatus) => void): () => void;
   account(): Promise<SyncAccountInfo | null>;

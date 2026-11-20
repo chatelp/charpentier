@@ -73,6 +73,9 @@ export class WebSync implements SyncService {
     return this.deps.origin;
   }
 
+  /** Served by the author's server: its novels are on the account, sign in first. */
+  readonly accountRequired = true;
+
   #fetch(path: string, init: RequestInit = {}) {
     return (this.deps.fetch ?? fetch)(`${this.deps.origin}${path}`, {
       ...init,

@@ -4,7 +4,9 @@
     {
       "name": "web",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["dev:web"],
+      "runtimeArgs": [
+        "dev:web"
+      ],
       "port": 5173
     },
     {
@@ -20,6 +22,21 @@
         "--strictPort"
       ],
       "port": 5174
+    },
+    {
+      "name": "web-build",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "@charpentier/web",
+        "exec",
+        "vite",
+        "preview",
+        "--port",
+        "4173",
+        "--strictPort"
+      ],
+      "port": 4173
     }
   ]
 }

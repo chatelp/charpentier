@@ -970,6 +970,15 @@
     }
   },
   "sync": {
+    "screen": {
+      "lead": "Connectez-vous pour retrouver vos romans.",
+      "email": "Adresse e-mail",
+      "password": "Mot de passe",
+      "submit": "Se connecter",
+      "signingIn": "Connexion…",
+      "arriving": "Vos romans arrivent…",
+      "unreachable": "Le serveur ne répond pas. Vérifiez le réseau."
+    },
     "serverPrompt": "Adresse du serveur (https://…)",
     "emailPrompt": "Adresse e-mail du compte",
     "passwordPrompt": "Mot de passe",

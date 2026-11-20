@@ -1,0 +1,64 @@
+/* The sign-in screen of the app the server serves (docs/PLAN.md 4.7 a).
+   A first look, with the app's tokens; the design session owns its look. */
+.ch-signin {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: var(--ch-space-5) 16px;
+  background: var(--ch-bg);
+  color: var(--ch-ink);
+}
+
+.ch-signin-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ch-space-3);
+  width: min(24rem, 100%);
+  padding: var(--ch-space-6) var(--ch-space-5);
+  border-radius: var(--ch-radius-lg);
+  background: var(--ch-bg);
+  box-shadow: var(--ch-raise);
+}
+
+.ch-signin-title {
+  margin: 0;
+  color: var(--ch-author);
+  font: 400 27px / 1.2 var(--ch-font-text);
+  text-align: center;
+}
+
+.ch-signin-lead {
+  margin: 0 0 var(--ch-space-2);
+  color: var(--ch-muted);
+  font: var(--ch-ui-sm) var(--ch-font-ui);
+  text-align: center;
+}
+
+.ch-signin-error {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: var(--ch-radius-md);
+  background: var(--ch-ink);
+  color: var(--ch-bg);
+  font: var(--ch-ui-sm) var(--ch-font-ui);
+}
+
+.ch-signin-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--ch-muted);
+  font: var(--ch-ui-xs) var(--ch-font-ui);
+}
+
+.ch-signin-submit {
+  justify-content: center;
+  margin-top: var(--ch-space-2);
+  padding: 9px 12px;
+  font-size: var(--ch-ui-sm);
+}
+
+.ch-signin-submit:disabled {
+  color: var(--ch-muted);
+  cursor: default;
+}

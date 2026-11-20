@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { I18nextProvider, useTranslation } from 'react-i18next';
 import { Library } from '../library/Library';
 import { TitleBar } from './TitleBar';
+import { SignIn } from './SignIn';
 import {
   initialProjectId,
   openProject,
@@ -59,6 +60,60 @@ function Root() {
   const [opening, setOpening] = useState<Opening>({ state: 'loading' });
   const [library, setLibrary] = useState<{ creating: boolean } | null>(null);
 
+  // The app the server serves (phase 4.7 a): nothing opens before signing in,
+  // then the account's library; signed out, back to the sign-in screen.
+  const sync = platform.sync;
+  const [gate, setGate] = useState<'checking' | 'sign-in' | 'arriving' | 'open'>(
+    sync?.accountRequired ? 'checking' : 'open',
+  );
+  useEffect(() => {
+    if (!sync?.accountRequired) return;
+    let cancelled = false;
+    void sync.account().then((account) => {
+      if (!cancelled) setGate((g) => (g === 'checking' ? (account ? 'open' : 'sign-in') : g));
+    });
+    const stop = sync.onStatusChange((status) => {
+      if (status !== 'off') return;
+      void sync.account().then((account) => {
+        if (cancelled || account) return;
+        setGate((g) => (g === 'open' ? 'sign-in' : g));
+        setLibrary(null);
+        setProjectId(undefined);
+      });
+    });
+    return () => {
+      cancelled = true;
+      stop();
+    };
+  }, [sync]);
+  // Signed in: once the account's library is heard (or after a while, offline),
+  // the library opens on the account's novels.
+  useEffect(() => {
+    if (gate !== 'arriving' || !sync) return;
+    let done = false;
+    const arrive = async () => {
+      if (done) return;
+      done = true;
+      // The projects come just after the library: a moment for them.
+      const deadline = Date.now() + 4000;
+      while (Date.now() < deadline && (await platform.library.list()).length === 0)
+        await new Promise((resolve) => setTimeout(resolve, 200));
+      const projects = await platform.library.list();
+      setGate('open');
+      if (projects.length > 0) setLibrary({ creating: false });
+    };
+    const stop = sync.onStatusChange((status) => {
+      if (status === 'synced' || status === 'offline') void arrive();
+    });
+    if (sync.status() === 'synced') void arrive();
+    const timer = setTimeout(() => void arrive(), 15_000);
+    return () => {
+      done = true;
+      stop();
+      clearTimeout(timer);
+    };
+  }, [gate, sync, platform]);
+
   const titles = useMemo(
     () => ({
       project: t('manuscript.defaultProjectTitle'),
@@ -77,7 +132,7 @@ function Root() {
 
   // Which project to open at start.
   useEffect(() => {
-    if (projectId) return;
+    if (projectId || gate !== 'open') return;
     let cancelled = false;
     initialProjectId(platform, titles).then(
       (id) => !cancelled && setProjectId(id),
@@ -89,7 +144,7 @@ function Root() {
     return () => {
       cancelled = true;
     };
-  }, [platform, titles, projectId, attempt]);
+  }, [platform, titles, projectId, attempt, gate]);
 
   // Opens it, and closes it when another one is chosen.
   useEffect(() => {
@@ -180,6 +235,11 @@ function Root() {
       slot={inWorkspace ? setTitleSlot : undefined}
     />
   ) : null;
+
+  if (gate === 'sign-in' && sync)
+    return <SignIn sync={sync} onSignedIn={() => setGate('arriving')} />;
+  if (gate === 'checking' || gate === 'arriving')
+    return <p role="status">{t(gate === 'arriving' ? 'sync.screen.arriving' : 'app.loading')}</p>;
 
   if (library)
     return (
