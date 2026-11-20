@@ -11,7 +11,7 @@ import {
   LlmOfflineError,
   LlmRefusalError,
   OPUS,
-} from './anthropic-llm';
+} from '@charpentier/anthropic';
 import { SecretStore } from './secret-store';
 
 /** A fake SDK client: records requests, answers or fails as told. */

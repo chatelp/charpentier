@@ -157,6 +157,8 @@ export const nodeZones = [
   'apps/desktop/src/preload',
   'apps/server/src',
   'packages/platform-desktop/src/main',
+  // The LLM service on Anthropic's API, for the desktop's main process and the server.
+  'packages/anthropic/src',
 ];
 
 /**

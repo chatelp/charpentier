@@ -2,7 +2,7 @@
   "name": "@charpentier/server",
   "version": "0.1.0",
   "private": true,
-  "description": "Self-hosted sync server: Hocuspocus over Postgres (docs/SPEC.md §14, D-21, D-22).",
+  "description": "Self-hosted sync server: Hocuspocus over Postgres (docs/SPEC.md \u00a714, D-21, D-22).",
   "license": "SEE LICENSE IN ../../LICENSE.md",
   "type": "module",
   "scripts": {
@@ -11,6 +11,8 @@
     "start": "node dist/main.js"
   },
   "dependencies": {
+    "@charpentier/anthropic": "workspace:*",
+    "@charpentier/platform": "workspace:*",
     "@charpentier/schema": "workspace:*",
     "@hocuspocus/extension-database": "^4.8.0",
     "@hocuspocus/server": "^4.8.0",

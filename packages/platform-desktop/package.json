@@ -17,6 +17,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "1.8.0",
     "@charpentier/agents": "workspace:*",
+    "@charpentier/anthropic": "workspace:*",
     "@charpentier/platform": "workspace:*",
     "@charpentier/schema": "workspace:*",
     "@hocuspocus/provider": "^4.8.0",

@@ -92,6 +92,12 @@ importers:
 
   apps/server:
     dependencies:
+      '@charpentier/anthropic':
+        specifier: workspace:*
+        version: link:../../packages/anthropic
+      '@charpentier/platform':
+        specifier: workspace:*
+        version: link:../../packages/platform
       '@charpentier/schema':
         specifier: workspace:*
         version: link:../../packages/schema
@@ -184,6 +190,19 @@ importers:
       yjs:
         specifier: ^13.6.33
         version: 13.6.33
+
+  packages/anthropic:
+    dependencies:
+      '@anthropic-ai/sdk':
+        specifier: 1.8.0
+        version: 1.8.0(zod@4.6.7)
+      '@charpentier/platform':
+        specifier: workspace:*
+        version: link:../platform
+    devDependencies:
+      '@types/node':
+        specifier: ^26.6.6
+        version: 26.6.6
 
   packages/core:
     dependencies:
@@ -281,6 +300,9 @@ importers:
       '@charpentier/agents':
         specifier: workspace:*
         version: link:../agents
+      '@charpentier/anthropic':
+        specifier: workspace:*
+        version: link:../anthropic
       '@charpentier/platform':
         specifier: workspace:*
         version: link:../platform

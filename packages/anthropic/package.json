@@ -1,0 +1,21 @@
+{
+  "name": "@charpentier/anthropic",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The LLM service on Anthropic's API, for the Node hosts: the desktop's main process and the server's relay.",
+  "license": "SEE LICENSE IN ../../LICENSE.md",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "1.8.0",
+    "@charpentier/platform": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6"
+  }
+}
