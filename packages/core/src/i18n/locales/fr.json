@@ -1065,7 +1065,7 @@
     "later": "Plus tard",
     "otherSection": "Autre section…",
     "pickSection": "Quelle section ?",
-    "hint": "⏎ envoyer · ⇧⏎ à la ligne · {{alt}}V {{alt}}X valider, rejeter la dernière proposition · {{mode}} libre / dirigé · Échap revenir au texte",
+    "hint": "⏎ envoyer · ⇧⏎ à la ligne · {{validate}} {{reject}} valider, rejeter la dernière proposition · {{mode}} libre / dirigé · Échap revenir au texte",
     "welcome": "Racontez-moi votre roman comme il vous vient : je range ce que vous dites dans l’Atelier, en propositions que vous validez ou non. En mode dirigé, je vous pose mes questions une à une, section par section. Voulez-vous commencer par « Le projet » ?",
     "startGuided": "Commencer en dirigé",
     "unavailable": "Le Compagnon n’est pas disponible dans cette version : l’entretien demande l’app de bureau.",

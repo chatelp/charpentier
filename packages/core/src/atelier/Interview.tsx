@@ -543,7 +543,13 @@ export function Interview({
         />
       </div>
       {available && (
-        <p className="ch-interview-hint">{t('interview.hint', { mode: modeKey, alt: host.alt })}</p>
+        <p className="ch-interview-hint">
+          {t('interview.hint', {
+            mode: modeKey,
+            validate: host.key('Alt-v'),
+            reject: host.key('Alt-x'),
+          })}
+        </p>
       )}
     </div>
   );

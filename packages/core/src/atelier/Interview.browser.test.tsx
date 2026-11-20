@@ -151,7 +151,12 @@ describe('the interview page of the Atelier (phase 6.2)', () => {
     await userEvent.keyboard('vx');
     expect((field as HTMLTextAreaElement).value).toBe('vx');
     expect(occupation().status).toBe('proposed');
-    screen.getByText(/⌥V ⌥X valider, rejeter la dernière proposition/);
+    // The hint names the keys as the host's keyboard does (the CI runs on Linux).
+    screen.getByText(
+      isMac
+        ? /⌥V ⌥X valider, rejeter la dernière proposition/
+        : /Alt\+V Alt\+X valider, rejeter la dernière proposition/,
+    );
     await userEvent.keyboard('{Backspace}{Backspace}');
     // ⌥V validates the last proposal waiting: the occupation.
     await userEvent.keyboard('{Alt>}v{/Alt}');

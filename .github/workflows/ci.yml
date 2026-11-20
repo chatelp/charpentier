@@ -3,6 +3,8 @@ name: CI
 on:
   push:
     branches: [main]
+    # A push that only touches the documents has nothing to check.
+    paths-ignore: ['docs/**', '**/*.md']
   pull_request:
 
 jobs:
@@ -22,7 +24,9 @@ jobs:
       # guardrail self-test and dependency license check.
       - run: pnpm check
       # The desktop app itself: built, launched in Electron (virtual display), killed mid-write.
-      - run: xvfb-run -a pnpm test:desktop
+      # The display is as wide as a desk's: on xvfb's default (1280 px) the window is narrower
+      # than the app's own 1440 px and the footer no longer has room for « Synchronisé ».
+      - run: xvfb-run -a -s "-screen 0 1920x1080x24" pnpm test:desktop
 
   # The app's Nix package, as the X250's system takes it (charpentier-os, D-29):
   # a dependency added without its new pnpmDeps hash (nix/charpentier.nix)
