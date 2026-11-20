@@ -555,6 +555,40 @@ describe('the System service of the X250 (phase 5.4)', () => {
     expect(await again.system.unlock('Nantes1')).toBe('ok');
   });
 
+  it('starts locked once a code is set: a restart never opens the device (D-44)', async () => {
+    const { system, dir } = await start();
+    // No code yet: the app opens on the text.
+    expect(system.state().lock.locked).toBe(false);
+    await system.setLockCode('Loire44');
+    system.dispose();
+
+    // The app starts again (an update, a crash): locked before anything is read.
+    const x250 = fakeX250();
+    const again = createLinuxSystem({
+      tools: x250.tools,
+      appVersion: '0.5.0',
+      hostname: 'x250',
+      settingsFile: path.join(dir, 'system.json'),
+      now: () => clock.now,
+      lockIterations: 1_000,
+    });
+    systems.push(again);
+    expect(again.state().lock).toEqual({ locked: true, hasCode: true, retryAt: null });
+    await again.start();
+    expect(again.state().lock.locked).toBe(true);
+    expect(ran(x250.runs, 'swaymsg', 'mode', 'locked')).toBe(true);
+    expect(await again.unlock('faux')).toBe('wrong');
+    expect(await again.unlock('Loire44')).toBe('ok');
+    expect(again.state().lock.locked).toBe(false);
+
+    // « Never »: the code is only asked after locking by hand, at a start too.
+    await again.setSetting('askCode', 'never');
+    again.dispose();
+    const never = await start(fakeX250(), dir);
+    expect(never.system.state().lock).toEqual({ locked: false, hasCode: true, retryAt: null });
+    expect(ran(never.x250.runs, 'swaymsg', 'mode', 'locked')).toBe(false);
+  });
+
   it('« after 15 min of sleep »: a shorter sleep opens on the text again', async () => {
     const { system } = await start();
     await system.setLockCode('1234');

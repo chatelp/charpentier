@@ -9,6 +9,12 @@ import { BrowserWindow } from 'electron';
  */
 let current: BrowserWindow | null = null;
 
+/** The device locks: the window closes, as the lock's cover hides the app's own (D-44). */
+export function closeAdminWindow(): void {
+  if (current && !current.isDestroyed()) current.close();
+  current = null;
+}
+
 export function openAdminWindow(url: string, appliance: boolean): void {
   if (current && !current.isDestroyed()) {
     current.show();

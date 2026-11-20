@@ -55,6 +55,8 @@ Préalables sur le prodesk2021 (infra/README.md, « Installer le X250 par le ré
 - [ ] La clé du Compagnon (si tu la donnes) est toujours là après un redémarrage.
 - [ ] Rabattre l'écran, attendre quelques secondes, le rouvrir : le code est demandé, aucun texte n'est visible avant.
 - [ ] Un code faux : le champ tremble une fois et se vide.
+- [ ] Redémarrer le X250, ou relancer l'app après une mise à jour : le code est demandé avant tout texte, même si le X250 n'était pas verrouillé avant (D-44). Avec « demander le code : jamais », il ne l'est pas.
+- [ ] La fenêtre d'administration ouverte, verrouiller (⊞L) ou rabattre l'écran : elle se ferme, elle n'est plus là après le code.
 
 ## 5.13 · Le premier démarrage depuis le téléphone
 

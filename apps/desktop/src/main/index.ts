@@ -11,7 +11,7 @@ import {
   shell,
   type WebContents,
 } from 'electron';
-import { openAdminWindow } from './admin-window';
+import { closeAdminWindow, openAdminWindow } from './admin-window';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -207,6 +207,11 @@ const mirrorStrings: MirrorStrings = {
     `Un fichier modifié hors de l’app n’a pas pu être repris dans le manuscrit : il est conservé sous le nom « ${file} ».`,
 };
 const system = deviceSystem();
+// The lock covers the administration window too (D-44): it is a window of
+// its own, above the app's cover, so it closes when the device locks.
+system?.onChange(() => {
+  if (system.state().lock.locked) closeAdminWindow();
+});
 const mirrors = new Map<string, ProjectMirror>();
 
 // ─── The Compagnon (step 3): the author's key in the keychain, Claude via the official SDK ───
@@ -412,6 +417,8 @@ ipcMain.handle(IPC_INVOKE, async (event, request: Request) => {
       return sessionOf(event.sender).handle(request);
     case 'sync.openAdmin': {
       // « Administrer le serveur… »: for an administrator, where the page answers.
+      // Never asked from the interface while locked (the cover lets no command through).
+      if (system?.state().lock.locked) return 'unreachable';
       const page = await sync.adminPage();
       if ('refused' in page) return page.refused;
       openAdminWindow(page.url, appliance);

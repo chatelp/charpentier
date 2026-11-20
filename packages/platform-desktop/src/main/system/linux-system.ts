@@ -212,6 +212,17 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
     now: () => now().getTime(),
   });
 
+  const settings = knownWarmth(
+    knownLayout(
+      {
+        ...DEFAULT_SYSTEM_SETTINGS,
+        ...(options.keyboard && { keyboardLayout: options.keyboard }),
+        ...stored.settings,
+      },
+      options.keyboard,
+    ),
+    stored.warmths === 2 || stored.settings?.nightWarmth === undefined,
+  );
   let state: SystemState = {
     device: {
       name: options.hostname,
@@ -238,18 +249,15 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
     cpu: { load: 0, temperature: 0, history: [] },
     printers: [],
     timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    settings: knownWarmth(
-      knownLayout(
-        {
-          ...DEFAULT_SYSTEM_SETTINGS,
-          ...(options.keyboard && { keyboardLayout: options.keyboard }),
-          ...stored.settings,
-        },
-        options.keyboard,
-      ),
-      stored.warmths === 2 || stored.settings?.nightWarmth === undefined,
-    ),
-    lock: { locked: false, hasCode: !!stored.lock, retryAt: null },
+    settings,
+    // The app starts locked (D-44): a restart, after an update or a crash,
+    // never opens a device its code protects. « Never » asks for the code
+    // only when the author locks by hand.
+    lock: {
+      locked: !!stored.lock && settings.askCode !== 'never',
+      hasCode: !!stored.lock,
+      retryAt: null,
+    },
     firstStart: stored.firstStartDone !== true,
     update: null,
     phoneSetup: null,
@@ -1281,6 +1289,8 @@ export function createLinuxSystem(options: LinuxSystemOptions): LinuxSystem {
     },
 
     start: async () => {
+      // Locked from the first state on: Sway's mode follows (no rescue terminal).
+      if (state.lock.locked) void run('swaymsg', 'mode', 'locked');
       await refresh();
       const version = deviceVersionLabel(state);
       const atStart = startMessages(lastVersion ?? null, state.update);
