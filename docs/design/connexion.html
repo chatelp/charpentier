@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Charpentier · connexion (web)</title>
+    <!-- Les tokens et les éléments de base de l'app : la porte des romans est dans la perle. -->
+    <link rel="stylesheet" href="../../packages/core/src/styles/base.css" />
+    <style>
+      /* Maquette de l'écran de connexion de l'app web (DESIGN §4.9 bis, PLAN 4.7 a).
+         ?etat=vide|erreur|essais|serveur|connexion|horsligne ; &sombre ; largeur de la fenêtre :
+         ordinateur ou téléphone (le rendu suit la largeur). */
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--ch-bg);
+        color: var(--ch-ink);
+        font-family: var(--ch-font-ui);
+      }
+      .door {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 16px 28px;
+        box-sizing: border-box;
+      }
+      .door img {
+        width: 64px;
+        height: 64px;
+      }
+      .door h1 {
+        margin: 18px 0 0;
+        font: 400 30px/1.2 var(--ch-font-text);
+        color: var(--ch-ink);
+      }
+      .door .lead {
+        margin: 6px 0 28px;
+        font: italic 400 16px/1.4 var(--ch-font-text);
+        color: var(--ch-muted);
+      }
+      .card {
+        width: 100%;
+        max-width: 24rem;
+        box-sizing: border-box;
+        padding: 24px;
+        border-radius: var(--ch-radius-lg);
+        background: var(--ch-bg);
+        box-shadow: var(--ch-raise);
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      .card label {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        color: var(--ch-muted);
+        font: 12.5px var(--ch-font-ui);
+      }
+      .card .ch-field {
+        height: 40px;
+        box-sizing: border-box;
+        font-size: 15px;
+        caret-color: var(--ch-author);
+      }
+      .pw {
+        position: relative;
+      }
+      .pw .show {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        border: 0;
+        background: none;
+        color: var(--ch-muted);
+        font: 12px var(--ch-font-ui);
+      }
+      .msg {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        color: var(--ch-ink);
+        font: 13px/1.45 var(--ch-font-ui);
+      }
+      .msg i {
+        flex: none;
+        display: grid;
+        place-items: center;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        box-shadow: var(--ch-raise-s);
+        color: var(--ch-ink-2);
+        font: 600 12px/1 var(--ch-font-ui);
+        font-style: normal;
+      }
+      .msg small {
+        display: block;
+        color: var(--ch-muted);
+        font-size: 12px;
+      }
+      .go {
+        height: 42px;
+        justify-content: center;
+        margin-top: 4px;
+        border-radius: var(--ch-radius-md);
+        color: var(--ch-author);
+        font: 500 14px var(--ch-font-ui);
+      }
+      .go kbd {
+        color: var(--ch-faint);
+        font: inherit;
+        font-weight: 400;
+      }
+      .go[aria-disabled='true'] {
+        box-shadow: none;
+        color: var(--ch-muted);
+      }
+      .foot {
+        margin-top: 22px;
+        max-width: 24rem;
+        text-align: center;
+        color: var(--ch-faint);
+        font: 12px/1.6 var(--ch-font-ui);
+      }
+      .foot b {
+        color: var(--ch-muted);
+        font-weight: 400;
+      }
+      /* Téléphone : en haut plutôt qu'au centre, pour que le clavier ne cache pas le bouton. */
+      @media (max-width: 600px) {
+        .door {
+          justify-content: flex-start;
+          padding-top: 48px;
+        }
+        .door img {
+          width: 48px;
+          height: 48px;
+        }
+        .door h1 {
+          font-size: 26px;
+        }
+        .door .lead {
+          margin-bottom: 22px;
+        }
+        .card {
+          padding: 20px 18px;
+        }
+        .card .ch-field {
+          height: 46px;
+          font-size: 16px;
+        }
+        .go {
+          height: 48px;
+        }
+        .go kbd {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="door">
+      <img src="icon/charpentier-petit.svg" alt="" />
+      <h1>Charpentier</h1>
+      <p class="lead">Vos romans vous attendent.</p>
+      <form class="card" id="card" onsubmit="return false;"></form>
+      <p class="foot" id="foot"></p>
+    </main>
+    <script>
+      const P = new URLSearchParams(location.search);
+      if (P.has('sombre')) document.documentElement.dataset.theme = 'dark';
+      const etat = P.get('etat') || 'vide';
+      const email = etat === 'vide' || etat === 'horsligne' ? '' : 'claire@exemple.fr';
+      const pw = etat === 'connexion' ? '••••••••••••' : '';
+      const MSG = {
+        erreur: ['E-mail ou mot de passe incorrect.', ''],
+        essais: ['Trop de tentatives.', 'Réessayez dans 30 secondes.'],
+        serveur: ['Le serveur ne répond pas.', 'Vérifiez la connexion, puis réessayez.'],
+        horsligne: [
+          'Hors ligne.',
+          'La première connexion demande le réseau ; ensuite, vos romans s’ouvrent même sans.',
+        ],
+      };
+      const m = MSG[etat];
+      const busy = etat === 'connexion';
+      const off = etat === 'horsligne';
+      document.getElementById('card').innerHTML = `
+        ${m ? `<div class="msg"><i>!</i><span>${m[0]}${m[1] ? `<small>${m[1]}</small>` : ''}</span></div>` : ''}
+        <label>E-mail<input class="ch-field" type="email" autocomplete="username" value="${email}" ${busy || off ? 'disabled' : ''} /></label>
+        <label>Mot de passe<span class="pw"><input class="ch-field" type="password" autocomplete="current-password" value="${pw}" ${busy || off ? 'disabled' : ''} style="width:100%" /><button type="button" class="show">afficher</button></span></label>
+        <button class="ch-btn go" ${busy || off ? 'aria-disabled="true"' : ''}>${busy ? 'Connexion…' : etat === 'serveur' ? 'Réessayer <kbd>⏎</kbd>' : 'Se connecter <kbd>⏎</kbd>'}</button>`;
+      document.getElementById('foot').innerHTML =
+        'Compte sur <b>charpentier.chatel.pm</b>.<br />Mot de passe oublié : demandez à l’administrateur du serveur.';
+      if (etat === 'vide') document.querySelector('input[type=email]').focus();
+      if (etat === 'erreur') document.querySelector('input[type=password]').focus();
+    </script>
+  </body>
+</html>
