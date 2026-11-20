@@ -51,6 +51,17 @@ export async function migrate(db: Database): Promise<void> {
       revoked_at timestamptz
     )
   `);
+  // The Compagnon's key of an account (phase 4.7 b), sealed (AES-256-GCM) by a
+  // key drawn from the password: neither the base nor a backup can open it.
+  await db.query(`
+    create table if not exists compagnon_keys (
+      user_id uuid primary key references users (id),
+      salt bytea not null,
+      nonce bytea not null,
+      sealed bytea not null,
+      updated_at timestamptz not null default now()
+    )
+  `);
   await db.query(`
     create table if not exists projects (
       id text primary key,

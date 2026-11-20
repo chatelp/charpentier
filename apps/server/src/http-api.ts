@@ -1,6 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { listSessions, login, revokeSession, sessionFor, type Session } from './accounts';
 import { clientAddress } from './admin/network';
+import { handleCompagnon, type CompagnonKeys } from './compagnon';
 import type { Database } from './database';
 
 /**
@@ -14,6 +15,7 @@ import type { Database } from './database';
  *   GET    /api/devices        the devices signed in to the account
  *   DELETE /api/devices/:id    signs a device out
  *   GET    /api/health         « ok », for the container's health check
+ *   …      /api/compagnon/*    the browser's Compagnon, relayed (compagnon.ts, phase 4.7 b)
  *
  * Every route but login and health needs `Authorization: Bearer <token>`,
  * or, from the app's own pages, its cookie.
@@ -175,6 +177,7 @@ export async function handleApi(
   limiter: LoginLimiter,
   request: IncomingMessage,
   response: ServerResponse,
+  compagnon?: CompagnonKeys,
 ): Promise<boolean> {
   const url = new URL(request.url ?? '/', 'http://localhost');
   if (!url.pathname.startsWith('/api/')) return false;
@@ -214,6 +217,10 @@ export async function handleApi(
     }
     limiter.reset(key);
     if (inCookie) {
+      // The browser's Compagnon (phase 4.7 b): its key opens with the password, seen only now.
+      await compagnon?.unlock(result, password).catch((error: unknown) => {
+        console.error('[compagnon] the key could not be opened', error);
+      });
       response.setHeader('Set-Cookie', webCookie(result.token));
       send(response, 200, { userId: result.userId, sessionId: result.sessionId });
     } else send(response, 200, result);
@@ -228,8 +235,11 @@ export async function handleApi(
     send(response, 401, { error: 'not-signed-in' });
     return true;
   }
+  if (compagnon && (await handleCompagnon(db, compagnon, limiter, session, request, response)))
+    return true;
   if (route === 'POST /api/logout') {
     await revokeSession(db, session.userId, session.sessionId);
+    compagnon?.forgetSessions([session.sessionId]);
     if (!bearer(request)) response.setHeader('Set-Cookie', webCookie('', 0));
     send(response, 204);
   } else if (route === 'GET /api/account') {
@@ -253,6 +263,7 @@ export async function handleApi(
     if (id === null) send(response, 400, { error: 'path' });
     else {
       const revoked = /^[0-9a-f-]{36}$/.test(id) && (await revokeSession(db, session.userId, id));
+      if (revoked) compagnon?.forgetSessions([id]);
       send(response, revoked ? 204 : 404);
     }
   } else {

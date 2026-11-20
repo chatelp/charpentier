@@ -24,6 +24,14 @@ function derive(password: string, nonce: Buffer, params: Params): Promise<Buffer
 
 const PREFIX = '$argon2id$v=19$';
 
+/**
+ * A key drawn from the password (the Compagnon's key is sealed with it, phase
+ * 4.7 b): the same Argon2id, its own salt, 32 bytes for AES-256.
+ */
+export function keyFromPassword(password: string, salt: Buffer): Promise<Buffer> {
+  return derive(password, salt, PARAMS);
+}
+
 export async function hashPassword(password: string): Promise<string> {
   const nonce = randomBytes(16);
   const key = await derive(password, nonce, PARAMS);

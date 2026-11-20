@@ -8,6 +8,7 @@ import { loadDocument, storeDocument, type Database } from './database';
 import { documentOwner } from './document-names';
 import { cookieToken, COOKIE_TOKEN, handleApi, LoginLimiter, sameOrigin, send } from './http-api';
 import { createWebApp } from './web-app';
+import { CompagnonKeys, type CreateLlm } from './compagnon';
 import { handleInstaller } from './installer';
 import { handleCache } from './nix-cache';
 import { handleNetboot, type NetbootOptions } from './netboot';
@@ -23,6 +24,8 @@ export interface SyncServerOptions {
   readonly netboot?: NetbootOptions;
   /** The built app for the browser (phase 4.7 a); without it, none. */
   readonly webDir?: string | null;
+  /** For tests: the model of the browser's Compagnon, played without the network. */
+  readonly createLlm?: CreateLlm;
   /** The administration page (phase 4.6). */
   readonly admin?: {
     /** CIDRs allowed to reach /admin (default: the home network and Tailscale). */
@@ -56,6 +59,7 @@ export function createSyncServer(options: SyncServerOptions): Server<ConnectionC
   const cacheDir = options.cacheDir ?? null;
   const netboot = options.netboot ?? { secret: null, macs: [] };
   const limiter = new LoginLimiter();
+  const compagnon = new CompagnonKeys(db, options.createLlm);
   const web = createWebApp(options.webDir ?? null);
   const admin = createAdmin(db, {
     networks: networkList(options.admin?.networks ?? DEFAULT_ADMIN_NETWORKS),
@@ -64,6 +68,7 @@ export function createSyncServer(options: SyncServerOptions): Server<ConnectionC
     restoreCommand: RESTORE_COMMAND,
     // A revoked device stops syncing at once: its connections are closed (it cannot come back).
     cutOff: (sessionIds) => {
+      compagnon.forgetSessions(sessionIds);
       for (const document of server.hocuspocus.documents.values())
         for (const connection of document.getConnections())
           if (sessionIds.includes(connection.context.sessionId)) connection.close();
@@ -138,7 +143,7 @@ export function createSyncServer(options: SyncServerOptions): Server<ConnectionC
       (await handleInstaller(db, cacheDir, request, response)) ||
       (await handleNetboot(db, cacheDir, netboot, request, response)) ||
       (await admin.handle(request, response)) ||
-      (await handleApi(db, limiter, request, response)) ||
+      (await handleApi(db, limiter, request, response, compagnon)) ||
       (await web.handle(request, response))
     );
   }
