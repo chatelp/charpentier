@@ -985,7 +985,7 @@
   },
   "sync": {
     "screen": {
-      "lead": "Vos romans vous attendent.",
+      "lead": "Vos projets vous attendent.",
       "email": "E-mail",
       "password": "Mot de passe",
       "bang": "!",
@@ -1001,7 +1001,7 @@
       "unreachable": "Le serveur ne répond pas.",
       "unreachableHelp": "Vérifiez la connexion, puis réessayez.",
       "offline": "Hors ligne.",
-      "offlineHelp": "La première connexion demande le réseau ; ensuite, vos romans s’ouvrent même sans.",
+      "offlineHelp": "La première connexion demande le réseau ; ensuite, vos projets s’ouvrent même sans.",
       "account": "Compte sur <host>{{host}}</host>.",
       "forgotten": "Mot de passe oublié : demandez à l’administrateur du serveur."
     },

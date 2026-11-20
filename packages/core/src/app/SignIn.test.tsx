@@ -51,7 +51,7 @@ describe('the app the server serves (phase 4.7 a)', () => {
     const { service } = webSync();
     const platform = createTestPlatform({ sync: service });
     render(<App platform={platform} i18n={await createI18n('fr')} />);
-    expect(await screen.findByText('Vos romans vous attendent.')).toBeTruthy();
+    expect(await screen.findByText('Vos projets vous attendent.')).toBeTruthy();
     expect(screen.getByLabelText('E-mail').getAttribute('autocomplete')).toBe('username');
     expect(screen.getByLabelText('Mot de passe').getAttribute('autocomplete')).toBe(
       'current-password',
