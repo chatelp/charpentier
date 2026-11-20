@@ -23,7 +23,7 @@ import {
   renameProjectEverywhere,
 } from './default-scene';
 
-const titles = { project: 'Mon roman', chapter: 'Chapitre 1', scene: 'Scène 1' };
+const titles = { project: 'Mon projet', chapter: 'Chapitre 1', scene: 'Scène 1' };
 
 function withPreferences() {
   const store = new Map<string, unknown>();
@@ -87,11 +87,11 @@ describe('library of projects', () => {
 
     await platform.library.trash(story.id);
     expect((await openDefaultProject(platform, titles)).projectId).toBe(first.projectId);
-    expect((await platform.library.list()).map((p) => p.title)).toEqual(['Mon roman']);
+    expect((await platform.library.list()).map((p) => p.title)).toEqual(['Mon projet']);
     await platform.library.restore(story.id);
     expect((await platform.library.list()).map((p) => p.title).sort()).toEqual([
       'La serre',
-      'Mon roman',
+      'Mon projet',
     ]);
   });
 
@@ -200,7 +200,7 @@ describe('a new device signed in (phase 5.6)', () => {
 
   it('opens the account’s blank start too, rather than doubling it with its own', async () => {
     const platform = withPreferences();
-    // An account where only blank starts arrived (16 November 2026: three « Mon roman »).
+    // An account where only blank starts arrived (16 November 2026: three « Mon projet »).
     const theirs = (await platform.library.create({ title: titles.project, kind: 'novel' })).id;
     await openProject(platform, theirs, titles);
     const own = await openProject(

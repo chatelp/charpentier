@@ -92,8 +92,8 @@ describe('a project that does not open', () => {
     const { platform, disk } = start();
     render(<App platform={platform} i18n={await createI18n('fr')} />);
     await screen.findByRole('alert');
-    fireEvent.click(screen.getByRole('button', { name: 'Tous les romans…' }));
-    const other = await screen.findByText('Mon roman');
+    fireEvent.click(screen.getByRole('button', { name: 'Tous les projets…' }));
+    const other = await screen.findByText('Mon projet');
     expect(screen.queryByRole('alert')).toBeNull();
     disk.broken = false;
     fireEvent.doubleClick(other);

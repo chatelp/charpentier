@@ -44,7 +44,7 @@ describe('library', () => {
 
     await userEvent.keyboard(mod('o'));
     await screen.findByRole('region', { name: 'Bibliothèque' });
-    expect(screen.getByRole('option', { name: /Mon roman/ })).toBeTruthy();
+    expect(screen.getByRole('option', { name: /Mon projet/ })).toBeTruthy();
     await userEvent.keyboard('n');
     await userEvent.keyboard('La serre');
     await userEvent.click(screen.getByRole('radio', { name: 'Nouvelle' }));
@@ -57,7 +57,7 @@ describe('library', () => {
     await userEvent.keyboard('La nouvelle commence.');
     expect((await platform.library.list()).map((p) => `${p.title} (${p.kind})`)).toEqual([
       'La serre (short-story)',
-      'Mon roman (novel)',
+      'Mon projet (novel)',
     ]);
 
     // Back to the novel: its text is there.
@@ -71,13 +71,13 @@ describe('library', () => {
     await userEvent.keyboard(mod('o'));
     await screen.findByRole('region', { name: 'Bibliothèque' });
     await waitFor(() =>
-      expect(document.activeElement).toBe(screen.getByRole('option', { name: /Mon roman/ })),
+      expect(document.activeElement).toBe(screen.getByRole('option', { name: /Mon projet/ })),
     );
     await userEvent.keyboard('{ArrowDown}{Backspace}');
     // The trash is at the foot of the library, shown on request.
     await userEvent.click(await screen.findByRole('button', { name: 'Corbeille (1)' }));
     await waitFor(() => expect(screen.getByText(/Mis à la corbeille le/)).toBeTruthy());
-    expect((await platform.library.list()).map((p) => p.title)).toEqual(['Mon roman']);
+    expect((await platform.library.list()).map((p) => p.title)).toEqual(['Mon projet']);
     await userEvent.click(screen.getByRole('option', { name: /La serre/ }));
     await userEvent.keyboard('{Enter}');
     await waitFor(async () => expect(await platform.library.list()).toHaveLength(2));
@@ -85,19 +85,23 @@ describe('library', () => {
     await textFocused();
   });
 
-  it('creates a novel with N and a short story with ⇧N, and offers both when it is empty', async () => {
+  it('creates a project with N, a novel unless its keys say a short story, and offers it when it is empty', async () => {
     const platform = await startApp();
     await textFocused();
     await userEvent.keyboard(mod('o'));
     const library = await screen.findByRole('region', { name: 'Bibliothèque' });
-    expect(within(library).getByRole('button', { name: /Nouveau roman/ })).toBeTruthy();
+    expect(within(library).getByRole('button', { name: /Nouveau projet/ })).toBeTruthy();
+    expect(within(library).queryByRole('button', { name: /Nouvelle/ })).toBeNull();
     // The open project has its words and scenes on its card.
     await waitFor(() =>
-      expect(screen.getByRole('option', { name: /Mon roman/ }).textContent).toMatch(
+      expect(screen.getByRole('option', { name: /Mon projet/ }).textContent).toMatch(
         /Roman · .*1 scène · ouvert /,
       ),
     );
-    await userEvent.keyboard('{Shift>}N{/Shift}');
+    // N opens the form on a novel; the genre is chosen there.
+    await userEvent.keyboard('n');
+    expect(screen.getByRole('radio', { name: 'Roman' }).getAttribute('aria-checked')).toBe('true');
+    await userEvent.click(screen.getByRole('radio', { name: 'Nouvelle' }));
     expect(screen.getByRole('radio', { name: 'Nouvelle' }).getAttribute('aria-checked')).toBe(
       'true',
     );

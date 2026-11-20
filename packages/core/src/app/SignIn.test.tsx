@@ -78,7 +78,7 @@ describe('the app the server serves (phase 4.7 a)', () => {
 
     fill('Mot de passe', 'bon mot de passe');
     fireEvent.click(screen.getByRole('button', { name: /^Se connecter/ }));
-    expect(await screen.findByText('Vos romans arrivent…')).toBeTruthy();
+    expect(await screen.findByText('Vos projets arrivent…')).toBeTruthy();
     expect(calls.at(-1)).toBe('signIn https://ecrire.example.org p@example.org');
     // The account's novel comes with the sync.
     await platform.library.create({ title: 'Avant Nantes', kind: 'novel' });

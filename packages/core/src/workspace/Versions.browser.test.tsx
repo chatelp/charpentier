@@ -11,7 +11,7 @@ afterEach(cleanup);
 const isMac = /Mac/.test(navigator.platform);
 const editor = () => screen.getByRole('textbox', { name: 'Texte de la scène' });
 const header = () => document.querySelector('.ch-scene-header')?.textContent ?? '';
-const novelButton = () => screen.getByRole('button', { name: /le roman\u00A0: renommer/ });
+const novelButton = () => screen.getByRole('button', { name: /le projet\u00A0: renommer/ });
 
 async function start() {
   const prefs = new Map<string, unknown>([['welcomed', true]]);
@@ -38,7 +38,7 @@ async function start() {
 const openSheet = async () => {
   // The test runs without the app's styles, where surfaces overlap: clicked through the DOM.
   novelButton().click();
-  return screen.findByRole('dialog', { name: 'Le roman' });
+  return screen.findByRole('dialog', { name: 'Le projet' });
 };
 
 describe('working versions (DESIGN 1.20)', () => {
@@ -48,7 +48,7 @@ describe('working versions (DESIGN 1.20)', () => {
 
     // One version: only the sheet speaks of versions.
     let sheet = await openSheet();
-    expect(sheet.textContent).toContain('Essayez une autre fin sans toucher au roman');
+    expect(sheet.textContent).toContain('Essayez une autre fin sans toucher au projet');
     expect(novelButton().textContent).not.toContain('·');
     within(sheet).getByRole('button', { name: '+ Nouvelle version…' }).click();
     const field = await within(sheet).findByRole('textbox', { name: 'Nom de la version' });
@@ -58,7 +58,7 @@ describe('working versions (DESIGN 1.20)', () => {
     await userEvent.type(field, 'Fin à Nantes{Enter}');
 
     // The new version is the active one: in the title, in the sheet, checked.
-    await waitFor(() => expect(novelButton().textContent).toContain('Mon roman · Fin à Nantes'));
+    await waitFor(() => expect(novelButton().textContent).toContain('Mon projet · Fin à Nantes'));
     const versions = within(sheet).getByRole('radiogroup', { name: 'Versions de travail' });
     const lines = within(versions).getAllByRole('radio');
     expect(lines.map((l) => l.querySelector('b')?.textContent)).toEqual([
@@ -92,7 +92,7 @@ describe('working versions (DESIGN 1.20)', () => {
     sheet = await openSheet();
     within(sheet).getAllByRole('radio')[0]?.click();
     await waitFor(() => expect(editor().textContent).toBe('Hélène arrive à Nantes. Il pleut.'));
-    await waitFor(() => expect(novelButton().textContent).toContain('Mon roman · Principale'));
+    await waitFor(() => expect(novelButton().textContent).toContain('Mon projet · Principale'));
     expect(header()).not.toContain('commune');
 
     // And again: the other ending.

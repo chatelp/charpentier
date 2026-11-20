@@ -53,8 +53,8 @@ const ADDRESS = word(
 );
 /** Words of the craft: a sentence that holds one talks about the book, it is not the book. */
 const CRAFT = word(
-  'scènes?|lecteurs?|lectrices?|chapitres?|récits?|phrases?|paragraphes?|textes?|romans?|narrat\\p{L}*|dialogues?|personnages?|intrigues?|styles?|rythmes?|tension|point de vue|écri\\p{L}*|auteurs?|autrices?|passages?|descriptions?|incipit|dénouement|enjeux?|conflits?|motivations?|thèmes?|métaphores?|verbes?|adjectifs?|adverbes?|imparfait|passé simple|protagonistes?|antagonistes?|procédés?|brouillons?|manuscrit|fiches?|exemples?|principes?|variantes?|' +
-    'scenes?|readers?|chapters?|sentences?|paragraphs?|characters?|novels?|stor(?:y|ies)|drafts?|narrat\\p{L}*|writ\\p{L}*|tense|plot|stakes|point of view|examples?|principles?',
+  'scènes?|lecteurs?|lectrices?|chapitres?|récits?|phrases?|paragraphes?|textes?|romans?|projets?|narrat\\p{L}*|dialogues?|personnages?|intrigues?|styles?|rythmes?|tension|point de vue|écri\\p{L}*|auteurs?|autrices?|passages?|descriptions?|incipit|dénouement|enjeux?|conflits?|motivations?|thèmes?|métaphores?|verbes?|adjectifs?|adverbes?|imparfait|passé simple|protagonistes?|antagonistes?|procédés?|brouillons?|manuscrit|fiches?|exemples?|principes?|variantes?|' +
+    'scenes?|readers?|chapters?|sentences?|paragraphs?|characters?|novels?|projects?|stor(?:y|ies)|drafts?|narrat\\p{L}*|writ\\p{L}*|tense|plot|stakes|point of view|examples?|principles?',
 );
 /** The Compagnon suggests (« pourrait », « et si ») : not narration. */
 const SUGGESTION = word('pourrai(?:t|ent)|devrai(?:t|ent)|faudrait|vaudrait|could|should|might');

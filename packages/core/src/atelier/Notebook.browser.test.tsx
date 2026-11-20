@@ -111,7 +111,7 @@ describe('the Carnet of the Compagnon (phase 6.5)', () => {
     expect(screen.getByRole('option', { name: 'Carnet' }).getAttribute('aria-selected')).toBe(
       'true',
     );
-    screen.getByRole('heading', { level: 3, name: 'Ce roman' });
+    screen.getByRole('heading', { level: 3, name: 'Ce projet' });
     screen.getByRole('heading', { level: 3, name: 'Vous' });
     within(screen.getByRole('group', { name: 'À reprendre' })).getByRole('article', {
       name: /Ce qui attend Hélène à Nantes/,

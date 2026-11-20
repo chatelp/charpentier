@@ -232,7 +232,7 @@ export function atelierState(root: Y.Doc): string {
 
 /** Texts the agent says itself, by language. */
 const FALLBACK: Record<string, string> = {
-  fr: 'Je préfère ne rien écrire pour votre roman : c’est votre voix qui compte. Parlez-moi plutôt de votre histoire, je range ce que vous me dites dans l’Atelier.',
+  fr: 'Je préfère ne rien écrire pour votre projet : c’est votre voix qui compte. Parlez-moi plutôt de votre histoire, je range ce que vous me dites dans l’Atelier.',
   en: 'I would rather not write anything for your novel: your voice is what matters. Tell me about your story instead, and I will file what you say in the Atelier.',
 };
 

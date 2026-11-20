@@ -90,7 +90,7 @@ export const MENTORS: readonly string[] = [
   'Vous écrivez :\n> Son père avait fermé l’atelier avant la crue. Elle ne répondit rien et serra la rambarde.\n\nLe geste dit tout. Faut-il encore le silence juste avant ?',
   'La réplique « Tu ne partiras pas, dit-il » arrive sans préparation. Qu’a vu Hélène, juste avant, qui rende cette phrase menaçante ?',
   'Dans votre texte, « — Je reste jusqu’à la crue, répondit Hélène. » répond trop vite. Un silence, un geste entre les deux répliques donnerait du poids à sa décision.',
-  'Je préfère ne pas proposer de texte pour votre roman : c’est votre voix qui compte. Dites-moi ce qui vous retient dans ce passage, et cherchons ensemble.',
+  'Je préfère ne pas proposer de texte pour votre projet : c’est votre voix qui compte. Dites-moi ce qui vous retient dans ce passage, et cherchons ensemble.',
   'Je ne l’écrirai pas à votre place : cette scène doit porter votre voix. Mais dites-moi : que voit Hélène en premier quand elle arrive sur le pont ?',
   'Ce qui fonctionne : la pluie, dès la première phrase, donne le ton. Ce qui résiste : on ne sait pas encore ce qu’Hélène risque.\n\nQue perdrait-elle si elle partait ?',
   'Le principe est simple : un personnage se révèle par ce qu’il fait sous la pression. Votre Hélène ne fait rien encore. Quel geste pourrait la trahir ?',

@@ -61,7 +61,7 @@ describe('the app’s settings (docs/DESIGN.md §4.8, phase 7.3)', () => {
       'Écriture19 px',
       'Sonsnon',
       'CompagnonOpus 5.5',
-      'Bibliothèque1 roman',
+      'Bibliothèque1 projet',
       'À propos0.1.1 (43d2f0a)',
     ]);
 

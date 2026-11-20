@@ -172,7 +172,7 @@ const STEPS = {
 
   async interview({ window }) {
     await window.keyboard.press('ControlOrMeta+0');
-    const field = window.getByRole('textbox', { name: 'Parlez de votre roman…' });
+    const field = window.getByRole('textbox', { name: 'Parlez de votre projet…' });
     await field.waitFor();
     await field.fill(
       'Mon héroïne, Hélène, est batelière sur la Loire en 1890. Elle a peur de l’eau, ce qui est un comble pour une batelière. J’écris ce livre pour mon grand-père, qui était marinier à Nantes.',
@@ -240,7 +240,7 @@ const STEPS = {
     );
     await snap(window, 'style-propositions');
     // Two choices adopted: V validates the last proposal, twice.
-    await window.getByRole('textbox', { name: 'Parlez de votre roman…' }).focus();
+    await window.getByRole('textbox', { name: 'Parlez de votre projet…' }).focus();
     await window.keyboard.press('v');
     await wait(400);
     await window.keyboard.press('v');

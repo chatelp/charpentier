@@ -107,7 +107,7 @@ describe('desktop app', () => {
     const dirs = folders();
     const { app, window } = await launch(dirs);
     // The window's title: the novel, then the scene (DESIGN §4.8, 1.19).
-    await expect.poll(() => window.title()).toBe('Mon roman — Scène 1');
+    await expect.poll(() => window.title()).toBe('Mon projet — Scène 1');
     expect(await window.evaluate(() => typeof (globalThis as { require?: unknown }).require)).toBe(
       'undefined',
     );
@@ -120,7 +120,7 @@ describe('desktop app', () => {
     });
     expect(prefs).toMatchObject({ contextIsolation: true, sandbox: true, nodeIntegration: false });
     expect(
-      fs.existsSync(path.join(dirs.library, 'Mon roman', '.charpentier', 'project.json')),
+      fs.existsSync(path.join(dirs.library, 'Mon projet', '.charpentier', 'project.json')),
     ).toBe(true);
   });
 
@@ -173,7 +173,7 @@ describe('desktop app', () => {
     await window.keyboard.type('Hélène regardait la Loire.');
     const file = path.join(
       dirs.library,
-      'Mon roman',
+      'Mon projet',
       'manuscrit',
       '01-chapitre-1',
       '01-scene-1.md',
@@ -425,7 +425,7 @@ describe('desktop app', () => {
       await button.waitFor();
       expect((await button.boundingBox())?.x).toBeGreaterThanOrEqual(80);
       await button.click();
-      await window.getByRole('dialog', { name: 'Le roman' }).waitFor();
+      await window.getByRole('dialog', { name: 'Le projet' }).waitFor();
       if (process.env['CHARPENTIER_E2E_SHOTS']) {
         await window.waitForTimeout(500);
         await window.screenshot({
@@ -512,7 +512,7 @@ describe('desktop app', () => {
     const second = await launch(secondDirs);
     await signIn(second.window, { newDevice: true });
     // The library offers the novel; ⏎ opens it, not the blank project it started with.
-    await second.window.getByText('Mon roman').first().waitFor();
+    await second.window.getByText('Mon projet').first().waitFor();
     await second.window.keyboard.press('Enter');
     await expect
       .poll(() => second.editor.textContent(), { timeout: 20_000 })

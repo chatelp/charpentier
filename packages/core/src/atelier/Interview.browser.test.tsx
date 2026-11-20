@@ -123,12 +123,12 @@ describe('the interview page of the Atelier (phase 6.2)', () => {
 
     // ⌘0: the interview heads the Atelier's rail; the Compagnon explains it first.
     await userEvent.keyboard(mod('0'));
-    const field = await screen.findByRole('textbox', { name: 'Parlez de votre roman…' });
+    const field = await screen.findByRole('textbox', { name: 'Parlez de votre projet…' });
     await waitFor(() => expect(document.activeElement).toBe(field));
     expect(screen.getByRole('option', { name: 'Le Compagnon' }).getAttribute('aria-selected')).toBe(
       'true',
     );
-    screen.getByText(/Racontez-moi votre roman/);
+    screen.getByText(/Racontez-moi votre projet/);
 
     // The author talks; the answer says where it filed what, with the proposals under it.
     await userEvent.keyboard('Mon heroine, Helene, est bateliere.{Enter}');

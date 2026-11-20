@@ -54,7 +54,7 @@ export interface ChatAnswer {
 
 /** Texts the agents themselves say, by language (the UI's catalogue is not reachable here). */
 const FALLBACK: Record<string, string> = {
-  fr: 'Je préfère ne pas proposer de texte pour votre roman : c’est votre voix qui compte. Dites-moi ce qui vous retient dans ce passage, et cherchons ensemble.',
+  fr: 'Je préfère ne pas proposer de texte pour votre projet : c’est votre voix qui compte. Dites-moi ce qui vous retient dans ce passage, et cherchons ensemble.',
   en: 'I would rather not write text for your novel: your voice is what matters. Tell me what holds you back in this passage, and let us look for it together.',
 };
 

@@ -152,7 +152,7 @@ describe('signing in to the sync server (step 4.4)', () => {
     await screen.findByRole('heading', { name: 'Bibliothèque' });
     await screen.findByText('Les Eaux basses');
     expect((await platform.library.list()).map((p) => p.title)).toEqual(['Les Eaux basses']);
-    expect((await platform.library.listTrashed()).map((p) => p.title)).toEqual(['Mon roman']);
+    expect((await platform.library.listTrashed()).map((p) => p.title)).toEqual(['Mon projet']);
   });
 
   it('keeps the open project when a signed-in device merely starts again', async () => {

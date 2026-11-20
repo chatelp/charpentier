@@ -5,7 +5,7 @@
     "loading": "Ouverture…",
     "openError": "Impossible d’ouvrir le projet.",
     "retry": "Réessayer",
-    "library": "Tous les romans…"
+    "library": "Tous les projets…"
   },
   "editor": {
     "emptyScene": "Écrivez ici. Le titre de la scène, celui du chapitre, tout se change plus tard.",
@@ -128,7 +128,7 @@
     }
   },
   "manuscript": {
-    "defaultProjectTitle": "Mon roman",
+    "defaultProjectTitle": "Mon projet",
     "defaultChapterTitle": "Chapitre 1",
     "defaultSceneTitle": "Scène 1",
     "newSceneTitle": "Nouvelle scène",
@@ -351,10 +351,10 @@
       "guided": "Dirigé"
     },
     "sync": {
-      "intro": "Vos romans, sur tous vos appareils, par votre serveur.",
+      "intro": "Vos projets, sur tous vos appareils, par votre serveur.",
       "account": "Compte",
       "none": "Pas de compte sur cet appareil",
-      "noneHelp": "Connectez-vous à votre serveur pour retrouver vos romans partout.",
+      "noneHelp": "Connectez-vous à votre serveur pour retrouver vos projets partout.",
       "signIn": "Se connecter…",
       "where": "sur {{server}} · {{state}}",
       "state": {
@@ -381,19 +381,19 @@
       "open": "Ouvrir…",
       "leave": "Quitter",
       "signOut": "Se déconnecter",
-      "signOutHelp": "Vos romans restent sur cet appareil ; ils ne se synchronisent plus."
+      "signOutHelp": "Vos projets restent sur cet appareil ; ils ne se synchronisent plus."
     },
     "library": {
-      "intro": "Où vivent vos romans, et comment les retrouver.",
+      "intro": "Où vivent vos projets, et comment les retrouver.",
       "folder": "Dossier",
-      "folderHelp": "Un dossier par roman ; chaque scène y est aussi un fichier texte, lisible sans l’app.",
+      "folderHelp": "Un dossier par projet ; chaque scène y est aussi un fichier texte, lisible sans l’app.",
       "change": "Changer…",
       "reveal": "Afficher dans {{fileManager}}",
-      "all": "Tous vos romans",
+      "all": "Tous vos projets",
       "allHelp": "La bibliothèque : ouvrir, renommer, la corbeille.",
-      "novelsTitle": "Romans",
-      "novels_one": "{{count}} roman",
-      "novels_other": "{{count}} romans"
+      "novelsTitle": "Projets",
+      "novels_one": "{{count}} projet",
+      "novels_other": "{{count}} projets"
     },
     "about": {
       "intro": "La version de l’app installée sur cet appareil.",
@@ -419,14 +419,14 @@
   "versions": {
     "main": "Principale",
     "title": "Versions de travail",
-    "everywhere": "La version active suit le roman sur tous vos appareils.",
+    "everywhere": "La version active suit le projet sur tous vos appareils.",
     "scenes_one": "{{count}} scène",
     "scenes_other": "{{count}} scènes",
     "own_one": "{{count}} scène à elle",
     "own_other": "{{count}} scènes à elle",
     "when": "{{what}} · {{when}}",
     "new": "+ Nouvelle version…",
-    "single": "Essayez une autre fin sans toucher au roman : une version de travail choisit, pour chaque scène, quelle variante lire.",
+    "single": "Essayez une autre fin sans toucher au projet : une version de travail choisit, pour chaque scène, quelle variante lire.",
     "nameField": "Nom de la version",
     "from": "Elle part de « {{version}} », telle qu’elle est. Rien n’est copié : chaque scène reste commune, jusqu’à ce que vous lui donniez une variante pour cette version, par « Nouvelle variante »{{shortcut}}.",
     "create": "Créer",
@@ -604,7 +604,7 @@
     "appearancesNote": "(remplies automatiquement)",
     "sections": {
       "meta": {
-        "story": "Le roman",
+        "story": "L’histoire",
         "shape": "Ton et public"
       },
       "characters": {
@@ -805,7 +805,7 @@
   "library": {
     "label": "Bibliothèque",
     "projects": "Projets",
-    "hint": "↑↓ parcourir · ⏎ ouvrir · N nouveau roman · ⇧N nouvelle · R renommer · ⌫ corbeille · Échap revenir",
+    "hint": "↑↓ parcourir · ⏎ ouvrir · N nouveau projet · R renommer · ⌫ corbeille · Échap revenir",
     "new": "Nouveau projet",
     "titlePlaceholder": "Titre du projet",
     "kind": "Type de projet",
@@ -821,10 +821,8 @@
       "mac": "le Finder",
       "other": "le gestionnaire de fichiers"
     },
-    "newNovel": "+ Nouveau roman",
-    "newNovelKey": "N",
-    "newStory": "+ Nouvelle",
-    "newStoryKey": "⇧N",
+    "newProject": "+ Nouveau projet",
+    "newProjectKey": "N",
     "open": "Ouvrir",
     "rename": "Renommer",
     "renameKey": "R",
@@ -858,21 +856,21 @@
     "fixedSpelling_other": "{{count}} corrections d’orthographe appliquées."
   },
   "novel": {
-    "button": "Le roman : renommer, changer de roman",
-    "buttonVersions": "Le roman : renommer, changer de version ou de roman",
-    "buttonLabelVersion": "{{title}}, version {{version}}, le roman : renommer, changer de version ou de roman",
-    "buttonLabel": "{{title}}, le roman : renommer, changer de roman",
-    "sheet": "Le roman",
+    "button": "Le projet : renommer, changer de projet",
+    "buttonVersions": "Le projet : renommer, changer de version ou de projet",
+    "buttonLabelVersion": "{{title}}, version {{version}}, le projet : renommer, changer de version ou de projet",
+    "buttonLabel": "{{title}}, le projet : renommer, changer de projet",
+    "sheet": "Le projet",
     "rename": "Renommer",
     "renameKey": "R",
     "cancel": "Annuler",
     "novel": "Roman",
     "shortStory": "Nouvelle",
-    "others": "Vos autres romans",
-    "alone": "C’est votre seul roman pour l’instant.",
-    "all": "Tous les romans…",
-    "new": "+ Nouveau roman",
-    "titleField": "Titre du roman",
+    "others": "Vos autres projets",
+    "alone": "C’est votre seul projet pour l’instant.",
+    "all": "Tous les projets…",
+    "new": "+ Nouveau projet",
+    "titleField": "Titre du projet",
     "hint": "↑↓ choisir · ⏎ ouvrir · R renommer · Échap fermer",
     "hintVersion": "↑↓ · ⏎ passer · R renommer la version · Échap fermer",
     "today": "aujourd’hui",
@@ -919,7 +917,7 @@
   "welcome": {
     "kind": "Bienvenue",
     "title": "Je lis par-dessus votre épaule",
-    "body": "Je n’écrirai jamais une ligne de votre roman : je signale, j’explique, je pose des questions. Trois endroits à connaître :",
+    "body": "Je n’écrirai jamais une ligne de votre projet : je signale, j’explique, je pose des questions. Trois endroits à connaître :",
     "places": {
       "left": {
         "where": "le livre",
@@ -942,7 +940,7 @@
   "tour": {
     "manuscript": {
       "title": "Le manuscrit",
-      "text": "Vos chapitres et vos scènes. Cliquez sur une scène pour l’ouvrir ; « Plan » montre tout le roman d’un coup."
+      "text": "Vos chapitres et vos scènes. Cliquez sur une scène pour l’ouvrir ; « Plan » montre tout le projet d’un coup."
     },
     "compagnon": {
       "title": "Le Compagnon",
@@ -994,7 +992,7 @@
       "submit": "Se connecter",
       "retry": "Réessayer",
       "signingIn": "Connexion…",
-      "arriving": "Vos romans arrivent…",
+      "arriving": "Vos projets arrivent…",
       "invalid": "E-mail ou mot de passe incorrect.",
       "tooMany": "Trop de tentatives.",
       "tooManyHelp": "Réessayez dans un quart d’heure.",
@@ -1045,10 +1043,10 @@
     "free": "Libre",
     "guided": "Dirigé",
     "modesLabel": "Mode de l’entretien",
-    "freeLine": "Mode entretien · parlez de votre roman : il range ce que vous dites dans l’Atelier et se souvient de tout.",
+    "freeLine": "Mode entretien · parlez de votre projet : il range ce que vous dites dans l’Atelier et se souvient de tout.",
     "guidedLine": "Mode entretien dirigé · il vous pose ses questions une à une, en commençant par ce qui est vide.",
     "you": "Vous",
-    "freePlaceholder": "Parlez de votre roman…",
+    "freePlaceholder": "Parlez de votre projet…",
     "guidedPlaceholder": "Votre réponse…",
     "proposals_one": "{{count}} proposition",
     "proposals_other": "{{count}} propositions",
@@ -1066,7 +1064,7 @@
     "otherSection": "Autre section…",
     "pickSection": "Quelle section ?",
     "hint": "⏎ envoyer · ⇧⏎ à la ligne · {{validate}} {{reject}} valider, rejeter la dernière proposition · {{mode}} libre / dirigé · Échap revenir au texte",
-    "welcome": "Racontez-moi votre roman comme il vous vient : je range ce que vous dites dans l’Atelier, en propositions que vous validez ou non. En mode dirigé, je vous pose mes questions une à une, section par section. Voulez-vous commencer par « Le projet » ?",
+    "welcome": "Racontez-moi votre projet comme il vous vient : je range ce que vous dites dans l’Atelier, en propositions que vous validez ou non. En mode dirigé, je vous pose mes questions une à une, section par section. Voulez-vous commencer par « Le projet » ?",
     "startGuided": "Commencer en dirigé",
     "unavailable": "Le Compagnon n’est pas disponible dans cette version : l’entretien demande l’app de bureau.",
     "newSheet": "nouvelle fiche",
@@ -1091,16 +1089,16 @@
     "filter": "Chercher dans le carnet…",
     "filterKey": "/",
     "books": {
-      "projet": "Ce roman",
+      "projet": "Ce projet",
       "auteur": "Vous"
     },
     "count_one": "{{count}} note",
     "count_other": "{{count}} notes",
     "readIn": "relu dans {{title}}",
-    "readEverywhere": "relu dans tous vos romans",
+    "readEverywhere": "relu dans tous vos projets",
     "emptyBook": {
       "projet": "Rien encore.",
-      "auteur": "Ce qui vous suit d’un roman à l’autre : votre façon d’écrire, d’être accompagné."
+      "auteur": "Ce qui vous suit d’un projet à l’autre : votre façon d’écrire, d’être accompagné."
     },
     "noMatch": "Aucune note ne contient « {{query}} ».",
     "natures": {
@@ -1175,7 +1173,7 @@
     "origin": "La note {{title}} vient de ce message, {{when}}.",
     "backToNotebook": "Revenir au carnet",
     "emptyIntro": "Le Compagnon note ici ce qu’il retient de vos échanges : votre histoire, vos décisions, vos doutes, ce qu’il faudra reprendre, la façon dont vous aimez être accompagné. Il relit ce carnet avant chaque réponse, dans l’entretien comme dans la conversation.",
-    "emptyQuiet": "Corrigez ou mettez à la corbeille ce qui ne vous ressemble pas : une note que vous corrigez devient la vôtre, et il ne la réécrit plus. Ce qui vous suit d’un roman à l’autre va dans le carnet « Vous ».",
+    "emptyQuiet": "Corrigez ou mettez à la corbeille ce qui ne vous ressemble pas : une note que vous corrigez devient la vôtre, et il ne la réécrit plus. Ce qui vous suit d’un projet à l’autre va dans le carnet « Vous ».",
     "openInterview": "Ouvrir l’entretien",
     "hint": "J K parcourir · ⏎ corriger · V garder telle quelle · ⌫ corbeille · O voir l’échange · N nouvelle note · / chercher · Échap revenir au texte",
     "editHint": "{{save}} enregistrer · Échap annuler"

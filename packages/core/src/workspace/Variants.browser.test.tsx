@@ -53,13 +53,13 @@ describe('variants and restore points, keyboard only', () => {
 
     await command('copie'); // « Nouvelle variante (copie de la variante active) »
     await userEvent.keyboard('{ControlOrMeta>}a{/ControlOrMeta}Sombre{Enter}');
-    await waitFor(() => expect(document.title).toBe('Mon roman — Scène 1 (Sombre)'));
+    await waitFor(() => expect(document.title).toBe('Mon projet — Scène 1 (Sombre)'));
     expect(editorText()).toBe('Il faisait beau.');
     await replaceText('Il pleuvait.');
 
     await userEvent.keyboard('{ControlOrMeta>}{Alt>}v{/Alt}{/ControlOrMeta}'); // change variant…
     await userEvent.keyboard('variante 1{Enter}');
-    await waitFor(() => expect(document.title).toBe('Mon roman — Scène 1 (Variante 1)'));
+    await waitFor(() => expect(document.title).toBe('Mon projet — Scène 1 (Variante 1)'));
     expect(editorText()).toBe('Il faisait beau.');
 
     await command('changer de variante');
@@ -102,7 +102,7 @@ describe('variants and restore points, keyboard only', () => {
 
     await command('variante corbeille');
     await waitFor(() => expect(editorText()).toBe('Texte A.'));
-    await waitFor(() => expect(document.title).toBe('Mon roman — Scène 1'));
+    await waitFor(() => expect(document.title).toBe('Mon projet — Scène 1'));
 
     await command('restaurer depuis');
     await userEvent.keyboard('{Enter}');

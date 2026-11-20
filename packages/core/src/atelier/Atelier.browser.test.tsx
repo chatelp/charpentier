@@ -295,9 +295,9 @@ describe('Atelier', () => {
     await userEvent.keyboard(mod('k'));
     await userEvent.keyboard('@');
     expect(screen.getByText('Fiches')).toBeTruthy();
-    await userEvent.keyboard('mon roman{Enter}');
+    await userEvent.keyboard('mon projet{Enter}');
     await screen.findByRole('region', { name: 'Atelier' });
-    expect(screen.getByRole('heading', { name: 'Mon roman' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Mon projet' })).toBeTruthy();
   });
 
   it('hides the rejections, shows them with ⇧X, and lets the author take one back', async () => {

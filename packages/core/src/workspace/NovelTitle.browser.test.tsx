@@ -45,7 +45,7 @@ async function start() {
 }
 
 const button = () =>
-  screen.getByRole('button', { name: /le roman\u00A0: renommer, changer de roman/ });
+  screen.getByRole('button', { name: /le projet\u00A0: renommer, changer de projet/ });
 
 describe('the novel’s title (docs/DESIGN.md §4.8, 1.19)', () => {
   it('opens the novel’s sheet: its figures, the three novels opened last, the library', async () => {
@@ -55,7 +55,7 @@ describe('the novel’s title (docs/DESIGN.md §4.8, 1.19)', () => {
     expect(button().getAttribute('aria-expanded')).toBe('false');
 
     await userEvent.click(button());
-    const sheet = await screen.findByRole('dialog', { name: 'Le roman' });
+    const sheet = await screen.findByRole('dialog', { name: 'Le projet' });
     expect(button().getAttribute('aria-expanded')).toBe('true');
     expect(sheet.textContent).toContain('Roman · 1 chapitre · 1 scène · 0 mot');
     await within(sheet).findByRole('button', { name: /Le Phare des Sept-Îles/ });
@@ -69,21 +69,21 @@ describe('the novel’s title (docs/DESIGN.md §4.8, 1.19)', () => {
     await waitFor(() => expect(document.activeElement).toBe(others[0]));
     await userEvent.keyboard('{ArrowDown}');
     expect(document.activeElement).toBe(others[1]);
-    within(sheet).getByRole('button', { name: /Tous les romans…/ });
-    within(sheet).getByRole('button', { name: '+ Nouveau roman' });
+    within(sheet).getByRole('button', { name: /Tous les projets…/ });
+    within(sheet).getByRole('button', { name: '+ Nouveau projet' });
 
     // Échap closes it, and the text has the focus again.
     await userEvent.keyboard('{Escape}');
-    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Le roman' })).toBeNull());
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Le projet' })).toBeNull());
     await waitFor(() => expect(document.activeElement).toBe(editor));
   });
 
   it('renames the novel with R, everywhere at once; an empty title is not saved', async () => {
     const { platform } = await start();
     await userEvent.click(button());
-    await screen.findByRole('dialog', { name: 'Le roman' });
+    await screen.findByRole('dialog', { name: 'Le projet' });
     await userEvent.keyboard('r');
-    const field = await screen.findByRole('textbox', { name: 'Titre du roman' });
+    const field = await screen.findByRole('textbox', { name: 'Titre du projet' });
     expect(field).toHaveProperty('value', 'Avant Nantes');
     await userEvent.clear(field);
     expect(screen.getByRole('button', { name: /^Renommer/ })).toHaveProperty('disabled', true);
@@ -94,21 +94,21 @@ describe('the novel’s title (docs/DESIGN.md §4.8, 1.19)', () => {
     const all = await platform.library.list();
     expect(all.find((p) => p.title === 'Avant Nantes, 1910')).toBeDefined();
     // Back to the sheet, not closed.
-    screen.getByRole('dialog', { name: 'Le roman' });
+    screen.getByRole('dialog', { name: 'Le projet' });
 
     // Échap on the field cancels without renaming, and leaves the sheet open.
     await userEvent.keyboard('r');
-    await screen.findByRole('textbox', { name: 'Titre du roman' });
+    await screen.findByRole('textbox', { name: 'Titre du projet' });
     await userEvent.keyboard('X{Escape}');
-    expect(screen.queryByRole('textbox', { name: 'Titre du roman' })).toBeNull();
-    screen.getByRole('dialog', { name: 'Le roman' });
+    expect(screen.queryByRole('textbox', { name: 'Titre du projet' })).toBeNull();
+    screen.getByRole('dialog', { name: 'Le projet' });
     expect(button().textContent).toContain('Avant Nantes, 1910');
   });
 
   it('opens another novel from the sheet, without going through the library', async () => {
     await start();
     await userEvent.click(button());
-    const sheet = await screen.findByRole('dialog', { name: 'Le roman' });
+    const sheet = await screen.findByRole('dialog', { name: 'Le projet' });
     // The test runs without the app's styles, where surfaces overlap: clicked through the DOM.
     (await within(sheet).findByRole('button', { name: /La Saison des cerises/ })).click();
     await waitFor(() => expect(button().textContent).toContain('La Saison des cerises'));
@@ -118,10 +118,10 @@ describe('the novel’s title (docs/DESIGN.md §4.8, 1.19)', () => {
     await start();
     await userEvent.keyboard(mod('{Shift>}p{/Shift}'));
     const overview = await screen.findByRole('region', { name: 'Vue d’ensemble du manuscrit' });
-    within(overview).getByRole('button', { name: /Tous les romans…/ });
+    within(overview).getByRole('button', { name: /Tous les projets…/ });
     await waitFor(() => expect(document.activeElement?.closest('.ch-card')).not.toBeNull());
     await userEvent.keyboard('r');
-    const field = await within(overview).findByRole('textbox', { name: 'Titre du roman' });
+    const field = await within(overview).findByRole('textbox', { name: 'Titre du projet' });
     await userEvent.clear(field);
     await userEvent.type(field, 'Le Fleuve{Enter}');
     await waitFor(() =>
@@ -132,7 +132,7 @@ describe('the novel’s title (docs/DESIGN.md §4.8, 1.19)', () => {
     await userEvent.keyboard(mod('j'));
     const drawer = await screen.findByRole('complementary', { name: 'Plan du manuscrit' });
     within(drawer).getByRole('button', { name: 'Le Fleuve' }).click();
-    await screen.findByRole('dialog', { name: 'Le roman' });
+    await screen.findByRole('dialog', { name: 'Le projet' });
     expect(screen.queryByRole('complementary', { name: 'Plan du manuscrit' })).toBeNull();
   });
 });

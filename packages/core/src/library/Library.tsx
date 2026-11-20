@@ -151,9 +151,9 @@ export function Library({ currentProjectId, creating = false, onOpen, onClose }:
       event.preventDefault();
       onClose();
     } else if (key.toLowerCase() === 'n') {
-      // N a novel, ⇧N a short story.
+      // N a new project: a novel unless the form's keys say a short story (DESIGN 1.31).
       event.preventDefault();
-      startCreating(event.shiftKey ? 'short-story' : 'novel');
+      startCreating('novel');
     }
     if (!selected || !(event.target as HTMLElement).closest('.ch-library-list')) return;
     const index = list.indexOf(selected);
@@ -187,14 +187,9 @@ export function Library({ currentProjectId, creating = false, onOpen, onClose }:
   };
 
   const newButtons = (
-    <>
-      <button type="button" className="ch-btn is-author" onClick={() => startCreating('novel')}>
-        {t('library.newNovel')} <kbd>{t('library.newNovelKey')}</kbd>
-      </button>
-      <button type="button" className="ch-btn" onClick={() => startCreating('short-story')}>
-        {t('library.newStory')} <kbd>{t('library.newStoryKey')}</kbd>
-      </button>
-    </>
+    <button type="button" className="ch-btn is-author" onClick={() => startCreating('novel')}>
+      {t('library.newProject')} <kbd>{t('library.newProjectKey')}</kbd>
+    </button>
   );
 
   return (

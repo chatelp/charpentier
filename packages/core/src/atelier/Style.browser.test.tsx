@@ -198,7 +198,7 @@ describe('reference texts and Style et voix (phase 6.4, DESIGN §4.5 1.16)', () 
     screen.getByText('Vous aviez choisi : « le présent de narration »');
 
     // ⌥V keeps the whole sheet of the last proposal: its choice, its category, its book.
-    (await screen.findByRole('textbox', { name: 'Parlez de votre roman…' })).focus();
+    (await screen.findByRole('textbox', { name: 'Parlez de votre projet…' })).focus();
     await userEvent.keyboard('{Alt>}v{/Alt}');
     await waitFor(() => {
       const kept = listEntities(project().root, 'style').find(
