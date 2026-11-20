@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
-<title>Charpentier (16 et 32 px)</title>
-<rect x="64" y="64" width="896" height="896" rx="200" fill="#e6eaf0"/>
-<rect x="64" y="64" width="896" height="896" rx="200" fill="none" stroke="#b3becc" stroke-width="24"/>
-<path d="M 230 200 H 400 V 630 H 820 V 800 H 230 Z" fill="#b2432a"/><circle cx="640" cy="400" r="105" fill="#1f4f7c"/>
-</svg>

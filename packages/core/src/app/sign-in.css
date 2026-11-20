@@ -14,9 +14,12 @@
 }
 
 .ch-signin-icon {
-  width: 64px;
-  height: 64px;
-  background: url('./charpentier-petit.svg') center / contain no-repeat;
+  /* The whole icon, the Mac app's (DESIGN 1.29): its plate has a 9 % transparent margin,
+     taken back from the title below. */
+  width: 96px;
+  height: 96px;
+  margin-bottom: -9px;
+  background: url('./charpentier.svg') center / contain no-repeat;
 }
 
 .ch-signin-title {
@@ -154,8 +157,9 @@
   }
 
   .ch-signin-icon {
-    width: 48px;
-    height: 48px;
+    width: 80px;
+    height: 80px;
+    margin-bottom: -7px;
   }
 
   .ch-signin-title {
