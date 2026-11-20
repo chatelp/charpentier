@@ -333,8 +333,11 @@ export class WebSync implements SyncService {
       const accountHasProjects = [...projects.values()].some((p) => !p.trashedAt);
       this.#withheld.clear();
       for (const p of local.values())
-        if (!projects.has(p.id) && accountHasProjects && (await this.#pristine(p.id)))
+        if (!projects.has(p.id) && accountHasProjects && (await this.#pristine(p.id))) {
           this.#withheld.add(p.id);
+          // Off the account's library too: to this browser's trash (never deleted).
+          if (!p.trashedAt) await this.deps.library.trash(p.id);
+        }
       // Each part by its own date, as on the desktop: the title by its own, the trash by its own.
       const trashDate = (p: LibraryRecord) => p.trashAt ?? p.trashedAt ?? '';
       const merged = (a: LibraryRecord, b: LibraryRecord | undefined): LibraryRecord => {

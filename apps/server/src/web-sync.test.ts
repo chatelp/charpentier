@@ -112,6 +112,33 @@ describe('the app in a browser syncs with its server (phase 4.7 a)', () => {
     expect(two.jar.cookie).toBe('');
   });
 
+  it('keeps a browser’s untouched starter off the account, in this browser’s trash', async () => {
+    const db = await freshDatabase();
+    const server = createSyncServer({ db, port: 0, address: '127.0.0.1' });
+    await server.listen();
+    servers.push(server);
+    const origin = `http://127.0.0.1:${server.address.port}`;
+    const helene = await account(db);
+
+    const one = browser(origin);
+    await one.sync.signIn({ server: origin, ...helene });
+    await one.library.create({ title: 'La batelière', kind: 'novel' });
+    expect(await one.sync.idle()).toBe(true);
+
+    // A browser that opened the app before signing in: a blank « Mon roman ».
+    const two = browser(origin);
+    const starter = await two.library.create({ title: 'Mon roman', kind: 'novel' });
+    expect(await two.sync.signIn({ server: origin, ...helene })).toBe('ok');
+    expect(await two.sync.idle()).toBe(true);
+    await expect
+      .poll(async () => (await two.library.list()).map((p) => p.title), { timeout: 5000 })
+      .toEqual(['La batelière']);
+    expect((await two.library.listTrashed()).map((p) => p.id)).toEqual([starter.id]);
+    await one.sync.reconcile();
+    expect((await one.library.list()).map((p) => p.title)).toEqual(['La batelière']);
+    expect(await one.library.listTrashed()).toEqual([]);
+  });
+
   it('brings a project restored from the trash back in every browser; the latest of a trash and a restore wins', async () => {
     const db = await freshDatabase();
     const server = createSyncServer({ db, port: 0, address: '127.0.0.1' });
