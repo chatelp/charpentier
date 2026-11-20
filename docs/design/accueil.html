@@ -128,6 +128,80 @@
       .nav .main {
         color: var(--ch-author);
       }
+      .shot {
+        position: relative;
+      }
+      .mark {
+        position: absolute;
+        transform: translate(-50%, -50%);
+        display: grid;
+        place-items: center;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: var(--ch-ink);
+        color: var(--ch-bg);
+        font: 600 13px/1 var(--ch-font-ui);
+        box-shadow: 0 0 0 4px var(--ch-bg);
+      }
+      .console {
+        padding: 70px 26px 30px;
+      }
+      .console .lab {
+        position: absolute;
+        top: 18px;
+        transform: translateX(-50%);
+        text-align: center;
+        color: var(--ch-ink);
+        font: 13px/1.35 var(--ch-font-ui);
+        white-space: nowrap;
+      }
+      .console .lab small {
+        display: block;
+        color: var(--ch-muted);
+        font-size: 12px;
+      }
+      .console .lab::after {
+        content: '';
+        position: absolute;
+        left: 50%;
+        top: 40px;
+        width: 1px;
+        height: 30px;
+        background: var(--ch-faint);
+      }
+      .text kbd {
+        padding: 1px 6px;
+        border-radius: 5px;
+        box-shadow: var(--ch-raise-s);
+        color: var(--ch-ink-2);
+        font: 12.5px var(--ch-font-ui);
+      }
+      .steps {
+        margin: 0 0 14px;
+        padding: 0;
+        list-style: none;
+        counter-reset: s;
+      }
+      .steps li {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 8px;
+        color: var(--ch-ink-2);
+        font: 16px/1.5 var(--ch-font-text);
+      }
+      .steps li b {
+        flex: none;
+        display: grid;
+        place-items: center;
+        width: 22px;
+        height: 22px;
+        margin-top: 2px;
+        border-radius: 50%;
+        background: var(--ch-ink);
+        color: var(--ch-bg);
+        font: 600 12px/1 var(--ch-font-ui);
+      }
       .diagram text {
         font: 14px var(--ch-font-ui);
         fill: var(--ch-ink);
@@ -198,15 +272,33 @@
         <text class="small" x="223" y="140" text-anchor="middle">synchronisation</text>
         <text class="small" x="445" y="122" text-anchor="middle">le Compagnon,</text><text class="small" x="445" y="140" text-anchor="middle">sous le compte de Pierre</text>
       </svg>`;
+      const CONSOLE = `${img('console')}
+        <span class="lab" style="left:${26 + 0.948 * 8}px;left:calc(26px + (100% - 52px) * 0.08)">Le manuscrit<small>⌘J</small></span>
+        <span class="lab" style="left:calc(26px + (100% - 52px) * 0.5)">Que voulez-vous faire ?<small>⌘K</small></span>
+        <span class="lab" style="left:calc(26px + (100% - 52px) * 0.92)">Le Compagnon<small>⌘L</small></span>`;
       const PAGES = [
         {
           k: 'Bienvenue',
           t: 'Un atelier pour écrire votre roman',
           p: [
             'Charpentier vous accompagne pendant que vous écrivez : il range ce que vous inventez, vérifie la cohérence, explique le métier.',
-            'Six choses à savoir avant de commencer. Deux minutes ; vous pourrez tout relire plus tard.',
+            'Sept choses à savoir avant de commencer. Deux minutes ; vous pourrez tout relire plus tard, par la ligne de commande : « Revoir l’accueil ».',
           ],
           img: 'ecrire',
+        },
+        {
+          k: 'La console',
+          t: 'Trois touches, en bas de la page',
+          p: [
+            'Tout part de là. À gauche, le livre ouvre le manuscrit ; à droite, le compas ouvre le Compagnon ; au milieu, « Que voulez-vous faire ? ».',
+            'Une touche reste enfoncée tant que son panneau est ouvert ; un second clic le referme. Les noms apparaissent quand la souris approche.',
+          ],
+          keys: [
+            '<kbd>⌘J</kbd> le manuscrit',
+            '<kbd>⌘K</kbd> la ligne de commande',
+            '<kbd>⌘L</kbd> le Compagnon',
+          ],
+          console: true,
         },
         {
           k: 'Scène par scène',
@@ -257,14 +349,22 @@
           img: 'variantes',
         },
         {
-          k: 'Le clavier',
-          t: '« Que voulez-vous faire ? »',
-          p: [
-            'Au centre du pied, tapez un mot : « variante », « Hélène », « chapitre 3 ». Toutes les actions de l’app y sont, avec leur raccourci : on les apprend en passant.',
-            'Et quoi qu’il arrive, Échap revient au texte.',
+          k: 'La ligne de commande',
+          t: 'Tout est à un mot',
+          steps: [
+            'Cliquez sur « Que voulez-vous faire ? », ou <kbd>⌘K</kbd>.',
+            'Tapez un mot : « variante », « Hélène », « chapitre 3 ». Les actions, les fiches et les scènes qui correspondent montent.',
+            'Choisissez avec <kbd>↑</kbd> <kbd>↓</kbd>, puis <kbd>⏎</kbd>.',
           ],
-          keys: ['<kbd>⌘K</kbd> la ligne de commande', '<kbd>Échap</kbd> retour au texte'],
-          img: 'commande',
+          p: [
+            'Chaque action y est, avec son raccourci affiché à droite : on l’apprend en passant. Commencez par <kbd>#</kbd> pour une scène, <kbd>@</kbd> pour une fiche. Et quoi qu’il arrive, Échap revient au texte.',
+          ],
+          img: 'commande-zoom',
+          marks: [
+            { x: 3.5, y: 89, n: 1 },
+            { x: 14, y: 89, n: 2 },
+            { x: 70, y: 37, n: 3 },
+          ],
         },
         {
           k: 'Vos textes',
@@ -280,13 +380,13 @@
       const forme = P.get('forme') || 'pages';
       const root = document.getElementById('root');
       const body = (pg) =>
-        `${pg.p.map((x) => `<p>${x}</p>`).join('')}${pg.never ? `<p class="never">${pg.never}</p>` : ''}${pg.keys ? `<div class="keys">${pg.keys.map((k) => `<span>${k}</span>`).join('')}</div>` : ''}`;
+        `${pg.steps ? `<ol class="steps">${pg.steps.map((x, i) => `<li><b>${i + 1}</b><span>${x}</span></li>`).join('')}</ol>` : ''}${pg.p.map((x) => `<p>${x}</p>`).join('')}${pg.never ? `<p class="never">${pg.never}</p>` : ''}${pg.keys ? `<div class="keys">${pg.keys.map((k) => `<span>${k}</span>`).join('')}</div>` : ''}`;
       if (forme === 'pages') {
         const n = Math.min(Math.max(+(P.get('page') || 1), 1), PAGES.length);
         const pg = PAGES[n - 1];
         root.innerHTML = `<div class="welcome">
           <div class="top"><img src="icon/charpentier.svg" alt="" /><span class="kicker">${pg.k}</span><span>${n} / ${PAGES.length}</span><span class="skip">Passer <kbd>Échap</kbd></span></div>
-          <div class="stage"><div class="shot">${pg.diagram ? DIAGRAM : img(pg.img)}</div><div class="text"><h2>${pg.t}</h2>${body(pg)}</div></div>
+          <div class="stage"><div class="shot${pg.console ? ' console' : ''}">${pg.diagram ? DIAGRAM : pg.console ? CONSOLE : img(pg.img) + (pg.marks || []).map((m) => `<span class="mark" style="left:${m.x}%;top:${m.y}%">${m.n}</span>`).join('')}</div><div class="text"><h2>${pg.t}</h2>${body(pg)}</div></div>
           <div class="nav"><span class="dots">${PAGES.map((_, i) => `<i class="${i + 1 === n ? 'on' : i + 1 < n ? 'done' : ''}"></i>`).join('')}</span>
             ${n > 1 ? `<button class="ch-btn prev">Précédent <kbd>←</kbd></button>` : ''}
             <button class="ch-btn main">${pg.last ? 'Commencer à écrire' : 'Suivant'} <kbd>${pg.last ? '⏎' : '→'}</kbd></button></div>
@@ -295,11 +395,11 @@
         root.innerHTML = `<div class="letter">
           <img src="icon/charpentier.svg" alt="" style="width:72px;margin:-6px 0" />
           <h1>Bienvenue dans Charpentier</h1>
-          <p style="color:var(--ch-muted);font:italic 17px/1.5 var(--ch-font-text);margin:0">Un atelier pour écrire votre roman. Six choses à savoir.</p>
+          <p style="color:var(--ch-muted);font:italic 17px/1.5 var(--ch-font-text);margin:0">Un atelier pour écrire votre roman. Sept choses à savoir.</p>
           ${PAGES.slice(1)
             .map(
               (pg) =>
-                `<section class="text"><div class="top" style="margin-bottom:8px"><span class="kicker">${pg.k}</span></div><h2>${pg.t}</h2>${body(pg)}<div class="shot">${pg.diagram ? DIAGRAM : img(pg.img)}</div></section>`,
+                `<section class="text"><div class="top" style="margin-bottom:8px"><span class="kicker">${pg.k}</span></div><h2>${pg.t}</h2>${body(pg)}<div class="shot${pg.console ? ' console' : ''}">${pg.diagram ? DIAGRAM : pg.console ? CONSOLE : img(pg.img) + (pg.marks || []).map((m) => `<span class="mark" style="left:${m.x}%;top:${m.y}%">${m.n}</span>`).join('')}</div></section>`,
             )
             .join('')}
           <div class="nav" style="margin-top:40px"><span class="dots"></span><button class="ch-btn main">Commencer à écrire <kbd>⏎</kbd></button></div>
