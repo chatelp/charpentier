@@ -172,6 +172,14 @@
     </main>
     <script>
       const P = new URLSearchParams(location.search);
+      // Le logo : ?logo=petit (simplifié, 64 px) ou ?logo=complet&taille=96|128 (celui de l'app du Mac).
+      const logo = document.querySelector('.door img');
+      if (P.get('logo') === 'complet') {
+        logo.src = 'icon/charpentier.svg';
+        const t = P.get('taille') || '128';
+        logo.style.width = logo.style.height = t + 'px';
+        logo.style.margin = '-' + Math.round(t * 0.09) + 'px 0';
+      }
       if (P.has('sombre')) document.documentElement.dataset.theme = 'dark';
       const etat = P.get('etat') || 'vide';
       const email = etat === 'vide' || etat === 'horsligne' ? '' : 'claire@exemple.fr';
