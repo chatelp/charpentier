@@ -1,5 +1,12 @@
 import { DocumentLibrary, MemoryDocumentService, WebSync } from '@charpentier/platform-web';
-import { guids } from '@charpentier/schema';
+import {
+  createChapter,
+  createScene,
+  guids,
+  initProject,
+  listChapters,
+  readProjectMeta,
+} from '@charpentier/schema';
 import { afterEach, describe, expect, it } from 'vitest';
 import WebSocket from 'ws';
 import { createSyncServer } from './sync-server';
@@ -110,6 +117,39 @@ describe('the app in a browser syncs with its server (phase 4.7 a)', () => {
     expect(two.sync.status()).toBe('off');
     expect(await two.sync.account()).toBeNull();
     expect(two.jar.cookie).toBe('');
+  });
+
+  it('hears a project of the account before opening it cold in a new browser (23 November 2026)', async () => {
+    const db = await freshDatabase();
+    const server = createSyncServer({ db, port: 0, address: '127.0.0.1' });
+    await server.listen();
+    servers.push(server);
+    const origin = `http://127.0.0.1:${server.address.port}`;
+    const helene = await account(db);
+
+    const one = browser(origin);
+    await one.sync.signIn({ server: origin, ...helene });
+    const project = await one.library.create({ title: 'Un archipel', kind: 'novel' });
+    const root = (await one.documents.open(guids.project(project.id))).doc;
+    initProject(root, { id: project.id, title: 'Un archipel', kind: 'novel' });
+    createScene(root, {
+      chapterId: createChapter(root, { title: 'Chapitre 1' }),
+      title: 'Scène 1',
+    });
+    expect(await one.sync.idle()).toBe(true);
+
+    // A new browser, right after signing in: its copy of the root is empty.
+    const two = browser(origin);
+    expect(await two.sync.signIn({ server: origin, ...helene })).toBe('ok');
+    const cold = (await two.documents.open(guids.project(project.id))).doc;
+    expect(readProjectMeta(cold)).toBeUndefined();
+    expect(await two.sync.whenDocumentSynced(guids.project(project.id))).toBe(true);
+    expect(readProjectMeta(cold)?.title).toBe('Un archipel');
+    expect(listChapters(cold)).toHaveLength(1);
+
+    // Signed out: nothing to wait for.
+    two.sync.stop();
+    expect(await two.sync.whenDocumentSynced(guids.project(project.id), 500)).toBe(false);
   });
 
   it('keeps a browser’s untouched starter off the account, in this browser’s trash', async () => {

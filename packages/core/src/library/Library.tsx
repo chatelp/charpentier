@@ -2,7 +2,7 @@ import type { LibraryFolderService, ProjectKind, ProjectSummary } from '@charpen
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePlatform } from '../app/platform-context';
-import { renameProjectEverywhere } from '../workspace/default-scene';
+import { createProject, renameProjectEverywhere } from '../workspace/default-scene';
 import { projectStatsPref, readProjectStats, type ProjectStats } from './project-stats';
 import './library.css';
 import { CloseButton } from '../icons/CloseButton';
@@ -130,10 +130,11 @@ export function Library({ currentProjectId, creating = false, onOpen, onClose }:
     if (!form) return;
     const title = form.title.trim();
     if (form.mode === 'create') {
-      const project = await library.create({
-        title: title || t('library.untitled'),
-        kind: form.kind,
-      });
+      const project = await createProject(
+        platform,
+        { title: title || t('library.untitled'), kind: form.kind },
+        { chapter: t('manuscript.defaultChapterTitle'), scene: t('manuscript.defaultSceneTitle') },
+      );
       setForm(null);
       onOpen(project.id);
     } else {

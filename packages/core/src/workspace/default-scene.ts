@@ -14,7 +14,7 @@ import {
   SYSTEM,
   variantFragment,
 } from '@charpentier/schema';
-import type { DocumentHandle, Platform } from '@charpentier/platform';
+import type { DocumentHandle, Platform, ProjectKind, ProjectSummary } from '@charpentier/platform';
 import type * as Y from 'yjs';
 
 /** The project opened last on this device. */
@@ -72,7 +72,7 @@ export function initialProjectId(platform: Platform, titles: DefaultTitles): Pro
       // The one that failed only when it is the only one: the app then says so and offers the library.
       const recent = live.find((p) => p.id !== failed) ?? live[0];
       if (recent) return recent.id;
-      return (await library.create({ title: titles.project, kind: 'novel' })).id;
+      return (await createProject(platform, { title: titles.project, kind: 'novel' }, titles)).id;
     })();
     pendingIds.set(platform, pending);
     // Each start decides afresh (the library may have changed meanwhile).
@@ -94,6 +94,37 @@ export function ensureScene(root: Y.Doc, titles: Pick<DefaultTitles, 'chapter' |
   return createScene(root, { chapterId, title: titles.scene }, SYSTEM).sceneId;
 }
 
+/**
+ * A project of the account not yet on this device: its root document is
+ * empty here and the server could not be heard (offline). Nothing is
+ * created in it, or it would merge with the real one later (a second
+ * « Chapitre 1 », 23 November 2026).
+ */
+export class ProjectNotHereError extends Error {}
+
+/**
+ * A new project, made on this device: its library entry and, at once, its
+ * root document with a chapter and a scene. A project's root is never empty
+ * once it exists, so that an empty root always means one that has not
+ * arrived yet (`openProject`).
+ */
+export async function createProject(
+  platform: Platform,
+  input: { readonly title: string; readonly kind: ProjectKind; readonly id?: string },
+  titles: Pick<DefaultTitles, 'chapter' | 'scene'>,
+): Promise<ProjectSummary> {
+  const summary = await platform.library.create(input);
+  const handle = await platform.documents.open(guids.project(summary.id));
+  try {
+    await handle.whenLoaded;
+    initProject(handle.doc, { id: summary.id, title: summary.title, kind: summary.kind });
+    ensureScene(handle.doc, titles);
+  } finally {
+    await handle.close();
+  }
+  return summary;
+}
+
 /** Opens a project of the library, ready to write in. */
 export async function openProject(
   platform: Platform,
@@ -109,6 +140,16 @@ export async function openProject(
     handle = await platform.documents.open(guids.project(projectId));
     await handle.whenLoaded;
     const root = handle.doc;
+    // Empty here: a project of the account that has not arrived yet. Its
+    // content comes from the server first; nothing is made before.
+    const sync = platform.sync;
+    if (!readProjectMeta(root) && sync?.whenDocumentSynced && sync.status() !== 'off') {
+      const arrived = await sync.whenDocumentSynced(guids.project(projectId));
+      // Heard by the host: its copy may reach this replica a moment later (desktop, over IPC).
+      for (let i = 0; arrived && !readProjectMeta(root) && i < 20; i++)
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      if (!arrived && !readProjectMeta(root)) throw new ProjectNotHereError(projectId);
+    }
     initProject(root, {
       id: projectId,
       title: summary?.title ?? titles.project,
@@ -135,7 +176,9 @@ export async function openProject(
     };
   } catch (error) {
     await handle?.close().catch(() => {});
-    await platform.preferences.set(FAILED_PROJECT_PREF, projectId).catch(() => {});
+    // Not here yet is not a failure of the project: it opens once the network is back.
+    if (!(error instanceof ProjectNotHereError))
+      await platform.preferences.set(FAILED_PROJECT_PREF, projectId).catch(() => {});
     throw error;
   }
 }

@@ -4,6 +4,7 @@
     "windowTitle": "{{novel}} — {{scene}}",
     "loading": "Ouverture…",
     "openError": "Impossible d’ouvrir le projet.",
+    "notHere": "Ce projet n’est pas encore sur cet appareil : la première ouverture demande le réseau.",
     "retry": "Réessayer",
     "library": "Tous les projets…"
   },

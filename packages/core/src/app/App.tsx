@@ -8,6 +8,7 @@ import { SignIn } from './SignIn';
 import {
   initialProjectId,
   openProject,
+  ProjectNotHereError,
   projectFromSync,
   type ProjectSession,
 } from '../workspace/default-scene';
@@ -54,7 +55,10 @@ export function App({ platform, i18n, features = NO_FEATURES }: AppProps) {
 }
 
 type Opening =
-  { state: 'loading' } | { state: 'ready'; session: ProjectSession } | { state: 'error' };
+  | { state: 'loading' }
+  | { state: 'ready'; session: ProjectSession }
+  /** `notHere`: a project of the account not yet on this device, and no network. */
+  | { state: 'error'; notHere?: boolean };
 
 function Root() {
   const { t } = useTranslation();
@@ -169,7 +173,8 @@ function Root() {
       },
       (error: unknown) => {
         console.error(error);
-        if (!cancelled) setOpening({ state: 'error' });
+        if (!cancelled)
+          setOpening({ state: 'error', notHere: error instanceof ProjectNotHereError });
       },
     );
     return () => {
@@ -294,7 +299,7 @@ function Root() {
       {shown.state === 'loading' && <p role="status">{t('app.loading')}</p>}
       {shown.state === 'error' && (
         <div role="alert">
-          <p>{t('app.openError')}</p>
+          <p>{t(shown.notHere ? 'app.notHere' : 'app.openError')}</p>
           <button type="button" className="ch-btn" autoFocus onClick={retry}>
             {t('app.retry')}
           </button>

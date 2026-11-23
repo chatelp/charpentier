@@ -460,6 +460,29 @@ export class WebSync implements SyncService {
     }
   }
 
+  /**
+   * Waits until the server's copy of a document has been received: a project
+   * of the account opened in this browser while its root is still empty here
+   * (23 November 2026, a second « Chapitre 1 » made on an empty root). False
+   * when it cannot be heard: signed out, offline, or too long.
+   */
+  async whenDocumentSynced(guid: string, timeoutMs = 15_000): Promise<boolean> {
+    const deadline = Date.now() + timeoutMs;
+    const projectId = /^project:([^/]+)$/.exec(guid)?.[1];
+    while (Date.now() < deadline) {
+      if (this.#status === 'off' || this.#status === 'unauthorized' || this.#status === 'offline')
+        return false;
+      const entry = this.#providers.get(guid);
+      if (entry?.provider.isSynced) return true;
+      // A project of the account the reconciliation has not reached yet: synced now.
+      const projects = this.#libraryDoc?.getMap(PROJECTS);
+      if (!entry && projectId && this.#librarySynced && projects?.has(projectId))
+        void this.#syncProject(projectId);
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+    return false;
+  }
+
   /** Waits until everything is sent and received (signing out, tests). */
   async idle(timeoutMs = 10_000): Promise<boolean> {
     const deadline = Date.now() + timeoutMs;

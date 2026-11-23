@@ -39,6 +39,12 @@ export interface SyncService {
    */
   readonly accountRequired?: boolean;
   status(): SyncStatus;
+  /**
+   * Waits until the server's copy of a document has been received (a
+   * project of the account opened on a device where it is still empty),
+   * or until it cannot be: offline, signed out, too long. True once heard.
+   */
+  whenDocumentSynced?(guid: string, timeoutMs?: number): Promise<boolean>;
   onStatusChange(listener: (status: SyncStatus) => void): () => void;
   account(): Promise<SyncAccountInfo | null>;
   signIn(input: {

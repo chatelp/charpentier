@@ -51,4 +51,12 @@ export class IpcSyncService implements SyncService {
   revokeDevice(id: string) {
     return this.bridge.invoke({ type: 'sync.revokeDevice', id });
   }
+
+  whenDocumentSynced(guid: string, timeoutMs?: number) {
+    return this.bridge.invoke({
+      type: 'sync.whenDocumentSynced',
+      guid,
+      ...(timeoutMs !== undefined && { timeoutMs }),
+    });
+  }
 }

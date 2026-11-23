@@ -14,6 +14,7 @@ import {
   guids,
   initProject,
   listAllScenes,
+  listChapters,
   listEntities,
   readFieldRef,
   rejectProposal,
@@ -174,6 +175,32 @@ describe('sync between two desktop apps (step 4.3)', { timeout: 20_000 }, () => 
     }
     expect(listEntities(root2, 'characters')).toHaveLength(1);
     expect(getScene(root2, sceneId)?.title).toBe('Le sas');
+  });
+
+  it('hears a project of the account before a new device opens it cold (23 November 2026)', async () => {
+    const url = await server();
+    const mac = device('Mac');
+    const x250 = device('X250');
+    const { id } = await mac.library.create({ title: 'Un archipel', kind: 'novel' });
+    const root = mac.doc(guids.project(id));
+    initProject(root, { id, title: 'Un archipel', kind: 'novel' });
+    createScene(root, {
+      chapterId: createChapter(root, { title: 'Chapitre 1' }),
+      title: 'Scène 1',
+    });
+    expect(await mac.engine.signIn(url, EMAIL, PASSWORD)).toBe('ok');
+    expect(await mac.engine.idle()).toBe(true);
+
+    // As soon as the project is in the new device's library, it may be opened: it waits for the server's copy.
+    expect(await x250.engine.signIn(url, EMAIL, PASSWORD)).toBe('ok');
+    await until(async () => (await x250.library.list()).some((p) => p.id === id), 10_000);
+    const cold = x250.doc(guids.project(id));
+    expect(await x250.engine.whenDocumentSynced(guids.project(id))).toBe(true);
+    expect(listChapters(cold).map((c) => c.title)).toEqual(['Chapitre 1']);
+
+    // Offline or signed out: nothing to wait for.
+    x250.engine.stop();
+    expect(await x250.engine.whenDocumentSynced(guids.project(id), 500)).toBe(false);
   });
 
   it('never brings back an old title from a device that opened the novel offline', async () => {

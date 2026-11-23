@@ -99,6 +99,11 @@ export type Request =
   | { readonly type: 'sync.devices' }
   | { readonly type: 'sync.revokeDevice'; readonly id: string }
   | { readonly type: 'sync.openAdmin' }
+  | {
+      readonly type: 'sync.whenDocumentSynced';
+      readonly guid: string;
+      readonly timeoutMs?: number;
+    }
   | { readonly type: 'system.snapshot' }
   | { readonly type: 'system.post'; readonly text: string }
   | { readonly type: 'system.monitorOpen' }
@@ -151,6 +156,7 @@ export interface Responses {
   'sync.signOut': null;
   'sync.devices': readonly SyncDevice[] | null;
   'sync.revokeDevice': boolean;
+  'sync.whenDocumentSynced': boolean;
   'agents.setLightModel': null;
   'system.snapshot': SystemSnapshot | null;
   'system.post': null;

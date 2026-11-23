@@ -14,11 +14,13 @@ import { describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
 import { createTestPlatform } from '../testing/test-platform';
 import {
+  createProject,
   ensureScene,
   initialProjectId,
   lastScenePref,
   LEGACY_PROJECT_PREF,
   openProject,
+  ProjectNotHereError,
   projectFromSync,
   renameProjectEverywhere,
 } from './default-scene';
@@ -226,5 +228,84 @@ describe('a new device signed in (phase 5.6)', () => {
     const blank = await openProject(alone, await initialProjectId(alone, titles), titles);
     expect(await projectFromSync(alone, blank, titles)).toBeNull();
     expect(await alone.library.listTrashed()).toEqual([]);
+  });
+});
+
+describe('a project of the account opened on a new device (23 November 2026)', () => {
+  /** The account's project, as the server holds it: one chapter, one scene. */
+  function serverCopy(projectId: string) {
+    const doc = new Y.Doc();
+    initProject(doc, { id: projectId, title: 'Un archipel', kind: 'novel' });
+    const chapterId = createChapter(doc, { title: 'Chapitre 1' });
+    createScene(doc, { chapterId, title: 'Scène 1' });
+    return Y.encodeStateAsUpdate(doc);
+  }
+
+  /** A device signed in, whose root of the project is empty until the server answers. */
+  async function device(answer: 'heard' | 'offline') {
+    // Documents kept as a host keeps them (on disk, in IndexedDB), closed or not.
+    const docs = new Map<string, Y.Doc>();
+    const base = withPreferences();
+    const platform = {
+      ...base,
+      documents: {
+        open: async (guid: string) => {
+          const doc = docs.get(guid) ?? new Y.Doc({ guid });
+          docs.set(guid, doc);
+          return { guid, doc, whenLoaded: Promise.resolve(), close: async () => {} };
+        },
+      },
+    };
+    const { id } = await platform.library.create({ title: 'Un archipel', kind: 'novel' });
+    const copy = serverCopy(id);
+    const asked: string[] = [];
+    const sync = {
+      server: 'https://ecrire.example.org',
+      status: () => 'connecting' as const,
+      onStatusChange: () => () => {},
+      account: async () => ({ server: 'https://ecrire.example.org', email: 'p@example.org' }),
+      signIn: async () => 'ok' as const,
+      signOut: async () => {},
+      devices: async () => [],
+      revokeDevice: async () => true,
+      openAdmin: async () => 'not-admin' as const,
+      whenDocumentSynced: async (guid: string) => {
+        asked.push(guid);
+        if (answer === 'offline') return false;
+        // The server's copy arrives, a moment later.
+        await new Promise((resolve) => setTimeout(resolve, 20));
+        const root = (await platform.documents.open(guid)).doc;
+        Y.applyUpdate(root, copy);
+        return true;
+      },
+    };
+    return { platform: { ...platform, sync }, projectId: id, asked, copy };
+  }
+
+  it('waits for the server’s copy, and adds no chapter of its own', async () => {
+    const { platform, projectId, asked, copy } = await device('heard');
+    const session = await openProject(platform, projectId, titles);
+    expect(asked).toEqual([guids.project(projectId)]);
+    // The sync keeps the document in step afterwards: what was made here merges with it.
+    Y.applyUpdate(session.root, copy);
+    expect(listChapters(session.root).map((c) => c.title)).toEqual(['Chapitre 1']);
+    expect(readProjectMeta(session.root)?.title).toBe('Un archipel');
+  });
+
+  it('offline, says the project is not here yet and makes nothing', async () => {
+    const { platform, projectId } = await device('offline');
+    await expect(openProject(platform, projectId, titles)).rejects.toBeInstanceOf(
+      ProjectNotHereError,
+    );
+    const root = (await platform.documents.open(guids.project(projectId))).doc;
+    expect(readProjectMeta(root)).toBeUndefined();
+    expect(listChapters(root)).toEqual([]);
+  });
+
+  it('a project made on this device has its chapter at once, without waiting', async () => {
+    const { platform } = await device('offline');
+    const made = await createProject(platform, { title: 'Nouveau', kind: 'novel' }, titles);
+    const session = await openProject(platform, made.id, titles);
+    expect(listChapters(session.root)).toHaveLength(1);
   });
 });
