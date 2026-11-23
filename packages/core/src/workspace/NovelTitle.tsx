@@ -52,13 +52,16 @@ export function readVersionsView(doc: Y.Doc): VersionsView {
   };
 }
 
-/** The active version's name, when the novel has more than one (else nothing is said of versions). */
+/**
+ * The active version's name, only outside the main one (DESIGN 1.33): in
+ * « Principale » the title stands alone, even when other versions exist.
+ */
 export function useActiveVersionName(root: Y.Doc): string | undefined {
   const { t } = useTranslation();
   const view = useDocSnapshot(root, readVersionsView);
   if (view.versions.length < 2) return undefined;
   const active = view.versions.find((v) => v.id === view.active);
-  return active ? versionLabel(t, active) : undefined;
+  return active && !active.isMain ? versionLabel(t, active) : undefined;
 }
 
 /**
@@ -76,13 +79,14 @@ export function NovelButton({
 }) {
   const { t } = useTranslation();
   const title = useDocSnapshot(ctx.root, readProjectMeta)?.title ?? '';
-  // The active version, as soon as the novel has two (DESIGN 1.20).
+  // The version is named outside the main one; the tooltip speaks of versions once there are two.
   const version = useActiveVersionName(ctx.root);
+  const several = useDocSnapshot(ctx.root, readVersionsView).versions.length > 1;
   return (
     <button
       type="button"
       className={`ch-novel ch-chrome${ctx.novelOpen ? ' is-open' : ''} ${className}`}
-      title={t(version ? 'novel.buttonVersions' : 'novel.button')}
+      title={t(several ? 'novel.buttonVersions' : 'novel.button')}
       aria-label={
         version
           ? t('novel.buttonLabelVersion', { title, version })
@@ -154,7 +158,9 @@ export function NovelSheet({
   const [creating, setCreating] = useState(mode === 'version');
   const [renamingVersion, setRenamingVersion] = useState<string | null>(null);
   // A version's line has the focus: R and the sheet's foot speak of the version.
-  const [versionFocused, setVersionFocused] = useState(false);
+  const [versionLineFocused, setVersionFocused] = useState(false);
+  // A line trashed with the focus on it never blurs: no version left, no version's line.
+  const versionFocused = versionLineFocused && several;
   const editing = renaming || creating || renamingVersion !== null;
   const focusLater = (selector: string) =>
     requestAnimationFrame(() => ref.current?.querySelector<HTMLElement>(selector)?.focus());
@@ -240,6 +246,7 @@ export function NovelSheet({
     if (event.key === 'Escape') {
       handled();
       if (renaming) setRenaming(false);
+      else if (creating && !several) onClose(true);
       else if (creating) {
         setCreating(false);
         focusLater('.ch-novel-new-version');
@@ -309,12 +316,19 @@ export function NovelSheet({
           <p className="ch-novel-stats">{stats}</p>
         </>
       )}
-      <div className="ch-novel-rule" />
-      {/* Working versions (DESIGN 1.20): only the sheet speaks of them while there is one. */}
-      <p className="ch-label" title={several ? t('versions.everywhere') : undefined}>
-        {t('versions.title')}
-      </p>
-      {several ? (
+      {/*
+        Working versions, in retreat (DESIGN 1.33): with the main one alone the
+        sheet says nothing of them; the command « Nouvelle version de travail… »
+        opens it on the first one's name, where the difference with a variant
+        is told once.
+      */}
+      {(several || creating) && <div className="ch-novel-rule" />}
+      {(several || creating) && (
+        <p className="ch-label" title={several ? t('versions.everywhere') : undefined}>
+          {t(several ? 'versions.title' : 'versions.firstTitle')}
+        </p>
+      )}
+      {several && (
         <div className="ch-novel-versions" role="radiogroup" aria-label={t('versions.title')}>
           {view.versions.map((v) => {
             const name = versionLabel(t, v);
@@ -397,19 +411,23 @@ export function NovelSheet({
             );
           })}
         </div>
-      ) : (
-        <p className="ch-novel-alone">{t('versions.single')}</p>
       )}
       {creating ? (
         <NameField
           initial=""
           label={t('versions.nameField')}
           submit={t('versions.create')}
+          {...(!several && { lead: t('versions.firstWhat') })}
           note={t('versions.from', {
             version: activeName || t('versions.main'),
             shortcut: spaced(ctx.shortcutLabel('newVariant')),
           })}
           onDone={(name) => {
+            if (!name && !several) {
+              // The first version given up: the sheet closes, nothing changed.
+              onClose(true);
+              return;
+            }
             setCreating(false);
             if (!name) {
               focusLater('.ch-novel-new-version');
@@ -421,16 +439,18 @@ export function NovelSheet({
           }}
         />
       ) : (
-        <div className="ch-novel-actions">
-          <button
-            type="button"
-            className="ch-btn ch-novel-new-version"
-            data-novel-row
-            onClick={() => setCreating(true)}
-          >
-            {t('versions.new')}
-          </button>
-        </div>
+        several && (
+          <div className="ch-novel-actions">
+            <button
+              type="button"
+              className="ch-btn ch-novel-new-version"
+              data-novel-row
+              onClick={() => setCreating(true)}
+            >
+              {t('versions.new')}
+            </button>
+          </div>
+        )
       )}
       <div className="ch-novel-rule" />
       <p className="ch-label">{t('novel.others')}</p>
@@ -482,6 +502,7 @@ function NameField({
   initial,
   label,
   submit,
+  lead,
   note,
   className = '',
   onDone,
@@ -489,6 +510,8 @@ function NameField({
   readonly initial: string;
   readonly label: string;
   readonly submit: string;
+  /** Said before the note, in ink: what the thing named is (a first working version). */
+  readonly lead?: string;
   readonly note?: string;
   readonly className?: string;
   readonly onDone: (name: string | null) => void;
@@ -515,6 +538,7 @@ function NameField({
         aria-label={label}
         onChange={(event) => setValue(event.target.value)}
       />
+      {lead && <p className="ch-novel-renaming-lead">{lead}</p>}
       {note && <p className="ch-novel-renaming-note">{note}</p>}
       <div className="ch-novel-renaming-foot">
         <button type="submit" className="ch-btn is-author is-lit" disabled={!value.trim()}>

@@ -41,21 +41,36 @@ const openSheet = async () => {
   return screen.findByRole('dialog', { name: 'Le projet' });
 };
 
-describe('working versions (DESIGN 1.20)', () => {
+/** The only way in while there is one version (DESIGN 1.33): the command, which opens the sheet. */
+const newVersionByCommand = async () => {
+  await userEvent.keyboard('{ControlOrMeta>}k{/ControlOrMeta}');
+  await screen.findByRole('dialog', { name: 'Ligne de commande' });
+  await userEvent.keyboard('Nouvelle version de travail{Enter}');
+  const sheet = await screen.findByRole('dialog', { name: 'Le projet' });
+  return { sheet, field: await within(sheet).findByRole('textbox', { name: 'Nom de la version' }) };
+};
+
+describe('working versions (DESIGN 1.20, in retreat since 1.33)', () => {
   it('tries another ending without touching the novel, and goes back to it', async () => {
     await start();
     await userEvent.keyboard('Hélène arrive à Nantes.');
 
-    // One version: only the sheet speaks of versions.
+    // One version: nothing speaks of versions, not even the sheet.
     let sheet = await openSheet();
-    expect(sheet.textContent).toContain('Essayez une autre fin sans toucher au projet');
+    expect(sheet.textContent).not.toMatch(/version/i);
     expect(novelButton().textContent).not.toContain('·');
-    within(sheet).getByRole('button', { name: '+ Nouvelle version…' }).click();
-    const field = await within(sheet).findByRole('textbox', { name: 'Nom de la version' });
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(document.activeElement).toBe(editor()));
+
+    // The command opens the sheet on the first one's name, and says once what it is.
+    const first = await newVersionByCommand();
+    sheet = first.sheet;
+    expect(sheet.textContent).toContain('Nouvelle version de travail');
+    expect(sheet.textContent).toContain('Une variante récrit une scène.');
     expect(sheet.textContent).toContain(
       'Elle part de «\u00a0Principale\u00a0», telle qu’elle est.',
     );
-    await userEvent.type(field, 'Fin à Nantes{Enter}');
+    await userEvent.type(first.field, 'Fin à Nantes{Enter}');
 
     // The new version is the active one: in the title, in the sheet, checked.
     await waitFor(() => expect(novelButton().textContent).toContain('Mon projet · Fin à Nantes'));
@@ -92,22 +107,26 @@ describe('working versions (DESIGN 1.20)', () => {
     sheet = await openSheet();
     within(sheet).getAllByRole('radio')[0]?.click();
     await waitFor(() => expect(editor().textContent).toBe('Hélène arrive à Nantes. Il pleut.'));
-    await waitFor(() => expect(novelButton().textContent).toContain('Mon projet · Principale'));
+    // In the main version the title stands alone, even with another version there.
+    await waitFor(() => expect(novelButton().textContent).not.toContain('·'));
     expect(header()).not.toContain('commune');
 
     // And again: the other ending.
     within(sheet).getAllByRole('radio')[1]?.click();
     await waitFor(() => expect(editor().textContent).toBe('Hélène reste à Nantes.'));
+    await waitFor(() => expect(novelButton().textContent).toContain('Mon projet · Fin à Nantes'));
   });
 
   it('renames a version on its line with R, and puts it in the trash with ⌫', async () => {
     await start();
-    const sheet = await openSheet();
-    within(sheet).getByRole('button', { name: '+ Nouvelle version…' }).click();
-    await userEvent.type(
-      await within(sheet).findByRole('textbox', { name: 'Nom de la version' }),
-      'Fin à Nantes{Enter}',
-    );
+    // A first version given up: the sheet closes, nothing changed.
+    const givenUp = await newVersionByCommand();
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Le projet' })).toBeNull());
+    expect(givenUp.sheet.isConnected).toBe(false);
+
+    const { sheet, field: name } = await newVersionByCommand();
+    await userEvent.type(name, 'Fin à Nantes{Enter}');
     const line = await waitFor(() => {
       const found = within(sheet).getAllByRole('radio')[1];
       expect(found).toBeDefined();
@@ -122,8 +141,9 @@ describe('working versions (DESIGN 1.20)', () => {
 
     (within(sheet).getAllByRole('radio')[1] as HTMLElement).focus();
     await userEvent.keyboard('{Backspace}');
+    // The last one gone: back to the main version, and the sheet is silent again.
     await waitFor(() => expect(within(sheet).queryAllByRole('radio')).toHaveLength(0));
-    expect(sheet.textContent).toContain('Essayez une autre fin');
+    expect(sheet.textContent).not.toMatch(/version/i);
     expect(novelButton().textContent).not.toContain('·');
   });
 });

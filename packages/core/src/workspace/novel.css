@@ -383,6 +383,14 @@
   display: none;
 }
 
+/* What a first working version is, said once, in ink (DESIGN 1.33). */
+.ch-novel-renaming-lead {
+  margin: 0;
+  color: var(--ch-ink);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .ch-novel-renaming-note {
   margin: 0;
   color: var(--ch-muted);
