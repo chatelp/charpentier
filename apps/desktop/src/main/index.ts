@@ -545,6 +545,9 @@ void app.whenReady().then(() => {
   if (builtFrom)
     app.setAboutPanelOptions({ applicationVersion: app.getVersion(), version: builtFrom });
   secretsWithoutKeychain();
+  // The key was first read before the keychain could be: read again before any window asks,
+  // or the footer says « saisir la clé » to an author who has one, until the next network check.
+  llm.setOnline(net.isOnline());
   // Once the secrets can be read (without a keychain, in clear on the device).
   shareAccountWithUpdates();
   // A device has no menu bar (on the Mac, the hidden one keeps ⌘Q for development).
