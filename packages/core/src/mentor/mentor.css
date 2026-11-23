@@ -483,3 +483,69 @@
   color: var(--ch-ink);
   font: 13.5px / 1.4 var(--ch-font-text);
 }
+
+/* When the Compagnon cannot answer (DESIGN 1.32): a flat block at the head of the
+   panel and of the interview, no medallion, no alert colour. */
+.ch-compagnon-blocked {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 10px 0;
+  padding: 10px 12px;
+}
+
+.ch-compagnon-blocked-lead {
+  margin: 0;
+  color: var(--ch-ink);
+  font: 13.5px / 1.45 var(--ch-font-ui);
+}
+
+.ch-compagnon-blocked-help {
+  margin: 0;
+  color: var(--ch-muted);
+  font: 12.5px / 1.45 var(--ch-font-ui);
+}
+
+.ch-compagnon-blocked .ch-btn {
+  margin-top: 4px;
+}
+
+.ch-compagnon-blocked kbd {
+  margin-left: 6px;
+  color: var(--ch-faint);
+  font: inherit;
+}
+
+.ch-compagnon-unlock {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-self: stretch;
+  margin-top: 4px;
+}
+
+.ch-compagnon-unlock .ch-field {
+  caret-color: var(--ch-author);
+}
+
+.ch-compagnon-unlock-problem {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 0;
+  color: var(--ch-ink);
+  font: 12.5px / 1.45 var(--ch-font-ui);
+}
+
+.ch-compagnon-unlock-problem i {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  box-shadow: var(--ch-raise-s);
+  font: 600 11px / 1 var(--ch-font-ui);
+  font-style: normal;
+}

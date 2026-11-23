@@ -49,7 +49,32 @@
     },
     "apiKeyPlaceholder": "Clé d’API Anthropic (sk-ant-…), gardée chiffrée sur cet appareil",
     "apiKeyPlaceholderServer": "Clé d’API Anthropic (sk-ant-…), gardée chiffrée sur votre serveur",
-    "unlockPrompt": "Mot de passe de votre compte, pour réveiller le Compagnon",
+    "unlockPrompt": "Mot de passe de votre compte, pour déverrouiller la clé du Compagnon",
+    "blocked": {
+      "unconfigured": {
+        "lead": "Le Compagnon attend votre clé d’API.",
+        "help": "Il répond avec votre propre clé Anthropic ; elle reste sur cet appareil.",
+        "helpServer": "Il répond avec votre propre clé Anthropic ; elle est gardée chiffrée sur votre serveur.",
+        "action": "Saisir la clé…",
+        "placeholder": "Saisissez d’abord votre clé"
+      },
+      "locked": {
+        "lead": "Le Compagnon attend votre mot de passe.",
+        "help": "Votre clé est gardée chiffrée sur le serveur ; votre mot de passe la déverrouille, une fois après chaque redémarrage du serveur.",
+        "action": "Déverrouiller…",
+        "password": "Mot de passe",
+        "submit": "Déverrouiller",
+        "invalid": "Mot de passe incorrect.",
+        "too-many-attempts": "Trop de tentatives : réessayez dans un quart d’heure.",
+        "offline": "Le serveur ne répond pas.",
+        "placeholder": "Déverrouillez d’abord la clé"
+      },
+      "offline": {
+        "lead": "Le Compagnon est hors ligne.",
+        "help": "Il revient avec le réseau ; votre écriture continue.",
+        "placeholder": "Hors ligne"
+      }
+    },
     "unlock": {
       "unlocked": "Le Compagnon est prêt.",
       "invalid": "Ce n’est pas le mot de passe du compte.",
@@ -211,7 +236,7 @@
     "toggleMentorPanel": "Points à traiter et conversation",
     "setApiKey": "Saisir la clé d’API Anthropic du Compagnon…",
     "forgetApiKey": "Oublier la clé d’API Anthropic",
-    "unlockCompagnon": "Réveiller le Compagnon (mot de passe du compte)…",
+    "unlockCompagnon": "Déverrouiller la clé du Compagnon (mot de passe du compte)…",
     "talkToMentor": "Parler au Compagnon",
     "moreHelp": "Plus d’aide du Compagnon",
     "lessHelp": "Moins d’aide du Compagnon",
@@ -334,7 +359,7 @@
       "keyHelpServer": "Gardée sur votre serveur, chiffrée par votre mot de passe ; elle ne part que vers Anthropic.",
       "keySaved": "enregistrée",
       "keyLocked": "en attente du mot de passe",
-      "unlock": "Réveiller…",
+      "unlock": "Déverrouiller…",
       "noKey": "aucune",
       "enter": "Saisir…",
       "change": "Changer…",

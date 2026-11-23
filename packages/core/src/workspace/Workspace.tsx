@@ -27,6 +27,7 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
+import { CompagnonBlocked } from '../mentor/Blocked';
 import { useMediaQuery } from '../hooks/use-media-query';
 import { usePlatform } from '../app/platform-context';
 import { Atelier, type AtelierLocation } from '../atelier/Atelier';
@@ -1111,6 +1112,13 @@ export function ProjectWorkspace({
       )}
       {mentorPanel && (
         <MentorPanel
+          blocked={
+            <CompagnonBlocked
+              agents={ctx.platform.agents}
+              onEnterKey={() => ctx.openSettings('compagnon')}
+              enterKeyShortcut={ctx.shortcutLabel('openSettings')}
+            />
+          }
           root={root}
           outline={outline}
           sceneId={sceneId}

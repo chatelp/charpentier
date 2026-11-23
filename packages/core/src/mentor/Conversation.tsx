@@ -18,6 +18,7 @@ import {
   type ReactNode,
 } from 'react';
 import { useTranslation } from 'react-i18next';
+import { blockedPlaceholderKey, blockedStatus, useCompagnonStatus } from './Blocked';
 import * as Y from 'yjs';
 import { usePlatform } from '../app/platform-context';
 import { useDocSnapshot } from '../hooks/use-doc-snapshot';
@@ -124,7 +125,9 @@ export function Conversation({
     }
   };
 
-  const available = platform.agents.status() !== 'disabled';
+  const status = useCompagnonStatus(platform.agents);
+  const available = status !== 'disabled';
+  const blocked = blockedStatus(status);
 
   return (
     <div className="ch-conversation">
@@ -191,8 +194,8 @@ export function Conversation({
         className="ch-field ch-chat-field"
         rows={2}
         value={draft}
-        disabled={!available}
-        placeholder={t('mentor.chatPlaceholder')}
+        disabled={!available || !!blocked}
+        placeholder={t(blocked ? blockedPlaceholderKey(blocked) : 'mentor.chatPlaceholder')}
         aria-label={t('mentor.chatPlaceholder')}
         onChange={(e) => setDraft(e.target.value)}
         onKeyDown={onKeyDown}

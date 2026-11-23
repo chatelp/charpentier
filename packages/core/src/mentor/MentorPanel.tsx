@@ -44,6 +44,8 @@ export interface MentorPanelProps {
   readonly onClose: () => void;
   readonly conversation?: ReactNode;
   readonly header?: ReactNode;
+  /** When the Compagnon cannot answer: the block at the head of both tabs (DESIGN 1.32). */
+  readonly blocked?: ReactNode;
   readonly active: boolean;
   /** The author's gestures to enter the panel so far: each one gives it the focus, nothing else does. */
   readonly entry: number;
@@ -329,6 +331,7 @@ export function MentorPanel(props: MentorPanelProps) {
         ))}
       </div>
       {props.header}
+      {props.blocked}
       {props.tab === 'conversation' ? (
         <PanelEntryContext.Provider value={props.entry}>
           {props.conversation}

@@ -91,7 +91,7 @@ describe('conversation with the Compagnon', () => {
     );
   });
 
-  it('without a key, sends the author where it is set: Réglages › Compagnon (DESIGN 1.24)', async () => {
+  it('without a key, says so as the panel opens and sends the author where it is set (DESIGN 1.32)', async () => {
     const platform = createTestPlatform({
       keybindings: { primaryModifier: isMac ? 'Meta' : 'Control', reserved: [] },
       preferences: { get: async () => undefined, set: async () => {} },
@@ -121,15 +121,14 @@ describe('conversation with the Compagnon', () => {
     await screen.findByRole('region', { name: 'Compagnon' });
     await userEvent.keyboard('{Escape}');
 
+    // The panel says it at once (DESIGN 1.32): a block at its head, the field inert.
     await userEvent.keyboard('{ControlOrMeta>}k{/ControlOrMeta}');
     await userEvent.keyboard('parler au compagnon{Enter}');
-    await screen.findByRole('textbox', { name: 'Votre question au Compagnon' });
-    await userEvent.keyboard('Que veut Hélène ?{Enter}');
-    const log = screen.getByRole('log');
-    await waitFor(() =>
-      expect(log.textContent).toMatch(/clé d’API\u00A0: Réglages › Compagnon \((⌘|Ctrl\+),\)\./),
-    );
-    within(log).getByRole('button', { name: 'Réglages › Compagnon' }).click();
+    const field = await screen.findByRole('textbox', { name: 'Votre question au Compagnon' });
+    expect((field as HTMLTextAreaElement).disabled).toBe(true);
+    expect(field.getAttribute('placeholder')).toBe('Saisissez d’abord votre clé');
+    expect(screen.getByText('Le Compagnon attend votre clé d’API.')).toBeTruthy();
+    screen.getByRole('button', { name: /^Saisir la clé…/ }).click();
     await screen.findByRole('region', { name: 'Compagnon' });
   });
 });

@@ -27,6 +27,12 @@ import {
 } from '@charpentier/schema';
 import { useEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
+import {
+  blockedPlaceholderKey,
+  blockedStatus,
+  CompagnonBlocked,
+  useCompagnonStatus,
+} from '../mentor/Blocked';
 import * as Y from 'yjs';
 import { useHostWords } from '../app/host-words';
 import { useDocSnapshot } from '../hooks/use-doc-snapshot';
@@ -139,7 +145,9 @@ export function Interview({
   const [later, setLater] = useState<readonly InterviewSection[]>([]);
   const field = useRef<HTMLTextAreaElement>(null);
   const transcript = useRef<HTMLDivElement>(null);
-  const available = platform.agents.status() !== 'disabled';
+  const status = useCompagnonStatus(platform.agents);
+  const available = status !== 'disabled';
+  const blocked = blockedStatus(status);
 
   useEffect(() => {
     let cancelled = false;
@@ -373,6 +381,11 @@ export function Interview({
         </div>
       )}
 
+      <CompagnonBlocked
+        agents={platform.agents}
+        onEnterKey={() => ctx.openSettings('compagnon')}
+        enterKeyShortcut={ctx.shortcutLabel('openSettings')}
+      />
       <div ref={transcript} className="ch-interview-log" role="log" aria-live="polite">
         {messages.length === 0 && (
           <div className="ch-interview-turn is-compagnon">
@@ -532,8 +545,14 @@ export function Interview({
           className="ch-field ch-interview-field"
           rows={1}
           value={draft}
-          disabled={!available}
-          placeholder={guided ? t('interview.guidedPlaceholder') : t('interview.freePlaceholder')}
+          disabled={!available || !!blocked}
+          placeholder={
+            blocked
+              ? t(blockedPlaceholderKey(blocked))
+              : guided
+                ? t('interview.guidedPlaceholder')
+                : t('interview.freePlaceholder')
+          }
           aria-label={guided ? t('interview.guidedPlaceholder') : t('interview.freePlaceholder')}
           onChange={(e) => {
             setDraft(e.target.value);
