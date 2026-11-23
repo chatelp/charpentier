@@ -362,7 +362,9 @@
     inset 2px 0 0 var(--ch-author);
 }
 
-/* On the line that has the focus: « Renommer R » and « Corbeille ⌫ » in place of its figures. */
+/* On the line that has the focus or the pointer: « Renommer R » and « Corbeille ⌫ » in place of
+   its figures. `:focus-within`, not `:focus`: pressing one of the two moves the focus to it, and
+   a line that hid them at that moment took the click for itself (it changed version). */
 .ch-novel-version-actions {
   display: none;
   flex: none;
@@ -375,11 +377,13 @@
   color: var(--ch-ink-2);
 }
 
-.ch-novel-version:focus .ch-novel-version-actions {
+.ch-novel-version:focus-within .ch-novel-version-actions,
+.ch-novel-version:hover .ch-novel-version-actions {
   display: inline-flex;
 }
 
-.ch-novel-version:focus small {
+.ch-novel-version:focus-within small,
+.ch-novel-version:hover small {
   display: none;
 }
 
