@@ -3,6 +3,8 @@ import {
   activeVersionId,
   listVersions,
   listVersionScenes,
+  restoreVersion,
+  switchVersion,
   MAIN_VERSION,
   readProjectMeta,
   renameVersion,
@@ -233,7 +235,17 @@ export function NovelSheet({
     trashVersion(ctx.root, version.id);
     const target = sceneInActiveVersion(ctx, at ?? ctx.sceneId);
     if (target && target !== ctx.sceneId) ctx.openScene(target);
-    ctx.notify(t('versions.trashed', { version: versionLabel(t, version) }));
+    const wasActive = view.active === version.id;
+    ctx.offerUndo(
+      t('versions.trashed', {
+        version: versionLabel(t, version),
+        undo: ctx.shortcutLabel('undo') ?? '',
+      }),
+      () => {
+        restoreVersion(ctx.root, version.id);
+        if (wasActive) switchVersion(ctx.root, version.id);
+      },
+    );
     focusLater('.ch-novel-version.is-on');
   };
 

@@ -157,19 +157,7 @@ export const variantCommands: readonly (Command<Ctx> & { readonly id: CommandId 
     id: 'trashVariant',
     scope: 'global',
     isEnabled: (ctx) => hasDocs(ctx) && (scene(ctx)?.variants.length ?? 0) > 1,
-    run: (ctx) => {
-      const current = scene(ctx);
-      if (!current || !ctx.sceneDocs) return;
-      const doomed = current.activeVariantId;
-      const next = current.variants.filter((v) => v.id !== doomed).at(-1);
-      if (!next) return;
-      createCheckpoint(ctx.sceneDocs.sceneDoc, ctx.sceneDocs.historyDoc, {
-        variantId: doomed,
-        reason: 'before-variant-delete',
-      });
-      setActiveVariant(ctx.root, current.id, next.id);
-      trashVariant(ctx.root, current.id, doomed);
-    },
+    run: (ctx) => trashVariantOfScene(ctx),
   },
   {
     id: 'createCheckpoint',
@@ -251,6 +239,35 @@ export const variantCommands: readonly (Command<Ctx> & { readonly id: CommandId 
 ];
 
 /** Trashed variants of the open scene, for the « restore from trash » list. */
+/**
+ * A variant of the open scene to the trash (the active one by default; then
+ * another becomes the active one), with a restore point and ⌘Z to bring it
+ * back. Never the scene's last variant.
+ */
+export function trashVariantOfScene(ctx: Ctx, variantId?: string): void {
+  const current = scene(ctx);
+  if (!current || !ctx.sceneDocs || current.variants.length < 2) return;
+  const doomed = variantId ?? current.activeVariantId;
+  if (!current.variants.some((v) => v.id === doomed)) return;
+  const wasActive = doomed === current.activeVariantId;
+  const next = current.variants.filter((v) => v.id !== doomed).at(-1);
+  if (!next) return;
+  const name = variantLabel(ctx.t, current, doomed);
+  createCheckpoint(ctx.sceneDocs.sceneDoc, ctx.sceneDocs.historyDoc, {
+    variantId: doomed,
+    reason: 'before-variant-delete',
+  });
+  if (wasActive) setActiveVariant(ctx.root, current.id, next.id);
+  trashVariant(ctx.root, current.id, doomed);
+  ctx.offerUndo(
+    ctx.t('status.variantTrashed', { name, undo: ctx.shortcutLabel('undo') ?? '' }),
+    () => {
+      restoreVariant(ctx.root, current.id, doomed);
+      if (wasActive) setActiveVariant(ctx.root, current.id, doomed);
+    },
+  );
+}
+
 export function trashedVariantItems(ctx: Ctx) {
   const current = scene(ctx);
   if (!current) return [];

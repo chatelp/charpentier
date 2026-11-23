@@ -64,6 +64,13 @@ export interface WorkspaceContext {
   /** A short, discreet confirmation (read by screen readers). */
   notify(message: string): void;
   /**
+   * A confirmation with a way back: what was just done (something put in the
+   * trash) is undone by ⌘Z, as long as the author has typed nothing since.
+   */
+  offerUndo(message: string, undo: () => void): void;
+  /** Takes the way back on offer, if any; false when there is none. */
+  undoOffered(): boolean;
+  /**
    * Writing surface, the Atelier (modules), the overview of the manuscript,
    * the settings (sections from the features) or a feature's view.
    */

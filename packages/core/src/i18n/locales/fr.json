@@ -476,7 +476,7 @@
     "firstTypingMany": "Cette scène est commune à {{count}} versions : ce que vous écrivez vaut pour toutes. Pour la changer ici seulement : Nouvelle variante{{shortcut}}.",
     "switched": "Version « {{version}} ».",
     "removed": "Scène retirée de « {{version}} ».",
-    "trashed": "Version « {{version}} » mise à la corbeille."
+    "trashed": "Version « {{version}} » mise à la corbeille. {{undo}} pour annuler."
   },
   "history": {
     "today": "Aujourd’hui, {{time}}",
@@ -501,7 +501,11 @@
     },
     "motionReduced": "Animations réduites.",
     "motionNormal": "Animations rétablies.",
-    "entityTrashed": "Mis à la corbeille : « {{title}} ». Pour revenir en arrière : « Restaurer depuis la corbeille… ».",
+    "entityTrashed": "Mis à la corbeille : « {{title}} ». {{undo}} pour annuler.",
+    "sceneTrashed": "Scène « {{title}} » mise à la corbeille. {{undo}} pour annuler.",
+    "chapterTrashed": "Chapitre « {{title}} » mis à la corbeille. {{undo}} pour annuler.",
+    "variantTrashed": "Variante « {{name}} » mise à la corbeille. {{undo}} pour annuler.",
+    "trashUndone": "Remis en place.",
     "uiSoundsOn": "Sons de l’interface activés.",
     "uiSoundsOff": "Sons de l’interface désactivés.",
     "typingSoundsOn": "Son de frappe activé.",

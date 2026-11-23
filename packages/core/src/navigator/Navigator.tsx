@@ -15,7 +15,11 @@ import {
   readProjectMeta,
 } from '@charpentier/schema';
 import { Fragment, useEffect, useRef, useState, type DragEvent, type KeyboardEvent } from 'react';
-import { formatCheckpointDate, variantLabel } from '../commands/variant-commands';
+import {
+  formatCheckpointDate,
+  trashVariantOfScene,
+  variantLabel,
+} from '../commands/variant-commands';
 import { useDocSnapshot } from '../hooks/use-doc-snapshot';
 import { variantLetter } from '../workspace/SceneChrome';
 import { useActiveVersionName } from '../workspace/NovelTitle';
@@ -193,6 +197,15 @@ export function Navigator({ ctx, outline, active, onClose, signals }: NavigatorP
           ctx.openScene(scene.id);
         },
       });
+    } else if (
+      (key === 'Delete' || key === 'Backspace') &&
+      (event.target as HTMLElement).closest('[data-variant]')
+    ) {
+      // On a variant's line the key is for the variant, never for its whole scene.
+      handled();
+      const line = (event.target as HTMLElement).closest<HTMLElement>('[data-variant]');
+      trashVariantOfScene(ctx, line?.dataset['variant']);
+      focusItem(focused.id);
     } else if (key === 'Delete' || key === 'Backspace') {
       handled();
       const next = neighbourId(focused);
@@ -378,6 +391,7 @@ export function Navigator({ ctx, outline, active, onClose, signals }: NavigatorP
                           key={v.id}
                           type="button"
                           tabIndex={-1}
+                          data-variant={v.id}
                           className={`ch-nav-variant${v.id === currentScene.activeVariantId ? ' is-active' : ''}`}
                           onClick={() => setActiveVariant(ctx.root, currentScene.id, v.id)}
                         >

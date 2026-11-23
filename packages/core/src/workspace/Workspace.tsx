@@ -30,6 +30,7 @@ import { useTranslation } from 'react-i18next';
 import { CompagnonBlocked } from '../mentor/Blocked';
 import { useMediaQuery } from '../hooks/use-media-query';
 import { usePlatform } from '../app/platform-context';
+import { matchesCharacter, parseKeybinding } from '../commands/keybinding';
 import { Atelier, type AtelierLocation } from '../atelier/Atelier';
 import type { SheetTarget } from '../atelier/atelier-data';
 import { SheetPanel } from '../atelier/SheetPanel';
@@ -579,6 +580,29 @@ export function ProjectWorkspace({
 
   const notify = (text: string) => setStatus({ key: ++paletteSequence, text });
 
+  // The way back on offer after something went to the trash: ⌘Z takes it, until
+  // the author types anything (then ⌘Z is the text's again).
+  const [offered, setOffered] = useState<{ readonly undo: () => void } | null>(null);
+  const offerUndo = (text: string, undo: () => void) => {
+    setOffered({ undo });
+    notify(text);
+  };
+  const undoOffered = () => {
+    if (!offered) return false;
+    setOffered(null);
+    offered.undo();
+    notify(t('status.trashUndone'));
+    return true;
+  };
+  useEffect(() => {
+    const forget = () => setOffered(null);
+    window.addEventListener('beforeinput', forget, true);
+    return () => {
+      window.removeEventListener('beforeinput', forget, true);
+      forget();
+    };
+  }, [root]);
+
   // The first time the author writes in a common scene outside Principale, a line says it goes
   // for every version that shares it (DESIGN 1.20), once per scene.
   const toldCommon = useRef(new Set<string>());
@@ -707,6 +731,8 @@ export function ProjectWorkspace({
     sceneTexts,
     shortcutLabel: (id) => registry.shortcutLabel(id),
     notify,
+    offerUndo,
+    undoOffered,
     wordsToday,
     typing,
     prefs,
@@ -714,6 +740,7 @@ export function ProjectWorkspace({
   };
 
   // Global shortcuts. The listener reads the latest context through a ref.
+  const primaryModifier = platform.keybindings.primaryModifier;
   const latest = useRef(ctx);
   const paletteOpenRef = useRef(false);
   const paletteOpen = palette !== null;
@@ -736,6 +763,16 @@ export function ProjectWorkspace({
       if (event.defaultPrevented || event.isComposing || paletteOpenRef.current) return;
       // Under a feature's cover (the X250 locked), no shortcut of the app.
       if (isCovered()) return;
+      // ⌘Z right after something went to the trash brings it back, wherever the
+      // focus is (the editor binds ⌘Z itself: this listener comes first).
+      if (
+        matchesCharacter(parseKeybinding('Mod-z', primaryModifier), event) &&
+        latest.current.undoOffered()
+      ) {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
       const command = registry.forEvent(event, latest.current);
       if (!command) return;
       event.preventDefault();
@@ -744,7 +781,7 @@ export function ProjectWorkspace({
     };
     window.addEventListener('keydown', onKeyDown, true);
     return () => window.removeEventListener('keydown', onKeyDown, true);
-  }, [registry]);
+  }, [registry, primaryModifier]);
   // The keyboard's layout, for the shortcuts with Alt (⌥⌘, on AZERTY is on the M
   // key); read again when the window comes back, the author may have switched.
   useEffect(() => {

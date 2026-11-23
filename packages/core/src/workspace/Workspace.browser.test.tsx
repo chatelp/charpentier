@@ -132,6 +132,36 @@ describe('workspace, keyboard only', () => {
     await userEvent.keyboard('{Enter}');
     expect(outline()).toEqual(['Chapitre 1: Scène 1, Éphémère']);
     await waitFor(() => expect(document.title).toBe('Mon projet — Éphémère'));
+
+    // The trash says what went and how to get it back: ⌘Z, as long as nothing was typed since.
+    await press('mod+k');
+    await userEvent.keyboard('scene corbeille{Enter}');
+    expect(outline()).toEqual(['Chapitre 1: Scène 1']);
+    // (The queries read a non-breaking space as a space.)
+    await screen.findByText(/Scène « Éphémère » mise à la corbeille\. .+ pour annuler\./);
+    await press('mod+z');
+    expect(outline()).toEqual(['Chapitre 1: Scène 1, Éphémère']);
+    await waitFor(() => expect(document.title).toBe('Mon projet — Éphémère'));
+    await screen.findByText('Remis en place.');
+
+    // Once the author has typed, ⌘Z is the text's again: the scene stays in the trash.
+    await press('mod+k');
+    await userEvent.keyboard('scene corbeille{Enter}');
+    await waitFor(() => expect(editorFocused()).toBe(true));
+    await userEvent.keyboard('Un mot.');
+    await press('mod+z');
+    expect(outline()).toEqual(['Chapitre 1: Scène 1']);
+  });
+
+  it('brings back with ⌘Z the last scene put in the trash, and takes away the one made in its place', async () => {
+    const { outline } = await startApp();
+    await press('mod+k');
+    await userEvent.keyboard('scene corbeille{Enter}');
+    // A manuscript always has a scene to write in: one was made.
+    expect(outline()).toEqual(['Chapitre 1: Nouvelle scène']);
+    await press('mod+z');
+    expect(outline()).toEqual(['Chapitre 1: Scène 1']);
+    await waitFor(() => expect(document.title).toBe('Mon projet — Scène 1'));
   });
 
   it('reorders scenes and chapters by drag and drop', async () => {

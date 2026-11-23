@@ -109,5 +109,29 @@ describe('variants and restore points, keyboard only', () => {
     await command('changer de variante');
     await userEvent.keyboard('B{Enter}');
     await waitFor(() => expect(editorText()).toBe('Texte B.'));
+
+    // ⌘Z right after brings the variant back, active as it was.
+    await command('variante corbeille');
+    await waitFor(() => expect(editorText()).toBe('Texte A.'));
+    await screen.findByText(/Variante « B » mise à la corbeille\. .+ pour annuler\./);
+    await userEvent.keyboard('{ControlOrMeta>}z{/ControlOrMeta}');
+    await waitFor(() => expect(editorText()).toBe('Texte B.'));
+  });
+
+  it('in the drawer, ⌫ on a variant’s line trashes the variant, never its scene', async () => {
+    await startApp();
+    await userEvent.keyboard('Texte A.');
+    await command('variante vide');
+    await userEvent.keyboard('B{Enter}');
+    await replaceText('Texte B.');
+    await userEvent.keyboard('{ControlOrMeta>}j{/ControlOrMeta}');
+    const line = await screen.findByRole('button', { name: /B · B/ });
+    line.focus();
+    await userEvent.keyboard('{Backspace}');
+    // The scene is still there, on its other variant; the variant's lines are gone (one left).
+    await waitFor(() => expect(editorText()).toBe('Texte A.'));
+    expect(document.title).toBe('Mon projet — Scène 1');
+    expect(screen.queryByRole('button', { name: /B · B/ })).toBeNull();
+    expect(screen.getByRole('treeitem', { name: /Scène 1/ })).toBeTruthy();
   });
 });

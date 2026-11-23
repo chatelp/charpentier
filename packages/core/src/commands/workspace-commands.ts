@@ -106,18 +106,54 @@ export function newChapterAt(
   return { chapterId, sceneId };
 }
 
+/**
+ * A scene to write in when the trash took the last one: made, opened, and
+ * remembered, so that undoing the trash takes it away again (with the chapter
+ * made for it, if one was).
+ */
+function sceneToWriteIn(ctx: WorkspaceContext): { id: string; unmake(): void } {
+  const chapters = new Set(listChapters(ctx.root).map((c) => c.id));
+  const id = ensureScene(ctx.root, defaultTitles(ctx));
+  const chapterId = listVersionScenes(ctx.root).find((s) => s.id === id)?.chapterId;
+  return {
+    id,
+    unmake: () => {
+      if (chapterId && !chapters.has(chapterId)) trashChapter(ctx.root, chapterId);
+      else trashScene(ctx.root, id);
+    },
+  };
+}
+
+const undoKey = (ctx: WorkspaceContext) => ctx.shortcutLabel('undo') ?? '';
+
+/** To the trash, with ⌘Z to bring it back (docs/PLAN.md 7.5). */
 export function trashSceneAndMove(ctx: WorkspaceContext, sceneId: string): void {
+  const title = ctx.outline.flatMap((c) => c.scenes).find((s) => s.id === sceneId)?.title ?? '';
+  const open = sceneId === ctx.sceneId;
   const next = neighbourOf(ctx, new Set([sceneId]));
   trashScene(ctx.root, sceneId);
-  if (sceneId === ctx.sceneId) ctx.openScene(next ?? ensureScene(ctx.root, defaultTitles(ctx)));
+  const made = open && !next ? sceneToWriteIn(ctx) : undefined;
+  if (open) ctx.openScene(next ?? made?.id ?? sceneId);
+  ctx.offerUndo(ctx.t('status.sceneTrashed', { title, undo: undoKey(ctx) }), () => {
+    restoreSceneWithChapter(ctx.root, sceneId);
+    if (open) ctx.openScene(sceneId);
+    made?.unmake();
+  });
 }
 
 export function trashChapterAndMove(ctx: WorkspaceContext, chapterId: string): void {
+  const title = ctx.outline.find((c) => c.id === chapterId)?.title ?? '';
   const inside = new Set(listScenes(ctx.root, chapterId).map((s) => s.id));
+  const was = ctx.sceneId;
   const next = neighbourOf(ctx, inside);
   trashChapter(ctx.root, chapterId);
-  if (inside.has(ctx.sceneId) || !next)
-    ctx.openScene(next ?? ensureScene(ctx.root, defaultTitles(ctx)));
+  const made = !next ? sceneToWriteIn(ctx) : undefined;
+  if (inside.has(was) || !next) ctx.openScene(next ?? made?.id ?? was);
+  ctx.offerUndo(ctx.t('status.chapterTrashed', { title, undo: undoKey(ctx) }), () => {
+    restoreChapter(ctx.root, chapterId);
+    if (inside.has(was)) ctx.openScene(was);
+    made?.unmake();
+  });
 }
 
 export { promptRenameChapter, promptRenameScene };
@@ -378,7 +414,10 @@ export const workspaceCommands: readonly WorkspaceCommand[] = [
     scope: 'editor',
     keybinding: 'Mod-z',
     isEnabled: withEditor,
-    run: (ctx) => void ctx.editor?.chain().focus().undo().run(),
+    // What just went to the trash comes back first (from the menu too); else the text's undo.
+    run: (ctx) => {
+      if (!ctx.undoOffered()) ctx.editor?.chain().focus().undo().run();
+    },
   },
   {
     id: 'redo',
