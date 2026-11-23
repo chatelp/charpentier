@@ -287,6 +287,27 @@
   field-sizing: content;
 }
 
+/* While typing: what each key does, and « Annuler » as a text button (DESIGN §4.5). */
+.ch-fv-keys {
+  margin: 5px 2px 0;
+  color: var(--ch-faint);
+  font-size: 11.5px;
+}
+
+.ch-fv-cancel {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.ch-fv-cancel:hover,
+.ch-fv-cancel:focus-visible {
+  color: var(--ch-ink);
+}
+
 .ch-fm {
   grid-column: 2;
   display: flex;

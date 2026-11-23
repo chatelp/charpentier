@@ -12,6 +12,8 @@ import {
   bornInName,
 } from '@charpentier/schema';
 import { useId, useRef, useState, type KeyboardEvent } from 'react';
+import { useHostWords } from '../app/host-words';
+import { usePlatform } from '../app/platform-context';
 import { acceptAndKeep, keepSheetOf } from './atelier-actions';
 import { useTranslation } from 'react-i18next';
 import { playSound } from '../sound/sounds';
@@ -69,6 +71,8 @@ export function FieldRow({
   onShowRejected,
 }: FieldRowProps) {
   const { t, i18n } = useTranslation();
+  const host = useHostWords();
+  const primary = usePlatform().keybindings.primaryModifier;
   const labelId = useId();
   const metaId = useId();
   const [draft, setDraft] = useState<string | null>(null);
@@ -108,6 +112,13 @@ export function FieldRow({
     setDraft(null);
     if (!taken && draft === initial.current) return;
     write(def.kind === 'line' ? draft.replace(/\s*\n\s*/g, ' ').trim() : draft.trim(), taken);
+  };
+
+  /** « Annuler »: the field as it was before the edition, nothing written (DESIGN §4.5). */
+  const cancelDraft = () => {
+    if (draft === null || !editing.current) return;
+    editing.current = false;
+    setDraft(null);
   };
 
   const optionLabel = (option: string) =>
@@ -195,7 +206,13 @@ export function FieldRow({
 
   const onDraftKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     event.stopPropagation();
-    if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
+    // ⌘. (Ctrl+. off the Mac) cancels. Shift is not looked at: on AZERTY the dot is ⇧;.
+    const mod = primary === 'Meta' ? event.metaKey && !event.ctrlKey : event.ctrlKey;
+    if (event.key === '.' && mod && !event.altKey) {
+      event.preventDefault();
+      cancelDraft();
+      requestFocus(event.currentTarget.parentElement);
+    } else if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
       event.preventDefault();
       commitDraft(true);
       // Back on the value, so ↑↓ keep moving through the sheet.
@@ -254,7 +271,9 @@ export function FieldRow({
             aria-labelledby={labelId}
             value={draft}
             rows={def.kind === 'line' ? 1 : 3}
-            title={t(def.kind === 'line' ? 'atelier.lineDraftHint' : 'atelier.textDraftHint')}
+            title={t(def.kind === 'line' ? 'atelier.lineDraftHint' : 'atelier.textDraftHint', {
+              cancel: host.key('Mod-.'),
+            })}
             autoFocus
             spellCheck
             lang={ctx.language}
@@ -262,6 +281,22 @@ export function FieldRow({
             onKeyDown={onDraftKeyDown}
             onBlur={() => commitDraft(false)}
           />
+          <p className="ch-fv-keys">
+            {t('atelier.draftKeys')}{' '}
+            <button
+              type="button"
+              className="ch-fv-cancel"
+              // Kept from taking the focus: the field's blur would save the draft first.
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={(event) => {
+                const edit = event.currentTarget.closest('.ch-fv-edit');
+                cancelDraft();
+                requestFocus(edit);
+              }}
+            >
+              {t('atelier.cancelDraft')} <kbd>{host.key('Mod-.')}</kbd>
+            </button>
+          </p>
         </div>
       ) : (
         <div

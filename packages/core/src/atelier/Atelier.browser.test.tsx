@@ -157,6 +157,25 @@ describe('Atelier', () => {
       status: 'validated',
       value: expect.stringContaining('du monde,\net le vide.'),
     });
+
+    // « Annuler » puts the field back as it was before the edition (DESIGN §4.5):
+    // by its key, ⌘. (Ctrl+. off the Mac), and by its button under the field.
+    const before = readFieldRef(root, fear).value;
+    field('Peur').focus();
+    await userEvent.keyboard('{Enter}');
+    await screen.findByRole('textbox', { name: 'Peur' });
+    screen.getByText(/⏎ valider · Échap garder ·/);
+    await userEvent.keyboard(` Rien de tout cela.${mod('.')}`);
+    await waitFor(() => expect(screen.queryByRole('textbox', { name: 'Peur' })).toBeNull());
+    expect(readFieldRef(root, fear).value).toBe(before);
+    await waitFor(() => expect(document.activeElement).toBe(field('Peur')));
+
+    await userEvent.keyboard('{Enter}');
+    await screen.findByRole('textbox', { name: 'Peur' });
+    await userEvent.keyboard(' Ni cela.');
+    await userEvent.click(screen.getByRole('button', { name: /Annuler/ }));
+    await waitFor(() => expect(screen.queryByRole('textbox', { name: 'Peur' })).toBeNull());
+    expect(readFieldRef(root, fear).value).toBe(before);
   });
 
   it('shows the Compagnon’s proposals in relief and lets the author validate or reject them', async () => {

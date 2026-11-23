@@ -764,8 +764,10 @@
     "filterKey": "/",
     "sheetPanel": "Fiche",
     "sheetPanelHint": "↑↓ parcourir · ⏎ modifier · ⇧⏎ à la ligne · {{open}} ouvrir dans l’Atelier · Échap fermer",
-    "lineDraftHint": "⏎ enregistrer · Échap quitter le champ (enregistre aussi)",
-    "textDraftHint": "⏎ enregistrer · ⇧⏎ à la ligne · Échap quitter le champ (enregistre aussi)",
+    "lineDraftHint": "⏎ valider · Échap garder le brouillon · {{cancel}} annuler",
+    "textDraftHint": "⏎ valider · ⇧⏎ à la ligne · Échap garder le brouillon · {{cancel}} annuler",
+    "draftKeys": "⏎ valider · Échap garder ·",
+    "cancelDraft": "Annuler",
     "newEntry": {
       "characters": "+ Nouveau personnage",
       "acts": "+ Nouvel acte",
