@@ -72,7 +72,7 @@ describe('contribution points of the core (phase 5.1)', () => {
 
     // The machine's settings, opened by their shortcut on the board of dials (DESIGN 1.23);
     // ⏎ opens a section with its rail, which goes from one to the next; Échap back to the board.
-    await userEvent.keyboard(mod('{Alt>},{/Alt}'));
+    await userEvent.keyboard(mod('{Alt>}{Shift>},{/Shift}{/Alt}'));
     const board = await screen.findByRole('listbox', { name: 'Sections des réglages' });
     await waitFor(() => expect(document.activeElement?.getAttribute('data-dial')).toBe('probe'));
     expect(board.textContent).toContain('Autre sonde');
@@ -95,7 +95,7 @@ describe('contribution points of the core (phase 5.1)', () => {
     await waitFor(() => expect(document.activeElement).toBe(editor));
 
     // A click on an empty spot leaves the focus on the body: Échap still goes back to the text.
-    await userEvent.keyboard(mod('{Alt>},{/Alt}'));
+    await userEvent.keyboard(mod('{Alt>}{Shift>},{/Shift}{/Alt}'));
     await screen.findByRole('listbox', { name: 'Sections des réglages' });
     (document.activeElement as HTMLElement).blur();
     expect(document.activeElement).toBe(document.body);

@@ -1,5 +1,6 @@
 import {
   createSimulatedSystem,
+  navigatorKeyboardLayout,
   type AgentsService,
   type KeybindingsService,
   type Platform,
@@ -51,7 +52,7 @@ export function webReservedShortcuts(apple: boolean): string[] {
     `${mod}-l`,
     ...tabs,
     ...(apple
-      ? ['Meta-q', 'Meta-Shift-a', 'Meta-Alt-ArrowLeft', 'Meta-Alt-ArrowRight']
+      ? ['Meta-q', 'Meta-,', 'Meta-Shift-a', 'Meta-Alt-ArrowLeft', 'Meta-Alt-ArrowRight']
       : ['Control-Tab']),
   ];
 }
@@ -61,6 +62,7 @@ export function createWebKeybindings(userAgent: string): KeybindingsService {
   return {
     primaryModifier: apple ? 'Meta' : 'Control',
     reserved: webReservedShortcuts(apple),
+    keyboardLayout: navigatorKeyboardLayout,
   };
 }
 

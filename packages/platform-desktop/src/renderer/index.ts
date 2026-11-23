@@ -1,10 +1,11 @@
 // Renderer side of the desktop platform: everything goes through the preload bridge.
-import type {
-  KeybindingsService,
-  LibraryService,
-  Platform,
-  PreferencesService,
-  SystemService,
+import {
+  navigatorKeyboardLayout,
+  type KeybindingsService,
+  type LibraryService,
+  type Platform,
+  type PreferencesService,
+  type SystemService,
 } from '@charpentier/platform';
 import type { DesktopBridge } from '../shared/ipc';
 import { IpcAgentsService } from './agents';
@@ -60,6 +61,7 @@ export function desktopKeybindings(platform: string, appliance = false): Keybind
       : appliance
         ? []
         : ['Control-q', 'Control-w'],
+    keyboardLayout: navigatorKeyboardLayout,
   };
 }
 

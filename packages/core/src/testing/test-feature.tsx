@@ -30,7 +30,7 @@ export const probeFeature: Feature = {
     {
       id: 'probeSettings',
       scope: 'global',
-      keybinding: 'Mod-Alt-,',
+      keybinding: 'Mod-Alt-Shift-,',
       run: (ctx) => ctx.openSystemSettings(),
     },
   ],

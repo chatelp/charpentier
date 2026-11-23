@@ -389,11 +389,14 @@ export const workspaceCommands: readonly WorkspaceCommand[] = [
   },
 ];
 
-/** The settings view: only there when a feature brings a section (docs/PLAN.md phase 5.1). */
+/**
+ * The app's settings (phase 7.3): ⌘, where the host leaves it, ⌥⌘, in a
+ * browser that opens its own settings with ⌘, (Dia, Chrome, 23 November 2026).
+ */
 export const openSettingsCommand: WorkspaceCommand = {
   id: 'openSettings',
   scope: 'global',
-  keybinding: 'Mod-,',
+  keybinding: ['Mod-,', 'Mod-Alt-,'],
   run: (ctx) => (ctx.view === 'settings' ? ctx.openWriting() : ctx.openSettings()),
 };
 

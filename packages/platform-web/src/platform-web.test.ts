@@ -74,7 +74,7 @@ describe('createWebKeybindings', () => {
   it('writes reserved shortcuts in the registry syntax (modifiers joined by -)', () => {
     for (const apple of [true, false]) {
       for (const shortcut of webReservedShortcuts(apple)) {
-        expect(shortcut).toMatch(/^((Meta|Control|Alt|Shift)-)+([a-z0-9]|[A-Z][A-Za-z]+)$/);
+        expect(shortcut).toMatch(/^((Meta|Control|Alt|Shift)-)+([a-z0-9,]|[A-Z][A-Za-z]+)$/);
       }
     }
   });

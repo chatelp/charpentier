@@ -5,6 +5,7 @@ import {
   parseKeybinding,
   sameChord,
   type Chord,
+  type KeyboardLayout,
   type PrimaryModifier,
 } from './keybinding';
 
@@ -48,6 +49,12 @@ export class CommandRegistry<Ctx> {
   }
 
   readonly #reserved: Chord[];
+  #layout: KeyboardLayout | undefined;
+
+  /** The keyboard's layout, once the host has read it (shortcuts with Alt). */
+  setKeyboardLayout(layout: KeyboardLayout): void {
+    this.#layout = layout;
+  }
 
   register(command: Command<Ctx>): this {
     if (this.#entries.some((e) => e.command.id === command.id))
@@ -112,7 +119,7 @@ export class CommandRegistry<Ctx> {
       this.#entries.find(
         (e) =>
           e.command.scope === 'global' &&
-          e.chords.some((chord) => match(chord, event)) &&
+          e.chords.some((chord) => match(chord, event, this.#layout)) &&
           (e.command.isEnabled?.(ctx) ?? true),
       );
     return (find(matchesCharacter) ?? find(matches))?.command;

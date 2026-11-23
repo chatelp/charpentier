@@ -745,6 +745,23 @@ export function ProjectWorkspace({
     window.addEventListener('keydown', onKeyDown, true);
     return () => window.removeEventListener('keydown', onKeyDown, true);
   }, [registry]);
+  // The keyboard's layout, for the shortcuts with Alt (⌥⌘, on AZERTY is on the M
+  // key); read again when the window comes back, the author may have switched.
+  useEffect(() => {
+    const keybindings = platform.keybindings;
+    if (!keybindings.keyboardLayout) return;
+    let alive = true;
+    const read = () =>
+      void keybindings.keyboardLayout?.().then((layout) => {
+        if (alive && layout) registry.setKeyboardLayout(layout);
+      });
+    read();
+    window.addEventListener('focus', read);
+    return () => {
+      alive = false;
+      window.removeEventListener('focus', read);
+    };
+  }, [platform, registry]);
   // Échap leaves the settings and the full-frame views wherever the focus is:
   // a click on an empty spot of the page leaves it on the body, out of their
   // own key handlers (found on the X250).

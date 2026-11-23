@@ -53,6 +53,35 @@ describe('keybindings', () => {
     expect(eventKey(event({ key: 'a', code: 'KeyQ' }))).toBe('a');
   });
 
+  it('reads the key typed with Alt from the layout when the host knows it (AZERTY: the comma is on M)', () => {
+    const azerty = new Map([
+      ['KeyM', ','],
+      ['KeyQ', 'a'],
+      ['KeyA', 'q'],
+      ['Semicolon', 'm'],
+    ]);
+    // ⌥⌘, on a French Mac keyboard: the M key of QWERTY, and ⌥ turns it into ∞.
+    const comma = event({ key: '∞', code: 'KeyM', altKey: true, metaKey: true });
+    expect(eventKey(comma, azerty)).toBe(',');
+    expect(matches(parseKeybinding('Mod-Alt-,', 'Meta'), comma, azerty)).toBe(true);
+    expect(matches(parseKeybinding('Mod-Alt-m', 'Meta'), comma, azerty)).toBe(false);
+    // ⌥⇧⌘A is the key that reads A, not the QWERTY A key.
+    const a = event({ key: 'Æ', code: 'KeyQ', altKey: true, metaKey: true, shiftKey: true });
+    expect(matches(parseKeybinding('Mod-Alt-Shift-a', 'Meta'), a, azerty)).toBe(true);
+    // Without the layout (Safari, Firefox), the physical letter as before.
+    expect(eventKey(comma)).toBe('m');
+    // The registry uses the layout once the host has read it.
+    const registry = new CommandRegistry<null>('Meta').register({
+      id: 'settings',
+      scope: 'global',
+      keybinding: 'Mod-Alt-,',
+      run: () => undefined,
+    });
+    expect(registry.forEvent(comma, null)).toBeUndefined();
+    registry.setKeyboardLayout(azerty);
+    expect(registry.forEvent(comma, null)?.id).toBe('settings');
+  });
+
   it('matches a digit shortcut by its physical key (AZERTY: the 1 key gives & unshifted)', () => {
     const one = parseKeybinding('Mod-1', 'Meta');
     expect(matches(one, event({ key: '&', code: 'Digit1', metaKey: true }))).toBe(true);
@@ -223,10 +252,14 @@ describe('workspace commands', () => {
       `${mod}-l`,
       ...Array.from({ length: 9 }, (_, i) => `${mod}-${i + 1}`),
       ...(apple
-        ? ['Meta-q', 'Meta-Shift-a', 'Meta-Alt-ArrowLeft', 'Meta-Alt-ArrowRight']
+        ? ['Meta-q', 'Meta-,', 'Meta-Shift-a', 'Meta-Alt-ArrowLeft', 'Meta-Alt-ArrowRight']
         : ['Control-Tab']),
     ];
     expect(() => createWorkspaceRegistry('Meta', reserved('Meta', true))).not.toThrow();
+    // A browser on a Mac opens its own settings with ⌘, (Dia): the app's go to ⌥⌘,.
+    const mac = createWorkspaceRegistry('Meta', reserved('Meta', true));
+    expect(mac.shortcutLabel('openSettings')).toBe('⌥⌘,');
+    expect(createWorkspaceRegistry('Meta', []).shortcutLabel('openSettings')).toBe('⌘,');
     expect(() => createWorkspaceRegistry('Control', reserved('Control', false))).not.toThrow();
     const linux = createWorkspaceRegistry('Control', reserved('Control', false));
     expect(linux.shortcutLabel('newScene')).toBe('Ctrl+Alt+N');

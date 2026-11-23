@@ -4,6 +4,7 @@ export type * from './agents';
 export type * from './documents';
 export type * from './file-mirror';
 export type * from './keybindings';
+export { navigatorKeyboardLayout } from './keybindings';
 export type * from './llm';
 export { LlmOfflineError, LlmRefusalError, LlmUnconfiguredError } from './llm';
 export type * from './menu';

@@ -39,13 +39,22 @@ export function parseKeybinding(binding: string, primary: PrimaryModifier): Chor
   };
 }
 
+/** The character each physical key gives without modifier, by `KeyboardEvent.code`. */
+export type KeyboardLayout = ReadonlyMap<string, string>;
+
 /**
- * The key an event stands for. With Alt, macOS turns letters into other
- * characters (⌥N gives "˜"), and AZERTY/QWERTY differ: for letters and
- * digits typed with Alt, fall back to the physical key code.
+ * The key an event stands for. With Alt, macOS turns characters into other
+ * ones (⌥N gives "˜", ⌥, gives "∞"): the key's own character comes from the
+ * layout when the host knows it (AZERTY: the comma is on `KeyM`); without it,
+ * letters and digits fall back to the physical key code.
  */
-export function eventKey(event: Pick<KeyboardEvent, 'key' | 'code' | 'altKey'>): string {
+export function eventKey(
+  event: Pick<KeyboardEvent, 'key' | 'code' | 'altKey'>,
+  layout?: KeyboardLayout,
+): string {
   if (event.altKey) {
+    const own = layout?.get(event.code);
+    if (own?.length === 1) return own.toLowerCase();
     const letter = /^Key([A-Z])$/.exec(event.code);
     if (letter?.[1]) return letter[1].toLowerCase();
     const digit = /^Digit([0-9])$/.exec(event.code);
@@ -66,8 +75,12 @@ const sameModifiers = (chord: Chord, event: ChordEvent): boolean =>
   event.shiftKey === chord.shift;
 
 /** The chord's key is the character the event gives (the layout decides). */
-export function matchesCharacter(chord: Chord, event: ChordEvent): boolean {
-  return eventKey(event) === chord.key && sameModifiers(chord, event);
+export function matchesCharacter(
+  chord: Chord,
+  event: ChordEvent,
+  layout?: KeyboardLayout,
+): boolean {
+  return eventKey(event, layout) === chord.key && sameModifiers(chord, event);
 }
 
 /**
@@ -75,8 +88,8 @@ export function matchesCharacter(chord: Chord, event: ChordEvent): boolean {
  * row gives `& é " ' ( - è _ ç à` unshifted, so ⌘1 arrives as ⌘& (`Digit1`).
  * The modifiers stay exactly those declared.
  */
-export function matches(chord: Chord, event: ChordEvent): boolean {
-  if (matchesCharacter(chord, event)) return true;
+export function matches(chord: Chord, event: ChordEvent, layout?: KeyboardLayout): boolean {
+  if (matchesCharacter(chord, event, layout)) return true;
   return (
     /^[0-9]$/.test(chord.key) && event.code === `Digit${chord.key}` && sameModifiers(chord, event)
   );

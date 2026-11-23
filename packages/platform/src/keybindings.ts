@@ -12,4 +12,28 @@ export interface KeybindingsService {
    * then fall back to their other shortcuts, or to the command line alone.
    */
   readonly reserved: readonly string[];
+  /**
+   * The character each physical key gives without modifier, by
+   * `KeyboardEvent.code` (`KeyM` gives `,` on AZERTY), when the host can tell:
+   * with Alt, macOS changes the character (⌥, gives ∞) and the registry reads
+   * the key's own. Null, or absent, when it cannot.
+   */
+  keyboardLayout?(): Promise<ReadonlyMap<string, string> | null>;
+}
+
+interface LayoutNavigator {
+  readonly keyboard?: { getLayoutMap?(): Promise<ReadonlyMap<string, string>> };
+}
+
+/**
+ * The keyboard layout as Chromium reads it (`navigator.keyboard`, the web and
+ * the desktop's renderer); null in a browser without it (Safari, Firefox).
+ */
+export async function navigatorKeyboardLayout(): Promise<ReadonlyMap<string, string> | null> {
+  const keyboard = (globalThis.navigator as LayoutNavigator | undefined)?.keyboard;
+  try {
+    return (await keyboard?.getLayoutMap?.()) ?? null;
+  } catch {
+    return null;
+  }
 }
