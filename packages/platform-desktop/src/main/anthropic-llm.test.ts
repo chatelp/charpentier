@@ -13,29 +13,24 @@ import {
   OPUS,
 } from '@charpentier/anthropic';
 import { SecretStore } from './secret-store';
+import { fakeAnthropic } from './testing/fake-anthropic';
 
 /** A fake SDK client: records requests, answers or fails as told. */
 function fakeClient(behaviour: () => unknown) {
   const requests: Record<string, unknown>[] = [];
-  const client = {
-    beta: {
-      messages: {
-        create: async (body: Record<string, unknown>) => {
-          requests.push(body);
-          const result = behaviour();
-          if (result instanceof Error) throw result;
-          return result;
-        },
-      },
+  const client = fakeAnthropic(
+    async (body: Record<string, unknown>) => {
+      requests.push(body);
+      const result = behaviour();
+      if (result instanceof Error) throw result;
+      return result;
     },
-    models: {
-      retrieve: async () => {
-        const result = behaviour();
-        if (result instanceof Error) throw result;
-        return { id: OPUS };
-      },
+    async () => {
+      const result = behaviour();
+      if (result instanceof Error) throw result;
+      return { id: OPUS };
     },
-  } as unknown as Anthropic;
+  );
   return { client, requests };
 }
 
@@ -82,6 +77,43 @@ describe('Anthropic LLM service', () => {
       betas: ['server-side-fallback-2026-07-01'],
       fallbacks: 'default',
     });
+  });
+
+  it('streams the answer and tells when its first words come, once (DESIGN 1.34)', async () => {
+    const requests: unknown[] = [];
+    let release: () => void = () => {};
+    const told: string[] = [];
+    // The SDK's stream: the first words arrive before the message is whole.
+    const stream = (body: unknown) => {
+      requests.push(body);
+      const listeners: ((delta: string) => void)[] = [];
+      const whole = new Promise((resolve) => {
+        release = () => resolve(message('{"reply":"Oui."}'));
+      });
+      return {
+        on(event: string, listener: (delta: string) => void) {
+          if (event === 'text') listeners.push(listener);
+          return this;
+        },
+        finalMessage: async () => {
+          for (const delta of ['{"re', 'ply":', '"Oui."}']) for (const l of listeners) l(delta);
+          told.push('deltas sent');
+          return whole;
+        },
+      };
+    };
+    const llm = new AnthropicLlmService({
+      apiKey: () => 'sk-test',
+      models: () => ({ deep: OPUS, fast: OPUS }),
+      createClient: () => ({ beta: { messages: { stream } } }) as unknown as Anthropic,
+    });
+    const answer = llm.generate(request, undefined, (event) => told.push(event));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(told).toEqual(['text', 'deltas sent']);
+    release();
+    expect(await answer).toMatchObject({ text: '{"reply":"Oui."}' });
+    expect(requests[0]).toMatchObject({ model: OPUS, max_tokens: 16000 });
+    expect(requests[0]).not.toHaveProperty('stream');
   });
 
   it('keeps the stable history in the cache for an hour, the last words outside it', async () => {

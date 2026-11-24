@@ -9,8 +9,20 @@
 export interface LlmService {
   status(): LlmStatus;
   onStatusChange(listener: (status: LlmStatus) => void): () => void;
-  generate(request: LlmRequest, signal?: AbortSignal): Promise<LlmResponse>;
+  /**
+   * `progress` is told when the model's first words arrive (`'text'`), for a
+   * host whose provider streams; one that does not never calls it. The
+   * answer itself only comes whole, in the response.
+   */
+  generate(
+    request: LlmRequest,
+    signal?: AbortSignal,
+    progress?: (event: LlmProgress) => void,
+  ): Promise<LlmResponse>;
 }
+
+/** What a call to the model says on the way: its first words are coming. */
+export type LlmProgress = 'text';
 
 /** The model declined the request for safety reasons (and so did its fallbacks). */
 export class LlmRefusalError extends Error {}

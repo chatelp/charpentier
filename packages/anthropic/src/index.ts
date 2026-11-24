@@ -4,6 +4,7 @@ import {
   LlmRefusalError,
   LlmUnconfiguredError,
   type LlmMessage,
+  type LlmProgress,
   type LlmRequest,
   type LlmResponse,
   type LlmService,
@@ -134,7 +135,11 @@ export class AnthropicLlmService implements LlmService {
     }
   }
 
-  async generate(request: LlmRequest, signal?: AbortSignal): Promise<LlmResponse> {
+  async generate(
+    request: LlmRequest,
+    signal?: AbortSignal,
+    progress?: (event: LlmProgress) => void,
+  ): Promise<LlmResponse> {
     const apiKey = this.options.apiKey();
     if (!apiKey) {
       this.#setStatus('unconfigured');
@@ -147,7 +152,9 @@ export class AnthropicLlmService implements LlmService {
         ? {}
         : { betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' as const };
     try {
-      const message = await this.#clientFor(apiKey).beta.messages.create(
+      // Streamed, so that the first words are known as they come (DESIGN 1.34:
+      // « Il écrit sa réponse… »); the answer is still read whole, at the end.
+      const stream = this.#clientFor(apiKey).beta.messages.stream(
         {
           model,
           max_tokens: request.maxOutputTokens,
@@ -175,6 +182,15 @@ export class AnthropicLlmService implements LlmService {
         },
         { signal },
       );
+      if (progress) {
+        let told = false;
+        stream.on('text', () => {
+          if (told) return;
+          told = true;
+          progress('text');
+        });
+      }
+      const message = await stream.finalMessage();
       this.#setStatus('available');
       // What the call cost, for the record (phase 6.5: the prompt cache, measured).
       const { usage } = message;
