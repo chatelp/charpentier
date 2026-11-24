@@ -1,4 +1,4 @@
-import type { LlmService } from '@charpentier/platform';
+import type { AnswerPhase, LlmService } from '@charpentier/platform';
 import { UnusableAnswerError } from './answer';
 import type { BookContext } from './book-context';
 import { isOneSentence, MAX_REPLY_LENGTH, narrativeProseIn, narrativeSentencesIn } from './guard';
@@ -108,6 +108,8 @@ export async function compagnonChat(
   memory?: MemoryStore,
   /** An answer the guardrails refused, and why (the live tests show it). */
   onRefused?: (refused: { readonly answer: unknown; readonly why: readonly unknown[] }) => void,
+  /** Where the answer stands, as the engine knows it (DESIGN 1.34). */
+  onPhase?: (phase: AnswerPhase) => void,
 ): Promise<ChatAnswer> {
   // Everything of the author's the Compagnon may quote: the scene, their messages, their validated sheets.
   const authorText = [
@@ -164,9 +166,14 @@ export async function compagnonChat(
       maxOutputTokens: 16000,
       tier: 'deep' as const,
     };
+    // Every attempt starts thinking again; its first words, then the guardrails, follow.
+    onPhase?.('thinking');
+    const writing = onPhase && (() => onPhase('writing'));
     const response = memory
-      ? await generateWithMemory(llm, request, memory, signal)
-      : await llm.generate(request, signal);
+      ? await generateWithMemory(llm, request, memory, signal, writing)
+      : await llm.generate(request, signal, writing);
+    signal?.throwIfAborted();
+    onPhase?.('reviewing');
     const answer = response.truncated ? undefined : parseAnswer(response.text);
     if (!answer) {
       last = response.truncated ? 'truncated' : 'unreadable';

@@ -65,6 +65,12 @@ class RelayLlm implements LlmService {
     for (const listener of this.#listeners) listener(status);
   }
 
+  /**
+   * The relay does not stream (one request, one whole answer): the first
+   * words are never told, and the interface goes from « Il réfléchit… »
+   * straight to « Il relit sa réponse… » (DESIGN 1.34). Stopping an answer
+   * aborts the request.
+   */
   async generate(request: LlmRequest, signal?: AbortSignal): Promise<LlmResponse> {
     let response: Response;
     try {
@@ -239,6 +245,13 @@ export class WebCompagnon implements AgentsService {
 
   async stopDeepWork(input: { readonly projectId: string }): Promise<void> {
     this.#works.stopDeepWork(input);
+  }
+
+  onAnswerPhase: NonNullable<AgentsService['onAnswerPhase']> = (listener) =>
+    this.#works.onAnswerPhase(listener);
+
+  async stopAnswer(input: { readonly projectId: string }): Promise<void> {
+    this.#works.stopAnswer(input);
   }
 
   async dropReference(input: { readonly token: string }): Promise<void> {

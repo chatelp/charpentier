@@ -1,4 +1,10 @@
-import type { LlmRequest, LlmResponse, LlmService, LlmToolCall } from '@charpentier/platform';
+import type {
+  LlmProgress,
+  LlmRequest,
+  LlmResponse,
+  LlmService,
+  LlmToolCall,
+} from '@charpentier/platform';
 import {
   agentOrigin,
   agentRenameNote,
@@ -412,6 +418,8 @@ export async function generateWithMemory(
   request: LlmRequest,
   store: MemoryStore,
   signal?: AbortSignal,
+  /** Told when the model's words come, at any round (DESIGN 1.34). */
+  progress?: (event: LlmProgress) => void,
 ): Promise<LlmResponse> {
   let messages = [...request.messages];
   let response: LlmResponse | undefined;
@@ -428,7 +436,10 @@ export async function generateWithMemory(
         ...(last && { toolChoice: 'none' as const }),
       },
       signal,
+      progress,
     );
+    // Stopped by the author: no note is taken on the way out.
+    signal?.throwIfAborted();
     const calls: readonly LlmToolCall[] = response.toolCalls ?? [];
     // A call on the last round all the same is not run: no answer came.
     if (calls.length === 0 || last) return response;

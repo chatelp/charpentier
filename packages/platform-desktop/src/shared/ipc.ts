@@ -1,4 +1,6 @@
 import type {
+  AnswerPhase,
+  AnswerResult,
   ApiKeyResult,
   AskResult,
   DeepTask,
@@ -84,6 +86,7 @@ export type Request =
       readonly characterId?: string;
     }
   | { readonly type: 'agents.stopDeepWork'; readonly projectId: string }
+  | { readonly type: 'agents.stopAnswer'; readonly projectId: string }
   | { readonly type: 'agents.chooseReference'; readonly projectId: string }
   | { readonly type: 'agents.readReference'; readonly projectId: string; readonly token: string }
   | { readonly type: 'agents.dropReference'; readonly token: string }
@@ -138,13 +141,14 @@ export interface Responses {
   'agents.status': LlmStatus;
   'agents.setKey': ApiKeyResult;
   'agents.forgetKey': null;
-  'agents.ask': AskResult;
+  'agents.ask': AnswerResult;
   'agents.analyze': AskResult;
   'agents.reviewChapter': AskResult;
-  'agents.interview': AskResult;
+  'agents.interview': AnswerResult;
   'agents.estimateDeepWork': DeepWorkEstimate | null;
   'agents.deepWork': DeepWorkOutcome;
   'agents.stopDeepWork': null;
+  'agents.stopAnswer': null;
   'agents.chooseReference': ReferenceChoiceResult;
   'agents.readReference': DeepWorkOutcome;
   'agents.dropReference': null;
@@ -177,6 +181,12 @@ export type Message =
   | { readonly type: 'doc.update'; readonly guid: string; readonly update: Uint8Array }
   /** The Compagnon's availability changed (main → renderer). */
   | { readonly type: 'agents.status'; readonly status: LlmStatus }
+  /** Where an answer to the author stands, `null` once done (main → renderer, DESIGN 1.34). */
+  | {
+      readonly type: 'agents.phase';
+      readonly projectId: string;
+      readonly phase: AnswerPhase | null;
+    }
   /** The window entered or left full screen (main → renderer). */
   | { readonly type: 'host.fullScreen'; readonly fullScreen: boolean }
   /** Where the sync stands changed (main → renderer). */

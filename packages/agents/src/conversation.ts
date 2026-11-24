@@ -1,4 +1,4 @@
-import type { LlmService } from '@charpentier/platform';
+import type { AnswerPhase, LlmService } from '@charpentier/platform';
 import {
   addChatMessage,
   agentOrigin,
@@ -29,6 +29,8 @@ export async function answerAuthor(input: {
   readonly sceneDoc?: Y.Doc;
   readonly sceneId?: string;
   readonly signal?: AbortSignal;
+  /** Where the answer stands (DESIGN 1.34): thinking, writing, reviewing. */
+  readonly onPhase?: (phase: AnswerPhase) => void;
 }): Promise<'answered' | 'nothing-to-answer'> {
   const messages = chatMessages(input.mentorDoc);
   const last = messages.at(-1);
@@ -79,7 +81,11 @@ export async function answerAuthor(input: {
     })),
     input.signal,
     memory,
+    undefined,
+    input.onPhase,
   );
+  // Stopped by the author while the guardrails read: nothing is said.
+  input.signal?.throwIfAborted();
   addChatMessage(
     input.mentorDoc,
     {

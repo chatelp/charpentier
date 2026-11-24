@@ -2,6 +2,9 @@ import {
   LlmOfflineError,
   LlmRefusalError,
   LlmUnconfiguredError,
+  type AnswerPhase,
+  type AnswerPhaseEvent,
+  type AnswerResult,
   type AskResult,
   type DeepTask,
   type DeepWorkEstimate,
@@ -40,6 +43,13 @@ import { estimateStyle, readReference, type ReferenceText } from './style-refere
 export interface AgentDocuments {
   acquire(guid: string, holder: unknown): Y.Doc | Promise<Y.Doc>;
   release(guid: string, holder: unknown): void;
+}
+
+/** An answer to the author in progress: how to stop it, where it stands. */
+interface Answer {
+  readonly signal: AbortSignal;
+  stop(): void;
+  onPhase(phase: AnswerPhase): void;
 }
 
 /** Under this, a text says too little of a style (DESIGN §4.5, « trop court »). */
@@ -205,15 +215,21 @@ export class AgentWorks {
     mode: 'free' | 'guided',
     skip: readonly string[],
     choice: { section?: string; pass?: boolean },
-  ): Promise<AskResult> {
+  ): Promise<AnswerResult> {
     if (this.llm.status() === 'unconfigured') return 'unavailable';
     const previous = this.#running.get(projectId) ?? Promise.resolve();
-    const run = previous.then(() => this.#interviewNow(projectId, mode, skip, choice));
+    // The author waits from now on, even behind a reading: « Il réfléchit… », and « Arrêter ».
+    const answer = this.#startAnswer(projectId);
+    const run = previous.then(() =>
+      answer.signal.aborted
+        ? ('stopped' as const)
+        : this.#interviewNow(projectId, mode, skip, choice, answer),
+    );
     this.#running.set(
       projectId,
       run.catch(() => {}),
     );
-    return run;
+    return run.finally(() => this.#endAnswer(projectId, answer));
   }
 
   async #interviewNow(
@@ -221,7 +237,8 @@ export class AgentWorks {
     mode: 'free' | 'guided',
     skip: readonly string[],
     choice: { section?: string; pass?: boolean },
-  ): Promise<AskResult> {
+    answer: Answer,
+  ): Promise<AnswerResult> {
     const isSection = (s: string | undefined): s is InterviewSection =>
       s !== undefined && (interviewSections as readonly string[]).includes(s);
     const rootGuid = guids.project(projectId);
@@ -240,10 +257,13 @@ export class AgentWorks {
           skip: skip.filter(isSection),
           ...(isSection(choice.section) && { section: choice.section }),
           ...(choice.pass && { pass: true }),
+          signal: answer.signal,
+          onPhase: answer.onPhase,
         });
         return 'answered' as const;
       });
     } catch (error) {
+      if (answer.signal.aborted) return 'stopped';
       if (error instanceof LlmUnconfiguredError) return 'unavailable';
       if (error instanceof LlmRefusalError) return 'refused';
       if (error instanceof LlmOfflineError) return 'offline';
@@ -484,8 +504,9 @@ export class AgentWorks {
     }
   }
 
-  async #ask(projectId: string, sceneId: string | undefined): Promise<AskResult> {
+  async #ask(projectId: string, sceneId: string | undefined): Promise<AnswerResult> {
     if (this.llm.status() === 'unconfigured') return 'unavailable';
+    const answer = this.#startAnswer(projectId);
     const rootGuid = guids.project(projectId);
     const mentorGuid = guids.mentor(projectId);
     const sceneGuid = sceneId ? guids.scene(projectId, sceneId) : undefined;
@@ -501,20 +522,77 @@ export class AgentWorks {
           mentorDoc,
           ...(sceneDoc && { sceneDoc }),
           ...(sceneId !== undefined && { sceneId }),
+          signal: answer.signal,
+          onPhase: answer.onPhase,
         });
       });
       return 'answered';
     } catch (error) {
+      if (answer.signal.aborted) return 'stopped';
       if (error instanceof LlmUnconfiguredError) return 'unavailable';
       if (error instanceof LlmRefusalError) return 'refused';
       if (error instanceof LlmOfflineError) return 'offline';
       console.error('Charpentier: the Compagnon could not answer', error);
       return 'failed';
+    } finally {
+      this.#endAnswer(projectId, answer);
     }
   }
 
+  /**
+   * The answers to the author in progress (the conversation's, the
+   * interview's), by project: each can be stopped, and says its phase.
+   */
+  readonly #answers = new Map<string, Set<Answer>>();
+  /** The last phase told for each project with an answer in progress. */
+  readonly #phases = new Map<string, AnswerPhase>();
+  readonly #phaseListeners = new Set<(event: AnswerPhaseEvent) => void>();
+
+  #tellPhase(projectId: string, phase: AnswerPhase | null) {
+    if ((this.#phases.get(projectId) ?? null) === phase) return;
+    if (phase === null) this.#phases.delete(projectId);
+    else this.#phases.set(projectId, phase);
+    for (const listener of this.#phaseListeners) listener({ projectId, phase });
+  }
+
+  #startAnswer(projectId: string): Answer {
+    const controller = new AbortController();
+    const answer: Answer = {
+      signal: controller.signal,
+      stop: () => controller.abort(),
+      // A stopped answer says nothing more: its block is gone already.
+      onPhase: (phase) => {
+        if (!controller.signal.aborted) this.#tellPhase(projectId, phase);
+      },
+    };
+    const answers = this.#answers.get(projectId) ?? new Set();
+    answers.add(answer);
+    this.#answers.set(projectId, answers);
+    this.#tellPhase(projectId, 'thinking');
+    return answer;
+  }
+
+  #endAnswer(projectId: string, answer: Answer) {
+    const answers = this.#answers.get(projectId);
+    answers?.delete(answer);
+    if (answers?.size) return;
+    this.#answers.delete(projectId);
+    this.#tellPhase(projectId, null);
+  }
+
+  /** Follows the phase of the answers in progress (DESIGN 1.34). */
+  onAnswerPhase(listener: (event: AnswerPhaseEvent) => void): () => void {
+    this.#phaseListeners.add(listener);
+    return () => this.#phaseListeners.delete(listener);
+  }
+
+  /** « Arrêter »: the answers in progress for the project stop; they write nothing. */
+  stopAnswer(input: { readonly projectId: string }): void {
+    for (const answer of this.#answers.get(input.projectId) ?? []) answer.stop();
+  }
+
   /** Answers the author's last message of the conversation. */
-  ask(input: { readonly projectId: string; readonly sceneId?: string }): Promise<AskResult> {
+  ask(input: { readonly projectId: string; readonly sceneId?: string }): Promise<AnswerResult> {
     return this.#ask(input.projectId, input.sceneId);
   }
 
@@ -540,7 +618,7 @@ export class AgentWorks {
     readonly skip?: readonly string[];
     readonly section?: string;
     readonly pass?: boolean;
-  }): Promise<AskResult> {
+  }): Promise<AnswerResult> {
     return this.#interview(input.projectId, input.mode, input.skip ?? [], {
       ...(input.section !== undefined && { section: input.section }),
       ...(input.pass !== undefined && { pass: input.pass }),

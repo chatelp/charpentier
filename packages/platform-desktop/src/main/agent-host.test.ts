@@ -24,6 +24,11 @@ import { AnthropicLlmService } from './anthropic-llm';
 import { DocStore } from './doc-store';
 import { documentLocator, FolderLibrary } from './projects';
 import type { SecretStore } from './secret-store';
+import { IpcAgentsService } from '../renderer/agents';
+import type { DesktopBridge, Message } from '../shared/ipc';
+import { PreferencesFile } from './preferences';
+import { RendererSession } from './renderer-session';
+import { fakeAnthropic } from './testing/fake-anthropic';
 
 const dirs: string[] = [];
 afterEach(() => {
@@ -66,7 +71,7 @@ function fakeClient() {
       usage: { input_tokens: 10, output_tokens: 10 },
     };
   };
-  const client = { beta: { messages: { create } } } as unknown as Anthropic;
+  const client = fakeAnthropic(create);
   return { client, seen };
 }
 
@@ -96,7 +101,7 @@ async function setUp(other?: Anthropic) {
   });
   const violations: AuthorshipViolation[] = [];
   const host = new AgentHost(llm, {} as SecretStore, store, undefined, (v) => violations.push(v));
-  return { host, store, projectId: project.id, seen, violations, sceneIds };
+  return { host, store, library, tmp, projectId: project.id, seen, violations, sceneIds };
 }
 
 describe('the specialised agents in the main process (D-27)', () => {
@@ -190,9 +195,7 @@ describe('an answer that cannot be used (cut at the output limit)', () => {
       content: [{ type: 'text', text: '{"reply":"Que veut' }],
       usage: { input_tokens: 10, output_tokens: 10 },
     });
-    const { host, store, projectId } = await setUp({
-      beta: { messages: { create } },
-    } as unknown as Anthropic);
+    const { host, store, projectId } = await setUp(fakeAnthropic(create));
     const mentor = store.acquire(guids.mentor(projectId), 'test');
     addChatMessage(mentor, { role: 'author', text: 'Ma scène est-elle trop lente ?' }, AUTHOR);
     addInterviewMessage(mentor, { role: 'author', text: 'Hélène est batelière.' }, AUTHOR);
@@ -207,6 +210,80 @@ describe('an answer that cannot be used (cut at the output limit)', () => {
     }
     expect(chatMessages(mentor).map((m) => m.role)).toEqual(['author']);
     expect(interviewMessages(mentor).map((m) => m.role)).toEqual(['author']);
+  });
+});
+
+describe('waiting for the Compagnon from the renderer (DESIGN 1.34)', () => {
+  /** The renderer's Compagnon, over the IPC of a session of the main process. */
+  async function wired(create: Parameters<typeof fakeAnthropic>[0]) {
+    const main = await setUp(fakeAnthropic(create));
+    const listeners = new Set<(m: Message) => void>();
+    const session = new RendererSession(
+      {
+        store: main.store,
+        library: main.library,
+        preferences: new PreferencesFile(path.join(main.tmp, 'prefs.json')),
+        agents: main.host,
+      },
+      (m) => queueMicrotask(() => listeners.forEach((l) => l(m))),
+    );
+    const bridge: DesktopBridge = {
+      platform: 'darwin',
+      invoke: (request) => session.handle(request),
+      send: () => {},
+      onMessage: (listener) => {
+        listeners.add(listener);
+        return () => listeners.delete(listener);
+      },
+    };
+    const agents = new IpcAgentsService(bridge, 'available');
+    const mentor = main.store.acquire(guids.mentor(main.projectId), 'test');
+    addChatMessage(mentor, { role: 'author', text: 'Ma scène est-elle trop lente ?' }, AUTHOR);
+    return { ...main, session, agents, mentor };
+  }
+
+  it('tells the renderer each phase of the answer, as the model streams it', async () => {
+    const { agents, projectId, mentor, session } = await wired(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      return {
+        stop_reason: 'end_turn',
+        content: [{ type: 'text', text: '{"reply":"Que veut Hélène ?","example":null}' }],
+        usage: { input_tokens: 10, output_tokens: 10 },
+      };
+    });
+    const phases: (string | null)[] = [];
+    agents.onAnswerPhase?.((event) => {
+      expect(event.projectId).toBe(projectId);
+      phases.push(event.phase);
+    });
+    expect(await agents.ask({ projectId })).toBe('answered');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(phases).toEqual(['thinking', 'writing', 'reviewing', null]);
+    expect(chatMessages(mentor).map((m) => m.role)).toEqual(['author', 'compagnon']);
+    // A window closed no longer hears them.
+    session.dispose();
+    addChatMessage(mentor, { role: 'author', text: 'Et la suivante ?' }, AUTHOR);
+    phases.length = 0;
+    await agents.ask({ projectId });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(phases).toEqual([]);
+  });
+
+  it('stops the answer from the renderer: nothing is written', async () => {
+    let reached = () => {};
+    const atModel = new Promise<void>((resolve) => (reached = resolve));
+    const { agents, projectId, mentor } = await wired(
+      (_body: unknown, options?: { signal?: AbortSignal }) =>
+        new Promise((_resolve, reject) => {
+          reached();
+          options?.signal?.addEventListener('abort', () => reject(new Error('aborted')));
+        }),
+    );
+    const answer = agents.ask({ projectId });
+    await atModel;
+    await agents.stopAnswer?.({ projectId });
+    expect(await answer).toBe('stopped');
+    expect(chatMessages(mentor).map((m) => m.role)).toEqual(['author']);
   });
 });
 

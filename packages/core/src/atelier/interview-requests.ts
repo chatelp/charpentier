@@ -1,4 +1,4 @@
-import type { AskResult } from '@charpentier/platform';
+import type { AnswerResult, AskResult } from '@charpentier/platform';
 import type { InterviewMode, InterviewSection } from '@charpentier/schema';
 import type { WorkspaceContext } from '../workspace/workspace-context';
 
@@ -37,13 +37,13 @@ export async function askInterview(
     readonly section?: InterviewSection;
     readonly pass?: boolean;
   },
-): Promise<AskResult> {
+): Promise<AnswerResult> {
   const { projectId } = ctx;
   set(projectId, (s) => ({ waiting: s.waiting + 1, problem: null }));
   const result = await ctx.platform.agents.interview({ projectId, ...input });
   set(projectId, (s) => ({
     waiting: Math.max(0, s.waiting - 1),
-    problem: result === 'answered' ? null : result,
+    problem: result === 'answered' || result === 'stopped' ? null : result,
   }));
   return result;
 }

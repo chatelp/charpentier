@@ -1,5 +1,6 @@
 import { AgentWorks } from '@charpentier/agents';
 import type {
+  AnswerResult,
   ApiKeyResult,
   DeepWorkEstimate,
   DeepWorkOutcome,
@@ -52,7 +53,14 @@ export class AgentHost {
   async handle(
     request: AgentRequest,
   ): Promise<
-    LlmStatus | ApiKeyResult | DeepWorkOutcome | DeepWorkEstimate | 'opus' | 'haiku' | null
+    | LlmStatus
+    | ApiKeyResult
+    | AnswerResult
+    | DeepWorkOutcome
+    | DeepWorkEstimate
+    | 'opus'
+    | 'haiku'
+    | null
   > {
     switch (request.type) {
       case 'agents.status':
@@ -94,6 +102,9 @@ export class AgentHost {
         return null;
       case 'agents.stopDeepWork':
         this.works.stopDeepWork(request);
+        return null;
+      case 'agents.stopAnswer':
+        this.works.stopAnswer(request);
         return null;
       case 'agents.lightModel':
         return this.works.lightModel();

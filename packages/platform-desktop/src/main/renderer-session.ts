@@ -25,6 +25,8 @@ export class RendererSession {
   readonly #open = new Map<string, { count: number; unsubscribe: () => void }>();
   #unwatchSystem: (() => void) | null = null;
   #monitor: { close(): void } | null = null;
+  /** The phases of the Compagnon's answers, told to this renderer (DESIGN 1.34). */
+  readonly #unwatchPhases: (() => void) | undefined;
 
   constructor(
     private readonly services: {
@@ -40,7 +42,11 @@ export class RendererSession {
       readonly system?: SystemService | null;
     },
     private readonly push: (message: Message) => void,
-  ) {}
+  ) {
+    this.#unwatchPhases = services.agents?.works.onAnswerPhase(({ projectId, phase }) =>
+      this.push({ type: 'agents.phase', projectId, phase }),
+    );
+  }
 
   async handle<R extends Request>(request: R): Promise<Responses[R['type']]> {
     return (await this.#handle(request)) as Responses[R['type']];
@@ -119,6 +125,7 @@ export class RendererSession {
       case 'agents.estimateDeepWork':
       case 'agents.deepWork':
       case 'agents.stopDeepWork':
+      case 'agents.stopAnswer':
       case 'agents.readReference':
       case 'agents.dropReference':
       case 'agents.lightModel':
@@ -214,6 +221,7 @@ export class RendererSession {
 
   /** The renderer went away (window closed, reload): let go of its documents. */
   dispose(): void {
+    this.#unwatchPhases?.();
     this.#unwatchSystem?.();
     this.#unwatchSystem = null;
     this.#monitor?.close();

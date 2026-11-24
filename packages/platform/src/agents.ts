@@ -72,6 +72,22 @@ export type CompagnonUnlockResult = 'unlocked' | 'invalid' | 'too-many-attempts'
 /** Outcome of asking the Compagnon to answer (its answer lands in the mentor document). */
 export type AskResult = 'answered' | 'unavailable' | 'offline' | 'refused' | 'failed';
 
+/** An answer to the author (`ask`, `interview`) may also be `stopped` by them: nothing is written. */
+export type AnswerResult = AskResult | 'stopped';
+
+/**
+ * Where the Compagnon's answer to the author stands (DESIGN 1.34): thinking
+ * until the model's first words, writing while they come (unseen), reviewing
+ * while the guardrails read it whole. Told by the engine, never guessed.
+ */
+export type AnswerPhase = 'thinking' | 'writing' | 'reviewing';
+
+/** The phase of a project's answer in progress; `null` once it is done (or stopped). */
+export interface AnswerPhaseEvent {
+  readonly projectId: string;
+  readonly phase: AnswerPhase | null;
+}
+
 /**
  * Entry point of core into the Compagnon. Agents run outside the UI
  * (Electron main process, server) and write their results into the project's
@@ -85,7 +101,19 @@ export interface AgentsService {
   setApiKey(key: string): Promise<ApiKeyResult>;
   forgetApiKey(): Promise<void>;
   /** Answers the author's last message of the conversation (docs/SPEC.md §6.7). */
-  ask(input: { readonly projectId: string; readonly sceneId?: string }): Promise<AskResult>;
+  ask(input: { readonly projectId: string; readonly sceneId?: string }): Promise<AnswerResult>;
+  /**
+   * Follows the phase of the answers in progress (`ask`, `interview`).
+   * Absent where the host cannot tell: the interface then keeps « Il
+   * réfléchit… » until the answer.
+   */
+  onAnswerPhase?(listener: (event: AnswerPhaseEvent) => void): () => void;
+  /**
+   * « Arrêter » (DESIGN 1.34): the answers in progress for this project stop,
+   * resolve `stopped`, and write nothing. Absent where the host cannot stop
+   * them: the interface does not offer it.
+   */
+  stopAnswer?(input: { readonly projectId: string }): Promise<void>;
   /**
    * Analyses scenes (docs/SPEC.md §6.2): sheets proposals, conflicts, remarks.
    * `automatic` skips scenes unchanged since their last analysis and may use
@@ -120,7 +148,7 @@ export interface AgentsService {
     readonly section?: string;
     /** « Passer »: another question on the same section. */
     readonly pass?: boolean;
-  }): Promise<AskResult>;
+  }): Promise<AnswerResult>;
   /**
    * What a task on the whole manuscript will cost (D-27, docs/PLAN.md §6.3),
    * or null when there is nothing to read (no text, no such character).

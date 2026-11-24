@@ -1,5 +1,5 @@
 import { UnusableAnswerError } from './answer';
-import type { LlmService } from '@charpentier/platform';
+import type { AnswerPhase, LlmService } from '@charpentier/platform';
 import {
   addInterviewMessage,
   agentOrigin,
@@ -283,6 +283,8 @@ export async function interviewTurn(input: {
   /** The author passes on the question in progress: another one, same section. */
   readonly pass?: boolean;
   readonly signal?: AbortSignal;
+  /** Where the answer stands (DESIGN 1.34): thinking, writing, reviewing. */
+  readonly onPhase?: (phase: AnswerPhase) => void;
 }): Promise<InterviewResult> {
   const { llm, root, mentorDoc, mode } = input;
   const messages = interviewMessages(mentorDoc);
@@ -357,7 +359,10 @@ export async function interviewTurn(input: {
   let turn: Turn | undefined;
   // How the last attempt ended: the rule broken (a refusal follows), or no answer to read.
   let failed: 'guarded' | 'truncated' | 'unreadable' | undefined;
+  const writing = input.onPhase && (() => input.onPhase?.('writing'));
   for (let attempt = 0; attempt < 2 && !turn; attempt++) {
+    // Every attempt starts thinking again; its first words, then the guardrails, follow.
+    input.onPhase?.('thinking');
     const response = await generateWithMemory(
       llm,
       {
@@ -370,7 +375,10 @@ export async function interviewTurn(input: {
       },
       memory,
       input.signal,
+      writing,
     );
+    input.signal?.throwIfAborted();
+    input.onPhase?.('reviewing');
     const parsed = response.truncated ? undefined : parseTurn(response.text);
     if (!parsed) failed = response.truncated ? 'truncated' : 'unreadable';
     else if (
@@ -381,6 +389,8 @@ export async function interviewTurn(input: {
       turn = parsed;
     else failed = 'guarded';
   }
+  // Stopped by the author while the guardrails read: nothing is said, nothing filed.
+  input.signal?.throwIfAborted();
   // No answer to read is a failure, not a refusal: nothing is said in his name.
   if (!turn && failed !== 'guarded') throw new UnusableAnswerError(failed ?? 'unreadable');
   if (!turn) {

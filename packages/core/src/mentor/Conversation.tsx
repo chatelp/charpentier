@@ -109,7 +109,7 @@ export function Conversation({
     setWaiting(true);
     const result = await platform.agents.ask({ projectId, sceneId });
     setWaiting(false);
-    if (result !== 'answered') setProblem(result);
+    if (result !== 'answered' && result !== 'stopped') setProblem(result);
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {

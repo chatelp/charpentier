@@ -1,10 +1,11 @@
-import type { AgentsService, DeepTask, LlmStatus } from '@charpentier/platform';
+import type { AgentsService, AnswerPhaseEvent, DeepTask, LlmStatus } from '@charpentier/platform';
 import type { DesktopBridge } from '../shared/ipc';
 
 /** The Compagnon as the renderer sees it: a status, and the key going in (never out). */
 export class IpcAgentsService implements AgentsService {
   #status: LlmStatus;
   readonly #listeners = new Set<(status: LlmStatus) => void>();
+  readonly #phaseListeners = new Set<(event: AnswerPhaseEvent) => void>();
 
   /**
    * `known`: the status read before the interface starts (`connectStatuses`). Without it
@@ -19,6 +20,10 @@ export class IpcAgentsService implements AgentsService {
     void bridge.invoke({ type: 'agents.status' }).then((status) => this.#set(status));
     bridge.onMessage((message) => {
       if (message.type === 'agents.status') this.#set(message.status);
+      else if (message.type === 'agents.phase') {
+        const event = { projectId: message.projectId, phase: message.phase };
+        for (const listener of this.#phaseListeners) listener(event);
+      }
     });
   }
 
@@ -91,6 +96,16 @@ export class IpcAgentsService implements AgentsService {
 
   async stopDeepWork(input: { readonly projectId: string }) {
     await this.bridge.invoke({ type: 'agents.stopDeepWork', ...input });
+  }
+
+  /** The phases come from the main process, where the agents run (DESIGN 1.34). */
+  onAnswerPhase(listener: (event: AnswerPhaseEvent) => void): () => void {
+    this.#phaseListeners.add(listener);
+    return () => this.#phaseListeners.delete(listener);
+  }
+
+  async stopAnswer(input: { readonly projectId: string }) {
+    await this.bridge.invoke({ type: 'agents.stopAnswer', ...input });
   }
 
   chooseReference(input: { readonly projectId: string }) {
