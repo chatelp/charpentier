@@ -75,6 +75,17 @@ export const SCREENS: Readonly<Record<string, () => Promise<unknown>>> = {
     await userEvent.click(screen.getByRole('button', { name: 'Actions de la scène La maison' }));
     await screen.findByRole('menu', { name: 'Scène · La maison' });
   },
+  'the status line after a trash': async () => {
+    await written();
+    await userEvent.keyboard(chord('j'));
+    await screen.findByRole('complementary', { name: 'Plan du manuscrit' });
+    await userEvent.click(screen.getByRole('button', { name: 'Actions de la scène La maison' }));
+    await screen.findByRole('menu', { name: 'Scène · La maison' });
+    await userEvent.click(screen.getByRole('menuitem', { name: /^Mettre à la corbeille/ }));
+    await screen.findByRole('button', {
+      name: 'Annuler la mise à la corbeille de la scène La maison',
+    });
+  },
   'the Compagnon panel': async () => {
     await written();
     await userEvent.keyboard(chord('l'));
