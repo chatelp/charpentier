@@ -441,3 +441,12 @@ Ce que l'auteur a dit de ses essais du 23 novembre : « tout ce que tu m'as dema
 
 **Vérifiable** : `pnpm check` échoue si j'ajoute une commande sans bouton, un bouton qui ne se clique pas ou un effacement muet ; la liste des écarts est vide ; les parcours rejouent sans moi les essais du 23 novembre (le projet ouvert dans un navigateur neuf, `⌫` sur une variante, la clé au démarrage, « Renommer » une version à la souris) ; le premier passage de l'agent lambda a rendu sa liste, triée.
 Commencé (23 novembre 2026) : les règles écrites (DESIGN 1.35 §5.0, SPEC D-46) ; la clé relue une fois le trousseau disponible, avant d'ouvrir la fenêtre (`apps/desktop/src/main/index.ts`) ; « Renommer » et « Corbeille » d'une version tiennent sous la souris (`novel.css`).
+Avancé (24 novembre 2026, sur `main`, rien n'est encore essayé par l'auteur) :
+- *Contrôles de la couche 1* (`packages/core/src/conformance`) : tous les raccourcis globaux pressés pour de vrai, sur le Mac et ailleurs ; un vrai clic sur tout ce qui se clique, écran par écran ; aucun symbole de touche en dur. Reste : « toute commande a une entrée visible » (attend le menu « ⋯ » des surfaces restantes).
+- *Couche 2* : la clé au démarrage (`apps/desktop/e2e/journeys`), le web à travers un vrai serveur. Restent les autres « Vérifiable ».
+- *Couche 3* : le pilote, la consigne et la nouvelle d'essai sont écrits (`apps/desktop/e2e/lambda`) ; le premier passage attend la fin du chantier (choix de l'auteur) et l'annonce de son coût.
+- *Deux appuis* : menus, `⌫`, ligne de commande, boutons, X250 ; une scène a du texte dès qu'une de ses variantes a un mot, et une scène qu'on croit vide est relue avant de partir ; une touche tenue est un seul appui ; `Échap` n'oublie que la confirmation.
+- *Corbeilles au pied des listes* : tiroir, fiches, versions de travail. « Vider la corbeille » (1.42) : à l'Orchestrateur.
+- *La ligne posée et le pied serré* (1.43).
+- *Défauts trouvés par ces contrôles, qui écrivaient dans le roman* : le second `⏎` depuis la ligne de commande, et le texte qui reprenait le clavier une image trop tard.
+- *Reste du chantier* : le menu « ⋯ » des surfaces restantes et le marquage `data-command` ; la barre de menus du Mac (1.45, à confirmer) ; les actions des lignes d'aide en vrais boutons ; le message d'un projet mis à la corbeille ; `⌘Z` pour une note du Carnet ; la valeur précédente d'un champ. Règles 6 à 11 : à confirmer par l'auteur.
