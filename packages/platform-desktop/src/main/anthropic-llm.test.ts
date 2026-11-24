@@ -79,43 +79,6 @@ describe('Anthropic LLM service', () => {
     });
   });
 
-  it('streams the answer and tells when its first words come, once (DESIGN 1.34)', async () => {
-    const requests: unknown[] = [];
-    let release: () => void = () => {};
-    const told: string[] = [];
-    // The SDK's stream: the first words arrive before the message is whole.
-    const stream = (body: unknown) => {
-      requests.push(body);
-      const listeners: ((delta: string) => void)[] = [];
-      const whole = new Promise((resolve) => {
-        release = () => resolve(message('{"reply":"Oui."}'));
-      });
-      return {
-        on(event: string, listener: (delta: string) => void) {
-          if (event === 'text') listeners.push(listener);
-          return this;
-        },
-        finalMessage: async () => {
-          for (const delta of ['{"re', 'ply":', '"Oui."}']) for (const l of listeners) l(delta);
-          told.push('deltas sent');
-          return whole;
-        },
-      };
-    };
-    const llm = new AnthropicLlmService({
-      apiKey: () => 'sk-test',
-      models: () => ({ deep: OPUS, fast: OPUS }),
-      createClient: () => ({ beta: { messages: { stream } } }) as unknown as Anthropic,
-    });
-    const answer = llm.generate(request, undefined, (event) => told.push(event));
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    expect(told).toEqual(['text', 'deltas sent']);
-    release();
-    expect(await answer).toMatchObject({ text: '{"reply":"Oui."}' });
-    expect(requests[0]).toMatchObject({ model: OPUS, max_tokens: 16000 });
-    expect(requests[0]).not.toHaveProperty('stream');
-  });
-
   it('keeps the stable history in the cache for an hour, the last words outside it', async () => {
     const { client, requests } = fakeClient(() => message('ok'));
     const llm = new AnthropicLlmService({
@@ -223,6 +186,173 @@ describe('Anthropic LLM service', () => {
     key = undefined;
     await expect(llm.generate(request)).rejects.toThrow('No API key');
     expect(statuses).toEqual(['offline', 'available', 'unconfigured']);
+  });
+});
+
+/** The SDK itself, its network played: what is sent as server-sent events, and how it ends. */
+describe('the answer streamed, through the SDK (DESIGN 1.34)', () => {
+  const sse = (event: Record<string, unknown>) =>
+    new TextEncoder().encode(`event: ${String(event['type'])}\ndata: ${JSON.stringify(event)}\n\n`);
+  const opening = {
+    type: 'message_start',
+    message: {
+      id: 'msg_1',
+      type: 'message',
+      role: 'assistant',
+      model: OPUS,
+      content: [],
+      stop_reason: null,
+      stop_sequence: null,
+      usage: { input_tokens: 10, output_tokens: 1 },
+    },
+  };
+  const block = (index: number, content_block: unknown, deltas: unknown[]) => [
+    { type: 'content_block_start', index, content_block },
+    ...deltas.map((delta) => ({ type: 'content_block_delta', index, delta })),
+    { type: 'content_block_stop', index },
+  ];
+  const thinking = block(0, { type: 'thinking', thinking: '', signature: '' }, [
+    { type: 'thinking_delta', thinking: 'Que veut-elle ?' },
+    { type: 'signature_delta', signature: 'sig' },
+  ]);
+  const words = (...texts: string[]) =>
+    block(
+      1,
+      { type: 'text', text: '' },
+      texts.map((text) => ({ type: 'text_delta', text })),
+    );
+  const ending = (stop_reason: string) => [
+    {
+      type: 'message_delta',
+      delta: { stop_reason, stop_sequence: null },
+      usage: { output_tokens: 5 },
+    },
+    { type: 'message_stop' },
+  ];
+
+  /** The service on the real SDK; `send` writes events, `controller` closes or breaks the stream. */
+  function streamed() {
+    let controller!: ReadableStreamDefaultController<Uint8Array>;
+    const bodies: Record<string, unknown>[] = [];
+    let sent!: () => void;
+    const requested = new Promise<void>((resolve) => (sent = resolve));
+    const llm = new AnthropicLlmService({
+      apiKey: () => 'sk-test',
+      models: () => ({ deep: OPUS, fast: OPUS }),
+      createClient: (apiKey) =>
+        new Anthropic({
+          apiKey,
+          maxRetries: 0,
+          fetch: async (_url, init) => {
+            bodies.push(JSON.parse(String(init?.body)) as Record<string, unknown>);
+            const body = new ReadableStream<Uint8Array>({
+              start(c) {
+                controller = c;
+                init?.signal?.addEventListener('abort', () =>
+                  c.error(new DOMException('This operation was aborted', 'AbortError')),
+                );
+              },
+            });
+            sent();
+            return new Response(body, { headers: { 'content-type': 'text/event-stream' } });
+          },
+        }),
+    });
+    return {
+      llm,
+      bodies,
+      requested,
+      send: (...events: Record<string, unknown>[]) => {
+        for (const event of events) controller.enqueue(sse(event));
+      },
+      close: () => controller.close(),
+      fail: (error: Error) => controller.error(error),
+    };
+  }
+  const soon = () => new Promise((resolve) => setTimeout(resolve, 5));
+
+  it('tells its first words once, before it is whole; thinking is not words', async () => {
+    const { llm, bodies, requested, send, close } = streamed();
+    const told: string[] = [];
+    const answer = llm.generate(request, undefined, (event) => told.push(event));
+    await requested;
+    send(opening, ...thinking);
+    await soon();
+    expect(told).toEqual([]);
+    send(...words('{"reply":', '"Oui."}').slice(0, 2));
+    await soon();
+    expect(told).toEqual(['text']);
+    send(...words('{"reply":', '"Oui."}').slice(2), ...ending('end_turn'));
+    close();
+    expect(await answer).toEqual({
+      text: '{"reply":"Oui."}',
+      usage: { inputTokens: 10, outputTokens: 5, cacheReadTokens: 0, cacheWriteTokens: 0 },
+    });
+    expect(told).toEqual(['text']);
+    expect(bodies[0]).toMatchObject({ stream: true, model: OPUS, max_tokens: 16000 });
+  });
+
+  it('gives the memory calls and the turn as they came, thinking and signature with them', async () => {
+    const { llm, requested, send, close } = streamed();
+    const told: string[] = [];
+    const answer = llm.generate({ ...request, tools: [{ kind: 'memory' }] }, undefined, (event) =>
+      told.push(event),
+    );
+    await requested;
+    send(
+      opening,
+      ...thinking,
+      ...block(1, { type: 'tool_use', id: 't1', name: 'memory', input: {} }, [
+        { type: 'input_json_delta', partial_json: '{"command":"view",' },
+        { type: 'input_json_delta', partial_json: '"path":"/memories"}' },
+      ]),
+      ...ending('tool_use'),
+    );
+    close();
+    expect(await answer).toMatchObject({
+      text: '',
+      toolCalls: [{ id: 't1', name: 'memory', input: { command: 'view', path: '/memories' } }],
+      turn: [
+        { type: 'thinking', thinking: 'Que veut-elle ?', signature: 'sig' },
+        { type: 'tool_use', id: 't1', input: { command: 'view', path: '/memories' } },
+      ],
+    });
+    // A call of the notebook is not his answer.
+    expect(told).toEqual([]);
+  });
+
+  it('gives an answer cut short as it is, its JSON unread', async () => {
+    const { llm, requested, send, close } = streamed();
+    const answer = llm.generate(request);
+    await requested;
+    send(opening, ...thinking, ...words('{"reply":"Que veut'), ...ending('max_tokens'));
+    close();
+    expect(await answer).toMatchObject({ text: '{"reply":"Que veut', truncated: true });
+  });
+
+  it('says offline when the network goes away in the middle of the answer', async () => {
+    const { llm, requested, send, fail } = streamed();
+    const answer = llm.generate(request);
+    const refused = expect(answer).rejects.toBeInstanceOf(LlmOfflineError);
+    await requested;
+    send(opening, ...thinking, ...words('{"reply":').slice(0, 2));
+    await soon();
+    fail(new TypeError('terminated'));
+    await refused;
+    expect(llm.status()).toBe('offline');
+  });
+
+  it('stops when told to, without taking it for a network failure', async () => {
+    const { llm, requested, send } = streamed();
+    const controller = new AbortController();
+    const answer = llm.generate(request, controller.signal);
+    const stopped = expect(answer).rejects.toBeInstanceOf(Anthropic.APIUserAbortError);
+    await requested;
+    send(opening, ...thinking);
+    await soon();
+    controller.abort();
+    await stopped;
+    expect(llm.status()).toBe('available');
   });
 });
 

@@ -69,6 +69,16 @@ function anthropicContent(content: LlmMessage['content']): unknown {
   });
 }
 
+/**
+ * The network went away while the answer streamed: the SDK wraps the failed
+ * read (a TypeError of fetch's) in a plain AnthropicError, not in the
+ * APIConnectionError it gives when the request itself cannot leave.
+ */
+const isDroppedStream = (error: unknown): boolean =>
+  error instanceof Anthropic.AnthropicError &&
+  !(error instanceof Anthropic.APIError) &&
+  (error as Error).cause instanceof TypeError;
+
 export class AnthropicLlmService implements LlmService {
   #status: LlmStatus;
   #client: Anthropic | undefined;
@@ -226,7 +236,7 @@ export class AnthropicLlmService implements LlmService {
         },
       };
     } catch (error) {
-      if (error instanceof Anthropic.APIConnectionError) {
+      if (error instanceof Anthropic.APIConnectionError || isDroppedStream(error)) {
         this.#setStatus('offline');
         throw new LlmOfflineError('The provider cannot be reached', { cause: error });
       } else if (error instanceof Anthropic.AuthenticationError) {
