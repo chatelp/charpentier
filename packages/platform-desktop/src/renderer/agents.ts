@@ -3,10 +3,19 @@ import type { DesktopBridge } from '../shared/ipc';
 
 /** The Compagnon as the renderer sees it: a status, and the key going in (never out). */
 export class IpcAgentsService implements AgentsService {
-  #status: LlmStatus = 'unconfigured';
+  #status: LlmStatus;
   readonly #listeners = new Set<(status: LlmStatus) => void>();
 
-  constructor(private readonly bridge: DesktopBridge) {
+  /**
+   * `known`: the status read before the interface starts (`connectStatuses`). Without it
+   * the service would say « no key » until the main process answers, and the footer would
+   * show « saisir la clé » for an instant to an author who has one (DESIGN §5.0, rule 7).
+   */
+  constructor(
+    private readonly bridge: DesktopBridge,
+    known: LlmStatus = 'unconfigured',
+  ) {
+    this.#status = known;
     void bridge.invoke({ type: 'agents.status' }).then((status) => this.#set(status));
     bridge.onMessage((message) => {
       if (message.type === 'agents.status') this.#set(message.status);

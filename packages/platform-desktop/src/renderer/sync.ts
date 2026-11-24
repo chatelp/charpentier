@@ -3,10 +3,15 @@ import type { DesktopBridge } from '../shared/ipc';
 
 /** The sync as the renderer sees it: a status, signing in and out, the devices. */
 export class IpcSyncService implements SyncService {
-  #status: SyncStatus = 'off';
+  #status: SyncStatus;
   readonly #listeners = new Set<(status: SyncStatus) => void>();
 
-  constructor(private readonly bridge: DesktopBridge) {
+  /** `known`: the status read before the interface starts (`connectStatuses`). */
+  constructor(
+    private readonly bridge: DesktopBridge,
+    known: SyncStatus = 'off',
+  ) {
+    this.#status = known;
     void bridge.invoke({ type: 'sync.status' }).then((status) => this.#set(status));
     bridge.onMessage((message) => {
       if (message.type === 'sync.status') this.#set(message.status);

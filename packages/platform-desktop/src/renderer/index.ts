@@ -3,8 +3,10 @@ import {
   navigatorKeyboardLayout,
   type KeybindingsService,
   type LibraryService,
+  type LlmStatus,
   type Platform,
   type PreferencesService,
+  type SyncStatus,
   type SystemService,
 } from '@charpentier/platform';
 import type { DesktopBridge } from '../shared/ipc';
@@ -65,13 +67,32 @@ export function desktopKeybindings(platform: string, appliance = false): Keybind
   };
 }
 
+/** What the main process knows of the Compagnon and of the sync, read before the interface starts. */
+export interface KnownStatuses {
+  readonly agents: LlmStatus;
+  readonly sync: SyncStatus;
+}
+
+/**
+ * The app says only what it knows (docs/DESIGN.md §5.0, rule 7): the core asks for these
+ * statuses synchronously at its first render, so they are read once before it.
+ */
+export async function connectStatuses(bridge: DesktopBridge): Promise<KnownStatuses> {
+  const [agents, sync] = await Promise.all([
+    bridge.invoke({ type: 'agents.status' }),
+    bridge.invoke({ type: 'sync.status' }),
+  ]);
+  return { agents, sync };
+}
+
 /**
  * `system`: the device's, from `connectSystem` (read once before the
- * interface starts, since the core asks for it synchronously).
+ * interface starts, since the core asks for it synchronously). `statuses`: from
+ * `connectStatuses`, for the same reason.
  */
 export function createDesktopPlatform(
   bridge: DesktopBridge,
-  options: { readonly system?: SystemService | null } = {},
+  options: { readonly system?: SystemService | null; readonly statuses?: KnownStatuses } = {},
 ): Platform {
   const appliance = bridge.appliance ?? false;
   return {
@@ -87,8 +108,8 @@ export function createDesktopPlatform(
     },
     preferences: preferences(bridge),
     keybindings: desktopKeybindings(bridge.platform, appliance),
-    agents: new IpcAgentsService(bridge),
-    sync: new IpcSyncService(bridge),
+    agents: new IpcAgentsService(bridge, options.statuses?.agents),
+    sync: new IpcSyncService(bridge, options.statuses?.sync),
     llm: null,
     fileMirror: null,
     secrets: null,
