@@ -236,16 +236,15 @@ export function NovelSheet({
     const target = sceneInActiveVersion(ctx, at ?? ctx.sceneId);
     if (target && target !== ctx.sceneId) ctx.openScene(target);
     const wasActive = view.active === version.id;
-    ctx.offerUndo(
-      t('versions.trashed', {
-        version: versionLabel(t, version),
-        undo: ctx.shortcutLabel('undo') ?? '',
-      }),
-      () => {
+    const name = versionLabel(t, version);
+    ctx.offerUndo({
+      message: t('versions.trashed', { version: name }),
+      label: t('status.undoTrash.version', { name }),
+      undo: () => {
         restoreVersion(ctx.root, version.id);
         if (wasActive) switchVersion(ctx.root, version.id);
       },
-    );
+    });
     focusLater('.ch-novel-version.is-on');
   };
 

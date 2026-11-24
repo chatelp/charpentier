@@ -113,7 +113,7 @@ describe('variants and restore points, keyboard only', () => {
     // ⌘Z right after brings the variant back, active as it was.
     await command('variante corbeille');
     await waitFor(() => expect(editorText()).toBe('Texte A.'));
-    await screen.findByText(/Variante « B » mise à la corbeille\. .+ pour annuler\./);
+    await screen.findByText('Variante « B » mise à la corbeille.');
     await userEvent.keyboard('{ControlOrMeta>}z{/ControlOrMeta}');
     await waitFor(() => expect(editorText()).toBe('Texte B.'));
   });

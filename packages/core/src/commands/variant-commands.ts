@@ -266,13 +266,14 @@ export function trashVariantOfScene(ctx: Ctx, variantId?: string): void {
   });
   if (wasActive) setActiveVariant(ctx.root, current.id, next.id);
   trashVariant(ctx.root, current.id, doomed);
-  ctx.offerUndo(
-    ctx.t('status.variantTrashed', { name, undo: ctx.shortcutLabel('undo') ?? '' }),
-    () => {
+  ctx.offerUndo({
+    message: ctx.t('status.variantTrashed', { name }),
+    label: ctx.t('status.undoTrash.variant', { name }),
+    undo: () => {
       restoreVariant(ctx.root, current.id, doomed);
       if (wasActive) setActiveVariant(ctx.root, current.id, doomed);
     },
-  );
+  });
 }
 
 export function trashedVariantItems(ctx: Ctx) {

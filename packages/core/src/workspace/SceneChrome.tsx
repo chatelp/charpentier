@@ -113,6 +113,8 @@ export function WritingFooter({
   words,
   wordsToday,
   status,
+  undo,
+  onStatusHover,
   mentorNote,
   onEnterKey,
   commandZone,
@@ -125,6 +127,21 @@ export function WritingFooter({
   readonly words: number | undefined;
   readonly wordsToday: number;
   readonly status: string | undefined;
+  /**
+   * After a trash, the line's one button (docs/DESIGN.md §4.7, 1.37): « Annuler » and the
+   * undo key, named for what it brings back.
+   */
+  readonly undo?:
+    | {
+        readonly label: string;
+        readonly shortcut: string | undefined;
+        /** The key, as `aria-keyshortcuts` says it. */
+        readonly keys: string | undefined;
+        readonly onUndo: () => void;
+      }
+    | undefined;
+  /** The pointer came over the state line, or left it (a trash's message stays meanwhile). */
+  readonly onStatusHover?: (over: boolean) => void;
   readonly mentorNote: string | undefined;
   /** The Compagnon waits for its key: « Compagnon : saisir la clé », clickable. */
   readonly onEnterKey?: (() => void) | undefined;
@@ -162,8 +179,29 @@ export function WritingFooter({
             {work.text}
           </button>
         )}
-        <span role="status" aria-live="polite" className="ch-footer-fit">
-          {status}
+        <span
+          className={`ch-footer-status${undo ? ' has-undo' : ''}`}
+          onPointerEnter={() => onStatusHover?.(true)}
+          onPointerMove={() => onStatusHover?.(true)}
+          onPointerLeave={() => onStatusHover?.(false)}
+        >
+          <span role="status" aria-live="polite" className="ch-footer-fit">
+            {status}
+          </span>
+          {undo && (
+            <button
+              type="button"
+              className="ch-footer-button ch-footer-undo"
+              aria-label={undo.label}
+              aria-keyshortcuts={undo.keys}
+              // The focus stays where the author was, as with the key.
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={undo.onUndo}
+            >
+              {t('status.undo')}
+              {undo.shortcut && <kbd>{undo.shortcut}</kbd>}
+            </button>
+          )}
         </span>
         {onEnterKey ? (
           <button

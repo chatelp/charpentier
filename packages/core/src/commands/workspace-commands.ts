@@ -124,8 +124,6 @@ function sceneToWriteIn(ctx: WorkspaceContext): { id: string; unmake(): void } {
   };
 }
 
-const undoKey = (ctx: WorkspaceContext) => ctx.shortcutLabel('undo') ?? '';
-
 /** To the trash, with ⌘Z to bring it back (docs/PLAN.md 7.5). */
 export function trashSceneAndMove(ctx: WorkspaceContext, sceneId: string): void {
   const title = ctx.outline.flatMap((c) => c.scenes).find((s) => s.id === sceneId)?.title ?? '';
@@ -134,10 +132,14 @@ export function trashSceneAndMove(ctx: WorkspaceContext, sceneId: string): void 
   trashScene(ctx.root, sceneId);
   const made = open && !next ? sceneToWriteIn(ctx) : undefined;
   if (open) ctx.openScene(next ?? made?.id ?? sceneId);
-  ctx.offerUndo(ctx.t('status.sceneTrashed', { title, undo: undoKey(ctx) }), () => {
-    restoreSceneWithChapter(ctx.root, sceneId);
-    if (open) ctx.openScene(sceneId);
-    made?.unmake();
+  ctx.offerUndo({
+    message: ctx.t('status.sceneTrashed', { title }),
+    label: ctx.t('status.undoTrash.scene', { name: title }),
+    undo: () => {
+      restoreSceneWithChapter(ctx.root, sceneId);
+      if (open) ctx.openScene(sceneId);
+      made?.unmake();
+    },
   });
 }
 
@@ -149,10 +151,18 @@ export function trashChapterAndMove(ctx: WorkspaceContext, chapterId: string): v
   trashChapter(ctx.root, chapterId);
   const made = !next ? sceneToWriteIn(ctx) : undefined;
   if (inside.has(was) || !next) ctx.openScene(next ?? made?.id ?? was);
-  ctx.offerUndo(ctx.t('status.chapterTrashed', { title, undo: undoKey(ctx) }), () => {
-    restoreChapter(ctx.root, chapterId);
-    if (inside.has(was)) ctx.openScene(was);
-    made?.unmake();
+  ctx.offerUndo({
+    // « Chapitre « Nantes » et 4 scènes mis à la corbeille. » (DESIGN §4.7, 1.37).
+    message:
+      inside.size === 0
+        ? ctx.t('status.chapterTrashed', { title })
+        : ctx.t('status.chapterWithScenesTrashed', { title, count: inside.size }),
+    label: ctx.t('status.undoTrash.chapter', { name: title }),
+    undo: () => {
+      restoreChapter(ctx.root, chapterId);
+      if (inside.has(was)) ctx.openScene(was);
+      made?.unmake();
+    },
   });
 }
 

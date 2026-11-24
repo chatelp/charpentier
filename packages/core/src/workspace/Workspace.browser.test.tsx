@@ -58,6 +58,9 @@ async function inputInPalette(text: string) {
   await userEvent.keyboard(`{ControlOrMeta>}a{/ControlOrMeta}${text}{Enter}`);
 }
 
+/** The drawer's line that has the focus. */
+const focusedLine = () => document.activeElement?.getAttribute('aria-label');
+
 const editorFocused = () =>
   document.activeElement?.getAttribute('aria-label') === 'Texte de la scène';
 
@@ -138,7 +141,7 @@ describe('workspace, keyboard only', () => {
     await userEvent.keyboard('scene corbeille{Enter}');
     expect(outline()).toEqual(['Chapitre 1: Scène 1']);
     // (The queries read a non-breaking space as a space.)
-    await screen.findByText(/Scène « Éphémère » mise à la corbeille\. .+ pour annuler\./);
+    await screen.findByText('Scène « Éphémère » mise à la corbeille.');
     await press('mod+z');
     expect(outline()).toEqual(['Chapitre 1: Scène 1, Éphémère']);
     await waitFor(() => expect(document.title).toBe('Mon projet — Éphémère'));
@@ -163,6 +166,113 @@ describe('workspace, keyboard only', () => {
     expect(outline()).toEqual(['Chapitre 1: Scène 1']);
     await waitFor(() => expect(document.title).toBe('Mon projet — Scène 1'));
   });
+
+  it('says what went to the trash, with « Annuler », whose click does what ⌘Z does', async () => {
+    const { outline } = await startApp();
+    await press('mod+alt+n');
+    await inputInPalette('Éphémère');
+    await press('mod+k');
+    await userEvent.keyboard('scene corbeille{Enter}');
+    expect(outline()).toEqual(['Chapitre 1: Scène 1']);
+    await screen.findByText('Scène « Éphémère » mise à la corbeille.');
+    // The line's one button, named for what it brings back, with the undo key of the device.
+    const button = screen.getByRole('button', {
+      name: 'Annuler la mise à la corbeille de la scène Éphémère',
+    });
+    expect(button.querySelector('kbd')?.textContent).toBe(isMac ? '⌘Z' : 'Ctrl+Z');
+    await userEvent.click(button);
+    expect(outline()).toEqual(['Chapitre 1: Scène 1, Éphémère']);
+    await waitFor(() => expect(document.title).toBe('Mon projet — Éphémère'));
+    await screen.findByText('Remis en place.');
+    expect(screen.queryByRole('button', { name: /^Annuler la mise à la corbeille/ })).toBeNull();
+    // The scene came back open, its text with the focus.
+    await waitFor(() => expect(editorFocused()).toBe(true));
+  });
+
+  it('counts the scenes that went with a chapter', async () => {
+    await startApp();
+    await press('mod+alt+shift+n');
+    await inputInPalette('Nantes');
+    await press('mod+alt+n');
+    await inputInPalette('Le quai');
+    await press('mod+k');
+    await userEvent.keyboard('chapitre corbeille{Enter}');
+    await screen.findByText('Chapitre « Nantes » et 2 scènes mis à la corbeille.');
+    screen.getByRole('button', { name: 'Annuler la mise à la corbeille du chapitre Nantes' });
+  });
+
+  it('takes back several trashes one by one, the most recent first', async () => {
+    const { outline } = await startApp();
+    await press('mod+alt+n');
+    await inputInPalette('Deux');
+    await press('mod+alt+n');
+    await inputInPalette('Trois');
+    expect(outline()).toEqual(['Chapitre 1: Scène 1, Deux, Trois']);
+    // In the drawer, ⌫ twice: nothing typed in between.
+    await press('mod+j');
+    await screen.findByRole('tree', { name: 'Plan du manuscrit' });
+    await waitFor(() => expect(focusedLine()).toBe('Trois'));
+    await userEvent.keyboard('{Backspace}');
+    await screen.findByText('Scène « Trois » mise à la corbeille.');
+    // The focus went to the line before.
+    await waitFor(() => expect(focusedLine()).toBe('Deux'));
+    await userEvent.keyboard('{Backspace}');
+    // The message names the last one.
+    await screen.findByText('Scène « Deux » mise à la corbeille.');
+    expect(outline()).toEqual(['Chapitre 1: Scène 1']);
+
+    await press('mod+z');
+    expect(outline()).toEqual(['Chapitre 1: Scène 1, Deux']);
+    await screen.findByText('Remis en place.');
+    await press('mod+z');
+    expect(outline()).toEqual(['Chapitre 1: Scène 1, Deux, Trois']);
+    // Nothing more on offer: ⌘Z is the text's again.
+    await press('mod+z');
+    expect(outline()).toEqual(['Chapitre 1: Scène 1, Deux, Trois']);
+  });
+
+  it('forgets every way back as soon as the author types', async () => {
+    const { outline } = await startApp();
+    await press('mod+alt+n');
+    await inputInPalette('Deux');
+    await press('mod+alt+n');
+    await inputInPalette('Trois');
+    await press('mod+j');
+    await screen.findByRole('tree', { name: 'Plan du manuscrit' });
+    await waitFor(() => expect(focusedLine()).toBe('Trois'));
+    await userEvent.keyboard('{Backspace}');
+    // The focus went to the line before.
+    await waitFor(() => expect(focusedLine()).toBe('Deux'));
+    await userEvent.keyboard('{Backspace}');
+    await screen.findByText('Scène « Deux » mise à la corbeille.');
+    // Back to the text, a word: the message and its « Annuler » go, and ⌘Z is the text's.
+    await press('Escape');
+    await waitFor(() => expect(editorFocused()).toBe(true));
+    await userEvent.keyboard('Un mot.');
+    await waitFor(() =>
+      expect(screen.queryByText('Scène « Deux » mise à la corbeille.')).toBeNull(),
+    );
+    expect(screen.queryByRole('button', { name: /^Annuler la mise à la corbeille/ })).toBeNull();
+    await press('mod+z');
+    await press('mod+z');
+    expect(outline()).toEqual(['Chapitre 1: Scène 1']);
+  });
+
+  it('keeps a trash’s message past the 4 s of a confirmation, then lets it go', async () => {
+    await startApp();
+    await press('mod+alt+n');
+    await inputInPalette('Éphémère');
+    await press('mod+k');
+    await userEvent.keyboard('scene corbeille{Enter}');
+    await screen.findByText('Scène « Éphémère » mise à la corbeille.');
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+    expect(screen.getByText('Scène « Éphémère » mise à la corbeille.')).toBeTruthy();
+    screen.getByRole('button', { name: 'Annuler la mise à la corbeille de la scène Éphémère' });
+    await waitFor(
+      () => expect(screen.queryByText('Scène « Éphémère » mise à la corbeille.')).toBeNull(),
+      { timeout: 5000 },
+    );
+  }, 20000);
 
   it('reorders scenes and chapters by drag and drop', async () => {
     const { outline } = await startApp();

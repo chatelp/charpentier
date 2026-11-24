@@ -59,7 +59,7 @@ import { SceneEditor } from '../editor/SceneEditor';
 import { useDocSnapshot } from '../hooks/use-doc-snapshot';
 import { Navigator } from '../navigator/Navigator';
 import { ThingMenuHost } from '../menu/ThingMenuSheet';
-import type { MenuRequest } from '../menu/thing-menu';
+import { ariaKeyShortcut, type MenuRequest } from '../menu/thing-menu';
 import { CommandPalette } from '../palette/CommandPalette';
 import type { PaletteRequest, PaletteScope } from '../palette/palette-request';
 import { lastScenePref, type ProjectSession } from './default-scene';
@@ -73,7 +73,7 @@ import { SceneHeader, SceneOpener, WritingFooter } from './SceneChrome';
 import { useSceneDocs } from './use-scene-docs';
 import { useTypingFade, useTypewriterScroll, useWordCount } from './use-writing-surface';
 import { useWordsToday } from './use-words-today';
-import type { WorkspaceContext } from './workspace-context';
+import type { UndoOffer, WorkspaceContext } from './workspace-context';
 import { useWritingPrefs } from './writing-prefs';
 import { isCovered } from '../features/cover';
 import { featureText } from '../features/feature';
@@ -88,6 +88,21 @@ import { useMentorDoc, workLocation } from '../work/WorkBlock';
 import { formatWhen } from '../work/work-format';
 
 let paletteSequence = 0;
+
+/** A line of the footer's state: a confirmation, or what went to the trash and its « Annuler ». */
+interface StatusLine {
+  readonly key: number;
+  readonly text: string;
+  /** The name of « Annuler », when the line offers a way back. */
+  readonly undoLabel?: string;
+}
+
+const STATUS_MS = 4000;
+const UNDO_STATUS_MS = 8000;
+/** Once the pointer leaves a message held past its time, it stays a moment for the eye. */
+const AFTER_HOVER_MS = 1500;
+/** Keys that make no gesture by themselves (a chord's first half). */
+const MODIFIER_KEYS = new Set(['Shift', 'Control', 'Alt', 'Meta', 'AltGraph', 'CapsLock', 'Fn']);
 
 /**
  * Under this width the Compagnon's notes unfold under their paragraph (docs/DESIGN.md §4.2):
@@ -312,7 +327,7 @@ export function ProjectWorkspace({
   const chapterIndex = outline.findIndex((c) => c.scenes.some((s) => s.id === sceneId));
   const chapter = outline[chapterIndex];
   const sceneDocs = useSceneDocs(platform, projectId, sceneId, scene?.activeVariantId ?? '');
-  const [status, setStatus] = useState<{ key: number; text: string } | null>(null);
+  const [status, setStatus] = useState<StatusLine | null>(null);
   // The remarks of each background work, at the head of the points.
   const mentorDoc = useMentorDoc(projectId);
   const work = useBackgroundWork(
@@ -590,28 +605,55 @@ export function ProjectWorkspace({
 
   const notify = (text: string) => setStatus({ key: ++paletteSequence, text });
 
-  // The way back on offer after something went to the trash: ⌘Z takes it, until
-  // the author types anything (then ⌘Z is the text's again).
-  const [offered, setOffered] = useState<{ readonly undo: () => void } | null>(null);
-  const offerUndo = (text: string, undo: () => void) => {
-    setOffered({ undo });
-    notify(text);
+  // The ways back on offer after things went to the trash, the most recent last: ⌘Z, or
+  // « Annuler » in the status line, takes them one by one (DESIGN §4.7, 1.37), until the author
+  // types anything (then ⌘Z is the text's again).
+  const [offers, setOffers] = useState<readonly UndoOffer[]>([]);
+  const offerUndo = (offer: UndoOffer) => {
+    setOffers((list) => [...list, offer]);
+    setStatus({ key: ++paletteSequence, text: offer.message, undoLabel: offer.label });
   };
   const undoOffered = () => {
-    if (!offered) return false;
-    setOffered(null);
-    offered.undo();
+    const offer = offers.at(-1);
+    if (!offer) return false;
+    setOffers(offers.slice(0, -1));
+    offer.undo();
     notify(t('status.trashUndone'));
     return true;
   };
   useEffect(() => {
-    const forget = () => setOffered(null);
+    // (Unchanged while there is nothing to forget: typing renders nothing more.)
+    const forget = () => {
+      setOffers((list) => (list.length > 0 ? [] : list));
+      // « Annuler » goes with them: it would aim at nothing.
+      setStatus((line) => (line?.undoLabel ? null : line));
+    };
     window.addEventListener('beforeinput', forget, true);
     return () => {
       window.removeEventListener('beforeinput', forget, true);
-      forget();
+      setOffers([]);
     };
   }, [root]);
+  // A trash's message goes as soon as the author does something else (a key, a click
+  // elsewhere): ⌘Z then no longer aims at it in their mind. Looked at once the gesture is
+  // done, so that what it said itself (another trash, « Remis en place. ») stays.
+  useEffect(() => {
+    if (!status?.undoLabel) return;
+    const shown = status.key;
+    const later: ReturnType<typeof setTimeout>[] = [];
+    const onGesture = (event: Event) => {
+      if (event instanceof KeyboardEvent && MODIFIER_KEYS.has(event.key)) return;
+      if (event.target instanceof Element && event.target.closest('.ch-footer-status')) return;
+      later.push(setTimeout(() => setStatus((line) => (line?.key === shown ? null : line)), 0));
+    };
+    document.addEventListener('keydown', onGesture, true);
+    document.addEventListener('pointerdown', onGesture, true);
+    return () => {
+      document.removeEventListener('keydown', onGesture, true);
+      document.removeEventListener('pointerdown', onGesture, true);
+      later.forEach(clearTimeout);
+    };
+  }, [status]);
 
   // The first time the author writes in a common scene outside Principale, a line says it goes
   // for every version that shares it (DESIGN 1.20), once per scene.
@@ -944,12 +986,23 @@ export function ProjectWorkspace({
     });
   }, [scene, t, projectTitle]);
 
-  // Confirmations fade after a few seconds.
+  // Confirmations fade after 4 s; a trash's message, with its « Annuler », after 8 s, and not
+  // while the pointer is over it (DESIGN §4.7, 1.37).
+  const [statusHovered, setStatusHovered] = useState<number | null>(null);
+  const statusHeld = status?.undoLabel !== undefined && statusHovered === status.key;
+  const statusDue = useRef({ key: -1, at: 0 });
   useEffect(() => {
-    if (!status) return;
-    const timer = setTimeout(() => setStatus(null), 4000);
+    if (!status || statusHeld) return;
+    if (statusDue.current.key !== status.key)
+      statusDue.current = {
+        key: status.key,
+        at: Date.now() + (status.undoLabel ? UNDO_STATUS_MS : STATUS_MS),
+      };
+    const left = Math.max(statusDue.current.at - Date.now(), AFTER_HOVER_MS);
+    const timer = setTimeout(() => setStatus(null), left);
     return () => clearTimeout(timer);
-  }, [status]);
+  }, [status, statusHeld]);
+  const undoChord = registry.chord('undo');
 
   const closePalette = () => {
     setPalette(null);
@@ -1373,6 +1426,18 @@ export function ProjectWorkspace({
         words={view === 'write' ? words : undefined}
         wordsToday={wordsToday}
         status={status?.text}
+        undo={
+          status?.undoLabel === undefined
+            ? undefined
+            : {
+                label: status.undoLabel,
+                shortcut: registry.shortcutLabel('undo'),
+                keys: undoChord && ariaKeyShortcut(undoChord),
+                // Exactly what ⌘Z does (DESIGN §5.0, rule 2).
+                onUndo: () => void ctx.undoOffered(),
+              }
+        }
+        onStatusHover={(over) => setStatusHovered(over && status ? status.key : null)}
         mentorNote={mentorNote}
         onEnterKey={
           // Where the key is set: Réglages › Compagnon (DESIGN 1.24).

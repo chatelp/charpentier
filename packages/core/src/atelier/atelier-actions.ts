@@ -87,10 +87,11 @@ export function trashEntityAndNotify(
   title: string,
 ): void {
   trashEntity(ctx.root, module, entityId);
-  ctx.offerUndo(
-    ctx.t('status.entityTrashed', { title, undo: ctx.shortcutLabel('undo') ?? '' }),
-    () => restoreEntity(ctx.root, module, entityId),
-  );
+  ctx.offerUndo({
+    message: ctx.t('status.entityTrashed', { title }),
+    label: ctx.t('status.undoTrash.entity', { name: title }),
+    undo: () => restoreEntity(ctx.root, module, entityId),
+  });
 }
 
 /** Items of the « Restaurer depuis la corbeille… » list for the Atelier's entries. */

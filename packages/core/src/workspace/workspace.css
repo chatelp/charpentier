@@ -188,15 +188,41 @@
   flex-shrink: 0;
 }
 
-.ch-footer-right > .ch-footer-fit {
+.ch-footer-right > .ch-footer-fit,
+.ch-footer-status > .ch-footer-fit {
   flex-shrink: 1;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+/* The state line and, after a trash, its one button (DESIGN §4.7, 1.37). */
+.ch-footer-right > .ch-footer-status {
+  display: flex;
+  flex-shrink: 1;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+/* Over it, the pointer holds the message: it takes the pointer while it offers « Annuler ». */
+.ch-footer-status.has-undo {
+  pointer-events: auto;
+}
+
+/* A flat button of the footer, its label in the ink, its key faint, lit while held. */
+.ch-footer-button.ch-footer-undo {
+  color: var(--ch-ink);
+}
+
+.ch-footer-button.ch-footer-undo:active {
+  background: var(--ch-lit-bg);
+  box-shadow: var(--ch-lit);
+  transition: none;
+}
+
 /* A state message is read whole: a long one (a common scene's warning) wraps, right-aligned. */
-.ch-footer-right > .ch-footer-fit[role='status']:not(:empty) {
+.ch-footer-status > .ch-footer-fit[role='status']:not(:empty) {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;

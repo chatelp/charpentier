@@ -476,7 +476,7 @@
     "firstTypingMany": "Cette scène est commune à {{count}} versions : ce que vous écrivez vaut pour toutes. Pour la changer ici seulement : Nouvelle variante{{shortcut}}.",
     "switched": "Version « {{version}} ».",
     "removed": "Scène retirée de « {{version}} ».",
-    "trashed": "Version « {{version}} » mise à la corbeille. {{undo}} pour annuler."
+    "trashed": "Version « {{version}} » mise à la corbeille."
   },
   "history": {
     "today": "Aujourd’hui, {{time}}",
@@ -501,11 +501,21 @@
     },
     "motionReduced": "Animations réduites.",
     "motionNormal": "Animations rétablies.",
-    "entityTrashed": "Mis à la corbeille : « {{title}} ». {{undo}} pour annuler.",
-    "sceneTrashed": "Scène « {{title}} » mise à la corbeille. {{undo}} pour annuler.",
-    "chapterTrashed": "Chapitre « {{title}} » mis à la corbeille. {{undo}} pour annuler.",
-    "variantTrashed": "Variante « {{name}} » mise à la corbeille. {{undo}} pour annuler.",
+    "entityTrashed": "Fiche « {{title}} » mise à la corbeille.",
+    "sceneTrashed": "Scène « {{title}} » mise à la corbeille.",
+    "chapterTrashed": "Chapitre « {{title}} » mis à la corbeille.",
+    "chapterWithScenesTrashed_one": "Chapitre « {{title}} » et {{count}} scène mis à la corbeille.",
+    "chapterWithScenesTrashed_other": "Chapitre « {{title}} » et {{count}} scènes mis à la corbeille.",
+    "variantTrashed": "Variante « {{name}} » mise à la corbeille.",
     "trashUndone": "Remis en place.",
+    "undo": "Annuler",
+    "undoTrash": {
+      "scene": "Annuler la mise à la corbeille de la scène {{name}}",
+      "chapter": "Annuler la mise à la corbeille du chapitre {{name}}",
+      "variant": "Annuler la mise à la corbeille de la variante {{name}}",
+      "entity": "Annuler la mise à la corbeille de la fiche {{name}}",
+      "version": "Annuler la mise à la corbeille de la version {{name}}"
+    },
     "uiSoundsOn": "Sons de l’interface activés.",
     "uiSoundsOff": "Sons de l’interface désactivés.",
     "typingSoundsOn": "Son de frappe activé.",

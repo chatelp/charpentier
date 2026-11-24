@@ -15,6 +15,16 @@ import type { PrefsUpdate, WritingPrefs } from './writing-prefs';
 export type WorkspaceView =
   'write' | 'atelier' | 'overview' | 'settings' | 'system-settings' | `view:${string}`;
 
+/** Something just went to the trash, and the way to bring it back. */
+export interface UndoOffer {
+  /** What went, by its kind and name (« Scène « Le quai » mise à la corbeille. »). */
+  readonly message: string;
+  /** The name of the « Annuler » button (« Annuler la mise à la corbeille de la scène Le quai »). */
+  readonly label: string;
+  /** Brings it back to its place. */
+  readonly undo: () => void;
+}
+
 /** Everything a command may use. Rebuilt on every render of the workspace. */
 export interface WorkspaceContext {
   readonly t: TFunction;
@@ -77,11 +87,12 @@ export interface WorkspaceContext {
   /** A short, discreet confirmation (read by screen readers). */
   notify(message: string): void;
   /**
-   * A confirmation with a way back: what was just done (something put in the
-   * trash) is undone by ⌘Z, as long as the author has typed nothing since.
+   * A confirmation with a way back (docs/DESIGN.md §4.7, « Effacer, dire, rattraper »):
+   * the status line says what went to the trash and carries « Annuler », which does what
+   * ⌘Z does. The offers pile up, the most recent on top, until the author types anything.
    */
-  offerUndo(message: string, undo: () => void): void;
-  /** Takes the way back on offer, if any; false when there is none. */
+  offerUndo(offer: UndoOffer): void;
+  /** Takes the most recent way back on offer, if any; false when there is none. */
   undoOffered(): boolean;
   /**
    * Writing surface, the Atelier (modules), the overview of the manuscript,
