@@ -150,7 +150,8 @@ describe('Atelier', () => {
     field('Peur').focus();
     await userEvent.keyboard('{Enter}');
     const draft = await screen.findByRole('textbox', { name: 'Peur' });
-    expect(draft.title).toContain('⇧⏎ à la ligne');
+    // The new line's key as the host names it (the CI runs on Linux).
+    expect(draft.title).toContain(isMac ? '⇧⏎ à la ligne' : 'Maj+⏎ à la ligne');
     await userEvent.keyboard(' du monde,{Shift>}{Enter}{/Shift}et le vide.{Escape}');
     await waitFor(() => expect(screen.queryByRole('textbox', { name: 'Peur' })).toBeNull());
     expect(readFieldRef(root, fear)).toMatchObject({
