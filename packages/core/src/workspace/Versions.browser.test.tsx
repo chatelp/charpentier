@@ -140,7 +140,8 @@ describe('working versions (DESIGN 1.20, in retreat since 1.33)', () => {
     await waitFor(() => expect(novelButton().textContent).toContain('Fin au Croisic'));
 
     (within(sheet).getAllByRole('radio')[1] as HTMLElement).focus();
-    await userEvent.keyboard('{Backspace}');
+    // Held, ⌫ is one press (the host repeats it).
+    await userEvent.keyboard('{Backspace>4/}');
     // A version is a big piece: its line's button asks, a second ⌫ does it (DESIGN §4.7).
     await within(sheet).findByRole('button', { name: /^Confirmer\u00a0: version/ });
     expect(within(sheet).getAllByRole('radio')).toHaveLength(2);

@@ -270,6 +270,44 @@ describe('the menu of a thing, in the manuscript drawer (docs/DESIGN.md §4.7)',
     screen.getByRole('button', { name: 'Annuler la mise à la corbeille du chapitre Chapitre 1' });
   });
 
+  it('a held ⌫ is one press: it neither confirms, nor forgets, on the line as in the menu', async () => {
+    const { outline } = await manuscript();
+    const repeats: boolean[] = [];
+    const seen = (event: KeyboardEvent) => repeats.push(event.repeat);
+    window.addEventListener('keydown', seen, true);
+    const whole = ['Chapitre 1: Scène 1, Scène B', 'Deux: Nouvelle scène'];
+    try {
+      line('Chapitre 1').focus();
+      // The host repeats the key while it is held: the first one is a press, not the others.
+      await userEvent.keyboard('{Backspace>4/}');
+      expect(repeats).toEqual([false, true, true, true]);
+      expect(outline()).toEqual(whole);
+      await screen.findByRole('button', { name: /^Confirmer\u00a0: chapitre/ });
+      expect(document.activeElement).toBe(line('Chapitre 1'));
+      // Another key forgets it.
+      await userEvent.keyboard('{ArrowDown}');
+      await waitFor(() => expect(screen.queryByRole('button', { name: /^Confirmer/ })).toBeNull());
+
+      // An empty scene goes, and the line that takes the focus stays.
+      line('Scène B').focus();
+      await userEvent.keyboard('{Backspace>4/}');
+      await waitFor(() =>
+        expect(outline()).toEqual(['Chapitre 1: Scène 1', 'Deux: Nouvelle scène']),
+      );
+      await press('mod+z');
+      await waitFor(() => expect(outline()).toEqual(whole));
+
+      await userEvent.click(more('Actions du chapitre Chapitre 1'));
+      const sheet = await menu('Chapitre · Chapitre 1');
+      await userEvent.keyboard('{Backspace>4/}');
+      expect(outline()).toEqual(whole);
+      entry(sheet, /^Confirmer\u00a0: chapitre/);
+      await userEvent.keyboard('{Escape}');
+    } finally {
+      window.removeEventListener('keydown', seen, true);
+    }
+  });
+
   it('puts an empty scene or chapter in the trash at the first press', async () => {
     const { outline } = await manuscript();
     line('Scène B').focus();

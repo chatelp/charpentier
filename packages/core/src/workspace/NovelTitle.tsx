@@ -292,7 +292,8 @@ export function NovelSheet({
       else setRenaming(true);
     } else if ((event.key === 'Backspace' || event.key === 'Delete') && version) {
       handled();
-      if (!version.isMain) askTrash(version);
+      // Held down, it is one press.
+      if (!version.isMain && !event.repeat) askTrash(version);
     } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       handled();
       const all = rows();

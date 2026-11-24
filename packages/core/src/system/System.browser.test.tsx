@@ -99,6 +99,30 @@ describe('the system line of the X250 (phase 5.3)', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
   });
 
+  it('forgets a network at the second O; held down, O is one press (DESIGN §5.0, rule 5)', async () => {
+    const system = createSimulatedSystem();
+    await start(system);
+    await userEvent.keyboard(sys('w'));
+    const panel = await screen.findByRole('dialog');
+    const known = () =>
+      system
+        .state()
+        .wifi.networks.filter((n) => n.known)
+        .map((n) => n.ssid);
+    expect(known()).toContain('Maison-5G');
+    within(panel)
+      .getByRole('option', { name: /Maison-5G/ })
+      .focus();
+    await userEvent.keyboard('{o>4/}');
+    await within(panel).findByText('Confirmer l’oubli de Maison-5G');
+    expect(known()).toContain('Maison-5G');
+    await userEvent.keyboard('o');
+    await waitFor(() => expect(known()).not.toContain('Maison-5G'));
+    // The line's state outlives a test: closed, as the author leaves it.
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  });
+
   it('answers the « : » of the command line: :lum 40, :wifi non', async () => {
     const system = createSimulatedSystem();
     await start(system);

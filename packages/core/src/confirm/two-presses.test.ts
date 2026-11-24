@@ -73,6 +73,30 @@ describe('the two presses (DESIGN §4.7, rule 5)', () => {
     expect(ran).toEqual([]);
   });
 
+  it('spends what the host repeats of a held key: no second press, nothing forgotten', () => {
+    const presses = new TwoPresses();
+    const ran: string[] = [];
+    const held = (name: string) => {
+      const spent: string[] = [];
+      const event = {
+        ...key(name),
+        repeat: true,
+        preventDefault: () => spent.push('default'),
+        stopPropagation: () => spent.push('propagation'),
+      };
+      presses.keyDown(event as unknown as KeyboardEvent);
+      return spent;
+    };
+    // Nothing armed: a held key is the screen's.
+    expect(held('Backspace')).toEqual([]);
+    presses.press(request('line', ran, 'status'));
+    // The key that armed, held; another key the author still holds (⏎ from the command line).
+    expect(held('Backspace')).toEqual(['default', 'propagation']);
+    expect(held('Enter')).toEqual(['default', 'propagation']);
+    expect(presses.armed()?.id).toBe('line');
+    expect(ran).toEqual([]);
+  });
+
   it('the status line button confirms what is armed', () => {
     const presses = new TwoPresses();
     const ran: string[] = [];

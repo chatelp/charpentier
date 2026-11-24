@@ -183,7 +183,8 @@ export function Library({ currentProjectId, creating = false, onOpen, onClose }:
       rename(selected);
     } else if ((key === 'Delete' || key === 'Backspace') && !selected.trashed) {
       event.preventDefault();
-      askTrash(selected);
+      // Held down, it is one press.
+      if (!event.repeat) askTrash(selected);
     }
   };
 

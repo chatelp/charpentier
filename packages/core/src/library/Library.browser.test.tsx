@@ -73,7 +73,8 @@ describe('library', () => {
     await waitFor(() =>
       expect(document.activeElement).toBe(screen.getByRole('option', { name: /Mon projet/ })),
     );
-    await userEvent.keyboard('{ArrowDown}{Backspace}');
+    // Held, ⌫ is one press (the host repeats it).
+    await userEvent.keyboard('{ArrowDown}{Backspace>4/}');
     // A project is a big piece: its button asks, a second ⌫ does it (DESIGN §4.7, rule 5).
     await screen.findByRole('button', {
       name: /^Confirmer\u00a0: projet «\u00a0.+\u00a0» à la corbeille/,

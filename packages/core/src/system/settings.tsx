@@ -14,7 +14,7 @@ import { Gauge, Keys, Slider } from './controls';
 import { duration, hours, minutesSince, postSoon, shortDate } from './panels';
 import { beforeRestart } from './restart';
 import { useSystemState } from './system-store';
-import { useTwoPresses } from '../confirm/two-presses';
+import { spendRepeat, useTwoPresses } from '../confirm/two-presses';
 
 /**
  * The twelve sections of the system's settings (docs/DESIGN.md §4.12), on
@@ -624,7 +624,13 @@ function useArmed(): [boolean, (act: () => void) => void] {
   useEffect(() => {
     if (!armed) return;
     const timer = setTimeout(() => setArmed(false), 3000);
-    return () => clearTimeout(timer);
+    // A key held down is one press: what the host repeats does not confirm.
+    const held = (event: KeyboardEvent) => void spendRepeat(event);
+    window.addEventListener('keydown', held, true);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('keydown', held, true);
+    };
   }, [armed]);
   return [
     armed,

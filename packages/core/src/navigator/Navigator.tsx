@@ -307,6 +307,9 @@ export function Navigator({ ctx, outline, active, onClose, signals }: NavigatorP
           ctx.openScene(scene.id);
         },
       });
+    } else if ((key === 'Delete' || key === 'Backspace') && event.repeat) {
+      // Held down, it is one press: the next line does not go with this one.
+      handled();
     } else if ((key === 'Delete' || key === 'Backspace') && variantLine) {
       handled();
       trashVariantOfScene(ctx, variantId);

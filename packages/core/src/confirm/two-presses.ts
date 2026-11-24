@@ -110,11 +110,13 @@ export class TwoPresses {
   /**
    * A key pressed while something is armed: Échap forgets it; in the status
    * line, any key but the one that presses again forgets it too, in silence.
-   * (A modifier alone changes nothing.)
+   * (A modifier alone changes nothing.) A key held down is one press: what the
+   * host repeats is spent here, it neither presses again nor forgets.
    */
   keyDown(event: KeyboardEvent): void {
     const armed = this.current;
     if (!armed || MODIFIERS.has(event.key)) return;
+    if (spendRepeat(event)) return;
     if (event.key === 'Escape') return this.disarm();
     if (armed.where !== 'status') return;
     if (!armed.keys?.some((chord) => matchesCharacter(chord, event))) this.disarm();
@@ -124,6 +126,17 @@ export class TwoPresses {
     this.current = next;
     for (const listener of this.listeners) listener();
   }
+}
+
+/**
+ * A key the host repeats while it is held, spent before it reaches anything: the list's own
+ * keys, and the click ⏎ makes on a button. (The arrows still walk.) True when it was.
+ */
+export function spendRepeat(event: KeyboardEvent): boolean {
+  if (!event.repeat || event.key.startsWith('Arrow')) return false;
+  event.preventDefault();
+  event.stopPropagation();
+  return true;
 }
 
 const MODIFIERS = new Set(['Shift', 'Control', 'Alt', 'Meta', 'AltGraph', 'CapsLock']);
