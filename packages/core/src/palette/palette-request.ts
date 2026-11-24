@@ -26,6 +26,8 @@ export interface PickItem {
   readonly label: string;
   readonly detail?: string;
   readonly shortcut?: string;
+  /** What choosing it asks a second press for (`confirmTwice`'s id): the line then stays open. */
+  readonly confirms?: string | undefined;
 }
 
 /** What a prefix of the command line searches (`#` scenes, `@` sheets, a feature's `:`). */

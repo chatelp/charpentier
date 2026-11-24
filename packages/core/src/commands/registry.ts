@@ -30,6 +30,11 @@ export interface Command<Ctx> {
   readonly keybinding?: string | readonly string[];
   /** Hidden from the palette and its shortcut ignored when false. */
   isEnabled?(ctx: Ctx): boolean;
+  /**
+   * What it asks a second press for now, if it does: the id its `confirmTwice` arms (docs/DESIGN.md
+   * §4.7 « Les deux appuis »). The command line then stays open and asks on the command's line.
+   */
+  confirms?(ctx: Ctx): string | undefined;
   run(ctx: Ctx): void | Promise<void>;
 }
 

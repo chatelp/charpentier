@@ -1050,8 +1050,11 @@ export function ProjectWorkspace({
         id: command.id,
         label: t(`commands.${command.id}` as 'commands.openPalette', hostWords),
         ...(shortcut && { shortcut }),
+        confirms: command.confirms?.(ctx),
         run: () => {
-          rememberCommand(command.id);
+          // Remembered once done: asked, the list must not move under the author.
+          const asks = command.confirms?.(ctx);
+          if (asks === undefined || presses.isArmed(asks)) rememberCommand(command.id);
           if (announceCommand({ id: command.id, from: 'palette' })) void command.run(ctx);
         },
       };
@@ -1447,7 +1450,7 @@ export function ProjectWorkspace({
       )}
       {/* The first press, said (DESIGN §4.7): the status line's own is read from its button. */}
       <p className="ch-visually-hidden" aria-live="polite">
-        {armed?.where === 'inline' ? t('confirm.again', { what: armed.what }) : ''}
+        {armed && armed.where !== 'status' ? t('confirm.again', { what: armed.what }) : ''}
       </p>
       <WritingFooter
         words={view === 'write' ? words : undefined}
@@ -1625,6 +1628,13 @@ export function ProjectWorkspace({
                 : SUGGESTED_COMMANDS
           }
           onClose={closePalette}
+          onDismiss={() => {
+            // Closed without a choice: what waited for its second press is forgotten.
+            presses.disarm();
+            closePalette();
+          }}
+          armed={armed}
+          onAsk={(run) => presses.within('palette', run)}
         />
       )}
     </div>

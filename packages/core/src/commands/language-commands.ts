@@ -133,6 +133,7 @@ export const languageCommands: readonly LanguageCommand[] = [
     },
     // No way back: at the second press (docs/DESIGN.md §4.7 « Les deux appuis »), on the
     // settings' button, or in the status line from the command line.
+    confirms: () => 'forgetApiKey',
     run: (ctx) =>
       void ctx.confirmTwice({
         id: 'forgetApiKey',

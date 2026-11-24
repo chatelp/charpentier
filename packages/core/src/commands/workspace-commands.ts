@@ -407,10 +407,20 @@ export const workspaceCommands: readonly WorkspaceCommand[] = [
       if (scene) moveChapterStep(ctx.root, scene.chapterId, 1);
     },
   },
-  { id: 'trashScene', scope: 'global', run: (ctx) => void askTrashScene(ctx, ctx.sceneId) },
+  {
+    id: 'trashScene',
+    scope: 'global',
+    confirms: (ctx) =>
+      sceneBigPiece(ctx, ctx.sceneId) === undefined ? undefined : trashArmId(ctx.sceneId),
+    run: (ctx) => void askTrashScene(ctx, ctx.sceneId),
+  },
   {
     id: 'trashChapter',
     scope: 'global',
+    confirms: (ctx) => {
+      const id = currentScene(ctx)?.chapterId;
+      return id && chapterBigPiece(ctx, id) !== undefined ? trashArmId(id) : undefined;
+    },
     run: (ctx) => {
       const scene = currentScene(ctx);
       if (scene) askTrashChapter(ctx, scene.chapterId);

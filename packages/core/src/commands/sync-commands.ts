@@ -97,18 +97,18 @@ export const syncCommands: readonly SyncCommand[] = [
           detail: d.current
             ? ctx.t('sync.thisDevice')
             : ctx.t('sync.lastSeen', { date: date(d.lastSeenAt) }),
+          ...(!d.current && { confirms: `revokeDevice:${d.id}` }),
         })),
         onPick: (id) => {
           // This device signs out with « Se déconnecter du serveur ».
           const device = devices.find((d) => d.id === id);
           if (device?.current) return ctx.notify(ctx.t('sync.useSignOut'));
-          // No way back: the status line asks for the second press (DESIGN §4.7).
+          // No way back: the command line asks for the second press (DESIGN §4.7).
           ctx.confirmTwice({
             id: `revokeDevice:${id}`,
             what: ctx.t('confirm.what.revokeDevice', {
               device: device?.device || ctx.t('sync.unnamedDevice'),
             }),
-            where: 'status',
             run: () =>
               void sync
                 .revokeDevice(id)

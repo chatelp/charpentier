@@ -139,8 +139,8 @@ describe('a scene that has text is a big piece (docs/DESIGN.md §4.7, rule 5 of 
   });
 });
 
-describe('a phrase longer than the foot (docs/DESIGN.md §4.7)', () => {
-  it('cuts the name, never « Confirmer », the key nor the seconds, and stays in the window', async () => {
+describe('a phrase with a long name (docs/DESIGN.md §4.7)', () => {
+  it('keeps the key and the seconds in the window', async () => {
     const name = 'Ordinateur de bureau de la bibliothèque municipale, salle de lecture '.repeat(3);
     const revoked: string[] = [];
     const sync: SyncService = {
@@ -168,19 +168,21 @@ describe('a phrase longer than the foot (docs/DESIGN.md §4.7)', () => {
       await userEvent.keyboard('appareils{Enter}');
       await screen.findByText(/Ordinateur de bureau/);
       await userEvent.keyboard('{Enter}');
-      const button = await ask('déconnecter Ordinateur');
-      const box = button.getBoundingClientRect();
+      // It asks in the command line (1.43): whole, in the window, the key and the seconds in sight.
+      const option = await screen.findByRole('option', {
+        name: /Confirmer\u00a0: déconnecter Ordinateur/,
+      });
+      const box = option.getBoundingClientRect();
       expect(box.left, `${width}: left`).toBeGreaterThanOrEqual(0);
       expect(box.right, `${width}: right`).toBeLessThanOrEqual(width);
-      const left = button.querySelector('.ch-confirm-left')?.getBoundingClientRect();
-      expect(left?.right, `${width}: seconds`).toBeLessThanOrEqual(box.right);
-      const what = button.querySelector<HTMLElement>('.ch-confirm-what');
-      expect(what && getComputedStyle(what).textOverflow).toBe('ellipsis');
-      expect(what?.getBoundingClientRect().left).toBeGreaterThanOrEqual(box.left);
-      // The name whole is in the tooltip; the button still confirms.
-      expect(button.title).toContain(name.trim());
-      await userEvent.click(button);
-      expect(revoked.splice(0)).toEqual(['b']);
+      for (const part of ['kbd', '.ch-confirm-left'])
+        expect(
+          option.querySelector(part)?.getBoundingClientRect().right,
+          `${width}: ${part}`,
+        ).toBeLessThanOrEqual(box.right);
+      expect(option.textContent).toContain(name.trim());
+      await userEvent.keyboard('{Enter}');
+      await waitFor(() => expect(revoked.splice(0)).toEqual(['b']));
       cleanup();
     }
   }, 40000);

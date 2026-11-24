@@ -1,6 +1,8 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { filterByQuery } from '../commands/registry';
+import { useHostWords } from '../app/host-words';
+import type { Armed } from '../confirm/two-presses';
 import { matchRanges } from './highlight';
 import type { PaletteRequest, PaletteScope, PickItem } from './palette-request';
 import './palette.css';
@@ -22,7 +24,16 @@ export interface CommandPaletteProps {
    */
   readonly recent?: readonly string[];
   readonly suggested?: readonly string[];
+  /** The line closes: something was chosen, or a value given. */
   readonly onClose: () => void;
+  /** Closed without a choice (Échap, its cross, a click elsewhere). */
+  readonly onDismiss: () => void;
+  /**
+   * The two presses (docs/DESIGN.md §4.7, 1.43): what waits for its second press, and how to run
+   * an item that asks for one, the line staying open.
+   */
+  readonly armed: Armed | null;
+  onAsk(run: () => void): void;
 }
 
 const COMMANDS_PREFIX = '>';
@@ -62,8 +73,12 @@ export function CommandPalette({
   recent = [],
   suggested = [],
   onClose,
+  onDismiss,
+  armed,
+  onAsk,
 }: CommandPaletteProps) {
   const { t } = useTranslation();
+  const host = useHostWords();
   const listId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState(
@@ -157,8 +172,11 @@ export function CommandPalette({
 
   const choose = (entry: (typeof flat)[number] | undefined) => {
     if (!entry) return;
+    const pick = () => entry.section.pick(entry.item);
+    // It asks first: the line stays, the item says what will go; the second choice does it.
+    if (entry.item.confirms && armed?.id !== entry.item.confirms) return onAsk(pick);
     onClose();
-    entry.section.pick(entry.item);
+    pick();
   };
 
   // Échap closes the line from anywhere in it: the field, or its cross after ⇥.
@@ -166,7 +184,7 @@ export function CommandPalette({
     if (event.key !== 'Escape') return;
     event.preventDefault();
     event.stopPropagation();
-    onClose();
+    onDismiss();
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -198,7 +216,7 @@ export function CommandPalette({
   const showHint = request.kind === 'commands' && Object.keys(scopes).length > 0;
 
   return (
-    <div className="ch-cmd-backdrop" onMouseDown={onClose}>
+    <div className="ch-cmd-backdrop" onMouseDown={onDismiss}>
       <div
         className="ch-cmdbar ch-tool"
         role="dialog"
@@ -233,10 +251,14 @@ export function CommandPalette({
             onKeyDown={onKeyDown}
           />
           {showHint && <span className="ch-cmd-hint">{t('palette.prefixHint')}</span>}
-          <CloseButton purpose="commandLine" onClose={onClose} />
+          <CloseButton purpose="commandLine" onClose={onDismiss} />
         </div>
         {request.kind !== 'input' && (
-          <div className="ch-cmd-results ch-raised ch-tool">
+          <div
+            className="ch-cmd-results ch-raised ch-tool"
+            // The field keeps the keyboard: after a click, ⏎ is still the line's.
+            onMouseDown={(event) => event.preventDefault()}
+          >
             <ul className="ch-cmd-list" id={listId} role="listbox" aria-label={placeholder}>
               {sections.map((section) => (
                 <li key={section.key} role="presentation">
@@ -248,13 +270,15 @@ export function CommandPalette({
                   <ul role="presentation" className="ch-cmd-list">
                     {section.items.map((item) => {
                       const i = flat.findIndex((e) => e.item === item && e.section === section);
+                      const asks =
+                        item.confirms !== undefined && armed?.id === item.confirms ? armed : null;
                       return (
                         <li
                           key={item.id}
                           id={optionId(i)}
                           role="option"
                           aria-selected={i === activeIndex}
-                          className="ch-cmd-item"
+                          className={`ch-cmd-item${asks ? ' is-asking' : ''}`}
                           onMouseMove={() => setActive(i)}
                           onClick={() => choose(flat[i])}
                         >
@@ -264,10 +288,26 @@ export function CommandPalette({
                             </span>
                           )}
                           <span className="ch-cmd-label">
-                            <Highlighted text={item.label} query={search} />
+                            {asks ? (
+                              t('confirm.phrase', { what: asks.what })
+                            ) : (
+                              <Highlighted text={item.label} query={search} />
+                            )}
                           </span>
-                          {item.detail && <span className="ch-cmd-detail">{item.detail}</span>}
-                          {item.shortcut && <kbd className="ch-cmd-shortcut">{item.shortcut}</kbd>}
+                          {asks && (
+                            <>
+                              <kbd className="ch-cmd-shortcut">{host.key('Enter')}</kbd>
+                              <span className="ch-confirm-left">
+                                {t('confirm.left', { count: asks.left })}
+                              </span>
+                            </>
+                          )}
+                          {!asks && item.detail && (
+                            <span className="ch-cmd-detail">{item.detail}</span>
+                          )}
+                          {!asks && item.shortcut && (
+                            <kbd className="ch-cmd-shortcut">{item.shortcut}</kbd>
+                          )}
                         </li>
                       );
                     })}

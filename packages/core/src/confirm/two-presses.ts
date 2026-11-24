@@ -11,6 +11,8 @@ import { matchesCharacter, type Chord } from '../commands/keybinding';
  */
 export const ARMED_FOR_SECONDS = 3;
 
+export type ConfirmWhere = 'inline' | 'palette' | 'status';
+
 export interface TwoPressRequest {
   /** What is armed (`trash:scene:<id>`): a press on something else arms that instead. */
   readonly id: string;
@@ -18,10 +20,11 @@ export interface TwoPressRequest {
   readonly what: string;
   /**
    * Where the phrase shows: on the button or the menu entry that was pressed
-   * (`inline`), or, from the keyboard without a menu, in the status line with
+   * (`inline`), on the line chosen in the command line, which stays open
+   * (`palette`), or, from the keyboard without a menu, in the status line with
    * a button (`status`).
    */
-  readonly where: 'inline' | 'status';
+  readonly where: ConfirmWhere;
   /** The keys that press again (in the status line: any other key forgets it). */
   readonly keys?: readonly Chord[] | undefined;
   /** The key shown on the status line's button (« ⌫ »). */
@@ -48,13 +51,13 @@ export class TwoPresses {
   readonly armed = (): Armed | null => this.current;
 
   /** Where a request without its own `where` shows its phrase (see `within`). */
-  private where: 'inline' | 'status' = 'status';
+  private where: ConfirmWhere = 'status';
 
   /**
    * Runs `act` with requests showing their phrase `where` by default: a control that runs a
    * command and shows the phrase on its own label says so (synchronously, before it waits).
    */
-  within<T>(where: 'inline' | 'status', act: () => T): T {
+  within<T>(where: ConfirmWhere, act: () => T): T {
     const before = this.where;
     this.where = where;
     try {
@@ -108,8 +111,8 @@ export class TwoPresses {
   }
 
   /**
-   * A key pressed while something is armed: Échap forgets it; in the status
-   * line, any key but the one that presses again forgets it too, in silence.
+   * A key pressed while something is armed: Échap forgets it; in the status line and
+   * in the command line, any key but the one that presses again forgets it too, in silence.
    * (A modifier alone changes nothing.) A key held down is one press: what the
    * host repeats is spent here, it neither presses again nor forgets.
    */
@@ -118,7 +121,12 @@ export class TwoPresses {
     if (!armed || MODIFIERS.has(event.key)) return;
     if (spendRepeat(event)) return;
     if (event.key === 'Escape') return this.disarm();
-    if (armed.where !== 'status') return;
+    if (armed.where === 'inline') return;
+    // In the command line, ⏎ presses again, whatever key armed it elsewhere.
+    if (armed.where === 'palette') {
+      if (event.key !== 'Enter') this.disarm();
+      return;
+    }
     if (!armed.keys?.some((chord) => matchesCharacter(chord, event))) this.disarm();
   }
 
