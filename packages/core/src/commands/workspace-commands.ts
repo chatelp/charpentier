@@ -267,6 +267,15 @@ export { promptRenameChapter, promptRenameScene };
 
 const withEditor = (ctx: WorkspaceContext) => ctx.editor !== null;
 
+/**
+ * The text's commands, the focus back in it at once: TipTap's own `focus()` waits a frame, and
+ * could then take the keyboard from a command line opened meanwhile, its words written in the novel.
+ */
+function textWithFocus(ctx: WorkspaceContext) {
+  ctx.editor?.view.focus();
+  return ctx.editor?.commands;
+}
+
 export const workspaceCommands: readonly WorkspaceCommand[] = [
   {
     id: 'openPalette',
@@ -510,21 +519,21 @@ export const workspaceCommands: readonly WorkspaceCommand[] = [
     scope: 'editor',
     keybinding: 'Mod-i',
     isEnabled: withEditor,
-    run: (ctx) => void ctx.editor?.chain().focus().toggleItalic().run(),
+    run: (ctx) => void textWithFocus(ctx)?.toggleItalic(),
   },
   {
     id: 'insertSceneBreak',
     scope: 'editor',
     keybinding: 'Mod-Shift-Enter',
     isEnabled: withEditor,
-    run: (ctx) => void ctx.editor?.chain().focus().insertSceneBreak().run(),
+    run: (ctx) => void textWithFocus(ctx)?.insertSceneBreak(),
   },
   {
     id: 'toggleBlockquote',
     scope: 'editor',
     keybinding: 'Mod-Shift-b',
     isEnabled: withEditor,
-    run: (ctx) => void ctx.editor?.chain().focus().toggleBlockquote().run(),
+    run: (ctx) => void textWithFocus(ctx)?.toggleBlockquote(),
   },
   {
     id: 'undo',
@@ -533,7 +542,7 @@ export const workspaceCommands: readonly WorkspaceCommand[] = [
     isEnabled: withEditor,
     // What just went to the trash comes back first (from the menu too); else the text's undo.
     run: (ctx) => {
-      if (!ctx.undoOffered()) ctx.editor?.chain().focus().undo().run();
+      if (!ctx.undoOffered()) textWithFocus(ctx)?.undo();
     },
   },
   {
@@ -541,7 +550,7 @@ export const workspaceCommands: readonly WorkspaceCommand[] = [
     scope: 'editor',
     keybinding: 'Mod-Shift-z',
     isEnabled: withEditor,
-    run: (ctx) => void ctx.editor?.chain().focus().redo().run(),
+    run: (ctx) => void textWithFocus(ctx)?.redo(),
   },
 ];
 

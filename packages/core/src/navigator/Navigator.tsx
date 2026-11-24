@@ -104,6 +104,10 @@ function flatten(outline: readonly OutlineChapter[]): Item[] {
   ]);
 }
 
+/** The lines ↑ ↓ walk: chapters, scenes, and the variants of the open scene under it. */
+const LINE = '[role="treeitem"], .ch-nav-variant';
+const linesOf = (list: HTMLElement) => [...list.querySelectorAll<HTMLElement>(LINE)];
+
 /**
  * Outline of the manuscript: chapters and scenes. Fully usable from the
  * keyboard (↑↓, ↵, ⌥↑↓, R, N, ⇧N, ⌫, Échap) and by drag and drop.
@@ -122,6 +126,7 @@ export function Navigator({ ctx, outline, active, onClose, signals }: NavigatorP
   const outOfVersion = versionName ? listScenesOutOfVersion(ctx.root) : [];
   const [showOut, setShowOut] = useState(false);
   const elements = useRef(new Map<string, HTMLLIElement>());
+  const tree = useRef<HTMLUListElement>(null);
 
   const focused =
     items.find((i) => i.id === focusedId) ?? items.find((i) => i.id === ctx.sceneId) ?? items[0];
@@ -143,6 +148,13 @@ export function Navigator({ ctx, outline, active, onClose, signals }: NavigatorP
     if (!id) return;
     setFocusedId(id);
     setFocusTick((n) => n + 1);
+  };
+
+  /** A line of the drawer: a variant's holds the focus itself, the others take it by their id. */
+  const focusLine = (line: HTMLElement | undefined) => {
+    const item = [...elements.current].find(([, element]) => element === line);
+    if (item) focusItem(item[0]);
+    else line?.focus();
   };
 
   const neighbourId = (item: Item) => {
@@ -226,7 +238,6 @@ export function Navigator({ ctx, outline, active, onClose, signals }: NavigatorP
 
   const onKeyDown = (event: KeyboardEvent<HTMLUListElement>) => {
     if (!focused) return;
-    const index = items.findIndex((i) => i.id === focused.id);
     const key = event.key;
     const handled = () => {
       event.preventDefault();
@@ -249,21 +260,26 @@ export function Navigator({ ctx, outline, active, onClose, signals }: NavigatorP
       promptRenameVariant(ctx, variantId);
     } else if ((key === 'ArrowDown' || key === 'ArrowUp') && event.altKey) {
       handled();
+      // Moving is the scene's: not from the line of one of its variants (rule 6).
+      if (variantLine) return;
       const direction = key === 'ArrowDown' ? 1 : -1;
       if (focused.kind === 'scene') moveSceneStep(ctx.root, focused.id, direction);
       else moveChapterStep(ctx.root, focused.id, direction);
       focusItem(focused.id);
-    } else if (key === 'ArrowDown') {
+    } else if ((key === 'ArrowDown' || key === 'ArrowUp') && !event.altKey) {
       handled();
+      const lines = linesOf(event.currentTarget);
+      const from =
+        (event.target as HTMLElement).closest<HTMLElement>(LINE) ??
+        elements.current.get(focused.id);
+      const at = from ? lines.indexOf(from) : -1;
+      const next = lines[at + (key === 'ArrowDown' ? 1 : -1)];
       // From the last line, down to the trash at the foot (DESIGN §4.7).
       const foot =
-        index === items.length - 1 &&
-        event.currentTarget.parentElement?.querySelector<HTMLElement>('[data-trash-row]');
-      if (foot) foot.focus();
-      else focusItem(items[Math.min(index + 1, items.length - 1)]?.id);
-    } else if (key === 'ArrowUp') {
-      handled();
-      focusItem(items[Math.max(index - 1, 0)]?.id);
+        key === 'ArrowDown' && !next
+          ? event.currentTarget.parentElement?.querySelector<HTMLElement>('[data-trash-row]')
+          : null;
+      focusLine(foot ?? next);
     } else if (key === 'Home') {
       handled();
       focusItem(items[0]?.id);
@@ -438,6 +454,7 @@ export function Navigator({ ctx, outline, active, onClose, signals }: NavigatorP
         </button>
       </div>
       <ul
+        ref={tree}
         className="ch-nav-tree"
         role="tree"
         aria-label={t('navigator.label')}
@@ -624,7 +641,7 @@ export function Navigator({ ctx, outline, active, onClose, signals }: NavigatorP
         lines={manuscriptTrash(ctx)}
         listName={t('trash.list.manuscript')}
         onRestored={(line) => focusItem(line.back)}
-        onLeave={() => focusItem(items.at(-1)?.id)}
+        onLeave={() => focusLine(tree.current ? linesOf(tree.current).at(-1) : undefined)}
         onEscape={onClose}
       />
       <p className="ch-nav-hint">

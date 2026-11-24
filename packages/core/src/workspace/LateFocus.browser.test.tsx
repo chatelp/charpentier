@@ -1,9 +1,11 @@
 import { cleanup, screen, waitFor } from '@testing-library/react';
 import { userEvent } from 'vitest/browser';
 import { afterEach, expect, it } from 'vitest';
+import fr from '../i18n/locales/fr.json';
 import { startApp } from '../conformance/app-under-test';
 import '../styles/base.css';
 
+const createI18nTitle = (id: keyof typeof fr.commands) => fr.commands[id];
 const frame = window.requestAnimationFrame;
 afterEach(() => {
   window.requestAnimationFrame = frame;
@@ -62,3 +64,38 @@ it('the text of a scene just opened has the focus, its cursor at the end', async
     'Il pleuvait. Encore.',
   );
 });
+
+// The drawer open, the command line gives the focus to nobody when it closes: a command that acts
+// on the text takes it there. At once, or it takes it from the command line opened next.
+for (const [name, words] of [
+  ['toggleItalic', 'italique'],
+  ['toggleBlockquote', 'citation'],
+  ['insertSceneBreak', 'separateur'],
+  ['undo', 'annuler'],
+  ['redo', 'retablir'],
+] as const)
+  it(`${name}, run from a panel, never takes the focus from the next command line`, async () => {
+    await startApp();
+    await textFocused();
+    await userEvent.keyboard('Il pleuvait.');
+    await userEvent.keyboard('{ControlOrMeta>}j{/ControlOrMeta}');
+    await screen.findByRole('tree', { name: 'Plan du manuscrit' });
+    await waitFor(() => expect(document.activeElement?.getAttribute('role')).toBe('treeitem'));
+    window.requestAnimationFrame = (callback) =>
+      window.setTimeout(() => callback(performance.now()), 400);
+    await userEvent.keyboard('{ControlOrMeta>}k{/ControlOrMeta}');
+    await screen.findByRole('dialog', { name: 'Ligne de commande' });
+    const title = createI18nTitle(name);
+    await userEvent.keyboard(words);
+    expect(screen.getByRole('option', { selected: true }).textContent).toContain(title);
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    const text = screen.getByRole('textbox', { name: 'Texte de la scène' });
+    await userEvent.keyboard('{ControlOrMeta>}k{/ControlOrMeta}');
+    await screen.findByRole('dialog', { name: 'Ligne de commande' });
+    const before = text.textContent;
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    await userEvent.keyboard('zzz');
+    expect(document.activeElement?.getAttribute('role')).toBe('combobox');
+    expect(text.textContent).toBe(before);
+  });

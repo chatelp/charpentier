@@ -67,6 +67,8 @@ export const systemUi = {
     set({ ...ui, open: ui.open === segment ? null : segment, armed: null }),
   /** Opens the menu with « Redémarrer… » or « Éteindre… » armed: ⏎ confirms. */
   confirm: (what: 'reboot' | 'off') => set({ ...ui, open: 'systeme', armed: what }),
+  /** The panel took what a command asked of it: asked once, armed once. */
+  answered: () => set({ ...ui, armed: null }),
   /** Puts the focus on the line (⊞ alone). */
   focusLine: () => set({ ...ui, focus: ui.focus + 1 }),
   print: (scope: UiState['print']) => set({ ...ui, open: null, print: scope }),

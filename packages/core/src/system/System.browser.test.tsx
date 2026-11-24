@@ -571,6 +571,66 @@ describe('the system line of the X250 (phase 5.3)', () => {
   });
 });
 
+describe('« Éteindre… » asked from the command line (DESIGN §5.0, rule 5)', () => {
+  const asked = async () => {
+    const system = createSimulatedSystem();
+    await start(system);
+    await userEvent.keyboard(mod('k'));
+    await userEvent.keyboard(':eteindre{Enter}');
+    const off = await screen.findByRole('button', { name: /Confirmer l’extinction/ });
+    return { system, off };
+  };
+
+  it('is asked once: the panel that comes back is not armed, and the text has the focus', async () => {
+    const first = await asked();
+    await waitFor(() => expect(document.activeElement).toBe(first.off));
+    // Another project: the line and its panel come back, open.
+    cleanup();
+    const again = createSimulatedSystem();
+    const { editor } = await start(again);
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    expect(screen.queryByRole('button', { name: /Confirmer l’extinction/ })).toBeNull();
+    expect(document.activeElement).toBe(editor);
+    expect([first.system, again].flatMap((s) => s.simulate.calls)).not.toContain('powerOff');
+  });
+
+  it('asked again once forgotten, it is armed again', async () => {
+    const { system, off } = await asked();
+    await waitFor(() => expect(document.activeElement).toBe(off));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: /Confirmer l’extinction/ })).toBeNull(),
+    );
+    await userEvent.keyboard(mod('k'));
+    await userEvent.keyboard(':eteindre{Enter}');
+    const armed = await screen.findByRole('button', { name: /Confirmer l’extinction/ });
+    await waitFor(() => expect(document.activeElement).toBe(armed));
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(system.simulate.calls).toContain('powerOff'));
+  });
+
+  it('never takes the keyboard from a command line opened meanwhile: ⏎ there turns nothing off', async () => {
+    const frame = window.requestAnimationFrame;
+    try {
+      const system = createSimulatedSystem();
+      await start(system);
+      await userEvent.keyboard(mod('k'));
+      window.requestAnimationFrame = (callback) =>
+        window.setTimeout(() => callback(performance.now()), 400);
+      await userEvent.keyboard(':eteindre{Enter}');
+      await screen.findByRole('button', { name: /Confirmer l’extinction/ });
+      await userEvent.keyboard(mod('k'));
+      await screen.findByRole('dialog', { name: 'Ligne de commande' });
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      expect(document.activeElement?.getAttribute('role')).toBe('combobox');
+      await userEvent.keyboard('zzz{Enter}');
+      expect(system.simulate.calls).not.toContain('powerOff');
+    } finally {
+      window.requestAnimationFrame = frame;
+    }
+  });
+});
+
 describe('the updates of the X250 (phase 5.12)', () => {
   it('announces the version ready, opens its panel with ⊞R, and restarts on a second ⏎', async () => {
     const system = createSimulatedSystem();

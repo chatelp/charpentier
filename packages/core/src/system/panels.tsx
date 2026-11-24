@@ -156,9 +156,13 @@ function MenuPanel({ ctx, onDone }: PanelProps) {
   useEffect(() => {
     if (!asked) return;
     setArmed(asked);
-    requestAnimationFrame(() =>
-      document.querySelector<HTMLElement>('.ch-sys-panel-body .is-armed')?.focus(),
-    );
+    // Asked once: a panel that comes back (another project) is not armed by it.
+    systemUi.answered();
+    requestAnimationFrame(() => {
+      // Never from a command line opened meanwhile: its ⏎ would confirm.
+      if (document.activeElement?.closest('.ch-cmdbar')) return;
+      document.querySelector<HTMLElement>('.ch-sys-panel-body .is-armed')?.focus();
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only when a command asks
   }, [asked]);
   const key = (id: string) => ctx?.shortcutLabel(id);

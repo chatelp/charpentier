@@ -1130,8 +1130,11 @@ export function ProjectWorkspace({
       onFixText={() => {
         const placed =
           editor && placedSignals(editor.state).find((p) => p.signal.id === noteSignalId);
-        if (editor && placed)
-          editor.chain().focus().setTextSelection({ from: placed.from, to: placed.to }).run();
+        if (editor && placed) {
+          editor.chain().setTextSelection({ from: placed.from, to: placed.to }).run();
+          // At once (TipTap's focus waits a frame).
+          editor.view.focus();
+        }
       }}
       onUpdateSheet={(ref) =>
         ctx.openAtelier({
