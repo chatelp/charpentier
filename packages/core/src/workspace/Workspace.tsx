@@ -96,6 +96,8 @@ interface StatusLine {
   readonly text: string;
   /** The name of « Annuler », when the line offers a way back. */
   readonly undoLabel?: string;
+  /** The thing's name in `text`, the only part that is cut. */
+  readonly name?: string | undefined;
 }
 
 const STATUS_MS = 4000;
@@ -614,7 +616,12 @@ export function ProjectWorkspace({
   const [offers, setOffers] = useState<readonly UndoOffer[]>([]);
   const offerUndo = (offer: UndoOffer) => {
     setOffers((list) => [...list, offer]);
-    setStatus({ key: ++paletteSequence, text: offer.message, undoLabel: offer.label });
+    setStatus({
+      key: ++paletteSequence,
+      text: offer.message,
+      undoLabel: offer.label,
+      name: offer.name,
+    });
   };
   const undoOffered = () => {
     const offer = offers.at(-1);
@@ -649,7 +656,7 @@ export function ProjectWorkspace({
     const later: ReturnType<typeof setTimeout>[] = [];
     const onGesture = (event: Event) => {
       if (event instanceof KeyboardEvent && MODIFIER_KEYS.has(event.key)) return;
-      if (event.target instanceof Element && event.target.closest('.ch-footer-status')) return;
+      if (event.target instanceof Element && event.target.closest('.ch-footer-posed')) return;
       later.push(setTimeout(() => setStatus((line) => (line?.key === shown ? null : line)), 0));
     };
     document.addEventListener('keydown', onGesture, true);
@@ -1461,6 +1468,7 @@ export function ProjectWorkspace({
             ? undefined
             : {
                 label: status.undoLabel,
+                name: status.name,
                 shortcut: registry.shortcutLabel('undo'),
                 keys: undoChord && ariaKeyShortcut(undoChord),
                 // Exactly what ⌘Z does (DESIGN §5.0, rule 2).

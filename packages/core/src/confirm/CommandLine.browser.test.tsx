@@ -80,14 +80,18 @@ describe('the two presses from the command line (docs/DESIGN.md §4.7, 1.43)', (
     expect(scenes()).toEqual(before);
   }, 15000);
 
-  it('closed while it asks, it has forgotten', async () => {
+  it('Échap forgets, and closes at the next one', async () => {
     const { text, editor, scenes, before } = await asked();
     await userEvent.keyboard('{Enter}');
     await asking();
+    // One Échap, one thing: it forgets, the line stays; the next one closes it.
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByText(/Confirmer/)).toBeNull());
+    await bar();
+    expect(document.activeElement?.getAttribute('role')).toBe('combobox');
     await userEvent.keyboard('{Escape}');
     await noBar();
     await textFocused();
-    expect(screen.queryByText(/Confirmer/)).toBeNull();
     await userEvent.keyboard('{ControlOrMeta>}k{/ControlOrMeta}');
     await bar();
     await userEvent.keyboard('scene corbeille{Enter}');

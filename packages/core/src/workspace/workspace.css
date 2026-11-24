@@ -196,18 +196,107 @@
   text-overflow: ellipsis;
 }
 
-/* The state line and, after a trash, its one button (DESIGN §4.7, 1.37). */
+/* The state line, when it has no button (DESIGN §4.7, 1.43). */
 .ch-footer-right > .ch-footer-status {
   display: flex;
   flex-shrink: 1;
   align-items: center;
-  gap: 8px;
   min-width: 0;
 }
 
-/* Over it, the pointer holds the message: it takes the pointer while it offers « Annuler ». */
-.ch-footer-status.has-undo {
+/*
+ * The state line that carries a button (DESIGN §4.7 « La ligne posée »): above the foot, on its
+ * right, as wide as its phrase and at most as the foot, over the page's text.
+ */
+.ch-footer-posed {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 6px);
+  left: 0;
+  display: flex;
+  justify-content: flex-end;
+  container-type: inline-size;
+}
+
+.ch-footer .ch-posed {
+  display: flex;
+  box-sizing: border-box;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 30px;
+  padding: 0 10px;
+  border-radius: 9px;
+  color: var(--ch-ink-2);
+  background: var(--ch-bg);
+  box-shadow: var(--ch-raise-s);
+  font: 12px var(--ch-font-ui);
+  white-space: nowrap;
   pointer-events: auto;
+  animation: ch-posed-in var(--ch-dur-note) var(--ch-ease);
+}
+
+@keyframes ch-posed-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.ch-posed > .ch-footer-undo {
+  padding-block: 2px;
+}
+
+.ch-posed-phrase,
+.ch-posed-text {
+  display: flex;
+  flex: 0 1 auto;
+  min-width: 0;
+  white-space: pre;
+}
+
+/* The name alone is cut, four characters at least. */
+.ch-posed-name {
+  flex: 0 1 auto;
+  min-width: 4ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ch-posed > kbd,
+.ch-posed > .ch-confirm-left,
+.ch-posed > button,
+.ch-posed-text > span:not(.ch-posed-name) {
+  flex: none;
+}
+
+/* Armed: the whole plate is the button, lit (« Les deux appuis »). */
+.ch-footer .ch-footer-confirm {
+  color: var(--ch-ink);
+  background: var(--ch-lit-bg);
+  box-shadow: var(--ch-lit);
+  font-weight: 500;
+}
+
+/* A foot too narrow for the rest of the phrase: two lines, the plate grows upward. */
+@container (max-width: 350px) {
+  .ch-footer .ch-posed,
+  .ch-posed-phrase,
+  .ch-posed-text {
+    white-space: normal;
+  }
+
+  .ch-footer .ch-posed {
+    padding-block: 6px;
+  }
+
+  .ch-posed-text {
+    display: inline;
+  }
+
+  .ch-posed-name {
+    display: inline;
+  }
 }
 
 /* A flat button of the footer, its label in the ink, its key faint, lit while held. */
@@ -219,35 +308,6 @@
   background: var(--ch-lit-bg);
   box-shadow: var(--ch-lit);
   transition: none;
-}
-
-/*
- * The second press waits (DESIGN §4.7 « Les deux appuis »): the phrase lit, the seconds faint,
- * just above the foot on its right, whole on one line (the foot's column is narrow).
- */
-.ch-footer-button.ch-footer-confirm {
-  position: absolute;
-  right: 0;
-  bottom: calc(100% + 6px);
-  display: flex;
-  align-items: baseline;
-  max-width: 100%;
-  color: var(--ch-ink);
-  background: var(--ch-lit-bg);
-  box-shadow: var(--ch-lit);
-  white-space: nowrap;
-  pointer-events: auto;
-}
-
-/* A long name is cut at its end: « Confirmer », the key and the seconds stay whole. */
-.ch-confirm-what {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.ch-footer-confirm > :not(.ch-confirm-what) {
-  flex: none;
 }
 
 /* A state message is read whole: a long one (a common scene's warning) wraps, right-aligned. */

@@ -20,6 +20,8 @@ export type WorkspaceView =
 export interface UndoOffer {
   /** What went, by its kind and name (« Scène « Le quai » mise à la corbeille. »). */
   readonly message: string;
+  /** Its name in the message, between « »: the only part cut when room is short. */
+  readonly name: string;
   /** The name of the « Annuler » button (« Annuler la mise à la corbeille de la scène Le quai »). */
   readonly label: string;
   /** Brings it back to its place. */

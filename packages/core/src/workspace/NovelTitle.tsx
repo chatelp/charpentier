@@ -260,6 +260,7 @@ export function NovelSheet({
     const name = versionLabel(t, version);
     ctx.offerUndo({
       message: t('versions.trashed', { version: name }),
+      name,
       label: t('status.undoTrash.version', { name }),
       undo: () => {
         restoreVersion(ctx.root, version.id);

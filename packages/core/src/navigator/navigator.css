@@ -172,6 +172,20 @@
   font-size: 13px;
 }
 
+/* Waiting for its second ⌫: the key muted, the seconds in the ink (DESIGN §4.7, 1.43). */
+.ch-nav-armed {
+  align-items: baseline;
+  color: var(--ch-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* (The sign of a key comes from a taller font: the line keeps its height.) */
+.ch-nav-armed kbd {
+  height: 1em;
+  overflow: visible;
+  color: var(--ch-muted);
+}
+
 .ch-nav-dots {
   color: var(--ch-mentor);
   letter-spacing: 1px;

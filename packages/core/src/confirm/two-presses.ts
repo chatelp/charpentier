@@ -50,6 +50,9 @@ export class TwoPresses {
 
   readonly armed = (): Armed | null => this.current;
 
+  /** Échap has just forgotten what was armed, and is not released yet. */
+  private forgot = false;
+
   /** Where a request without its own `where` shows its phrase (see `within`). */
   private where: ConfirmWhere = 'status';
 
@@ -111,16 +114,24 @@ export class TwoPresses {
   }
 
   /**
-   * A key pressed while something is armed: Échap forgets it; in the status line and
+   * A key pressed while something is armed: Échap forgets it and does nothing more (1.43: the
+   * menu, the drawer, the sheet, the line stay; the next one closes); in the status line and
    * in the command line, any key but the one that presses again forgets it too, in silence.
    * (A modifier alone changes nothing.) A key held down is one press: what the
    * host repeats is spent here, it neither presses again nor forgets.
    */
   keyDown(event: KeyboardEvent): void {
     const armed = this.current;
+    // The Échap that forgot, still held: it closes nothing either.
+    if (!event.repeat) this.forgot = false;
+    else if (this.forgot && event.key === 'Escape') return spend(event);
     if (!armed || MODIFIERS.has(event.key)) return;
     if (spendRepeat(event)) return;
-    if (event.key === 'Escape') return this.disarm();
+    if (event.key === 'Escape') {
+      spend(event);
+      this.forgot = true;
+      return this.disarm();
+    }
     if (armed.where === 'inline') return;
     // In the command line, ⏎ presses again, whatever key armed it elsewhere.
     if (armed.where === 'palette') {
@@ -142,9 +153,21 @@ export class TwoPresses {
  */
 export function spendRepeat(event: KeyboardEvent): boolean {
   if (!event.repeat || event.key.startsWith('Arrow')) return false;
+  spend(event);
+  return true;
+}
+
+/** Nothing under this key hears it. */
+function spend(event: KeyboardEvent): void {
   event.preventDefault();
   event.stopPropagation();
-  return true;
+}
+
+/** Keys of a plain armed state (the X250's items): a held key is spent, Échap only forgets. */
+export function armedKey(event: KeyboardEvent, forget: () => void): void {
+  if (spendRepeat(event) || event.key !== 'Escape') return;
+  spend(event);
+  forget();
 }
 
 const MODIFIERS = new Set(['Shift', 'Control', 'Alt', 'Meta', 'AltGraph', 'CapsLock']);

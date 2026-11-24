@@ -268,6 +268,7 @@ export function trashVariantOfScene(ctx: Ctx, variantId?: string): void {
   trashVariant(ctx.root, current.id, doomed);
   ctx.offerUndo({
     message: ctx.t('status.variantTrashed', { name }),
+    name,
     label: ctx.t('status.undoTrash.variant', { name }),
     undo: () => {
       restoreVariant(ctx.root, current.id, doomed);

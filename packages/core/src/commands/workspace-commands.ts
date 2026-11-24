@@ -134,6 +134,7 @@ export function trashSceneAndMove(ctx: WorkspaceContext, sceneId: string): void 
   if (open) ctx.openScene(next ?? made?.id ?? sceneId);
   ctx.offerUndo({
     message: ctx.t('status.sceneTrashed', { title }),
+    name: title,
     label: ctx.t('status.undoTrash.scene', { name: title }),
     undo: () => {
       restoreSceneWithChapter(ctx.root, sceneId);
@@ -157,6 +158,7 @@ export function trashChapterAndMove(ctx: WorkspaceContext, chapterId: string): v
       inside.size === 0
         ? ctx.t('status.chapterTrashed', { title })
         : ctx.t('status.chapterWithScenesTrashed', { title, count: inside.size }),
+    name: title,
     label: ctx.t('status.undoTrash.chapter', { name: title }),
     undo: () => {
       restoreChapter(ctx.root, chapterId);

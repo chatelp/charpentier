@@ -89,6 +89,7 @@ export function trashEntityAndNotify(
   trashEntity(ctx.root, module, entityId);
   ctx.offerUndo({
     message: ctx.t('status.entityTrashed', { title }),
+    name: title,
     label: ctx.t('status.undoTrash.entity', { name: title }),
     undo: () => restoreEntity(ctx.root, module, entityId),
   });

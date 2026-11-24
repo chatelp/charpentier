@@ -3,7 +3,15 @@ import { parseKeybinding } from '../commands/keybinding';
 import { TwoPresses, type TwoPressRequest } from './two-presses';
 
 const key = (key: string) =>
-  ({ key, metaKey: false, ctrlKey: false, altKey: false, shiftKey: false }) as KeyboardEvent;
+  ({
+    key,
+    metaKey: false,
+    ctrlKey: false,
+    altKey: false,
+    shiftKey: false,
+    preventDefault: () => {},
+    stopPropagation: () => {},
+  }) as KeyboardEvent;
 
 describe('the two presses (DESIGN §4.7, rule 5)', () => {
   beforeEach(() => vi.useFakeTimers());

@@ -1,6 +1,7 @@
 import type { OutlineChapter, SceneInfo } from '@charpentier/schema';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { CutPhrase, PosedLine } from './PosedLine';
 import { toRoman } from './roman';
 
 export interface SceneChromeProps {
@@ -130,11 +131,13 @@ export function WritingFooter({
   readonly status: string | undefined;
   /**
    * After a trash, the line's one button (docs/DESIGN.md §4.7, 1.37): « Annuler » and the
-   * undo key, named for what it brings back.
+   * undo key, named for what it brings back. The line then sits above the foot (1.43).
    */
   readonly undo?:
     | {
         readonly label: string;
+        /** The thing's name, in the message: the only part that is cut. */
+        readonly name: string | undefined;
         readonly shortcut: string | undefined;
         /** The key, as `aria-keyshortcuts` says it. */
         readonly keys: string | undefined;
@@ -143,7 +146,7 @@ export function WritingFooter({
     | undefined;
   /**
    * A big piece armed from the keyboard (docs/DESIGN.md §4.7 « Les deux appuis »): the status
-   * line carries the phrase as a button, its key and the seconds left; the button confirms.
+   * line, above the foot, is a button, its key and the seconds left; it confirms.
    */
   readonly confirm?:
     | {
@@ -170,6 +173,7 @@ export function WritingFooter({
   readonly work?: { readonly text: string; readonly onClick: () => void } | undefined;
 }) {
   const { t } = useTranslation();
+  const posed = confirm !== undefined || undo !== undefined;
   return (
     <footer className="ch-footer">
       <span className="ch-footer-words">
@@ -193,35 +197,10 @@ export function WritingFooter({
             {work.text}
           </button>
         )}
-        <span
-          className={`ch-footer-status${undo ? ' has-undo' : ''}`}
-          onPointerEnter={() => onStatusHover?.(true)}
-          onPointerMove={() => onStatusHover?.(true)}
-          onPointerLeave={() => onStatusHover?.(false)}
-        >
+        <span className="ch-footer-status">
           <span role="status" aria-live="polite" className="ch-footer-fit">
-            {confirm ? (
-              <span className="ch-visually-hidden">
-                {t('confirm.again', { what: confirm.what })}
-              </span>
-            ) : (
-              status
-            )}
+            {!posed && status}
           </span>
-          {!confirm && undo && (
-            <button
-              type="button"
-              className="ch-footer-button ch-footer-undo"
-              aria-label={undo.label}
-              aria-keyshortcuts={undo.keys}
-              // The focus stays where the author was, as with the key.
-              onMouseDown={(event) => event.preventDefault()}
-              onClick={undo.onUndo}
-            >
-              {t('status.undo')}
-              {undo.shortcut && <kbd>{undo.shortcut}</kbd>}
-            </button>
-          )}
         </span>
         {onEnterKey ? (
           <button
@@ -257,22 +236,50 @@ export function WritingFooter({
         {features}
         {tools}
       </span>
-      {confirm && (
-        // Above the foot, right-aligned, whole on one line: the foot's column is too narrow
-        // for the phrase once a panel is open (DESIGN §4.7 « Les deux appuis »).
-        <button
-          type="button"
-          className="ch-footer-button ch-footer-confirm"
-          title={t('confirm.ask', { what: confirm.what })}
-          aria-keyshortcuts={confirm.keys}
-          onMouseDown={(event) => event.preventDefault()}
-          onClick={confirm.onConfirm}
-        >
-          <span className="ch-confirm-what">{t('confirm.ask', { what: confirm.what })}</span>
-          {confirm.shortcut && <kbd>{confirm.shortcut}</kbd>}
-          <span className="ch-confirm-left">{t('confirm.left', { count: confirm.left })}</span>
-        </button>
-      )}
+      <PosedLine
+        said={confirm ? t('confirm.again', { what: confirm.what }) : undo ? (status ?? '') : ''}
+      >
+        {confirm ? (
+          // The whole plate is the button (DESIGN §4.7 « Les deux appuis »).
+          <button
+            type="button"
+            className="ch-footer-button ch-posed ch-footer-confirm"
+            title={t('confirm.ask', { what: confirm.what })}
+            aria-keyshortcuts={confirm.keys}
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={confirm.onConfirm}
+          >
+            <CutPhrase text={t('confirm.ask', { what: confirm.what })} />
+            {confirm.shortcut && <kbd>{confirm.shortcut}</kbd>}
+            <span className="ch-confirm-left">{t('confirm.left', { count: confirm.left })}</span>
+          </button>
+        ) : (
+          undo && (
+            <div
+              className="ch-posed ch-posed-undo"
+              onPointerEnter={() => onStatusHover?.(true)}
+              onPointerMove={() => onStatusHover?.(true)}
+              onPointerLeave={() => onStatusHover?.(false)}
+            >
+              <span className="ch-posed-phrase" aria-hidden="true" title={status}>
+                <CutPhrase text={status ?? ''} name={undo.name} />
+              </span>
+              <button
+                type="button"
+                className="ch-footer-button ch-footer-undo"
+                aria-label={undo.label}
+                aria-keyshortcuts={undo.keys}
+                // The focus stays where the author was, as with the key.
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={undo.onUndo}
+              >
+                {t('status.undo')}
+                {undo.shortcut && <kbd>{undo.shortcut}</kbd>}
+              </button>
+            </div>
+          )
+        )}
+      </PosedLine>
     </footer>
   );
 }

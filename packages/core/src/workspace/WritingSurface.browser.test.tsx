@@ -110,7 +110,7 @@ describe('writing surface', () => {
     await userEvent.keyboard(mod('k'));
     await userEvent.keyboard('changer de theme{Enter}');
     await waitFor(() => expect(document.documentElement.dataset['theme']).toBe('light'));
-    expect(screen.getByRole('status').textContent).toBe('Thème clair.');
+    expect((await screen.findByText('Thème clair.')).getAttribute('role')).toBe('status');
   });
 
   it('keeps the focus in a command line opened right after leaving the drawer', async () => {

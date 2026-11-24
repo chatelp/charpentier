@@ -14,7 +14,7 @@ import { Gauge, Keys, Slider } from './controls';
 import { duration, hours, minutesSince, postSoon, shortDate } from './panels';
 import { beforeRestart } from './restart';
 import { useSystemState } from './system-store';
-import { spendRepeat, useTwoPresses } from '../confirm/two-presses';
+import { armedKey, useTwoPresses } from '../confirm/two-presses';
 
 /**
  * The twelve sections of the system's settings (docs/DESIGN.md §4.12), on
@@ -625,7 +625,7 @@ function useArmed(): [boolean, (act: () => void) => void] {
     if (!armed) return;
     const timer = setTimeout(() => setArmed(false), 3000);
     // A key held down is one press: what the host repeats does not confirm.
-    const held = (event: KeyboardEvent) => void spendRepeat(event);
+    const held = (event: KeyboardEvent) => armedKey(event, () => setArmed(false));
     window.addEventListener('keydown', held, true);
     return () => {
       clearTimeout(timer);

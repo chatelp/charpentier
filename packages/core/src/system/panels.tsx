@@ -12,7 +12,7 @@ import { featureText } from '../features/feature';
 import { CloseButton } from '../icons/CloseButton';
 import type { WorkspaceContext } from '../workspace/workspace-context';
 import { Gauge, Keys, PanelRow, Signal, Slider } from './controls';
-import { spendRepeat } from '../confirm/two-presses';
+import { armedKey } from '../confirm/two-presses';
 import { beforeRestart } from './restart';
 import { systemUi, useJournal, useSystemState, useSystemUi, type Segment } from './system-store';
 
@@ -35,7 +35,7 @@ function useArmed(
     if (!armed) return;
     const timer = setTimeout(() => setArmed(null), 3000);
     // A key held down is one press: what the host repeats does not confirm.
-    const held = (event: KeyboardEvent) => void spendRepeat(event);
+    const held = (event: KeyboardEvent) => armedKey(event, () => setArmed(null));
     window.addEventListener('keydown', held, true);
     return () => {
       clearTimeout(timer);

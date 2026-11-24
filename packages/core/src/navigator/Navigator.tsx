@@ -44,6 +44,7 @@ import {
   promptRenameScene,
   askTrashChapter,
   askTrashScene,
+  trashArmId,
 } from '../commands/workspace-commands';
 import type { WorkspaceContext } from '../workspace/workspace-context';
 import './navigator.css';
@@ -501,14 +502,22 @@ export function Navigator({ ctx, outline, active, onClose, signals }: NavigatorP
                       <span className="ch-nav-own">{versionName}</span>
                     )}
                 </span>
-                <span className="ch-nav-meta" aria-hidden="true">
-                  {dots > 0 && <span className="ch-nav-dots">{'•'.repeat(dots)}</span>}
-                  {count !== undefined && count > 0 && <span>{number.format(count)}</span>}
-                  {count === 0 && item.kind === 'scene' && <span>—</span>}
-                  {scene && scene.variants.length > 1 && (
-                    <span>{t('navigator.variantCount', { count: scene.variants.length })}</span>
-                  )}
-                </span>
+                {/* Armed from its line: its key and the seconds, in place of its words (DESIGN 1.43). */}
+                {ctx.armed?.where === 'status' && ctx.armed.id === trashArmId(item.id) ? (
+                  <span className="ch-nav-meta ch-nav-armed" aria-hidden="true">
+                    <kbd>{ctx.armed.shortcut}</kbd>
+                    <span>{t('confirm.left', { count: ctx.armed.left })}</span>
+                  </span>
+                ) : (
+                  <span className="ch-nav-meta" aria-hidden="true">
+                    {dots > 0 && <span className="ch-nav-dots">{'•'.repeat(dots)}</span>}
+                    {count !== undefined && count > 0 && <span>{number.format(count)}</span>}
+                    {count === 0 && item.kind === 'scene' && <span>—</span>}
+                    {scene && scene.variants.length > 1 && (
+                      <span>{t('navigator.variantCount', { count: scene.variants.length })}</span>
+                    )}
+                  </span>
+                )}
                 <MoreButton
                   label={t(`thingMenu.actionsOf.${item.kind}`, { name: item.title })}
                   shortcut={menuKey}
