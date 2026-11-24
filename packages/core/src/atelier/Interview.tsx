@@ -509,10 +509,10 @@ export function Interview({
               disabled={waiting}
               onClick={() => ask({ pass: true, section })}
             >
-              {t('interview.pass')} <kbd>⇥</kbd>
+              {t('interview.pass')} <kbd>{host.key('Tab')}</kbd>
             </button>
             <button type="button" className="ch-btn" disabled={waiting} onClick={leaveForLater}>
-              {t('interview.later')} <kbd>⇧⇥</kbd>
+              {t('interview.later')} <kbd>{host.key('Shift-Tab')}</kbd>
             </button>
             <button
               type="button"
@@ -564,6 +564,7 @@ export function Interview({
       {available && (
         <p className="ch-interview-hint">
           {t('interview.hint', {
+            newline: host.key('Shift-Enter'),
             mode: modeKey,
             validate: host.key('Alt-v'),
             reject: host.key('Alt-x'),

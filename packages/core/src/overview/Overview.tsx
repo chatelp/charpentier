@@ -450,6 +450,7 @@ function CheckpointPreview({
   readonly onClose: () => void;
 }) {
   const { t, i18n } = useTranslation();
+  const host = useHostWords();
   const number = new Intl.NumberFormat(i18n.language);
   const words = countWords(text);
   const delta = words - countWords(current);
@@ -506,7 +507,7 @@ function CheckpointPreview({
           {t('overview.restore')} <kbd>{t('overview.restoreActionKey')}</kbd>
         </button>
         <button type="button" tabIndex={-1} className="ch-btn" onClick={onVariant}>
-          {t('overview.toVariant')} <kbd>{t('overview.toVariantKey')}</kbd>
+          {t('overview.toVariant')} <kbd>{host.key('Shift-Enter')}</kbd>
         </button>
         <button type="button" tabIndex={-1} className="ch-btn" onClick={onClose}>
           {t('overview.close')} <kbd>{t('overview.closeKey')}</kbd>

@@ -1,3 +1,4 @@
+import { useHostWords } from '../app/host-words';
 import {
   acceptProposal,
   knownByField,
@@ -142,6 +143,7 @@ export function Atelier({
   onWrite,
 }: AtelierProps) {
   const { t } = useTranslation();
+  const host = useHostWords();
   const data = useDocSnapshot(ctx.root, readAtelier);
   const numbers = useMemo(() => sceneNumbers(ctx.outline), [ctx.outline]);
   const [query, setQuery] = useState('');
@@ -436,7 +438,7 @@ export function Atelier({
               {t('atelier.rejectedEntries', { count: rejectedEntries })}
               {' · '}
               <button type="button" className="ch-link" onClick={toggleRejected}>
-                {t('atelier.showRejected')} <kbd>{t('atelier.legend.toggleKey')}</kbd>
+                {t('atelier.showRejected')} <kbd>{host.key('Shift-x')}</kbd>
               </button>
             </p>
           )}
@@ -716,6 +718,7 @@ export function Sheet({
   readonly onShowPassage: (sceneId: string) => void;
 }) {
   const { t } = useTranslation();
+  const host = useHostWords();
   const def = moduleDefs[target.module];
   const showRejected = ctx.prefs.showRejected;
   const toggleRejected = () => ctx.updatePrefs((p) => ({ showRejected: !p.showRejected }));
@@ -838,7 +841,7 @@ export function Sheet({
             {showRejected
               ? t('atelier.legend.hide')
               : t('atelier.legend.show', { count: rejections })}{' '}
-            <kbd>{t('atelier.legend.toggleKey')}</kbd>
+            <kbd>{host.key('Shift-x')}</kbd>
           </button>
         )}
         <span aria-hidden="true">

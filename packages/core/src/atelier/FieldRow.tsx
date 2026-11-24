@@ -272,6 +272,7 @@ export function FieldRow({
             value={draft}
             rows={def.kind === 'line' ? 1 : 3}
             title={t(def.kind === 'line' ? 'atelier.lineDraftHint' : 'atelier.textDraftHint', {
+              newline: host.key('Shift-Enter'),
               cancel: host.key('Mod-.'),
             })}
             autoFocus

@@ -108,6 +108,7 @@ const KEY_LABELS: Record<string, string> = {
   ArrowLeft: '←',
   ArrowRight: '→',
   Enter: '⏎',
+  Tab: '⇥',
   Escape: 'Échap',
   Backspace: '⌫',
   Delete: 'Suppr',

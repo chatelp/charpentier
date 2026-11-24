@@ -101,7 +101,10 @@ export function SheetPanel({ ctx, target, active, onOpenInAtelier, onClose }: Sh
         />
       </div>
       <p className="ch-panel-hint">
-        {t('atelier.sheetPanelHint', { open: host.key('Mod-Enter') })}
+        {t('atelier.sheetPanelHint', {
+          newline: host.key('Shift-Enter'),
+          open: host.key('Mod-Enter'),
+        })}
       </p>
       <CloseButton purpose="panel" onClose={onClose} corner />
     </aside>

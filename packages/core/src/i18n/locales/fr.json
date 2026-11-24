@@ -92,7 +92,7 @@
     "you": "Vous",
     "chatEmpty": "Posez votre question sur votre scène, vos personnages, votre histoire. Le Compagnon vous aide à écrire, il n’écrit pas à votre place.",
     "chatPlaceholder": "Votre question au Compagnon",
-    "chatHint": "⏎ envoyer · ⇧⏎ nouvelle ligne · {{insert}} insérer l’exemple · Échap fermer",
+    "chatHint": "⏎ envoyer · {{newline}} nouvelle ligne · {{insert}} insérer l’exemple · Échap fermer",
     "thinking": "Le Compagnon réfléchit…",
     "exampleLabel": "Exemple · une phrase",
     "insertExample": "Insérer dans le texte",
@@ -429,7 +429,7 @@
   },
   "navigator": {
     "label": "Plan du manuscrit",
-    "hint": "↑↓ parcourir · ⏎ ouvrir · {{move}} déplacer · V variantes · R renommer · N scène · ⇧N chapitre · ⌫ corbeille · Échap fermer",
+    "hint": "↑↓ parcourir · ⏎ ouvrir · {{move}} déplacer · V variantes · R renommer · N scène · {{chapter}} chapitre · ⌫ corbeille · Échap fermer",
     "current": "scène ouverte",
     "title": "Manuscrit",
     "variants": "Variantes",
@@ -602,8 +602,7 @@
       "rejected": "estompée : rejetée",
       "contradicted": "contredite",
       "show": "afficher ({{count}})",
-      "hide": "masquer",
-      "toggleKey": "⇧X"
+      "hide": "masquer"
     },
     "status": {
       "proposed": "Proposée par le Compagnon.",
@@ -768,9 +767,9 @@
     "inScene": "scène {{number}}",
     "filterKey": "/",
     "sheetPanel": "Fiche",
-    "sheetPanelHint": "↑↓ parcourir · ⏎ modifier · ⇧⏎ à la ligne · {{open}} ouvrir dans l’Atelier · Échap fermer",
+    "sheetPanelHint": "↑↓ parcourir · ⏎ modifier · {{newline}} à la ligne · {{open}} ouvrir dans l’Atelier · Échap fermer",
     "lineDraftHint": "⏎ valider · Échap garder le brouillon · {{cancel}} annuler",
-    "textDraftHint": "⏎ valider · ⇧⏎ à la ligne · Échap garder le brouillon · {{cancel}} annuler",
+    "textDraftHint": "⏎ valider · {{newline}} à la ligne · Échap garder le brouillon · {{cancel}} annuler",
     "draftKeys": "⏎ valider · Échap garder ·",
     "cancelDraft": "Annuler",
     "newEntry": {
@@ -825,7 +824,6 @@
     "restore": "Restaurer",
     "restoreActionKey": "⏎",
     "toVariant": "En faire une variante",
-    "toVariantKey": "⇧⏎",
     "close": "Fermer",
     "closeKey": "Échap",
     "chapters_one": "{{count}} chapitre",
@@ -1096,7 +1094,7 @@
     "later": "Plus tard",
     "otherSection": "Autre section…",
     "pickSection": "Quelle section ?",
-    "hint": "⏎ envoyer · ⇧⏎ à la ligne · {{validate}} {{reject}} valider, rejeter la dernière proposition · {{mode}} libre / dirigé · Échap revenir au texte",
+    "hint": "⏎ envoyer · {{newline}} à la ligne · {{validate}} {{reject}} valider, rejeter la dernière proposition · {{mode}} libre / dirigé · Échap revenir au texte",
     "welcome": "Racontez-moi votre projet comme il vous vient : je range ce que vous dites dans l’Atelier, en propositions que vous validez ou non. En mode dirigé, je vous pose mes questions une à une, section par section. Voulez-vous commencer par « Le projet » ?",
     "startGuided": "Commencer en dirigé",
     "unavailable": "Le Compagnon n’est pas disponible dans cette version : l’entretien demande l’app de bureau.",

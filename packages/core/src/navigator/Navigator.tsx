@@ -453,7 +453,12 @@ export function Navigator({ ctx, outline, active, onClose, signals }: NavigatorP
             ))}
         </div>
       )}
-      <p className="ch-nav-hint">{t('navigator.hint', { move: `${host.key('Alt-ArrowUp')}↓` })}</p>
+      <p className="ch-nav-hint">
+        {t('navigator.hint', {
+          move: `${host.key('Alt-ArrowUp')}↓`,
+          chapter: host.key('Shift-n'),
+        })}
+      </p>
     </aside>
   );
 }

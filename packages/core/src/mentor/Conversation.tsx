@@ -200,7 +200,12 @@ export function Conversation({
         onChange={(e) => setDraft(e.target.value)}
         onKeyDown={onKeyDown}
       />
-      <p className="ch-panel-hint">{t('mentor.chatHint', { insert: host.key('Mod-Enter') })}</p>
+      <p className="ch-panel-hint">
+        {t('mentor.chatHint', {
+          newline: host.key('Shift-Enter'),
+          insert: host.key('Mod-Enter'),
+        })}
+      </p>
     </div>
   );
 }
