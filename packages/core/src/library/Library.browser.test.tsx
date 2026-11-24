@@ -74,6 +74,12 @@ describe('library', () => {
       expect(document.activeElement).toBe(screen.getByRole('option', { name: /Mon projet/ })),
     );
     await userEvent.keyboard('{ArrowDown}{Backspace}');
+    // A project is a big piece: its button asks, a second ⌫ does it (DESIGN §4.7, rule 5).
+    await screen.findByRole('button', {
+      name: /^Confirmer\u00a0: projet «\u00a0.+\u00a0» à la corbeille/,
+    });
+    expect(await platform.library.list()).toHaveLength(2);
+    await userEvent.keyboard('{Backspace}');
     // The trash is at the foot of the library, shown on request.
     await userEvent.click(await screen.findByRole('button', { name: 'Corbeille (1)' }));
     await waitFor(() => expect(screen.getByText(/Mis à la corbeille le/)).toBeTruthy());
@@ -106,7 +112,7 @@ describe('library', () => {
       'true',
     );
     await userEvent.keyboard('{Escape}');
-    await userEvent.keyboard('{Backspace}');
+    await userEvent.keyboard('{Backspace}{Backspace}');
     await screen.findByText('Aucun projet pour l’instant. Commencez un roman ou une nouvelle.');
     expect(await platform.library.list()).toHaveLength(0);
   });

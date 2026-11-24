@@ -53,6 +53,10 @@ export interface MenuEntry {
    * the next render.
    */
   readonly keepOpen?: boolean | undefined;
+  /** The seconds left of the two presses (« 3 s »), at the right in the faint ink. */
+  readonly countdown?: string | undefined;
+  /** Lit: the entry waits for its second press (« Confirmer : … »). */
+  readonly lit?: boolean | undefined;
   /** Replaces the sheet's content, « ‹ Retour » at its head: no cascading submenu. */
   readonly choices?: readonly MenuChoice[] | undefined;
   /** Said in the sheet when the filter leaves none of the choices (« Aucun chapitre de ce nom. »). */

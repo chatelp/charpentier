@@ -141,6 +141,10 @@ describe('working versions (DESIGN 1.20, in retreat since 1.33)', () => {
 
     (within(sheet).getAllByRole('radio')[1] as HTMLElement).focus();
     await userEvent.keyboard('{Backspace}');
+    // A version is a big piece: its line's button asks, a second ⌫ does it (DESIGN §4.7).
+    await within(sheet).findByRole('button', { name: /^Confirmer\u00a0: version/ });
+    expect(within(sheet).getAllByRole('radio')).toHaveLength(2);
+    await userEvent.keyboard('{Backspace}');
     // The last one gone: back to the main version, and the sheet is silent again.
     await waitFor(() => expect(within(sheet).queryAllByRole('radio')).toHaveLength(0));
     expect(sheet.textContent).not.toMatch(/version/i);

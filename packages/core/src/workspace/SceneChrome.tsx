@@ -114,6 +114,7 @@ export function WritingFooter({
   wordsToday,
   status,
   undo,
+  confirm,
   onStatusHover,
   mentorNote,
   onEnterKey,
@@ -138,6 +139,19 @@ export function WritingFooter({
         /** The key, as `aria-keyshortcuts` says it. */
         readonly keys: string | undefined;
         readonly onUndo: () => void;
+      }
+    | undefined;
+  /**
+   * A big piece armed from the keyboard (docs/DESIGN.md §4.7 « Les deux appuis »): the status
+   * line carries the phrase as a button, its key and the seconds left; the button confirms.
+   */
+  readonly confirm?:
+    | {
+        readonly what: string;
+        readonly left: number;
+        readonly shortcut: string | undefined;
+        readonly keys: string | undefined;
+        readonly onConfirm: () => void;
       }
     | undefined;
   /** The pointer came over the state line, or left it (a trash's message stays meanwhile). */
@@ -186,9 +200,15 @@ export function WritingFooter({
           onPointerLeave={() => onStatusHover?.(false)}
         >
           <span role="status" aria-live="polite" className="ch-footer-fit">
-            {status}
+            {confirm ? (
+              <span className="ch-visually-hidden">
+                {t('confirm.again', { what: confirm.what })}
+              </span>
+            ) : (
+              status
+            )}
           </span>
-          {undo && (
+          {!confirm && undo && (
             <button
               type="button"
               className="ch-footer-button ch-footer-undo"
@@ -237,6 +257,21 @@ export function WritingFooter({
         {features}
         {tools}
       </span>
+      {confirm && (
+        // Above the foot, right-aligned, whole on one line: the foot's column is too narrow
+        // for the phrase once a panel is open (DESIGN §4.7 « Les deux appuis »).
+        <button
+          type="button"
+          className="ch-footer-button ch-footer-confirm"
+          aria-keyshortcuts={confirm.keys}
+          onMouseDown={(event) => event.preventDefault()}
+          onClick={confirm.onConfirm}
+        >
+          {t('confirm.ask', { what: confirm.what })}
+          {confirm.shortcut && <kbd>{confirm.shortcut}</kbd>}
+          <span className="ch-confirm-left">{t('confirm.left', { count: confirm.left })}</span>
+        </button>
+      )}
     </footer>
   );
 }

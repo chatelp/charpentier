@@ -18,8 +18,12 @@ import {
   newSceneAfter,
   promptRenameChapter,
   promptRenameScene,
-  trashChapterAndMove,
-  trashSceneAndMove,
+  askTrashChapter,
+  askTrashScene,
+  chapterBigPiece,
+  sceneBigPiece,
+  trashArmId,
+  type AskFrom,
 } from '../commands/workspace-commands';
 import {
   commandKey,
@@ -79,6 +83,34 @@ function keysOf(ctx: Ctx) {
     /** A command's key, only where the command does this very thing (`same`). */
     command: (id: string, same = true): MenuKey =>
       same ? commandKey(ctx.shortcutLabel(id), ctx.shortcutChord(id)) : NO_KEY,
+  };
+}
+
+/** The drawer's ⌫, as the two presses of a big piece press it again (DESIGN §4.7). */
+export function trashKeyFrom(ctx: Ctx, where: 'inline' | 'status'): AskFrom {
+  return { where, ...keysOf(ctx).own('trash') };
+}
+
+/**
+ * « Mettre à la corbeille », or, a big piece armed, « Confirmer : chapitre et 4 scènes à la
+ * corbeille » with the seconds left: the first press keeps the menu open (DESIGN §4.7).
+ */
+function trashEntry(
+  ctx: Ctx,
+  id: string,
+  big: string | undefined,
+  ask: (from: AskFrom) => void,
+): MenuEntry {
+  const armed = ctx.armed?.id === trashArmId(id) ? ctx.armed : null;
+  return {
+    ...entry(
+      'trash',
+      armed ? ctx.t('confirm.phrase', { what: armed.what }) : ctx.t('thingMenu.entry.trash'),
+      keysOf(ctx).own('trash'),
+      { run: () => ask(trashKeyFrom(ctx, 'inline')) },
+    ),
+    keepOpen: big !== undefined && !armed,
+    ...(armed && { countdown: ctx.t('confirm.left', { count: armed.left }), lit: true }),
   };
 }
 
@@ -240,12 +272,9 @@ export function sceneMenu(ctx: Ctx, sceneId: string, hands: DrawerHands): ThingM
       {
         id: 'trash',
         entries: [
-          entry('trash', t('thingMenu.entry.trash'), key.own('trash'), {
-            run: () => {
-              const next = neighbourOf(outline, sceneId);
-              trashSceneAndMove(ctx, sceneId);
-              hands.focus(next);
-            },
+          trashEntry(ctx, sceneId, sceneBigPiece(ctx, sceneId), (from) => {
+            const next = neighbourOf(outline, sceneId);
+            askTrashScene(ctx, sceneId, from, () => hands.focus(next));
           }),
         ],
       },
@@ -347,12 +376,9 @@ export function chapterMenu(ctx: Ctx, chapterId: string, hands: DrawerHands): Th
       {
         id: 'trash',
         entries: [
-          entry('trash', t('thingMenu.entry.trash'), key.own('trash'), {
-            run: () => {
-              const next = neighbourOf(outline, chapterId);
-              trashChapterAndMove(ctx, chapterId);
-              hands.focus(next);
-            },
+          trashEntry(ctx, chapterId, chapterBigPiece(ctx, chapterId), (from) => {
+            const next = neighbourOf(outline, chapterId);
+            askTrashChapter(ctx, chapterId, from, () => hands.focus(next));
           }),
         ],
       },

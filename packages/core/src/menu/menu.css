@@ -131,3 +131,17 @@
   color: var(--ch-muted);
   font: var(--ch-ui-xs) var(--ch-font-ui);
 }
+
+/* Waiting for its second press (DESIGN §4.7 « Les deux appuis »): lit, the phrase whole. */
+.ch-menu-item.is-lit {
+  background: var(--ch-lit-bg);
+  box-shadow: var(--ch-lit);
+}
+
+.ch-menu-item.is-lit .ch-menu-label {
+  white-space: normal;
+}
+
+.ch-menu-countdown {
+  font-variant-numeric: tabular-nums;
+}

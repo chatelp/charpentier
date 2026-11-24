@@ -124,6 +124,10 @@ describe('signing in to the sync server (step 4.4)', () => {
     await command('appareils');
     expect(await screen.findByText('cet appareil')).toBeTruthy();
     await userEvent.keyboard('x250{Enter}');
+    // No way back: the status line asks for a second press (DESIGN §4.7, rule 5).
+    await userEvent.click(
+      await screen.findByRole('button', { name: /^Confirmer\u00a0: déconnecter / }),
+    );
     await screen.findByText('Appareil déconnecté.');
     expect(calls).toContain('revoke b');
 

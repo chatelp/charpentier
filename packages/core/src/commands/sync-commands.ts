@@ -100,11 +100,22 @@ export const syncCommands: readonly SyncCommand[] = [
         })),
         onPick: (id) => {
           // This device signs out with « Se déconnecter du serveur ».
-          if (devices.find((d) => d.id === id)?.current)
-            return ctx.notify(ctx.t('sync.useSignOut'));
-          void sync
-            .revokeDevice(id)
-            .then((done) => ctx.notify(ctx.t(done ? 'sync.deviceRevoked' : 'sync.unreachable')));
+          const device = devices.find((d) => d.id === id);
+          if (device?.current) return ctx.notify(ctx.t('sync.useSignOut'));
+          // No way back: the status line asks for the second press (DESIGN §4.7).
+          ctx.confirmTwice({
+            id: `revokeDevice:${id}`,
+            what: ctx.t('confirm.what.revokeDevice', {
+              device: device?.device || ctx.t('sync.unnamedDevice'),
+            }),
+            where: 'status',
+            run: () =>
+              void sync
+                .revokeDevice(id)
+                .then((done) =>
+                  ctx.notify(ctx.t(done ? 'sync.deviceRevoked' : 'sync.unreachable')),
+                ),
+          });
         },
       });
     },

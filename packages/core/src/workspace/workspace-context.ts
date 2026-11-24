@@ -6,6 +6,7 @@ import type * as Y from 'yjs';
 import type { AtelierLocation } from '../atelier/Atelier';
 import type { SheetTarget } from '../atelier/atelier-data';
 import type { Chord } from '../commands/keybinding';
+import type { Armed, TwoPressRequest } from '../confirm/two-presses';
 import type { MenuRequest } from '../menu/thing-menu';
 import type { PaletteRequest } from '../palette/palette-request';
 import type { WorkRef } from '@charpentier/schema';
@@ -109,8 +110,22 @@ export interface WorkspaceContext {
   openSystemSettings(sectionId?: string): void;
   /** A feature's full-frame view (docs/PLAN.md phase 5.1). */
   openView(viewId: string): void;
-  /** Runs a command of the registry, a feature's included (false: unknown or disabled). */
-  runCommand(commandId: string): Promise<boolean>;
+  /**
+   * Runs a command of the registry, a feature's included (false: unknown or disabled).
+   * `inline`: the control that runs it shows the two presses' phrase itself (its label
+   * reads `armed`); otherwise a command that asks for them asks in the status line.
+   */
+  runCommand(commandId: string, options?: { readonly inline?: boolean }): Promise<boolean>;
+  /**
+   * The two presses (docs/DESIGN.md §4.7, rule 5 of §5.0) of a big piece or a gesture with
+   * no way back: the first press arms the request for 3 s, the second runs it (true then).
+   * Without `where`, the phrase shows where the running command was asked from.
+   */
+  confirmTwice(
+    request: Omit<TwoPressRequest, 'where'> & Partial<Pick<TwoPressRequest, 'where'>>,
+  ): boolean;
+  /** What waits for its second press, if anything (its label reads « Confirmer : … »). */
+  readonly armed: Armed | null;
   openWriting(): void;
   openOverview(): void;
   /** The library of projects; `creating` opens the new project form. */

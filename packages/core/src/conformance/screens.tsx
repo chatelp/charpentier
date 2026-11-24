@@ -82,9 +82,30 @@ export const SCREENS: Readonly<Record<string, () => Promise<unknown>>> = {
     await userEvent.click(screen.getByRole('button', { name: 'Actions de la scène La maison' }));
     await screen.findByRole('menu', { name: 'Scène · La maison' });
     await userEvent.click(screen.getByRole('menuitem', { name: /^Mettre à la corbeille/ }));
+    // The scene has text: a second press (DESIGN §4.7, rule 5).
+    await userEvent.click(
+      await screen.findByRole('menuitem', { name: /^Confirmer\u00a0: scène de/ }),
+    );
     await screen.findByRole('button', {
       name: 'Annuler la mise à la corbeille de la scène La maison',
     });
+  },
+  'a scene with text, waiting for its second press in its menu': async () => {
+    await written();
+    await userEvent.keyboard(chord('j'));
+    await screen.findByRole('complementary', { name: 'Plan du manuscrit' });
+    await userEvent.click(screen.getByRole('button', { name: 'Actions de la scène La maison' }));
+    await screen.findByRole('menu', { name: 'Scène · La maison' });
+    await userEvent.click(screen.getByRole('menuitem', { name: /^Mettre à la corbeille/ }));
+    await screen.findByRole('menuitem', { name: /^Confirmer\u00a0: scène de/ });
+  },
+  'the status line, asking for the second press of a chapter': async () => {
+    await written();
+    await userEvent.keyboard(chord('j'));
+    await screen.findByRole('complementary', { name: 'Plan du manuscrit' });
+    screen.getByRole('treeitem', { name: /Le fleuve/ }).focus();
+    await userEvent.keyboard('{Backspace}');
+    await screen.findByRole('button', { name: /^Confirmer\u00a0: chapitre et 1 scène/ });
   },
   'the Compagnon panel': async () => {
     await written();

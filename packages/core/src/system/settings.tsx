@@ -14,6 +14,7 @@ import { Gauge, Keys, Slider } from './controls';
 import { duration, hours, minutesSince, postSoon, shortDate } from './panels';
 import { beforeRestart } from './restart';
 import { useSystemState } from './system-store';
+import { useTwoPresses } from '../confirm/two-presses';
 
 /**
  * The twelve sections of the system's settings (docs/DESIGN.md §4.12), on
@@ -73,6 +74,8 @@ function Row({
 
 function Network() {
   const { system, state, s, yesNo } = useSettings();
+  // Forgetting a network has no way back: at the second press (docs/DESIGN.md §4.7).
+  const { presses, armed } = useTwoPresses();
   return (
     <>
       <Group title={s('groups.wifi')}>
@@ -112,10 +115,19 @@ function Network() {
               {n.known && (
                 <button
                   type="button"
-                  className="ch-btn"
-                  onClick={() => void system.forgetWifi(n.ssid)}
+                  className={`ch-btn${armed?.id === `wifi:${n.ssid}` ? ' is-lit' : ''}`}
+                  onClick={() =>
+                    presses.press({
+                      id: `wifi:${n.ssid}`,
+                      what: n.ssid,
+                      where: 'inline',
+                      run: () => void system.forgetWifi(n.ssid),
+                    })
+                  }
                 >
-                  {s('rows.forget')}
+                  {armed?.id === `wifi:${n.ssid}`
+                    ? s('rows.confirmForget', { name: n.ssid })
+                    : s('rows.forget')}
                 </button>
               )}
             </Row>
@@ -135,6 +147,7 @@ function Network() {
 
 function Bluetooth() {
   const { system, state, s, yesNo } = useSettings();
+  const { presses, armed } = useTwoPresses();
   // Pairing (phase 5.7): a search of a few seconds, then the devices found.
   const [found, setFound] = useState<readonly BluetoothDevice[] | null>(null);
   const [busy, setBusy] = useState<'scan' | string | null>(null);
@@ -166,10 +179,19 @@ function Bluetooth() {
         <Row key={d.id} label={d.name} help={d.connected ? s('rows.connected') : undefined}>
           <button
             type="button"
-            className="ch-btn"
-            onClick={() => void system.forgetBluetooth(d.id)}
+            className={`ch-btn${armed?.id === `bt:${d.id}` ? ' is-lit' : ''}`}
+            onClick={() =>
+              presses.press({
+                id: `bt:${d.id}`,
+                what: d.name,
+                where: 'inline',
+                run: () => void system.forgetBluetooth(d.id),
+              })
+            }
           >
-            {s('rows.forget')}
+            {armed?.id === `bt:${d.id}`
+              ? s('rows.confirmForget', { name: d.name })
+              : s('rows.forget')}
           </button>
         </Row>
       ))}

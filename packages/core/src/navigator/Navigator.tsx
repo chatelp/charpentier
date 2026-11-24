@@ -42,8 +42,8 @@ import {
   newSceneAfter,
   promptRenameChapter,
   promptRenameScene,
-  trashChapterAndMove,
-  trashSceneAndMove,
+  askTrashChapter,
+  askTrashScene,
 } from '../commands/workspace-commands';
 import type { WorkspaceContext } from '../workspace/workspace-context';
 import './navigator.css';
@@ -55,6 +55,7 @@ import {
   DRAWER_KEYS,
   manuscriptMenu,
   sceneMenu,
+  trashKeyFrom,
   variantMenu,
   type DrawerHands,
 } from './navigator-menus';
@@ -313,9 +314,10 @@ export function Navigator({ ctx, outline, active, onClose, signals }: NavigatorP
     } else if (key === 'Delete' || key === 'Backspace') {
       handled();
       const next = neighbourId(focused);
-      if (focused.kind === 'scene') trashSceneAndMove(ctx, focused.id);
-      else trashChapterAndMove(ctx, focused.id);
-      focusItem(next);
+      // A big piece goes at the second ⌫: the status line asks meanwhile (DESIGN §4.7).
+      const from = trashKeyFrom(ctx, 'status');
+      if (focused.kind === 'scene') askTrashScene(ctx, focused.id, from, () => focusItem(next));
+      else askTrashChapter(ctx, focused.id, from, () => focusItem(next));
     }
   };
 

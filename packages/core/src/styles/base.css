@@ -105,6 +105,18 @@ kbd,
   color: var(--ch-mentor);
 }
 
+/* Waiting for its second press (docs/DESIGN.md §4.7 « Les deux appuis »): lit, seconds faint. */
+.ch-btn.is-lit {
+  background: var(--ch-lit-bg);
+  box-shadow: var(--ch-lit);
+}
+
+.ch-confirm-left {
+  margin-left: 0.6em;
+  color: var(--ch-faint);
+  font-variant-numeric: tabular-nums;
+}
+
 /* The main action of a group (the author's ink). */
 .ch-btn.is-author {
   color: var(--ch-author);

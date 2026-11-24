@@ -7,6 +7,7 @@ import { projectStatsPref, readProjectStats, type ProjectStats } from './project
 import './library.css';
 import { CloseButton } from '../icons/CloseButton';
 import { useHostWords } from '../app/host-words';
+import { useTwoPresses } from '../confirm/two-presses';
 
 export interface LibraryProps {
   readonly currentProjectId: string | undefined;
@@ -116,6 +117,16 @@ export function Library({ currentProjectId, creating = false, onOpen, onClose }:
 
   const startCreating = (kind: ProjectKind) => setForm({ mode: 'create', title: '', kind });
   const rename = (row: Row) => setForm({ mode: 'rename', id: row.id, title: row.title });
+  // A project is a big piece: it goes at the second press (docs/DESIGN.md §4.7, rule 5).
+  const { presses, armed } = useTwoPresses();
+  const armId = (row: Row) => `trash:project:${row.id}`;
+  const askTrash = (row: Row) =>
+    presses.press({
+      id: armId(row),
+      what: t('confirm.what.project', { name: row.title }),
+      where: 'inline',
+      run: () => void trash(row),
+    });
   const trash = async (row: Row) => {
     // The open project stays open: trashing it only takes it off the list.
     await library.trash(row.id);
@@ -172,7 +183,7 @@ export function Library({ currentProjectId, creating = false, onOpen, onClose }:
       rename(selected);
     } else if ((key === 'Delete' || key === 'Backspace') && !selected.trashed) {
       event.preventDefault();
-      await trash(selected);
+      askTrash(selected);
     }
   };
 
@@ -315,10 +326,22 @@ export function Library({ currentProjectId, creating = false, onOpen, onClose }:
                     <button
                       type="button"
                       tabIndex={-1}
-                      className="ch-btn"
-                      onClick={() => void trash(row)}
+                      className={`ch-btn${armed?.id === armId(row) ? ' is-lit' : ''}`}
+                      onClick={() => askTrash(row)}
                     >
-                      {t('library.toTrash')} <kbd>{t('library.toTrashKey')}</kbd>
+                      {armed?.id === armId(row) ? (
+                        <>
+                          {t('confirm.phrase', { what: armed.what })}{' '}
+                          <kbd>{t('library.toTrashKey')}</kbd>
+                          <span className="ch-confirm-left">
+                            {t('confirm.left', { count: armed.left })}
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          {t('library.toTrash')} <kbd>{t('library.toTrashKey')}</kbd>
+                        </>
+                      )}
                     </button>
                   </>
                 )}
@@ -327,6 +350,9 @@ export function Library({ currentProjectId, creating = false, onOpen, onClose }:
           );
         })}
       </ul>
+      <p className="ch-visually-hidden" aria-live="polite">
+        {armed ? t('confirm.again', { what: armed.what }) : ''}
+      </p>
 
       <footer className="ch-library-foot">
         {trashCount > 0 && (

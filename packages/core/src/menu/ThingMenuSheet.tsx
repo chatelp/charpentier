@@ -309,7 +309,7 @@ export function ThingMenuSheet({
                     tabIndex={-1}
                     data-entry={entry.id}
                     data-command={inert ? undefined : entry.command}
-                    className="ch-menu-item"
+                    className={`ch-menu-item${entry.lit ? ' is-lit' : ''}`}
                     aria-disabled={inert || undefined}
                     aria-haspopup={!inert && entry.choices ? 'menu' : undefined}
                     aria-keyshortcuts={
@@ -321,6 +321,9 @@ export function ThingMenuSheet({
                   >
                     <span className="ch-menu-label">{entry.label}</span>
                     {!inert && entry.shortcut && <kbd aria-hidden="true">{entry.shortcut}</kbd>}
+                    {entry.countdown && (
+                      <span className="ch-menu-detail ch-menu-countdown">{entry.countdown}</span>
+                    )}
                   </button>
                 );
               })}

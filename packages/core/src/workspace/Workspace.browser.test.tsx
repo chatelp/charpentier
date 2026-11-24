@@ -197,6 +197,13 @@ describe('workspace, keyboard only', () => {
     await inputInPalette('Le quai');
     await press('mod+k');
     await userEvent.keyboard('chapitre corbeille{Enter}');
+    // A chapter that has scenes asks first, in the status line (DESIGN §4.7, rule 5).
+    const ask = await screen.findByRole('button', {
+      name: /^Confirmer\u00a0: chapitre et 2 scènes à la corbeille/,
+    });
+    expect(ask.textContent).toMatch(/3\u00a0s$/);
+    expect(screen.queryByText('Chapitre « Nantes » et 2 scènes mis à la corbeille.')).toBeNull();
+    await userEvent.click(ask);
     await screen.findByText('Chapitre « Nantes » et 2 scènes mis à la corbeille.');
     screen.getByRole('button', { name: 'Annuler la mise à la corbeille du chapitre Nantes' });
   });
@@ -319,6 +326,9 @@ describe('workspace, keyboard only', () => {
     const { outline } = await startApp();
     await press('mod+k');
     await userEvent.keyboard('chapitre corbeille{Enter}');
+    await userEvent.click(
+      await screen.findByRole('button', { name: /^Confirmer\u00a0: chapitre et 1 scène/ }),
+    );
     expect(outline()).toEqual(['Nouveau chapitre: Nouvelle scène']);
     await waitFor(() => expect(editorFocused()).toBe(true));
   });

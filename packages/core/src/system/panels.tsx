@@ -374,6 +374,7 @@ function CpuPanel() {
 
 function WifiPanel({ ctx }: PanelProps) {
   const { system, state, text } = useSys();
+  const [forgetArmed, armForget] = useArmed();
   const [chosen, setChosen] = useState<WifiNetwork | null>(null);
   const [password, setPassword] = useState('');
   const [refused, setRefused] = useState(false);
@@ -423,12 +424,18 @@ function WifiPanel({ ctx }: PanelProps) {
               onKeyDown={(e) => {
                 if (e.key.toLowerCase() === 'o' && n.known) {
                   e.preventDefault();
-                  void system.forgetWifi(n.ssid);
+                  // No way back: a second O within 3 s (docs/DESIGN.md §4.7).
+                  armForget(n.ssid, () => void system.forgetWifi(n.ssid));
                 }
               }}
             >
               <span>{n.ssid}</span>
               <span className="ch-sys-item-aside">
+                {forgetArmed === n.ssid && (
+                  <span className="is-lit">
+                    {text('system.panel.confirmForget', { name: n.ssid })}
+                  </span>
+                )}
                 {n.ssid === state.wifi.connected && text('system.panel.connected')}
                 <Signal bars={n.signal} />
                 {n.portal ? (
@@ -472,6 +479,8 @@ function WifiPanel({ ctx }: PanelProps) {
 
 function BluetoothPanel({ ctx }: PanelProps) {
   const { system, state, text } = useSys();
+  // Forgetting a device has no way back: at the second press (docs/DESIGN.md §4.7).
+  const [armed, arm] = useArmed();
   return (
     <>
       <Head
@@ -498,10 +507,12 @@ function BluetoothPanel({ ctx }: PanelProps) {
           {d.connected && <span className="ch-sys-value">{text('system.panel.btConnected')}</span>}
           <button
             type="button"
-            className="ch-btn is-item"
-            onClick={() => void system.forgetBluetooth(d.id)}
+            className={`ch-btn is-item${armed === d.id ? ' is-lit' : ''}`}
+            onClick={() => arm(d.id, () => void system.forgetBluetooth(d.id))}
           >
-            {text('system.panel.forget')}
+            {armed === d.id
+              ? text('system.panel.confirmForget', { name: d.name })
+              : text('system.panel.forget')}
           </button>
         </PanelRow>
       ))}

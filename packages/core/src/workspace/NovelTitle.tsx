@@ -230,6 +230,20 @@ export function NovelSheet({
     t('overview.words', { count: words, formatted: number.format(words) }),
   ].join(' · ');
 
+  // A working version is a big piece: it goes at the second press (DESIGN §4.7, rule 5).
+  const trashArm = (version: VersionInfo) => `trash:version:${version.id}`;
+  const askTrash = (version: VersionInfo) => {
+    const count = view.counts.get(version.id) ?? 0;
+    ctx.confirmTwice({
+      id: trashArm(version),
+      what:
+        count > 0
+          ? t('confirm.what.version', { count })
+          : t('confirm.what.versionAlone', { name: versionLabel(t, version) }),
+      where: 'inline',
+      run: () => trash(version),
+    });
+  };
   const trash = (version: VersionInfo) => {
     const at = sceneInActiveVersion(ctx, ctx.sceneId);
     trashVersion(ctx.root, version.id);
@@ -278,7 +292,7 @@ export function NovelSheet({
       else setRenaming(true);
     } else if ((event.key === 'Backspace' || event.key === 'Delete') && version) {
       handled();
-      if (!version.isMain) trash(version);
+      if (!version.isMain) askTrash(version);
     } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       handled();
       const all = rows();
@@ -403,20 +417,37 @@ export function NovelSheet({
                     {t('versions.rename')}
                     <kbd>{t('versions.renameKey')}</kbd>
                   </button>
-                  {!v.isMain && (
-                    <button
-                      type="button"
-                      tabIndex={-1}
-                      className="ch-btn"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        trash(v);
-                      }}
-                    >
-                      {t('versions.trash')}
-                      <kbd>{t('versions.trashKey')}</kbd>
-                    </button>
-                  )}
+                  {!v.isMain &&
+                    (ctx.armed?.id === trashArm(v) ? (
+                      <button
+                        type="button"
+                        tabIndex={-1}
+                        className="ch-btn is-lit"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          askTrash(v);
+                        }}
+                      >
+                        {t('confirm.phrase', { what: ctx.armed.what })}
+                        <kbd>{t('versions.trashKey')}</kbd>
+                        <span className="ch-confirm-left">
+                          {t('confirm.left', { count: ctx.armed.left })}
+                        </span>
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        tabIndex={-1}
+                        className="ch-btn"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          askTrash(v);
+                        }}
+                      >
+                        {t('versions.trash')}
+                        <kbd>{t('versions.trashKey')}</kbd>
+                      </button>
+                    ))}
                 </span>
               </div>
             );

@@ -346,10 +346,20 @@ function Compagnon({ ctx }: { readonly ctx: Ctx }) {
               {hasKey && (
                 <button
                   type="button"
-                  className="ch-btn"
-                  onClick={() => void ctx.runCommand('forgetApiKey')}
+                  className={`ch-btn${ctx.armed?.id === 'forgetApiKey' ? ' is-lit' : ''}`}
+                  data-command="forgetApiKey"
+                  onClick={() => void ctx.runCommand('forgetApiKey', { inline: true })}
                 >
-                  {t('appSettings.compagnon.forget')}
+                  {ctx.armed?.id === 'forgetApiKey' ? (
+                    <>
+                      {t('confirm.phrase', { what: ctx.armed.what })}
+                      <span className="ch-confirm-left">
+                        {t('confirm.left', { count: ctx.armed.left })}
+                      </span>
+                    </>
+                  ) : (
+                    t('appSettings.compagnon.forget')
+                  )}
                 </button>
               )}
             </>

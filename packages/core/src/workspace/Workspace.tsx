@@ -83,6 +83,7 @@ import { BoardSettingsView } from '../features/BoardSettingsView';
 import { appSettingsSections } from '../settings/app-settings';
 import './workspace.css';
 import { CloseButton } from '../icons/CloseButton';
+import { useTwoPresses } from '../confirm/two-presses';
 import { useBackgroundWork, workName } from '../work/use-background-work';
 import { useMentorDoc, workLocation } from '../work/WorkBlock';
 import { formatWhen } from '../work/work-format';
@@ -328,6 +329,8 @@ export function ProjectWorkspace({
   const chapter = outline[chapterIndex];
   const sceneDocs = useSceneDocs(platform, projectId, sceneId, scene?.activeVariantId ?? '');
   const [status, setStatus] = useState<StatusLine | null>(null);
+  // The two presses of a big piece (DESIGN §4.7, rule 5): one thing armed at a time.
+  const { presses, armed } = useTwoPresses();
   // The remarks of each background work, at the head of the points.
   const mentorDoc = useMentorDoc(projectId);
   const work = useBackgroundWork(
@@ -732,8 +735,12 @@ export function ProjectWorkspace({
       setNavigatorOpen(false);
       setView(`view:${viewId}`);
     },
-    runCommand: async (commandId) =>
-      announceCommand({ id: commandId, from: 'control' }) && registry.execute(commandId, ctx),
+    runCommand: async (commandId, options) =>
+      announceCommand({ id: commandId, from: 'control' }) &&
+      // A command asks for its second press where it was run from.
+      presses.within(options?.inline ? 'inline' : 'status', () => registry.execute(commandId, ctx)),
+    confirmTwice: (request) => presses.pressHere(request),
+    armed,
     openLibrary: (creating = false) => onLibrary(creating),
     openProject: (id) => {
       if (id !== projectId) onOpenProject?.(id);
@@ -1425,6 +1432,10 @@ export function ProjectWorkspace({
           }
         />
       )}
+      {/* The first press, said (DESIGN §4.7): the status line's own is read from its button. */}
+      <p className="ch-visually-hidden" aria-live="polite">
+        {armed?.where === 'inline' ? t('confirm.again', { what: armed.what }) : ''}
+      </p>
       <WritingFooter
         words={view === 'write' ? words : undefined}
         wordsToday={wordsToday}
@@ -1439,6 +1450,17 @@ export function ProjectWorkspace({
                 // Exactly what ⌘Z does (DESIGN §5.0, rule 2).
                 onUndo: () => void ctx.undoOffered(),
               }
+        }
+        confirm={
+          armed?.where === 'status'
+            ? {
+                what: armed.what,
+                left: armed.left,
+                shortcut: armed.shortcut,
+                keys: armed.keys?.[0] && ariaKeyShortcut(armed.keys[0]),
+                onConfirm: () => void presses.confirm(),
+              }
+            : undefined
         }
         onStatusHover={(over) => setStatusHovered(over && status ? status.key : null)}
         mentorNote={mentorNote}
@@ -1551,7 +1573,11 @@ export function ProjectWorkspace({
           anchor={menu.anchor}
           surface={menu.surface}
           onGone={() => setMenu(null)}
-          onClose={closeMenu}
+          onClose={() => {
+            // Closed without a choice: what waited for its second press is forgotten.
+            presses.disarm();
+            closeMenu();
+          }}
           onChoose={(run) => {
             closeMenu();
             run();

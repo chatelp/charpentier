@@ -131,10 +131,17 @@ export const languageCommands: readonly LanguageCommand[] = [
       const status = ctx.platform.agents.status();
       return status === 'available' || status === 'offline';
     },
-    run: async (ctx) => {
-      await ctx.platform.agents.forgetApiKey();
-      ctx.notify(ctx.t('mentor.apiKeyForgotten'));
-    },
+    // No way back: at the second press (docs/DESIGN.md §4.7 « Les deux appuis »), on the
+    // settings' button, or in the status line from the command line.
+    run: (ctx) =>
+      void ctx.confirmTwice({
+        id: 'forgetApiKey',
+        what: ctx.t('confirm.what.forgetKey'),
+        run: () =>
+          void ctx.platform.agents
+            .forgetApiKey()
+            .then(() => ctx.notify(ctx.t('mentor.apiKeyForgotten'))),
+      }),
   },
   {
     // The key on the server, sealed by the password: after a restart of the server (phase 4.7 b).

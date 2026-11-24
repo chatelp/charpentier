@@ -223,6 +223,61 @@ describe('the menu of a thing, in the manuscript drawer (docs/DESIGN.md §4.7)',
     );
   });
 
+  it('asks twice before a chapter that has scenes goes: the entry asks, the menu stays (DESIGN §4.7, rule 5)', async () => {
+    const { outline } = await manuscript();
+    await userEvent.click(more('Actions du chapitre Chapitre 1'));
+    const sheet = await menu('Chapitre · Chapitre 1');
+    await userEvent.click(entry(sheet, 'Mettre à la corbeille'));
+    // Nothing went; the same entry now says what will go, lit, with the seconds left.
+    const asking = entry(sheet, /^Confirmer\u00a0: chapitre et 2 scènes à la corbeille/);
+    expect(asking.classList.contains('is-lit')).toBe(true);
+    expect(asking.textContent).toMatch(/3\u00a0s$/);
+    expect(screen.getByRole('menu')).toBe(sheet);
+    expect(outline()).toEqual(['Chapitre 1: Scène 1, Scène B', 'Deux: Nouvelle scène']);
+    // Past 3 s, the label comes back and nothing went.
+    await waitFor(() => expect(entry(sheet, 'Mettre à la corbeille')).toBeTruthy(), {
+      timeout: 4500,
+    });
+    expect(outline()).toEqual(['Chapitre 1: Scène 1, Scène B', 'Deux: Nouvelle scène']);
+    // Two presses of its key, and it goes, with the way back on offer.
+    await userEvent.keyboard('{Backspace}');
+    entry(sheet, /^Confirmer\u00a0: chapitre/);
+    await userEvent.keyboard('{Backspace}');
+    await noMenu();
+    expect(outline()).toEqual(['Deux: Nouvelle scène']);
+    await screen.findByText(/^Chapitre .+Chapitre 1.+ et 2 scènes mis à la corbeille\.$/);
+  }, 15000);
+
+  it('asks in the status line at ⌫ on a chapter line; a second ⌫ does it, another key forgets it', async () => {
+    const { outline } = await manuscript();
+    line('Chapitre 1').focus();
+    await userEvent.keyboard('{Backspace}');
+    const ask = await screen.findByRole('button', {
+      name: /^Confirmer\u00a0: chapitre et 2 scènes à la corbeille/,
+    });
+    expect(ask.querySelector('kbd')?.textContent).toBe(key('Backspace'));
+    // The line keeps the focus; any other key forgets in silence.
+    expect(document.activeElement).toBe(line('Chapitre 1'));
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() => expect(screen.queryByRole('button', { name: /^Confirmer/ })).toBeNull());
+    expect(outline()).toEqual(['Chapitre 1: Scène 1, Scène B', 'Deux: Nouvelle scène']);
+
+    line('Chapitre 1').focus();
+    await userEvent.keyboard('{Backspace}');
+    await screen.findByRole('button', { name: /^Confirmer\u00a0: chapitre/ });
+    await userEvent.keyboard('{Backspace}');
+    await waitFor(() => expect(outline()).toEqual(['Deux: Nouvelle scène']));
+    screen.getByRole('button', { name: 'Annuler la mise à la corbeille du chapitre Chapitre 1' });
+  });
+
+  it('puts an empty scene or chapter in the trash at the first press', async () => {
+    const { outline } = await manuscript();
+    line('Scène B').focus();
+    await userEvent.keyboard('{Backspace}');
+    await waitFor(() => expect(outline()).toEqual(['Chapitre 1: Scène 1', 'Deux: Nouvelle scène']));
+    expect(screen.queryByRole('button', { name: /^Confirmer/ })).toBeNull();
+  });
+
   it('replaces its content by the chapters for « Déplacer vers le chapitre… », and moves the scene', async () => {
     const { outline } = await manuscript();
     await userEvent.click(more('Actions de la scène Scène B'));

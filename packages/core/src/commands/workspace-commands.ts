@@ -24,7 +24,7 @@ import {
 import type { WorkspaceContext } from '../workspace/workspace-context';
 import { ensureScene, renameProjectEverywhere } from '../workspace/default-scene';
 import type { CommandId } from './command-id';
-import type { PrimaryModifier } from './keybinding';
+import type { Chord, PrimaryModifier } from './keybinding';
 import { trashedVariantItems, variantCommands } from './variant-commands';
 import { versionCommands } from './version-commands';
 import { writingCommands } from './writing-commands';
@@ -164,6 +164,76 @@ export function trashChapterAndMove(ctx: WorkspaceContext, chapterId: string): v
       made?.unmake();
     },
   });
+}
+
+/** How a two-press request is shown and pressed again (`TwoPressRequest`). */
+export interface AskFrom {
+  readonly where?: 'inline' | 'status' | undefined;
+  readonly keys?: readonly Chord[] | undefined;
+  readonly shortcut?: string | undefined;
+}
+
+/**
+ * What a scene takes to the trash if it is a big piece (docs/DESIGN.md §4.7 « Les deux
+ * appuis »): a scene that has text. Its words are its active variant's; a scene with several
+ * variants counts as one that has text, the others' words not being at hand.
+ */
+export function sceneBigPiece(ctx: WorkspaceContext, sceneId: string): string | undefined {
+  const scene = ctx.outline.flatMap((c) => c.scenes).find((s) => s.id === sceneId);
+  if (!scene) return undefined;
+  const words = ctx.sceneWords.get(sceneId) ?? 0;
+  if (words > 0)
+    return ctx.t('confirm.what.sceneWords', {
+      count: words,
+      formatted: new Intl.NumberFormat(ctx.language).format(words),
+    });
+  if (scene.variants.length > 1)
+    return ctx.t('confirm.what.sceneVariants', { count: scene.variants.length });
+  return undefined;
+}
+
+/** A chapter that has scenes is a big piece: « chapitre et 4 scènes à la corbeille ». */
+export function chapterBigPiece(ctx: WorkspaceContext, chapterId: string): string | undefined {
+  const count = ctx.outline.find((c) => c.id === chapterId)?.scenes.length ?? 0;
+  return count > 0 ? ctx.t('confirm.what.chapter', { count }) : undefined;
+}
+
+/** The id a scene's or a chapter's two presses are armed under. */
+export const trashArmId = (id: string) => `trash:${id}`;
+
+/**
+ * The scene to the trash: at once when it is empty, at the second press when it has text
+ * (DESIGN §4.7, rule 5). True when it went; `after` runs then (the focus moves on).
+ */
+export function askTrashScene(
+  ctx: WorkspaceContext,
+  sceneId: string,
+  from: AskFrom = {},
+  after?: () => void,
+): boolean {
+  const run = () => {
+    trashSceneAndMove(ctx, sceneId);
+    after?.();
+  };
+  const what = sceneBigPiece(ctx, sceneId);
+  if (!what) return (run(), true);
+  return ctx.confirmTwice({ id: trashArmId(sceneId), what, ...from, run });
+}
+
+/** The chapter to the trash: at the second press when it has scenes. */
+export function askTrashChapter(
+  ctx: WorkspaceContext,
+  chapterId: string,
+  from: AskFrom = {},
+  after?: () => void,
+): boolean {
+  const run = () => {
+    trashChapterAndMove(ctx, chapterId);
+    after?.();
+  };
+  const what = chapterBigPiece(ctx, chapterId);
+  if (!what) return (run(), true);
+  return ctx.confirmTwice({ id: trashArmId(chapterId), what, ...from, run });
 }
 
 export { promptRenameChapter, promptRenameScene };
@@ -336,13 +406,13 @@ export const workspaceCommands: readonly WorkspaceCommand[] = [
       if (scene) moveChapterStep(ctx.root, scene.chapterId, 1);
     },
   },
-  { id: 'trashScene', scope: 'global', run: (ctx) => trashSceneAndMove(ctx, ctx.sceneId) },
+  { id: 'trashScene', scope: 'global', run: (ctx) => void askTrashScene(ctx, ctx.sceneId) },
   {
     id: 'trashChapter',
     scope: 'global',
     run: (ctx) => {
       const scene = currentScene(ctx);
-      if (scene) trashChapterAndMove(ctx, scene.chapterId);
+      if (scene) askTrashChapter(ctx, scene.chapterId);
     },
   },
   {
