@@ -1,0 +1,133 @@
+/* The menu of a thing (docs/DESIGN.md §4.7): the « ⋯ » of a line and the sheet it opens. */
+
+/* « ⋯ »: flat, its place always kept; seen on the line's hover or focus, and while its menu is open. */
+.ch-more {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  /* Never makes its line taller. */
+  margin: -6px -4px -6px 0;
+  padding: 0;
+  align-self: center;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--ch-muted);
+  font: 15px / 24px var(--ch-font-ui);
+  cursor: pointer;
+  /* Shows at once: a real click must find it as soon as the mouse is on its line. */
+  opacity: 0;
+}
+
+:hover > .ch-more,
+:focus-within > .ch-more,
+.ch-more[aria-expanded='true'] {
+  opacity: 1;
+}
+
+.ch-more:hover {
+  box-shadow: var(--ch-raise-s);
+  color: var(--ch-ink);
+}
+
+/* Its menu open: that is where the author is. */
+.ch-more[aria-expanded='true'] {
+  background: var(--ch-lit-bg);
+  box-shadow: var(--ch-lit);
+  color: var(--ch-ink);
+}
+
+.ch-menu {
+  position: fixed;
+  z-index: var(--ch-z-command);
+  min-width: 15rem;
+  max-width: 20rem;
+  max-height: calc(100vh - 16px);
+  overflow-y: auto;
+  padding: 8px 6px 6px;
+  border-radius: var(--ch-radius-md);
+  background: var(--ch-bg);
+  box-shadow: var(--ch-raise);
+  outline: none;
+}
+
+/* On the slate of a tool panel: the slate's own relief, not the page's. */
+.ch-menu.ch-tool.ch-tool {
+  box-shadow: var(--ch-raise);
+}
+
+.ch-menu-head,
+.ch-menu-title {
+  margin: 0;
+  padding: 2px 10px 6px;
+  overflow: hidden;
+  color: var(--ch-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ch-menu-title {
+  padding-top: 4px;
+}
+
+/* An engraved rule between two groups: shade above, light below. */
+.ch-menu-group + .ch-menu-group,
+.ch-menu-back + .ch-menu-group {
+  margin-top: 5px;
+  padding-top: 5px;
+  border-top: 1px solid var(--ch-shade);
+  box-shadow: inset 0 1px 0 var(--ch-highlight);
+}
+
+.ch-menu-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: var(--ch-radius-sm);
+  background: transparent;
+  color: var(--ch-ink);
+  font: var(--ch-ui-sm) var(--ch-font-ui);
+  text-align: left;
+  cursor: pointer;
+  outline: none;
+}
+
+.ch-menu-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ch-menu-item kbd,
+.ch-menu-detail {
+  flex: none;
+  color: var(--ch-faint);
+  font: 11.5px var(--ch-font-ui);
+}
+
+/* The entry under the pointer or the focus is lit (the pointer carries the focus). */
+.ch-menu-item:focus {
+  background: var(--ch-lit-bg);
+  box-shadow: var(--ch-lit);
+}
+
+/* Does not apply now: at its place, faint, without a key nor a reaction. */
+.ch-menu-item[aria-disabled='true'] {
+  color: var(--ch-faint);
+  cursor: default;
+}
+
+.ch-menu-back {
+  color: var(--ch-muted);
+}
+
+.ch-menu-filter {
+  margin: 0;
+  padding: 2px 10px 4px;
+  color: var(--ch-muted);
+  font: var(--ch-ui-xs) var(--ch-font-ui);
+}

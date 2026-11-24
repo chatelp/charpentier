@@ -1365,5 +1365,52 @@
     "chose": "Vous aviez choisi : « {{choice}} »",
     "yourChoice": "Votre choix · {{category}}",
     "yourChoiceLabel": "Votre choix, {{category}} : {{choice}}. Ouvrir la fiche."
+  },
+  "thingMenu": {
+    "actions": "Actions",
+    "actionsOf": {
+      "scene": "Actions de la scène {{name}}",
+      "chapter": "Actions du chapitre {{name}}",
+      "variant": "Actions de la variante {{name}}",
+      "manuscript": "Actions du manuscrit {{name}}"
+    },
+    "head": "{{kind}} · {{name}}",
+    "kind": {
+      "scene": "Scène",
+      "chapter": "Chapitre",
+      "variant": "Variante",
+      "manuscript": "Manuscrit"
+    },
+    "back": "‹ Retour",
+    "noMatch": "Rien de ce nom.",
+    "compagnon": "Le Compagnon",
+    "entry": {
+      "open": "Ouvrir",
+      "rename": "Renommer…",
+      "newSceneAfter": "Nouvelle scène après",
+      "newSceneInChapter": "Nouvelle scène dans ce chapitre",
+      "newChapterAfter": "Nouveau chapitre après",
+      "newChapter": "Nouveau chapitre",
+      "newVariantCopy": "Nouvelle variante (copie)",
+      "newVariantFrom": "Nouvelle variante à partir de celle-ci",
+      "readVariant": "Lire cette variante",
+      "switchVariant": "Changer de variante…",
+      "createCheckpoint": "Créer un point de restauration",
+      "moveUp": "Monter",
+      "moveDown": "Descendre",
+      "moveToChapter": "Déplacer vers le chapitre…",
+      "analyzeChapter": "Avis sur tout le chapitre",
+      "reviewChapter": "Bilan du chapitre",
+      "analyzeManuscript": "Avis sur tout le manuscrit",
+      "trash": "Mettre à la corbeille"
+    },
+    "inert": {
+      "firstScene": "C’est déjà la première scène.",
+      "lastScene": "C’est déjà la dernière scène.",
+      "firstChapter": "C’est déjà le premier chapitre.",
+      "lastChapter": "C’est déjà le dernier chapitre.",
+      "onlyChapter": "Le manuscrit n’a qu’un chapitre.",
+      "onlyVariant": "Une scène garde au moins une variante."
+    }
   }
 }
