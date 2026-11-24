@@ -623,7 +623,10 @@ export function ProjectWorkspace({
   };
   useEffect(() => {
     // (Unchanged while there is nothing to forget: typing renders nothing more.)
-    const forget = () => {
+    const forget = (event: Event) => {
+      // Typing a command's name in the command line changes nothing in the project:
+      // what went to the trash can still come back.
+      if ((event.target as Element | null)?.closest?.('.ch-cmdbar')) return;
       setOffers((list) => (list.length > 0 ? [] : list));
       // « Annuler » goes with them: it would aim at nothing.
       setStatus((line) => (line?.undoLabel ? null : line));

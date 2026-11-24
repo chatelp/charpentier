@@ -231,6 +231,23 @@ describe('workspace, keyboard only', () => {
     expect(outline()).toEqual(['Chapitre 1: Scène 1, Deux, Trois']);
   });
 
+  it('keeps the way back when the trashes go through the command line', async () => {
+    const { outline } = await startApp();
+    await press('mod+alt+n');
+    await inputInPalette('Deux');
+    await press('mod+alt+n');
+    await inputInPalette('Trois');
+    // Typing a command's name changes nothing in the project: both stay on offer.
+    await press('mod+k');
+    await userEvent.keyboard('scene corbeille{Enter}');
+    await press('mod+k');
+    await userEvent.keyboard('scene corbeille{Enter}');
+    expect(outline()).toEqual(['Chapitre 1: Scène 1']);
+    await press('mod+z');
+    await press('mod+z');
+    expect(outline()).toEqual(['Chapitre 1: Scène 1, Deux, Trois']);
+  });
+
   it('forgets every way back as soon as the author types', async () => {
     const { outline } = await startApp();
     await press('mod+alt+n');
