@@ -340,15 +340,9 @@
 }
 
 .ch-transcript-empty,
-.ch-transcript-waiting,
 .ch-transcript-problem {
   color: var(--ch-muted);
   font-size: var(--ch-ui-sm);
-}
-
-.ch-transcript-waiting {
-  color: var(--ch-mentor);
-  font-style: italic;
 }
 
 .ch-turn {

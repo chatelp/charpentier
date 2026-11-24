@@ -1,0 +1,149 @@
+/* While the Compagnon prepares his answer (docs/DESIGN.md §4.5, « Pendant qu'il réfléchit », 1.34). */
+
+.ch-wait {
+  margin: var(--ch-space-4) 0;
+}
+
+.ch-wait.is-panel {
+  margin: 0 0 14px;
+}
+
+.ch-wait p {
+  margin: 0;
+}
+
+.ch-wait-who {
+  margin-bottom: 4px !important;
+  color: var(--ch-mentor);
+}
+
+.ch-wait-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 24px;
+}
+
+.ch-wait-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* His pastille (§4.2): the blue dot of 8 px in light relief, breathing on the single curve. */
+.ch-wait-dot,
+.ch-console-breath {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--ch-radius-round);
+  background: var(--ch-mentor);
+  box-shadow: var(--ch-raise-s);
+  animation: ch-breathe 1.6s var(--ch-ease) infinite;
+}
+
+@keyframes ch-breathe {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Nothing moves while the author types (§3.4), nor with « Réduire les animations ». */
+.ch-wait.is-typing .ch-wait-dot,
+.ch-app[data-typing] .ch-wait-dot,
+.ch-app[data-typing] .ch-console-breath,
+:root[data-motion='reduced'] .ch-wait-dot,
+:root[data-motion='reduced'] .ch-console-breath {
+  animation: none;
+  opacity: 0.7;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ch-wait-dot,
+  .ch-console-breath {
+    animation: none;
+    opacity: 0.7;
+  }
+}
+
+.ch-wait-phase {
+  color: var(--ch-mentor);
+  font: italic 15px / 1.5 var(--ch-font-text);
+}
+
+.ch-wait.is-panel .ch-wait-phase {
+  font: italic 13.5px / 1.55 var(--ch-font-ui);
+}
+
+.ch-wait-time {
+  margin-left: auto;
+  color: var(--ch-faint);
+  font: 11px var(--ch-font-ui);
+  font-variant-numeric: tabular-nums;
+}
+
+/* « Arrêter »: a flat button, there from the start at the mouse and the keyboard. */
+.ch-btn.ch-wait-stop {
+  background: transparent;
+  box-shadow: none;
+  color: var(--ch-muted);
+}
+
+.ch-wait-stop kbd {
+  color: var(--ch-faint);
+}
+
+.ch-wait-stop.is-quiet {
+  opacity: 0;
+  transition: opacity var(--ch-dur-relief) var(--ch-ease);
+}
+
+.ch-wait:hover .ch-wait-stop.is-quiet,
+.ch-wait-stop.is-quiet:focus-visible {
+  opacity: 1;
+}
+
+.ch-wait-long {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px !important;
+  color: var(--ch-muted);
+  font: var(--ch-ui-sm) var(--ch-font-ui);
+}
+
+/* The answer takes the block's place: it appears there, nothing jumps. */
+.ch-transcript > .ch-turn.is-compagnon:last-child,
+.ch-interview-log > .ch-interview-turn.is-compagnon:last-child {
+  animation: ch-wait-in var(--ch-dur-note) var(--ch-ease) both;
+}
+
+@keyframes ch-wait-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Stopped: under the author's message, to send it again. */
+.ch-wait-again {
+  margin: -8px 0 var(--ch-space-4) !important;
+  color: var(--ch-muted);
+  font: var(--ch-ui-sm) var(--ch-font-ui);
+  text-align: right;
+}
+
+.ch-wait-again.is-panel {
+  margin: -10px 0 14px !important;
+  text-align: left;
+}
+
+/* The console's key, panel closed: the same pastille in place of its count. */
+.ch-console-breath {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+}

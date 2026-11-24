@@ -29,6 +29,7 @@ function press(chord: Chord): string {
  */
 const NOTHING_TO_ACT_ON: Readonly<Record<string, string>> = {
   interviewOtherSection: 'only in the guided interview',
+  stopAnswer: 'only while the Compagnon prepares an answer',
   passageAction: 'needs a remark or a correction under the cursor',
   analyzeScene: 'needs a Compagnon (the test platform has none)',
 };

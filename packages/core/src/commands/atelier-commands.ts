@@ -2,6 +2,7 @@ import { interviewSections, type EntityModule } from '@charpentier/schema';
 import { askInterview } from '../atelier/interview-requests';
 import { createEntityPrompt } from '../atelier/atelier-actions';
 import { ATELIER_MODULES, type AtelierModule } from '../atelier/module-defs';
+import { isAnswerWaiting, stopAnswer } from '../mentor/answer-wait';
 import type { WorkspaceContext } from '../workspace/workspace-context';
 import type { CommandId } from './command-id';
 import type { Command } from './registry';
@@ -89,6 +90,20 @@ export const atelierCommands: readonly AtelierCommand[] = [
           });
         },
       }),
+  },
+  {
+    // « Arrêter » the Compagnon's answer (DESIGN 1.34), the interview's or the conversation's,
+    // while he prepares one. A field's draft keeps its own ⌘. (« Annuler », FieldRow): there,
+    // this one stands aside.
+    id: 'stopAnswer',
+    scope: 'global',
+    // On AZERTY the dot is ⇧;: both are bound, as for the text's size.
+    keybinding: ['Mod-.', 'Mod-Shift-.'],
+    isEnabled: (ctx) =>
+      !!ctx.platform.agents.stopAnswer &&
+      isAnswerWaiting(ctx.platform.agents, ctx.projectId) &&
+      !document.activeElement?.closest('.ch-fv-input'),
+    run: (ctx) => stopAnswer(ctx.platform.agents, ctx.projectId),
   },
   ...ATELIER_MODULES.map((rail, i): AtelierCommand => ({
     id: RAIL_COMMANDS[rail],

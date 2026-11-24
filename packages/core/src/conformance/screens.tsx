@@ -1,6 +1,8 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import { userEvent } from 'vitest/browser';
 import { expect } from 'vitest';
+import { createFakeCompagnon } from '../testing/fake-compagnon';
+import { waitClock } from '../mentor/answer-wait';
 import { hostPrimary, startApp } from './app-under-test';
 
 const mod = hostPrimary === 'Meta' ? 'Meta' : 'Control';
@@ -28,8 +30,8 @@ async function mouseBack() {
 }
 
 /** A project with something in it: two chapters, three scenes, a variant, a restore point. */
-async function written() {
-  const app = await startApp();
+async function written(options: Parameters<typeof startApp>[0] = {}) {
+  const app = await startApp(options);
   await waitFor(() => expect(document.activeElement).toBe(app.editor));
   await userEvent.keyboard('Hélène attache la barque au quai de la Fosse.');
   await command('Créer un point de restauration');
@@ -151,6 +153,26 @@ export const SCREENS: Readonly<Record<string, () => Promise<unknown>>> = {
     await written();
     await userEvent.keyboard(chord('l'));
     await screen.findByRole('tab', { name: /Points à traiter/ });
+  },
+  // Waiting for his answer, long enough for « Arrêter » to be in plain sight (DESIGN 1.34).
+  'the conversation, waiting for the Compagnon': async () => {
+    await written({ platform: { agents: createFakeCompagnon().agents } });
+    await command('Parler au Compagnon');
+    await screen.findByRole('textbox', { name: 'Votre question au Compagnon' });
+    const now = waitClock.now;
+    waitClock.now = () => now() - 31_000;
+    await userEvent.keyboard('Que veut Hélène ?{Enter}');
+    waitClock.now = now;
+    await screen.findByText('C’est plus long que d’habitude.', { exact: false });
+  },
+  'the interview, its answer stopped': async () => {
+    await written({ platform: { agents: createFakeCompagnon().agents } });
+    await userEvent.keyboard(chord('0'));
+    await screen.findByRole('textbox', { name: 'Parlez de votre projet…' });
+    await userEvent.keyboard('Hélène est batelière.{Enter}');
+    await screen.findByRole('status', { name: 'Le Compagnon réfléchit…' });
+    await userEvent.keyboard(chord('.'));
+    await screen.findByRole('button', { name: 'Envoyer à nouveau' });
   },
   'the display sheet': async () => {
     await written();

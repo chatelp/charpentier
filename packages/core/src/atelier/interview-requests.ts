@@ -1,35 +1,14 @@
-import type { AnswerResult, AskResult } from '@charpentier/platform';
+import type { AnswerResult } from '@charpentier/platform';
 import type { InterviewMode, InterviewSection } from '@charpentier/schema';
+import { requestAnswer } from '../mentor/answer-wait';
 import type { WorkspaceContext } from '../workspace/workspace-context';
 
 /**
- * The interview's requests to the Compagnon (D-26), shared by its page and
- * its commands: which projects are waiting for an answer, and the last
- * problem, so that the page says « Le Compagnon réfléchit… » whoever asked.
+ * One turn of the interview (D-26), the author's message already in the
+ * thread; shared by its page and its commands. The wait is the Compagnon's
+ * (`mentor/answer-wait`): the page shows it whoever asked.
  */
-interface State {
-  readonly waiting: number;
-  readonly problem: AskResult | null;
-}
-
-const states = new Map<string, State>();
-const listeners = new Set<() => void>();
-const IDLE: State = { waiting: 0, problem: null };
-
-const set = (projectId: string, change: (s: State) => State) => {
-  states.set(projectId, change(states.get(projectId) ?? IDLE));
-  for (const listener of listeners) listener();
-};
-
-export const interviewState = (projectId: string): State => states.get(projectId) ?? IDLE;
-
-export function subscribeInterview(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
-
-/** One turn of the interview, the author's message already in the thread. */
-export async function askInterview(
+export function askInterview(
   ctx: Pick<WorkspaceContext, 'platform' | 'projectId'>,
   input: {
     readonly mode: InterviewMode;
@@ -37,13 +16,15 @@ export async function askInterview(
     readonly section?: InterviewSection;
     readonly pass?: boolean;
   },
+  /** The thread's last message, where its page knows it: the answer takes the wait's place. */
+  after?: string,
 ): Promise<AnswerResult> {
   const { projectId } = ctx;
-  set(projectId, (s) => ({ waiting: s.waiting + 1, problem: null }));
-  const result = await ctx.platform.agents.interview({ projectId, ...input });
-  set(projectId, (s) => ({
-    waiting: Math.max(0, s.waiting - 1),
-    problem: result === 'answered' || result === 'stopped' ? null : result,
-  }));
-  return result;
+  return requestAnswer(
+    ctx.platform.agents,
+    projectId,
+    'interview',
+    () => ctx.platform.agents.interview({ projectId, ...input }),
+    after,
+  );
 }

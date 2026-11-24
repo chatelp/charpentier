@@ -25,7 +25,7 @@ import {
   bornIn,
   bornInName,
 } from '@charpentier/schema';
-import { useEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   blockedPlaceholderKey,
@@ -34,6 +34,8 @@ import {
   useCompagnonStatus,
 } from '../mentor/Blocked';
 import * as Y from 'yjs';
+import { sendAgain, showsWait, stopAnswer, useAnswerState } from '../mentor/answer-wait';
+import { useTypingPause, WaitBlock } from '../mentor/WaitBlock';
 import { useHostWords } from '../app/host-words';
 import { useDocSnapshot } from '../hooks/use-doc-snapshot';
 import { Medallion } from '../icons/Pictogram';
@@ -42,7 +44,7 @@ import type { WorkspaceContext } from '../workspace/workspace-context';
 import type { AtelierLocation } from './Atelier';
 import { acceptAndKeep, hasKeptField, rejectSheet } from './atelier-actions';
 import { readAtelier } from './atelier-data';
-import { askInterview, interviewState, subscribeInterview } from './interview-requests';
+import { askInterview } from './interview-requests';
 import { moduleDefs, type AtelierModule } from './module-defs';
 import { sameWork } from '../work/use-background-work';
 import { WorkCard } from '../work/WorkBlock';
@@ -167,8 +169,9 @@ export function Interview({
   const messages = useDocSnapshot(mentorDoc ?? empty, interviewMessages);
   // Re-read on every change of the Atelier (a proposal validated in its sheet shows here).
   useDocSnapshot(root, readAtelier);
-  const request = useSyncExternalStore(subscribeInterview, () => interviewState(projectId));
-  const waiting = request.waiting > 0;
+  const { wait, ended } = useAnswerState(platform.agents, projectId, 'interview');
+  const waiting = wait !== null;
+  const [typing, onTyping] = useTypingPause();
 
   useEffect(() => {
     if (active) field.current?.focus();
@@ -201,8 +204,9 @@ export function Interview({
   const question = guided && last?.role === 'compagnon' && last.question ? last : undefined;
   const section = question?.section;
 
+  const lastId = () => (mentorDoc ? interviewMessages(mentorDoc).at(-1)?.id : undefined);
   const ask = (input: Omit<Parameters<typeof askInterview>[1], 'mode'> = {}) =>
-    void askInterview(ctx, { mode: guided ? 'guided' : 'free', skip: later, ...input });
+    void askInterview(ctx, { mode: guided ? 'guided' : 'free', skip: later, ...input }, lastId());
 
   // Going to guided mode: the Compagnon asks his first question.
   const wasGuided = useRef(guided);
@@ -210,7 +214,7 @@ export function Interview({
     const switched = guided && !wasGuided.current;
     wasGuided.current = guided;
     if (switched && mentorDoc && available && !waiting && !question)
-      void askInterview(ctx, { mode: 'guided', skip: later });
+      void askInterview(ctx, { mode: 'guided', skip: later }, lastId());
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only on the switch
   }, [guided, mentorDoc]);
 
@@ -271,6 +275,7 @@ export function Interview({
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+    if (event.target === field.current) onTyping(event);
     if (event.key === 'Escape' && originMessage) {
       event.preventDefault();
       backToNotebook();
@@ -314,7 +319,7 @@ export function Interview({
     if (!section) return;
     const next = [...later, section];
     setLater(next);
-    void askInterview(ctx, { mode: 'guided', skip: next });
+    void askInterview(ctx, { mode: 'guided', skip: next }, lastId());
   };
 
   const modeKey = ctx.shortcutLabel('toggleInterviewMode') ?? '';
@@ -472,9 +477,39 @@ export function Interview({
             />
           </div>
         )}
-        {waiting && <p className="ch-transcript-waiting">{t('mentor.thinking')}</p>}
-        {request.problem && (
-          <p className="ch-transcript-problem">{text(`mentor.ask.${request.problem}`)}</p>
+        {showsWait(wait, last) && (
+          <WaitBlock
+            wait={wait}
+            variant="page"
+            typing={typing}
+            onStop={
+              platform.agents.stopAnswer &&
+              (() => {
+                stopAnswer(platform.agents, projectId);
+                // The button goes with the block: back to the field.
+                field.current?.focus();
+              })
+            }
+            stopKey={ctx.shortcutLabel('stopAnswer')}
+          />
+        )}
+        {/* Stopped: the author's message waits, to be sent again (DESIGN 1.34). */}
+        {ended === 'stopped' && last?.role === 'author' && (
+          <p className="ch-wait-again">
+            <button
+              type="button"
+              className="ch-link"
+              onClick={() => {
+                sendAgain(platform.agents, projectId, 'interview');
+                field.current?.focus();
+              }}
+            >
+              {t('mentor.wait.again')}
+            </button>
+          </p>
+        )}
+        {ended && ended !== 'stopped' && (
+          <p className="ch-transcript-problem">{text(`mentor.ask.${ended}`)}</p>
         )}
       </div>
 
@@ -563,7 +598,7 @@ export function Interview({
       </div>
       {available && (
         <p className="ch-interview-hint">
-          {t('interview.hint', {
+          {t(waiting ? 'mentor.wait.interviewHint' : 'interview.hint', {
             newline: host.key('Shift-Enter'),
             mode: modeKey,
             validate: host.key('Alt-v'),

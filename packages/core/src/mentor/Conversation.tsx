@@ -26,7 +26,15 @@ import { NotedLine } from '../atelier/NotedLine';
 import { BilanHeading, BilanLinks } from '../work/Bilan';
 import { StyleCitation } from './StyleCitation';
 import type { WorkspaceContext } from '../workspace/workspace-context';
-import type { AskResult } from '@charpentier/platform';
+import {
+  forgetProblem,
+  requestAnswer,
+  sendAgain,
+  showsWait,
+  stopAnswer,
+  useAnswerState,
+} from './answer-wait';
+import { useTypingPause, WaitBlock } from './WaitBlock';
 import { PanelEntryContext, usePanelEntry } from '../workspace/panel-entry';
 import { useHostWords } from '../app/host-words';
 
@@ -61,9 +69,10 @@ export function Conversation({
   const platform = usePlatform();
   const [mentorDoc, setMentorDoc] = useState<Y.Doc | null>(null);
   const [draft, setDraft] = useState('');
-  const [waiting, setWaiting] = useState(false);
-  /** Why the last question went unanswered (`mentor.ask.<problem>`). */
-  const [problem, setProblem] = useState<Exclude<AskResult, 'answered'> | null>(null);
+  // The wait outlives the panel: closed and opened again, it is still there (DESIGN 1.34).
+  const { wait, ended } = useAnswerState(platform.agents, projectId, 'chat');
+  const waiting = wait !== null;
+  const [typing, onTyping] = useTypingPause();
   const field = useRef<HTMLTextAreaElement>(null);
   const transcript = useRef<HTMLDivElement>(null);
 
@@ -82,6 +91,9 @@ export function Conversation({
     };
   }, [platform, projectId]);
 
+  // A problem said here is not said again when the panel comes back (a key set meanwhile…).
+  useEffect(() => () => forgetProblem(platform.agents, projectId, 'chat'), [platform, projectId]);
+
   const messages = useDocSnapshot(mentorDoc ?? empty, chatMessages);
 
   // The field takes the focus when the author enters the panel, never by itself.
@@ -96,7 +108,7 @@ export function Conversation({
     [...messages].reverse().find((m) => m.role === 'compagnon')?.example,
   );
 
-  const send = async () => {
+  const send = () => {
     const text = draft.trim();
     if (!text || !mentorDoc || waiting) return;
     addChatMessage(
@@ -105,17 +117,20 @@ export function Conversation({
       AUTHOR,
     );
     setDraft('');
-    setProblem(null);
-    setWaiting(true);
-    const result = await platform.agents.ask({ projectId, sceneId });
-    setWaiting(false);
-    if (result !== 'answered' && result !== 'stopped') setProblem(result);
+    void requestAnswer(
+      platform.agents,
+      projectId,
+      'chat',
+      () => platform.agents.ask({ projectId, sceneId }),
+      chatMessages(mentorDoc).at(-1)?.id,
+    );
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+    onTyping(event);
     if (event.key === 'Enter' && !event.shiftKey && !event.metaKey && !event.ctrlKey) {
       event.preventDefault();
-      void send();
+      send();
     } else if (event.key === 'Enter' && (event.metaKey || event.ctrlKey) && lastExample) {
       event.preventDefault();
       onInsertExample(lastExample);
@@ -128,6 +143,10 @@ export function Conversation({
   const status = useCompagnonStatus(platform.agents);
   const available = status !== 'disabled';
   const blocked = blockedStatus(status);
+  // Stopped by the author: their message waits to be sent again.
+  const stopped = ended === 'stopped' && messages.at(-1)?.role === 'author';
+  /** Why the last question went unanswered (`mentor.ask.<problem>`). */
+  const problem = ended === 'stopped' ? null : ended;
 
   return (
     <div className="ch-conversation">
@@ -170,7 +189,36 @@ export function Conversation({
             </Turn>
           </Fragment>
         ))}
-        {waiting && <p className="ch-transcript-waiting">{t('mentor.thinking')}</p>}
+        {showsWait(wait, messages.at(-1)) && (
+          <WaitBlock
+            wait={wait}
+            variant="panel"
+            typing={typing}
+            onStop={
+              platform.agents.stopAnswer &&
+              (() => {
+                stopAnswer(platform.agents, projectId);
+                // The button goes with the block: back to the field.
+                field.current?.focus();
+              })
+            }
+            stopKey={ctx?.shortcutLabel('stopAnswer')}
+          />
+        )}
+        {stopped && (
+          <p className="ch-wait-again is-panel">
+            <button
+              type="button"
+              className="ch-link"
+              onClick={() => {
+                sendAgain(platform.agents, projectId, 'chat');
+                field.current?.focus();
+              }}
+            >
+              {t('mentor.wait.again')}
+            </button>
+          </p>
+        )}
         {problem === 'unavailable' && ctx ? (
           // No key: where the author sets it, one click away (DESIGN 1.24).
           <p className="ch-transcript-problem">
@@ -201,7 +249,7 @@ export function Conversation({
         onKeyDown={onKeyDown}
       />
       <p className="ch-panel-hint">
-        {t('mentor.chatHint', {
+        {t(waiting ? 'mentor.wait.chatHint' : 'mentor.chatHint', {
           newline: host.key('Shift-Enter'),
           insert: host.key('Mod-Enter'),
         })}

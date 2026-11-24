@@ -5,6 +5,9 @@ import { stepMeasure, stepTextSize } from './writing-prefs';
 import './entry-points.css';
 import { CloseButton } from '../icons/CloseButton';
 import { Pictogram, type PictogramName } from '../icons/Pictogram';
+import { usePlatform } from '../app/platform-context';
+import { useAnyAnswerWaiting } from '../mentor/answer-wait';
+import '../mentor/wait.css';
 
 /** « Label (shortcut) »: the native tooltip of every entry point (docs/DESIGN.md §4.8). */
 export const withShortcut = (label: string, shortcut: string | undefined) =>
@@ -40,6 +43,9 @@ export function ConsoleKey({
   readonly band?: boolean;
   onToggle(): void;
 }) {
+  // The Compagnon prepares an answer, his panel closed: his pastille breathes here,
+  // in place of the count, until it comes (docs/DESIGN.md §4.5, 1.34).
+  const waiting = useAnyAnswerWaiting(usePlatform().agents) && mentor && !pressed;
   return (
     <button
       type="button"
@@ -54,10 +60,15 @@ export function ConsoleKey({
         {name} {shortcut && <kbd>{shortcut}</kbd>}
       </span>
       <Pictogram name={picto} size={17} />
-      {count !== undefined && count > 0 && (
-        <span className="ch-console-count" aria-hidden="true">
-          {count}
-        </span>
+      {waiting ? (
+        <span className="ch-console-breath" aria-hidden="true" />
+      ) : (
+        count !== undefined &&
+        count > 0 && (
+          <span className="ch-console-count" aria-hidden="true">
+            {count}
+          </span>
+        )
       )}
     </button>
   );
