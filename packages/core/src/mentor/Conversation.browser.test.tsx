@@ -1,6 +1,6 @@
 import { addChatMessage, agentOrigin, chatMessages, guids } from '@charpentier/schema';
 import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
-import { userEvent } from 'vitest/browser';
+import { page, userEvent } from 'vitest/browser';
 import { afterEach, describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
 import { App } from '../app/App';
@@ -116,7 +116,9 @@ describe('conversation with the Compagnon', () => {
     });
     render(<App platform={platform} i18n={await createI18n('fr')} />);
     await screen.findByRole('textbox', { name: 'Texte de la scène' });
-    // The footer's « Compagnon : saisir la clé » opens the section.
+    // The footer's « Compagnon : saisir la clé » opens the section (a tight foot has no room for it).
+    const [width, height] = [window.innerWidth, window.innerHeight];
+    await page.viewport(1280, 800);
     screen.getByRole('button', { name: 'Compagnon\u00A0: saisir la clé' }).click();
     await screen.findByRole('region', { name: 'Compagnon' });
     await userEvent.keyboard('{Escape}');
@@ -130,5 +132,6 @@ describe('conversation with the Compagnon', () => {
     expect(screen.getByText('Le Compagnon attend votre clé d’API.')).toBeTruthy();
     screen.getByRole('button', { name: /^Saisir la clé…/ }).click();
     await screen.findByRole('region', { name: 'Compagnon' });
+    await page.viewport(width, height);
   });
 });

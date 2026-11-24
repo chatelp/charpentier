@@ -63,6 +63,11 @@ export interface WorkspaceContext {
    * text not read yet): who asks then takes it for a scene that has text.
    */
   sceneHasText(sceneId: string): boolean | undefined;
+  /**
+   * Reads a scene thought empty again, whose text may have come from another device since:
+   * true when it is empty for sure; false when it is not, or not known in time.
+   */
+  sceneStillEmpty(sceneId: string): Promise<boolean>;
   /** Plain text of each scene's active variant (as last read). */
   readonly sceneTexts: ReadonlyMap<string, string>;
   /** The Compagnon's intervention level for this project (D-19). */

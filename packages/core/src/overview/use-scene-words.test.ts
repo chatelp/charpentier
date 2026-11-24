@@ -2,7 +2,7 @@ import * as Y from 'yjs';
 import { describe, expect, it } from 'vitest';
 import type { DocumentHandle } from '@charpentier/platform';
 import { guids, variantFragment } from '@charpentier/schema';
-import { SceneTextReader as Reader } from './use-scene-words';
+import { sceneIsEmpty, SceneTextReader as Reader } from './use-scene-words';
 
 /** The reader, its texts alone. */
 class SceneTextReader extends Reader {
@@ -141,5 +141,20 @@ describe('reading the scenes’ texts for the overview', () => {
     expect(docs.opened).toEqual(['a']);
     await reader.read(variants('v1', 'v3'));
     expect(docs.opened).toEqual(['a', 'a']);
+  });
+
+  it('reads again a scene thought empty; not read in time, or at all, it is not known to be', async () => {
+    const docs = documents();
+    const scene = { id: 'a', activeVariantId: 'v1', variants: [{ id: 'v1' }, { id: 'v2' }] };
+    expect(await sceneIsEmpty(docs.service, 'p1', scene)).toBe(true);
+    // Filled on another device since, in the variant that is not read.
+    docs.write('a', 'v2', 'Écrit ailleurs.');
+    expect(await sceneIsEmpty(docs.service, 'p1', scene)).toBe(false);
+    const never = { open: () => new Promise<DocumentHandle>(() => {}) };
+    const before = Date.now();
+    expect(await sceneIsEmpty(never, 'p1', scene)).toBe(false);
+    expect(Date.now() - before).toBeLessThan(1000);
+    const broken = { open: () => Promise.reject<DocumentHandle>(new Error('unreadable')) };
+    expect(await sceneIsEmpty(broken, 'p1', scene)).toBe(false);
   });
 });

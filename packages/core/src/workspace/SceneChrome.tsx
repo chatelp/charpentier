@@ -177,10 +177,12 @@ export function WritingFooter({
   return (
     <footer className="ch-footer">
       <span className="ch-footer-words">
-        {words !== undefined && <span>{t('footer.words', { count: words })}</span>}
+        {words !== undefined && (
+          <span className="ch-footer-count">{t('footer.words', { count: words })}</span>
+        )}
         {words !== undefined && wordsToday > 0 && (
           <>
-            {' · '}
+            <span className="ch-footer-today-mark">{' · '}</span>
             <span className="ch-footer-today">{t('footer.today', { count: wordsToday })}</span>
           </>
         )}
@@ -215,7 +217,7 @@ export function WritingFooter({
           // One state message at a time, whole: the most recent (a confirmation) wins.
           mentorNote &&
           !status && (
-            <span className="ch-footer-fit" title={mentorNote}>
+            <span className="ch-footer-fit ch-footer-note" title={mentorNote}>
               {mentorNote}
             </span>
           )
@@ -225,7 +227,7 @@ export function WritingFooter({
           (syncState.onClick ? (
             <button
               type="button"
-              className="ch-footer-button is-mentor ch-footer-fit"
+              className="ch-footer-button is-mentor ch-footer-fit ch-footer-sync"
               onClick={syncState.onClick}
             >
               {syncState.text}

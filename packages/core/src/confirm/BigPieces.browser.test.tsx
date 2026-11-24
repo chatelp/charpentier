@@ -1,5 +1,5 @@
 import type { SyncService } from '@charpentier/platform';
-import { guids, readOutline } from '@charpentier/schema';
+import { guids, readOutline, variantFragment } from '@charpentier/schema';
 import { cleanup, screen, waitFor, within } from '@testing-library/react';
 import { page, userEvent } from 'vitest/browser';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -51,7 +51,27 @@ async function start(slow = () => false) {
     readOutline(root())
       .flatMap((c) => c.scenes)
       .map((s) => s.title);
-  return { scenes };
+  /** The document of a scene, as another device's edits reach it. */
+  const sceneDoc = (title: string) => {
+    const scene = readOutline(root())
+      .flatMap((c) => c.scenes)
+      .find((s) => s.title === title);
+    if (!scene) throw new Error(title);
+    const doc = docs.get(guids.scene(String(app.prefs.get('lastProjectId')), scene.id)) as Y.Doc;
+    return { doc, variantId: scene.activeVariantId };
+  };
+  return { scenes, sceneDoc };
+}
+/** Written on another device: an edit of a second replica, carried here. */
+function writtenElsewhere({ doc, variantId }: { doc: Y.Doc; variantId: string }) {
+  const other = new Y.Doc();
+  Y.applyUpdate(other, Y.encodeStateAsUpdate(doc));
+  other.transact(() => {
+    const paragraph = new Y.XmlElement('paragraph');
+    paragraph.insert(0, [new Y.XmlText('Écrit sur le X250.')]);
+    variantFragment(other, variantId).push([paragraph]);
+  }, 'author');
+  Y.applyUpdate(doc, Y.encodeStateAsUpdate(other), 'remote');
 }
 const drawer = async () => {
   await userEvent.keyboard('{ControlOrMeta>}j{/ControlOrMeta}');
@@ -75,6 +95,19 @@ describe('a scene that has text is a big piece (docs/DESIGN.md §4.7, rule 5 of 
     await userEvent.keyboard('{ControlOrMeta>}a{/ControlOrMeta}Le quai{Enter}');
     await waitFor(() => expect(scenes()).toEqual(['Scène 1', 'Le quai']));
     await drawer();
+    line('Scène 1').focus();
+    await userEvent.keyboard('{Backspace}');
+    await ask('scène');
+    expect(scenes()).toEqual(['Scène 1', 'Le quai']);
+  });
+
+  it('asks for a scene read empty, then filled on another device', async () => {
+    const { scenes, sceneDoc } = await start();
+    await command('Nouvelle scène', 'Le quai');
+    await drawer();
+    // Read here, empty: it would go at the first press.
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    writtenElsewhere(sceneDoc('Scène 1'));
     line('Scène 1').focus();
     await userEvent.keyboard('{Backspace}');
     await ask('scène');

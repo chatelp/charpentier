@@ -167,15 +167,46 @@
  */
 .ch-app[data-view='write'] .ch-footer {
   display: grid;
-  /* The middle column holds the console: the command zone and its two keys (DESIGN 1.25). */
+  /*
+   * The middle column holds the console: the command zone and its two keys (DESIGN 1.25). A
+   * tight foot (DESIGN §4.7, 1.43; « Aa » never leaves it): under 30rem the console goes from
+   * 14 to 11rem, then the right side gives way down to « Aa », then the words. (100% is the
+   * foot's width, which the panels set: no window width says it.)
+   */
   grid-template-columns:
-    minmax(4.5rem, 1fr) minmax(14rem, calc(min(30rem, 38vw) + 6.5rem))
-    minmax(9rem, 1fr);
+    minmax(clamp(0rem, 100% - 15.75rem, 4.5rem), 1fr)
+    minmax(clamp(11rem, (100% - 30rem) * 999, 14rem), calc(min(30rem, 38vw) + 6.5rem))
+    minmax(clamp(2.75rem, 100% - 17.5rem, 9rem), 1fr);
+  column-gap: clamp(0.5rem, 100% - 15.5rem, 1rem);
 }
 
 .ch-app[data-view='write'] .ch-footer-right {
   min-width: 0;
-  container-type: inline-size;
+  container: foot-side / inline-size;
+}
+
+.ch-app[data-view='write'] .ch-footer-words {
+  container: foot-words / inline-size;
+}
+
+.ch-app[data-view='write'] .ch-footer-middle {
+  container: foot-middle / inline-size;
+}
+
+/* Too tight for its words, the command zone keeps « › » and its key. */
+@container foot-middle (max-width: 13.9rem) {
+  /* (Its name, still, for who does not see it.) */
+  .ch-cmdzone-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .ch-console > .ch-cmdzone {
+    justify-content: space-between;
+  }
 }
 
 /* Clipped, not hidden: the buttons keep their relief. */
@@ -209,13 +240,14 @@
  * right, as wide as its phrase and at most as the foot, over the page's text.
  */
 .ch-footer-posed {
+  /* (Outside the grid's columns.) */
   position: absolute;
   right: 0;
   bottom: calc(100% + 6px);
   left: 0;
   display: flex;
   justify-content: flex-end;
-  container-type: inline-size;
+  container: foot-posed / inline-size;
 }
 
 .ch-footer .ch-posed {
@@ -279,7 +311,7 @@
 }
 
 /* A foot too narrow for the rest of the phrase: two lines, the plate grows upward. */
-@container (max-width: 350px) {
+@container foot-posed (max-width: 350px) {
   .ch-footer .ch-posed,
   .ch-posed-phrase,
   .ch-posed-text {
@@ -338,9 +370,49 @@
   white-space: nowrap;
 }
 
-/* « Enregistré » is always true: it goes first when the side is short. */
-@container (max-width: 15rem) {
+/* The Compagnon's key, cut by an ellipsis rather than by the foot's edge. */
+.ch-footer-right > .ch-footer-key {
+  display: block;
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/*
+ * The side gives way in order (DESIGN 1.43): « Enregistré », always true; the Compagnon's note;
+ * the sync's state. « Aa » stays.
+ */
+@container foot-side (max-width: 15rem) {
   .ch-footer-saved {
+    display: none;
+  }
+}
+
+@container foot-side (max-width: 7rem) {
+  .ch-footer-note,
+  .ch-footer-right > .ch-footer-key {
+    display: none;
+  }
+}
+
+@container foot-side (max-width: 5rem) {
+  .ch-footer-sync,
+  .ch-footer-work {
+    display: none;
+  }
+}
+
+/* Then the day's words, then the words: whole, or not there. */
+@container foot-words (max-width: 10rem) {
+  .ch-footer-today,
+  .ch-footer-today-mark {
+    display: none;
+  }
+}
+
+@container foot-words (max-width: 3.5rem) {
+  .ch-footer-count {
     display: none;
   }
 }

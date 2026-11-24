@@ -7,9 +7,14 @@ import * as Y from 'yjs';
 import { App } from '../app/App';
 import { createI18n } from '../i18n/i18n';
 import { createTestPlatform } from '../testing/test-platform';
+import { systemUi } from './system-store';
 import { createSystemFeature } from './system-feature';
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  // The line's state outlives a test: a panel left open takes the focus of the next one's text.
+  systemUi.open(null);
+});
 
 const isMac = /Mac/.test(navigator.platform);
 const mod = (keys: string) => `{ControlOrMeta>}${keys}{/ControlOrMeta}`;
@@ -121,6 +126,24 @@ describe('the system line of the X250 (phase 5.3)', () => {
     // The line's state outlives a test: closed, as the author leaves it.
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  });
+
+  it('Échap forgets an armed item and leaves its panel open; the next one closes it', async () => {
+    const system = createSimulatedSystem();
+    await start(system);
+    await userEvent.keyboard(sys('w'));
+    const panel = await screen.findByRole('dialog');
+    const network = within(panel).getByRole('option', { name: /Maison-5G/ });
+    network.focus();
+    await userEvent.keyboard('o');
+    await within(panel).findByText('Confirmer l’oubli de Maison-5G');
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(within(panel).queryByText(/Confirmer l’oubli/)).toBeNull());
+    expect(panel.isConnected).toBe(true);
+    expect(document.activeElement).toBe(network);
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(system.state().wifi.networks.find((n) => n.ssid === 'Maison-5G')?.known).toBe(true);
   });
 
   it('in the settings too, ⏎ held on « oublier » is one press', async () => {
@@ -629,6 +652,12 @@ describe('the updates of the X250 (phase 5.12)', () => {
     expect(system.simulate.calls).toContain('checkUpdate');
 
     const back = screen.getByRole('button', { name: 'revenir à 0.4.2…' });
+    // Échap forgets what is armed, and the page stays.
+    await userEvent.click(back);
+    expect(back.textContent).toContain('confirmer : redémarrer sur 0.4.2');
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(back.textContent).not.toContain('confirmer'));
+    expect(back.isConnected).toBe(true);
     // Held down, ⏎ is one press: it asks, and does not confirm by itself (DESIGN §5.0, rule 5).
     back.focus();
     await userEvent.keyboard('{Enter>4/}');

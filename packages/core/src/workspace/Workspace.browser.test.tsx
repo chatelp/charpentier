@@ -125,6 +125,8 @@ describe('workspace, keyboard only', () => {
     const { outline } = await startApp();
     await press('mod+alt+n');
     await inputInPalette('Éphémère');
+    // The scene is there: not read yet, it would ask (DESIGN §4.7, 1.43).
+    await waitFor(() => expect(editorFocused()).toBe(true));
     await press('mod+k');
     await userEvent.keyboard('scene corbeille{Enter}');
     expect(outline()).toEqual(['Chapitre 1: Scène 1']);
@@ -137,6 +139,8 @@ describe('workspace, keyboard only', () => {
     await waitFor(() => expect(document.title).toBe('Mon projet — Éphémère'));
 
     // The trash says what went and how to get it back: ⌘Z, as long as nothing was typed since.
+    // The scene is there: not read yet, it would ask (DESIGN §4.7, 1.43).
+    await waitFor(() => expect(editorFocused()).toBe(true));
     await press('mod+k');
     await userEvent.keyboard('scene corbeille{Enter}');
     expect(outline()).toEqual(['Chapitre 1: Scène 1']);
@@ -148,6 +152,8 @@ describe('workspace, keyboard only', () => {
     await screen.findByText('Remis en place.');
 
     // Once the author has typed, ⌘Z is the text's again: the scene stays in the trash.
+    // The scene is there: not read yet, it would ask (DESIGN §4.7, 1.43).
+    await waitFor(() => expect(editorFocused()).toBe(true));
     await press('mod+k');
     await userEvent.keyboard('scene corbeille{Enter}');
     await waitFor(() => expect(editorFocused()).toBe(true));
@@ -158,6 +164,8 @@ describe('workspace, keyboard only', () => {
 
   it('brings back with ⌘Z the last scene put in the trash, and takes away the one made in its place', async () => {
     const { outline } = await startApp();
+    // The scene is there: not read yet, it would ask (DESIGN §4.7, 1.43).
+    await waitFor(() => expect(editorFocused()).toBe(true));
     await press('mod+k');
     await userEvent.keyboard('scene corbeille{Enter}');
     // A manuscript always has a scene to write in: one was made.
@@ -171,6 +179,8 @@ describe('workspace, keyboard only', () => {
     const { outline } = await startApp();
     await press('mod+alt+n');
     await inputInPalette('Éphémère');
+    // The scene is there: not read yet, it would ask (DESIGN §4.7, 1.43).
+    await waitFor(() => expect(editorFocused()).toBe(true));
     await press('mod+k');
     await userEvent.keyboard('scene corbeille{Enter}');
     expect(outline()).toEqual(['Chapitre 1: Scène 1']);
@@ -245,8 +255,12 @@ describe('workspace, keyboard only', () => {
     await press('mod+alt+n');
     await inputInPalette('Trois');
     // Typing a command's name changes nothing in the project: both stay on offer.
+    // The scene is there: not read yet, it would ask (DESIGN §4.7, 1.43).
+    await waitFor(() => expect(editorFocused()).toBe(true));
     await press('mod+k');
     await userEvent.keyboard('scene corbeille{Enter}');
+    // The scene is there: not read yet, it would ask (DESIGN §4.7, 1.43).
+    await waitFor(() => expect(editorFocused()).toBe(true));
     await press('mod+k');
     await userEvent.keyboard('scene corbeille{Enter}');
     expect(outline()).toEqual(['Chapitre 1: Scène 1']);
@@ -286,6 +300,8 @@ describe('workspace, keyboard only', () => {
     await startApp();
     await press('mod+alt+n');
     await inputInPalette('Éphémère');
+    // The scene is there: not read yet, it would ask (DESIGN §4.7, 1.43).
+    await waitFor(() => expect(editorFocused()).toBe(true));
     await press('mod+k');
     await userEvent.keyboard('scene corbeille{Enter}');
     await screen.findByText('Scène « Éphémère » mise à la corbeille.');

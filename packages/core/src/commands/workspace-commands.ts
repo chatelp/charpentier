@@ -181,12 +181,16 @@ export interface AskFrom {
  * yet is no reason to let it go: it asks.
  */
 export function sceneBigPiece(ctx: WorkspaceContext, sceneId: string): string | undefined {
+  return ctx.sceneHasText(sceneId) === false ? undefined : sceneAsked(ctx, sceneId);
+}
+
+/** « scène de 1 240 mots à la corbeille »: what a scene that asks takes with it. */
+function sceneAsked(ctx: WorkspaceContext, sceneId: string): string | undefined {
   const scene = ctx.outline.flatMap((c) => c.scenes).find((s) => s.id === sceneId);
-  const hasText = ctx.sceneHasText(sceneId);
-  if (!scene || hasText === false) return undefined;
+  if (!scene) return undefined;
   if (scene.variants.length > 1)
     return ctx.t('confirm.what.sceneVariants', { count: scene.variants.length });
-  const words = hasText ? ctx.sceneWords.get(sceneId) : undefined;
+  const words = ctx.sceneHasText(sceneId) ? ctx.sceneWords.get(sceneId) : undefined;
   return words
     ? ctx.t('confirm.what.sceneWords', {
         count: words,
@@ -204,23 +208,43 @@ export function chapterBigPiece(ctx: WorkspaceContext, chapterId: string): strin
 /** The id a scene's or a chapter's two presses are armed under. */
 export const trashArmId = (id: string) => `trash:${id}`;
 
+/** Scenes being read again before they go: a second press meanwhile changes nothing. */
+const reading = new Set<string>();
+
 /**
  * The scene to the trash: at once when it is empty, at the second press when it has text
- * (DESIGN §4.7, rule 5). True when it went; `after` runs then (the focus moves on).
+ * (DESIGN §4.7, rule 5). One thought empty and not open is read again first: another device may
+ * have filled it. `after` runs when it went (the focus moves on).
  */
 export function askTrashScene(
   ctx: WorkspaceContext,
   sceneId: string,
   from: AskFrom = {},
   after?: () => void,
-): boolean {
+): void {
   const run = () => {
     trashSceneAndMove(ctx, sceneId);
     after?.();
   };
+  const id = trashArmId(sceneId);
   const what = sceneBigPiece(ctx, sceneId);
-  if (!what) return (run(), true);
-  return ctx.confirmTwice({ id: trashArmId(sceneId), what, ...from, run });
+  if (what) return void ctx.confirmTwice({ id, what, ...from, run });
+  if (sceneId === ctx.sceneId) return run();
+  if (reading.has(sceneId)) return;
+  reading.add(sceneId);
+  void ctx.sceneStillEmpty(sceneId).then((empty) => {
+    reading.delete(sceneId);
+    if (empty) return run();
+    // Its menu, if it came from one, is closed: the line asks, its key presses again.
+    const filled = ctx.t('confirm.what.scene');
+    ctx.confirmTwice({
+      id,
+      what: sceneAsked(ctx, sceneId) ?? filled,
+      ...from,
+      where: 'status',
+      run,
+    });
+  });
 }
 
 /** The chapter to the trash: at the second press when it has scenes. */
@@ -229,14 +253,14 @@ export function askTrashChapter(
   chapterId: string,
   from: AskFrom = {},
   after?: () => void,
-): boolean {
+): void {
   const run = () => {
     trashChapterAndMove(ctx, chapterId);
     after?.();
   };
   const what = chapterBigPiece(ctx, chapterId);
-  if (!what) return (run(), true);
-  return ctx.confirmTwice({ id: trashArmId(chapterId), what, ...from, run });
+  if (!what) return run();
+  ctx.confirmTwice({ id: trashArmId(chapterId), what, ...from, run });
 }
 
 export { promptRenameChapter, promptRenameScene };

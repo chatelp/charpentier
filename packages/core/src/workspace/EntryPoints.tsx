@@ -6,7 +6,7 @@ import './entry-points.css';
 import { CloseButton } from '../icons/CloseButton';
 import { Pictogram, type PictogramName } from '../icons/Pictogram';
 import { usePlatform } from '../app/platform-context';
-import { useAnyAnswerWaiting } from '../mentor/answer-wait';
+import { useAnswerWaiting } from '../mentor/answer-wait';
 import '../mentor/wait.css';
 
 /** « Label (shortcut) »: the native tooltip of every entry point (docs/DESIGN.md §4.8). */
@@ -28,6 +28,7 @@ export function ConsoleKey({
   tour,
   mentor = false,
   band = false,
+  projectId,
   onToggle,
 }: {
   readonly picto: PictogramName;
@@ -41,11 +42,13 @@ export function ConsoleKey({
   readonly mentor?: boolean;
   /** In the overview's strip (DESIGN 1.25): 30 px, in the strip's slate. */
   readonly band?: boolean;
+  /** The project open: the Compagnon's wait is for it. */
+  readonly projectId: string;
   onToggle(): void;
 }) {
   // The Compagnon prepares an answer, his panel closed: his pastille breathes here,
   // in place of the count, until it comes (docs/DESIGN.md §4.5, 1.34).
-  const waiting = useAnyAnswerWaiting(usePlatform().agents) && mentor && !pressed;
+  const waiting = useAnswerWaiting(usePlatform().agents, projectId) && mentor && !pressed;
   return (
     <button
       type="button"
@@ -84,6 +87,7 @@ export function Console({
   manuscript,
   compagnon,
   away,
+  projectId,
 }: {
   readonly commandZone: ReactNode;
   readonly manuscript: {
@@ -99,6 +103,7 @@ export function Console({
   };
   /** The command line is open: the plate fades out. */
   readonly away: boolean;
+  readonly projectId: string;
 }) {
   const { t } = useTranslation();
   return (
@@ -110,6 +115,7 @@ export function Console({
         shortcut={manuscript.shortcut}
         pressed={manuscript.open}
         tour={1}
+        projectId={projectId}
         onToggle={manuscript.toggle}
       />
       {commandZone}
@@ -121,6 +127,7 @@ export function Console({
         count={compagnon.count}
         pressed={compagnon.open}
         tour={2}
+        projectId={projectId}
         mentor
         onToggle={compagnon.toggle}
       />

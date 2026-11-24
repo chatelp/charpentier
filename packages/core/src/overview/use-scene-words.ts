@@ -6,6 +6,7 @@ import {
   type OutlineChapter,
 } from '@charpentier/schema';
 import { useEffect, useMemo, useState } from 'react';
+import type * as Y from 'yjs';
 import { countWords } from '../editor/word-count';
 
 interface SceneToRead {
@@ -23,6 +24,10 @@ interface ReadScene {
   /** The variants it read, and which was active: another reading is due when they change. */
   readonly key: string;
 }
+
+/** Whether a variant has a word, in its scene's document. */
+export const variantHasText = (doc: Y.Doc, variantId: string): boolean =>
+  countWords(fragmentPlainText(variantFragment(doc, variantId))) > 0;
 
 const variantIds = (scene: SceneToRead) =>
   scene.variants?.map((v) => v.id) ?? [scene.activeVariantId];
@@ -88,6 +93,38 @@ export class SceneTextReader {
   }
 }
 
+/** A scene thought empty is read again before it goes: no longer than this. */
+const REREAD_MS = 300;
+
+/**
+ * Reads a scene again: true when all its variants are empty for sure, false when one has a word,
+ * or when it could not be read in time (DESIGN §4.7: unknown is not empty).
+ */
+export async function sceneIsEmpty(
+  documents: Platform['documents'],
+  projectId: string,
+  scene: SceneToRead,
+): Promise<boolean> {
+  const read = async () => {
+    const handle = await documents.open(guids.scene(projectId, scene.id));
+    try {
+      await handle.whenLoaded;
+      return !variantIds(scene).some((id) => variantHasText(handle.doc, id));
+    } finally {
+      await handle.close();
+    }
+  };
+  let late: ReturnType<typeof setTimeout> | undefined;
+  const tooLate = new Promise<false>((resolve) => {
+    late = setTimeout(() => resolve(false), REREAD_MS);
+  });
+  try {
+    return await Promise.race([read().catch(() => false), tooLate]);
+  } finally {
+    clearTimeout(late);
+  }
+}
+
 interface Reading {
   readonly scenes: ReadonlyMap<string, ReadScene>;
   /** The scene in the editor when they were read: its text may be another since. */
@@ -101,10 +138,13 @@ export interface SceneTexts {
   /** Plain text of each scene's active variant, as last read. */
   readonly texts: ReadonlyMap<string, string>;
   /**
-   * The words of each of a scene's variants; undefined while it is not known: not read yet,
-   * or read when it was the scene in the editor, or with other variants.
+   * Whether a scene has a word in one of its variants. `open`: its document, when it is the scene
+   * in the editor, live. Undefined while it is not known: not read yet, or read when it was the
+   * scene in the editor, or with other variants.
    */
-  variantWords(sceneId: string): ReadonlyMap<string, number> | undefined;
+  hasText(sceneId: string, open?: Y.Doc): boolean | undefined;
+  /** Reads a scene thought empty again (see `sceneIsEmpty`). */
+  stillEmpty(sceneId: string): Promise<boolean>;
 }
 
 /**
@@ -143,14 +183,20 @@ export function useSceneTexts(
     // `key` stands for the scenes, their variants and the active ones.
   }, [reader, key, openSceneId]);
 
-  const variantWords = (sceneId: string) => {
+  const hasText = (sceneId: string, open?: Y.Doc) => {
     const scene = scenes.find((s) => s.id === sceneId);
+    if (!scene) return undefined;
+    if (open) return scene.variants.some((v) => variantHasText(open, v.id));
     const read = reading.scenes.get(sceneId);
-    if (!scene || !read || read.key !== readKey(scene)) return undefined;
+    if (!read || read.key !== readKey(scene)) return undefined;
     if (reading.open === sceneId && openSceneId !== sceneId) return undefined;
-    return read.words;
+    return [...read.words.values()].some((n) => n > 0);
   };
-  return { texts, variantWords };
+  const stillEmpty = async (sceneId: string) => {
+    const scene = scenes.find((s) => s.id === sceneId);
+    return scene !== undefined && sceneIsEmpty(platform.documents, projectId, scene);
+  };
+  return { texts, hasText, stillEmpty };
 }
 
 /** Words of each scene, from its text. */

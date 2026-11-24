@@ -420,7 +420,8 @@ export function ProjectWorkspace({
   );
   const syncStatus = useSyncExternalStore(subscribeSync, () => sync?.status() ?? 'off');
   const words = useWordCount(editor);
-  const { texts: storedTexts, variantWords } = useSceneTexts(platform, projectId, outline, sceneId);
+  const storedScenes = useSceneTexts(platform, projectId, outline, sceneId);
+  const storedTexts = storedScenes.texts;
   const storedWords = useWordsOf(storedTexts);
   // The open scene's text is live (its word count changes with every edit).
   const sceneTexts = useMemo(
@@ -801,19 +802,11 @@ export function ProjectWorkspace({
     atelierLocation,
     sceneWords,
     sceneTexts,
-    sceneHasText: (id) => {
-      const read = variantWords(id);
-      // The open scene's active variant counts live, in its editor.
-      const live = id === sceneId && editor ? words : undefined;
-      if (live) return true;
-      // (Alone, it says it all: a scene just made is empty, read or not.)
-      if (live !== undefined && scene?.variants.length === 1) return false;
-      if (!read) return undefined;
-      const active = id === sceneId ? scene?.activeVariantId : undefined;
-      return [...read].some(
-        ([variant, n]) => (live !== undefined && variant === active ? 0 : n) > 0,
-      );
-    },
+    sceneHasText: (id) =>
+      id === sceneId && sceneDocs
+        ? words > 0 || storedScenes.hasText(id, sceneDocs.sceneDoc)
+        : storedScenes.hasText(id),
+    sceneStillEmpty: (id) => storedScenes.stillEmpty(id),
     shortcutLabel: (id) => registry.shortcutLabel(id),
     shortcutChord: (id) => registry.chord(id),
     menuOf: menu?.id ?? null,
@@ -992,7 +985,10 @@ export function ProjectWorkspace({
       view === 'write'
     ) {
       lastFocusedEditor.current = editor;
-      editor.commands.focus('end');
+      // Synchronous, like `focusTextIfIdle`: a frame later, it would take the keyboard from a
+      // command line opened meanwhile, and the command's words would be written in the novel.
+      editor.chain().setTextSelection(editor.state.doc.content.size).scrollIntoView().run();
+      editor.view.focus();
     }
   }, [editor, palette, navigatorOpen, view, mentorPanel]);
 
@@ -1057,7 +1053,7 @@ export function ProjectWorkspace({
         id: command.id,
         label: t(`commands.${command.id}` as 'commands.openPalette', hostWords),
         ...(shortcut && { shortcut }),
-        confirms: command.confirms?.(ctx),
+        confirms: palette ? command.confirms?.(ctx) : undefined,
         run: () => {
           // Remembered once done: asked, the list must not move under the author.
           const asks = command.confirms?.(ctx);
@@ -1450,6 +1446,7 @@ export function ProjectWorkspace({
               pressed={mentorPanel !== null}
               mentor
               band
+              projectId={projectId}
               onToggle={toggleCompagnon}
             />
           }
@@ -1522,6 +1519,7 @@ export function ProjectWorkspace({
           view === 'write' && (
             <Console
               away={paletteOpen}
+              projectId={projectId}
               manuscript={{
                 shortcut: registry.shortcutLabel('toggleNavigator'),
                 open: navigatorOpen,

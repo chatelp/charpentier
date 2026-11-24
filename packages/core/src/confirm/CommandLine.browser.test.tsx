@@ -4,6 +4,7 @@ import { page, userEvent } from 'vitest/browser';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type * as Y from 'yjs';
 import { startApp } from '../conformance/app-under-test';
+import { createTestPlatform } from '../testing/test-platform';
 import '../styles/base.css';
 
 beforeEach(() => page.viewport(1280, 800));
@@ -144,5 +145,28 @@ describe('the two presses from the command line (docs/DESIGN.md §4.7, 1.43)', (
     await userEvent.keyboard('{Enter}');
     await noBar();
     await waitFor(() => expect(scenes()).not.toContain(before[0]));
+  });
+
+  it('forgetting the key as well: not at the first ⏎, and nothing written', async () => {
+    const forgotten: string[] = [];
+    const agents = {
+      ...createTestPlatform().agents,
+      status: () => 'available' as const,
+      forgetApiKey: async () => void forgotten.push('key'),
+    };
+    const { editor } = await startApp({ platform: { agents } });
+    await textFocused();
+    await userEvent.keyboard('Il pleuvait.');
+    const text = paragraphs(editor);
+    await userEvent.keyboard('{ControlOrMeta>}k{/ControlOrMeta}');
+    await bar();
+    await userEvent.keyboard('oublier cle{Enter}');
+    await within(await bar()).findByRole('option', { name: /Confirmer\u00a0: oublier la clé/ });
+    expect(forgotten).toEqual([]);
+    await userEvent.keyboard('{Enter}');
+    await noBar();
+    await waitFor(() => expect(forgotten).toEqual(['key']));
+    await textFocused();
+    expect(paragraphs(editor)).toEqual(text);
   });
 });

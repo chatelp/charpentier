@@ -216,11 +216,11 @@ export function useAnswerState(
   );
 }
 
-/** He prepares one, for whichever project (the console's key is not told which is open). */
-export function useAnyAnswerWaiting(agents: AgentsService): boolean {
+/** He prepares one for this project, in either thread (the console's key). */
+export function useAnswerWaiting(agents: AgentsService, projectId: string): boolean {
   const known = answersOf(agents);
   return useSyncExternalStore(
     known.subscribe,
-    useCallback(() => known.waiting(), [known]),
+    useCallback(() => known.waiting(projectId), [known, projectId]),
   );
 }
