@@ -470,7 +470,7 @@ export function moveChapterStep(
 }
 
 export interface TrashContent {
-  readonly chapters: readonly ChapterInfo[];
+  readonly chapters: readonly (ChapterInfo & { readonly trashedAt: string })[];
   readonly scenes: readonly (SceneInfo & { readonly trashedAt: string })[];
 }
 

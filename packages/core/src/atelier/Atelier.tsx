@@ -29,6 +29,8 @@ import {
   type AtelierData,
   type SheetTarget,
 } from './atelier-data';
+import { TrashFoot } from '../trash/TrashFoot';
+import { moduleTrash } from '../trash/module-trash';
 import { createEntityPrompt, trashEntityAndNotify } from './atelier-actions';
 import { CommandZone, ModeSwitch } from '../workspace/EntryPoints';
 import { NovelButton } from '../workspace/NovelTitle';
@@ -239,6 +241,8 @@ export function Atelier({
 
   const onListKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.target instanceof HTMLInputElement) return;
+    // In the trash at the foot, the keys are never for the entry selected above (rule 6).
+    if ((event.target as HTMLElement).closest('.ch-trash-foot')) return;
     if (event.metaKey || event.ctrlKey || event.altKey) return;
     const index = shown.findIndex((e) => e.key === selected?.key);
     const key = event.key;
@@ -246,6 +250,12 @@ export function Atelier({
     const module = selected?.target.module as EntityModule;
     if (key === 'ArrowDown' || key === 'ArrowUp') {
       event.preventDefault();
+      // From the last entry, down to the trash at the foot (DESIGN §4.7).
+      const foot =
+        key === 'ArrowDown' &&
+        index === shown.length - 1 &&
+        listRef.current?.querySelector<HTMLElement>('[data-trash-row]');
+      if (foot) return foot.focus();
       const next =
         shown[Math.max(0, Math.min(shown.length - 1, index + (key === 'ArrowDown' ? 1 : -1)))];
       select(next);
@@ -442,6 +452,18 @@ export function Atelier({
               </button>
             </p>
           )}
+          <TrashFoot
+            // Folded again from one module to the next.
+            key={rail}
+            lines={moduleTrash(ctx, rail)}
+            onRestored={({ target }) => {
+              setQuery('');
+              onLocation({ rail, target });
+              setTimeout(() => focusWithin(listRef));
+            }}
+            listName={t('trash.list.entries', { module: t(`atelier.modules.${rail}`) })}
+            onLeave={() => focusWithin(listRef, '[aria-selected="true"]')}
+          />
           {rail === 'structure' && <WorkBlock ctx={ctx} work={STRUCTURE_WORK} />}
           {rail === 'clues' && <WorkBlock ctx={ctx} work={CLUES_WORK} />}
           {rail === 'style' && <WorkBlock ctx={ctx} work={STYLE_WORK} />}

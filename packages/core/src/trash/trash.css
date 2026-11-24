@@ -1,0 +1,73 @@
+/*
+ * The trash at the foot of a list (docs/DESIGN.md §4.7 « La corbeille au pied de la liste »):
+ * under an engraved rule, a muted link; unfolded, the things in the faint ink, « Remettre ».
+ */
+.ch-trash-foot {
+  margin: 14px 0 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--ch-shade);
+  color: var(--ch-muted);
+  font: 12px / 1.4 var(--ch-font-ui);
+}
+
+/* In the drawer, whose lists keep their own margins. */
+.ch-navigator > .ch-trash-foot {
+  margin-inline: 20px;
+}
+
+.ch-trash-foot > p {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  margin: 0;
+}
+
+.ch-trash-link {
+  white-space: nowrap;
+}
+
+.ch-trash-link > .ch-picto {
+  display: inline-block;
+  margin-right: 5px;
+  vertical-align: -2px;
+}
+
+.ch-trash-list {
+  /* A long trash scrolls in its place: the list above stays in sight. */
+  max-height: 40vh;
+  /* Wider than its text: the buttons keep their relief. */
+  margin: 4px -10px 0;
+  padding: 4px 10px;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.ch-trash-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 4px 0;
+  color: var(--ch-faint);
+}
+
+.ch-trash-what {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.ch-trash-name {
+  overflow: hidden;
+  font: 13.5px / 1.3 var(--ch-font-text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ch-trash-detail {
+  font: 11px / 1.3 var(--ch-font-ui);
+}
+
+.ch-trash-restore {
+  flex: none;
+}

@@ -148,7 +148,27 @@ describe('working versions (DESIGN 1.20, in retreat since 1.33)', () => {
     await userEvent.keyboard('{Backspace}');
     // The last one gone: back to the main version, and the sheet is silent again.
     await waitFor(() => expect(within(sheet).queryAllByRole('radio')).toHaveLength(0));
-    expect(sheet.textContent).not.toMatch(/version/i);
+    // … but for its trash, a single line (DESIGN 1.37).
+    expect(sheet.textContent?.match(/version/gi)).toHaveLength(1);
     expect(novelButton().textContent).not.toContain('·');
+    within(sheet).getByRole('button', { name: 'Versions de travail à la corbeille (1)' }).focus();
+    await userEvent.keyboard('{Enter}');
+    const list = within(sheet).getByRole('list', { name: 'Corbeille des versions de travail' });
+    expect(list.textContent).toMatch(/^Fin au Croisicversion · aujourd’hui à \d/);
+    // R on a line of the trash renames nothing (rule 6).
+    const back = within(list).getByRole('button', { name: 'Remettre Fin au Croisic' });
+    back.focus();
+    await userEvent.keyboard('r');
+    expect(within(sheet).queryByRole('textbox')).toBeNull();
+    await userEvent.keyboard('{Enter}');
+    // In the list again, with the focus, without being the one read; its trash says nothing more.
+    await waitFor(() => expect(within(sheet).getAllByRole('radio')).toHaveLength(2));
+    await waitFor(() =>
+      expect(document.activeElement).toBe(within(sheet).getAllByRole('radio')[1]),
+    );
+    expect(novelButton().textContent).not.toContain('Fin au Croisic');
+    expect(
+      within(sheet).queryByRole('button', { name: /^Corbeille,|à la corbeille \(/ }),
+    ).toBeNull();
   });
 });

@@ -1,6 +1,7 @@
 import type { ProjectSummary } from '@charpentier/platform';
 import {
   activeVersionId,
+  listTrashedVersions,
   listVersions,
   listVersionScenes,
   restoreVersion,
@@ -24,6 +25,8 @@ import {
   versionLabel,
 } from '../commands/version-commands';
 import { CloseButton } from '../icons/CloseButton';
+import { TrashFoot } from '../trash/TrashFoot';
+import { formatWhen } from '../work/work-format';
 import { playSound } from '../sound/sounds';
 import { renameProjectEverywhere } from './default-scene';
 import type { WorkspaceContext } from './workspace-context';
@@ -38,15 +41,19 @@ interface VersionsView {
   readonly active: string;
   /** Scenes of Principale, and each other version's own scenes. */
   readonly counts: ReadonlyMap<string, number>;
+  /** Versions in the trash, the most recent first. */
+  readonly trashed: readonly VersionInfo[];
 }
 
 export function readVersionsView(doc: Y.Doc): VersionsView {
   const versions = listVersions(doc);
+  const trashed = listTrashedVersions(doc);
   return {
     versions,
+    trashed,
     active: activeVersionId(doc),
     counts: new Map(
-      versions.map((v) => [
+      [...versions, ...trashed].map((v) => [
         v.id,
         v.isMain ? listVersionScenes(doc, MAIN_VERSION).length : versionOwnScenes(doc, v.id),
       ]),
@@ -262,7 +269,9 @@ export function NovelSheet({
     focusLater('.ch-novel-version.is-on');
   };
 
-  const rows = () => [...(ref.current?.querySelectorAll<HTMLElement>('[data-novel-row]') ?? [])];
+  const rows = () => [
+    ...(ref.current?.querySelectorAll<HTMLElement>('[data-novel-row], [data-trash-row]') ?? []),
+  ];
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     const handled = () => {
       event.preventDefault();
@@ -286,7 +295,9 @@ export function NovelSheet({
     // On a version's line, R and ⌫ act on the version (DESIGN 1.20); elsewhere, R renames the novel.
     const line = (event.target as HTMLElement).closest<HTMLElement>('[data-version]');
     const version = view.versions.find((v) => v.id === line?.dataset['version']);
-    if (key === 'r' && !event.metaKey && !event.ctrlKey && !event.altKey) {
+    // On a line of the trash, R is nobody's: it would rename the project (rule 6).
+    const inTrash = (event.target as HTMLElement).closest('.ch-trash-foot') !== null;
+    if (key === 'r' && !inTrash && !event.metaKey && !event.ctrlKey && !event.altKey) {
       handled();
       if (version) setRenamingVersion(version.id);
       else setRenaming(true);
@@ -495,6 +506,29 @@ export function NovelSheet({
           </div>
         )
       )}
+      <TrashFoot
+        lines={view.trashed.map((v) => {
+          const name = versionLabel(t, v);
+          const own = view.counts.get(v.id) ?? 0;
+          const when = formatWhen(t, v.trashedAt ?? '', ctx.language);
+          return {
+            id: v.id,
+            name,
+            detail:
+              own > 0
+                ? t('trash.detail.version', { count: own, when })
+                : t('trash.detail.versionAlone', { when }),
+            // Back in the list, without becoming the one read.
+            restore: () => {
+              restoreVersion(ctx.root, v.id);
+              ctx.notify(t('trash.restored.version', { name }));
+            },
+          };
+        })}
+        onRestored={(line) => focusLater(`[data-version="${line.id}"]`)}
+        listName={t('trash.list.versions')}
+        link={several ? undefined : t('trash.versionsLink', { count: view.trashed.length })}
+      />
       <div className="ch-novel-rule" />
       <p className="ch-label">{t('novel.others')}</p>
       {others?.length === 0 && <p className="ch-novel-alone">{t('novel.alone')}</p>}

@@ -47,6 +47,8 @@ const DRAWINGS = {
       <circle cx="10" cy="17" r="2" />
     </>
   ),
+  // The trash at the foot of a list (DESIGN §4.7 « La corbeille au pied de la liste »).
+  corbeille: <path d="M4 7h16M9.5 7V4h5v3M6.5 7l1 13h9l1-13M10 11v5.5M14 11v5.5" />,
 } satisfies Record<string, ReactNode>;
 
 export type PictogramName = keyof typeof DRAWINGS;

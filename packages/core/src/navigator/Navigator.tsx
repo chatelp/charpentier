@@ -49,6 +49,8 @@ import type { WorkspaceContext } from '../workspace/workspace-context';
 import './navigator.css';
 import { useHostWords } from '../app/host-words';
 import { MoreButton } from '../menu/MoreButton';
+import { TrashFoot } from '../trash/TrashFoot';
+import { manuscriptTrash } from '../trash/manuscript-trash';
 import type { ThingMenu } from '../menu/thing-menu';
 import {
   chapterMenu,
@@ -131,7 +133,8 @@ export function Navigator({ ctx, outline, active, onClose, signals }: NavigatorP
     answered.current = focusTick;
     // A variant's line that holds the focus keeps it until a key moves it: there, the keys
     // are the variant's (docs/DESIGN.md §5.0, rule 6).
-    if (!asked && document.activeElement?.closest('[data-variant]')) return;
+    // (So does a line of the trash at the foot.)
+    if (!asked && document.activeElement?.closest('[data-variant], .ch-trash-foot')) return;
     elements.current.get(focused.id)?.focus();
   }, [active, focused, focusTick]);
 
@@ -251,7 +254,12 @@ export function Navigator({ ctx, outline, active, onClose, signals }: NavigatorP
       focusItem(focused.id);
     } else if (key === 'ArrowDown') {
       handled();
-      focusItem(items[Math.min(index + 1, items.length - 1)]?.id);
+      // From the last line, down to the trash at the foot (DESIGN §4.7).
+      const foot =
+        index === items.length - 1 &&
+        event.currentTarget.parentElement?.querySelector<HTMLElement>('[data-trash-row]');
+      if (foot) foot.focus();
+      else focusItem(items[Math.min(index + 1, items.length - 1)]?.id);
     } else if (key === 'ArrowUp') {
       handled();
       focusItem(items[Math.max(index - 1, 0)]?.id);
@@ -603,6 +611,13 @@ export function Navigator({ ctx, outline, active, onClose, signals }: NavigatorP
             ))}
         </div>
       )}
+      <TrashFoot
+        lines={manuscriptTrash(ctx)}
+        listName={t('trash.list.manuscript')}
+        onRestored={(line) => focusItem(line.back)}
+        onLeave={() => focusItem(items.at(-1)?.id)}
+        onEscape={onClose}
+      />
       <p className="ch-nav-hint">
         {t('navigator.hint', {
           move: `${host.key('Alt-ArrowUp')}↓`,

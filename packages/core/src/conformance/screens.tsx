@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import { userEvent } from 'vitest/browser';
 import { expect } from 'vitest';
 import { hostPrimary, startApp } from './app-under-test';
@@ -106,6 +106,46 @@ export const SCREENS: Readonly<Record<string, () => Promise<unknown>>> = {
     screen.getByRole('treeitem', { name: /Le fleuve/ }).focus();
     await userEvent.keyboard('{Backspace}');
     await screen.findByRole('button', { name: /^Confirmer\u00a0: chapitre et 1 scène/ });
+  },
+  'the trash at the foot of the drawer, unfolded': async () => {
+    await written();
+    await userEvent.keyboard(chord('j'));
+    await screen.findByRole('complementary', { name: 'Plan du manuscrit' });
+    screen.getByRole('treeitem', { name: 'Chapitre 1' }).focus();
+    await userEvent.keyboard('{Backspace}');
+    await screen.findByRole('button', { name: /^Confirmer/ });
+    await userEvent.keyboard('{Backspace}');
+    await userEvent.click(await screen.findByRole('button', { name: 'Corbeille, 1 élément' }));
+    await screen.findByRole('button', { name: 'Remettre Chapitre 1' });
+    await mouseBack();
+  },
+  'the trash of the characters, unfolded': async () => {
+    await written();
+    await command('Nouveau personnage');
+    await answer('Hélène');
+    const list = await screen.findByRole('listbox', { name: 'Personnages' });
+    (await within(list).findByRole('option', { name: /Hélène/ })).focus();
+    await userEvent.keyboard('{Backspace}');
+    await userEvent.click(await screen.findByRole('button', { name: 'Corbeille, 1 élément' }));
+    await screen.findByRole('button', { name: 'Remettre Hélène' });
+  },
+  'the trash of the versions, unfolded': async () => {
+    await written();
+    await command('Nouvelle version de travail');
+    const sheet = await screen.findByRole('dialog', { name: 'Le projet' });
+    await userEvent.type(
+      await within(sheet).findByRole('textbox', { name: 'Nom de la version' }),
+      'Autre fin{Enter}',
+    );
+    await waitFor(() => expect(within(sheet).getAllByRole('radio')).toHaveLength(2));
+    (within(sheet).getAllByRole('radio')[1] as HTMLElement).focus();
+    await userEvent.keyboard('{Backspace}');
+    await within(sheet).findByRole('button', { name: /^Confirmer/ });
+    await userEvent.keyboard('{Backspace}');
+    await userEvent.click(
+      await within(sheet).findByRole('button', { name: 'Versions de travail à la corbeille (1)' }),
+    );
+    await within(sheet).findByRole('button', { name: 'Remettre Autre fin' });
   },
   'the Compagnon panel': async () => {
     await written();

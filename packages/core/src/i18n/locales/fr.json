@@ -1397,6 +1397,41 @@
       "revokeDevice": "déconnecter {{device}}"
     }
   },
+  "trash": {
+    "link_one": "Corbeille ({{count}})",
+    "link_other": "Corbeille ({{count}})",
+    "linkLabel_one": "Corbeille, {{count}} élément",
+    "linkLabel_other": "Corbeille, {{count}} éléments",
+    "hide": "masquer",
+    "restore": "Remettre",
+    "restoreLabel": "Remettre {{name}}",
+    "list": {
+      "manuscript": "Corbeille du manuscrit",
+      "entries": "Corbeille de {{module}}",
+      "versions": "Corbeille des versions de travail"
+    },
+    "versionsLink_one": "Versions de travail à la corbeille ({{count}})",
+    "versionsLink_other": "Versions de travail à la corbeille ({{count}})",
+    "detail": {
+      "scene": "scène de {{chapter}} · {{when}}",
+      "chapter": "chapitre · {{when}}",
+      "chapterWithScenes_one": "chapitre, avec {{count}} scène · {{when}}",
+      "chapterWithScenes_other": "chapitre, avec {{count}} scènes · {{when}}",
+      "variant": "variante de {{scene}} · {{when}}",
+      "entity": "fiche de {{module}} · {{when}}",
+      "versionAlone": "version · {{when}}",
+      "version_one": "version, avec {{count}} scène · {{when}}",
+      "version_other": "version, avec {{count}} scènes · {{when}}"
+    },
+    "restored": {
+      "scene": "Scène « {{title}} » remise.",
+      "sceneWithChapter": "Scène « {{title}} » remise, avec son chapitre « {{chapter}} ».",
+      "chapter": "Chapitre « {{title}} » remis.",
+      "variant": "Variante « {{name}} » remise.",
+      "entity": "Fiche « {{title}} » remise.",
+      "version": "Version « {{name}} » remise."
+    }
+  },
   "thingMenu": {
     "actions": "Actions",
     "actionsOf": {
