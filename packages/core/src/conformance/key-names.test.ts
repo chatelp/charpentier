@@ -61,4 +61,23 @@ describe('names of keys', () => {
     }
     expect(found).toEqual([]);
   });
+  // What broke the CI on 24 November 2026: a browser test that renders the app with the
+  // machine's own modifier (⌘ on the Mac, Ctrl under Linux) and expects the Mac's sign. The
+  // tests run on the Mac and under Linux: such an expectation says which machine it is for.
+  it('are never expected in a browser test without saying for which machine', () => {
+    const found: string[] = [];
+    for (const [file, source] of Object.entries(sources)) {
+      if (!file.endsWith('.browser.test.tsx')) continue;
+      const lines = withoutComments(source).split('\n');
+      lines.forEach((line, index) => {
+        // A key's sign inside a string or a regular expression, not in a test's title.
+        if (!/(['"`/])[^'"`/]*[⌘⌥⌃⇧][^'"`/]*\1/.test(line)) return;
+        if (/^\s*(it|describe|test)(\.\w+)?\(/.test(line)) return;
+        const around = lines.slice(Math.max(0, index - 2), index + 1).join('\n');
+        if (/isMac|primary|'Meta'|"Meta"/.test(around)) return;
+        found.push(`${file.replace('../', '')}:${index + 1}`);
+      });
+    }
+    expect(found).toEqual([]);
+  });
 });
