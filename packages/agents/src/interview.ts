@@ -31,7 +31,7 @@ import {
   MEMORY_INSTRUCTIONS,
   leavingAlert,
   leavingSoon,
-  projectMemory,
+  pendingMemory,
   stableThread,
   windowStart,
 } from './memory';
@@ -301,7 +301,7 @@ export async function interviewTurn(input: {
   const thread = companionThread(mentorDoc, authorSpoke ? last.id : undefined);
   const authorMessages = messages.filter((m) => m.role === 'author').slice(-QUOTED_MESSAGES);
   const authorText = authorMessages.map((m) => m.text).join('\n');
-  const memory = projectMemory({
+  const memory = pendingMemory({
     mentorDoc,
     root,
     ...(last?.role === 'author' && { sources: [last.id] }),
@@ -313,6 +313,11 @@ export async function interviewTurn(input: {
   // The thread's last messages; before them, its summary; the alert when the oldest are about to go.
   const start = windowStart(thread.length, memory, HISTORY);
   const history = thread.slice(start);
+  // What the turn writes besides its answer waits for its end: stopped, it writes nothing.
+  const writes: (() => void)[] = [() => memory.file()];
+  const flush = () => {
+    if (!input.signal?.aborted) for (const write of writes.splice(0)) write();
+  };
   const earlier = await keepThreadSummary({
     llm,
     mentorDoc,
@@ -320,6 +325,7 @@ export async function interviewTurn(input: {
     start,
     language,
     ...(input.signal && { signal: input.signal }),
+    defer: (write) => writes.push(write),
   });
   const alert = leavingAlert(leavingSoon(thread.length, memory, HISTORY), history[0]);
 
@@ -376,7 +382,10 @@ export async function interviewTurn(input: {
       memory,
       input.signal,
       writing,
-    );
+    ).catch((error: unknown) => {
+      flush();
+      throw error;
+    });
     input.signal?.throwIfAborted();
     input.onPhase?.('reviewing');
     const parsed = response.truncated ? undefined : parseTurn(response.text);
@@ -391,6 +400,7 @@ export async function interviewTurn(input: {
   }
   // Stopped by the author while the guardrails read: nothing is said, nothing filed.
   input.signal?.throwIfAborted();
+  flush();
   // No answer to read is a failure, not a refusal: nothing is said in his name.
   if (!turn && failed !== 'guarded') throw new UnusableAnswerError(failed ?? 'unreadable');
   if (!turn) {

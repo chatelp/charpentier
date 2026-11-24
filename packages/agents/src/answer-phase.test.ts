@@ -7,9 +7,12 @@ import {
   guids,
   initProject,
   interviewMessages,
+  listNotes,
+  readThreadSummary,
 } from '@charpentier/schema';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import * as Y from 'yjs';
+import { projectMemory } from './memory';
 import { AgentWorks, type AgentDocuments } from './works';
 
 /** The documents of one project, held in memory. */
@@ -132,6 +135,109 @@ describe('« Arrêter » (DESIGN 1.34)', () => {
     // Nothing is left stopped: the next answer comes.
     expect(await works.interview({ projectId: 'p1', mode: 'free' })).toBe('answered');
     expect(interviewMessages(mentorDoc).map((m) => m.role)).toEqual(['author', 'compagnon']);
+  });
+
+  /** A model that takes a note, then thinks until it is stopped (or fails). */
+  const notesThen = (fail: boolean): LlmService => {
+    let round = 0;
+    return {
+      status: () => 'available',
+      onStatusChange: () => () => {},
+      generate: (_request, signal) =>
+        ++round === 1
+          ? Promise.resolve({
+              text: '',
+              turn: [],
+              toolCalls: [
+                {
+                  id: 't1',
+                  name: 'memory',
+                  input: {
+                    command: 'create',
+                    path: '/memories/projet/decisions/lieu.md',
+                    file_text: '# Nantes, 1872',
+                  },
+                },
+              ],
+            })
+          : new Promise((_resolve, reject) => {
+              if (fail) reject(new Error('The provider failed'));
+              signal?.addEventListener('abort', () => reject(new Error('Request was aborted.')));
+            }),
+    };
+  };
+
+  it.each(['chat', 'interview'] as const)(
+    'leaves no note of the Compagnon’s either, taken before the stop (%s)',
+    async (kind) => {
+      const { store, mentorDoc } = project();
+      addChatMessage(mentorDoc, { role: 'author', text: 'Tout se passe à Nantes.' }, AUTHOR);
+      addInterviewMessage(mentorDoc, { role: 'author', text: 'Tout se passe à Nantes.' }, AUTHOR);
+      const works = new AgentWorks(notesThen(false), store);
+      const before = Y.encodeStateVector(mentorDoc);
+      const answer =
+        kind === 'chat'
+          ? works.ask({ projectId: 'p1' })
+          : works.interview({ projectId: 'p1', mode: 'free' });
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      works.stopAnswer({ projectId: 'p1' });
+      expect(await answer).toBe('stopped');
+      expect(Y.encodeStateVector(mentorDoc)).toEqual(before);
+      expect(listNotes(mentorDoc)).toEqual([]);
+    },
+  );
+
+  it.each(['chat', 'interview'] as const)(
+    'is not a failure: what he noted before the provider failed is kept, as before (%s)',
+    async (kind) => {
+      const { store, mentorDoc } = project();
+      addChatMessage(mentorDoc, { role: 'author', text: 'Tout se passe à Nantes.' }, AUTHOR);
+      addInterviewMessage(mentorDoc, { role: 'author', text: 'Tout se passe à Nantes.' }, AUTHOR);
+      const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const works = new AgentWorks(notesThen(true), store);
+      const answer =
+        kind === 'chat'
+          ? works.ask({ projectId: 'p1' })
+          : works.interview({ projectId: 'p1', mode: 'free' });
+      expect(await answer).toBe('failed');
+      logged.mockRestore();
+      expect(listNotes(mentorDoc).map((n) => n.path)).toEqual([
+        '/memories/projet/decisions/lieu.md',
+      ]);
+    },
+  );
+
+  it('writes no summary of the thread when stopped after it was made', async () => {
+    const { store, mentorDoc } = project();
+    // A thread long enough for its oldest messages to leave the window, and a notebook already begun.
+    projectMemory({ mentorDoc }).run({
+      command: 'create',
+      path: '/memories/projet/decisions/lieu.md',
+      file_text: '# Nantes, 1872',
+    });
+    for (let i = 0; i < 60; i++)
+      addChatMessage(
+        mentorDoc,
+        { role: i % 2 ? 'compagnon' : 'author', text: `Message ${i}` },
+        AUTHOR,
+      );
+    addChatMessage(mentorDoc, { role: 'author', text: 'Et maintenant ?' }, AUTHOR);
+    let summarized = false;
+    const llm: LlmService = {
+      ...endless,
+      generate: (request, signal) => {
+        if (request.tier !== 'fast') return endless.generate(request, signal);
+        summarized = true;
+        return Promise.resolve({ text: JSON.stringify({ summary: 'Ils ont parlé de Nantes.' }) });
+      },
+    };
+    const works = new AgentWorks(llm, store);
+    const answer = works.ask({ projectId: 'p1' });
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    works.stopAnswer({ projectId: 'p1' });
+    expect(await answer).toBe('stopped');
+    expect(summarized).toBe(true);
+    expect(readThreadSummary(mentorDoc)).toBeUndefined();
   });
 
   it('does not stop the background works, nor them it', async () => {

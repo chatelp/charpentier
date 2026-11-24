@@ -48,6 +48,8 @@ export async function keepThreadSummary(input: {
   readonly start: number;
   readonly language: string;
   readonly signal?: AbortSignal;
+  /** Takes the write instead of making it now: an answer the author stops writes nothing. */
+  readonly defer?: (write: () => void) => void;
 }): Promise<string | undefined> {
   const { thread, start, mentorDoc } = input;
   if (start <= 0) return undefined;
@@ -77,12 +79,16 @@ export async function keepThreadSummary(input: {
     // Over its bound, the summary says where it was cut (« […] ») : the next one is built on it.
     const text = cutMarked(summary.trim(), MAX_SUMMARY);
     const last = left.at(-1);
-    if (last)
-      writeThreadSummary(
-        mentorDoc,
-        { text, upTo: last.id, covered: start },
-        agentOrigin('thread-summary'),
-      );
+    if (last) {
+      const write = () =>
+        writeThreadSummary(
+          mentorDoc,
+          { text, upTo: last.id, covered: start },
+          agentOrigin('thread-summary'),
+        );
+      if (input.defer) input.defer(write);
+      else write();
+    }
     return text;
   } catch (error) {
     if (input.signal?.aborted) throw error;

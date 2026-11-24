@@ -11,7 +11,7 @@ import type * as Y from 'yjs';
 import { bookContext } from './book-context';
 import { compagnonChat } from './chat';
 import { sceneContext, sheetsSummary, validatedStyleChoice } from './context';
-import { leavingAlert, leavingSoon, projectMemory, windowStart } from './memory';
+import { leavingAlert, leavingSoon, pendingMemory, windowStart } from './memory';
 import { keepThreadSummary } from './thread-summary';
 
 /** Turns of the conversation sent back to the model (the oldest are left out). */
@@ -39,7 +39,7 @@ export async function answerAuthor(input: {
   // One Compagnon (D-35): the interview is part of the conversation's thread, with his notebook.
   // The message just sent is the thread's last turn, as it is its array's (one rule, see companionThread).
   const thread = companionThread(input.mentorDoc, last.id);
-  const memory = projectMemory({
+  const memory = pendingMemory({
     mentorDoc: input.mentorDoc,
     root: input.root,
     sources: [last.id],
@@ -51,6 +51,11 @@ export async function answerAuthor(input: {
   // The thread's last messages; before them, its summary; the alert when the oldest are about to go.
   const start = windowStart(thread.length, memory, HISTORY);
   const window = thread.slice(start);
+  // What the turn writes besides its answer waits for its end: stopped, it writes nothing.
+  const writes: (() => void)[] = [() => memory.file()];
+  const flush = () => {
+    if (!input.signal?.aborted) for (const write of writes.splice(0)) write();
+  };
   const earlier = await keepThreadSummary({
     llm: input.llm,
     mentorDoc: input.mentorDoc,
@@ -58,6 +63,7 @@ export async function answerAuthor(input: {
     start,
     language: context.language,
     ...(input.signal && { signal: input.signal }),
+    defer: (write) => writes.push(write),
   });
   const alert = leavingAlert(leavingSoon(thread.length, memory, HISTORY), window[0]);
   const answer = await compagnonChat(
@@ -83,7 +89,7 @@ export async function answerAuthor(input: {
     memory,
     undefined,
     input.onPhase,
-  );
+  ).finally(flush);
   // Stopped by the author while the guardrails read: nothing is said.
   input.signal?.throwIfAborted();
   addChatMessage(

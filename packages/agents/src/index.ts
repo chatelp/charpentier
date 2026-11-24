@@ -25,6 +25,7 @@ export {
   generateWithMemory,
   MAX_NOTE,
   memoryInstructions,
+  pendingMemory,
   projectMemory,
   type MemoryStore,
 } from './memory';

@@ -18,7 +18,7 @@ import {
   type Note,
   type NotedChange,
 } from '@charpentier/schema';
-import type * as Y from 'yjs';
+import * as Y from 'yjs';
 import { ATELIER_DIR, atelierFiles } from './atelier-files';
 import { narrativeProseIn } from './guard';
 
@@ -263,6 +263,35 @@ export function projectMemory(input: {
         if (error instanceof NoteRefused) return fail(error.message);
         throw error;
       }
+    },
+  };
+}
+
+/**
+ * The notebook for one answer to the author (DESIGN 1.34): what he notes on
+ * the way is kept on a working copy, where his next rounds read it, and only
+ * goes to the project with `file()`. An answer the author stops files nothing.
+ * Each write is run again on the live notebook, with its own checks: a note
+ * the author took up meanwhile stays theirs.
+ */
+export function pendingMemory(
+  input: Parameters<typeof projectMemory>[0],
+): MemoryStore & { file(): void } {
+  const copy = new Y.Doc();
+  Y.applyUpdate(copy, Y.encodeStateAsUpdate(input.mentorDoc));
+  const working = projectMemory({ ...input, mentorDoc: copy });
+  const live = projectMemory(input);
+  const written: Readonly<Record<string, unknown>>[] = [];
+  return {
+    ...working,
+    changes: () => live.changes(),
+    run(command) {
+      const result = working.run(command);
+      if (!result.isError && command['command'] !== 'view') written.push(command);
+      return result;
+    },
+    file() {
+      for (const command of written.splice(0)) live.run(command);
     },
   };
 }
