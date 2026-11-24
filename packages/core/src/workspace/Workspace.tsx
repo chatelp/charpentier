@@ -1406,6 +1406,11 @@ export function ProjectWorkspace({
           prefs={prefs}
           updatePrefs={updatePrefs}
           shortcut={(id) => registry.shortcutLabel(id)}
+          onSettings={() => {
+            playSound('toc');
+            setDisplayOpen(false);
+            void ctx.runCommand('openSettings');
+          }}
           onClose={(backToText) => {
             playSound('toc');
             setDisplayOpen(false);

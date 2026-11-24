@@ -3,6 +3,7 @@ import { userEvent } from 'vitest/browser';
 import { afterEach, describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
 import { App } from '../app/App';
+import { formatBinding } from '../commands/keybinding';
 import { createI18n } from '../i18n/i18n';
 import { createTestPlatform } from '../testing/test-platform';
 
@@ -84,6 +85,22 @@ describe('entry points (docs/DESIGN.md §4.8)', () => {
     await waitFor(() => expect(prefs.get('writing')).toMatchObject({ textSize: 20 }));
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Affichage' })).toBeNull());
+  });
+
+  it('leads to the app’s settings from the last line of « Aa », with the command’s key', async () => {
+    const { platform } = setup();
+    await open(platform);
+    await userEvent.click(screen.getByRole('button', { name: 'Aa' }));
+    const sheet = await screen.findByRole('dialog', { name: 'Affichage' });
+    const settings = within(sheet).getByRole('button', { name: /^Réglages de l’app…/ });
+    expect(within(sheet).getAllByRole('button').at(-1)).toBe(settings);
+    expect(settings.querySelector('kbd')?.textContent).toBe(
+      formatBinding('Mod-,', isMac ? 'Meta' : 'Control'),
+    );
+    expect(settings.dataset['command']).toBe('openSettings');
+    await userEvent.click(settings);
+    await screen.findByRole('region', { name: 'Réglages' });
+    expect(screen.queryByRole('dialog', { name: 'Affichage' })).toBeNull();
   });
 
   it('fades the entry points while typing, and brings them back', async () => {

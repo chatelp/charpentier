@@ -280,6 +280,36 @@
   flex: 1;
 }
 
+/* « Réglages de l'app… », the last line, under an engraved rule: shade above, light below. */
+.ch-display-settings {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  width: calc(100% + 12px);
+  margin: 8px -6px -4px;
+  padding: 9px 6px 7px;
+  border: 0;
+  border-top: 1px solid var(--ch-shade);
+  border-radius: 0 0 var(--ch-radius-sm) var(--ch-radius-sm);
+  background: transparent;
+  box-shadow: inset 0 1px 0 var(--ch-highlight);
+  color: var(--ch-ink-2);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ch-display-settings:hover,
+.ch-display-settings:focus-visible {
+  color: var(--ch-ink);
+}
+
+/* Held: lit at once, like every button (docs/DESIGN.md §4.7). */
+.ch-display-settings:active {
+  background: var(--ch-lit-bg);
+}
+
 /* Setting keys: the options not chosen in the muted ink, the chosen one sunk, in ink. */
 .ch-btn.ch-display-choice {
   color: var(--ch-muted);

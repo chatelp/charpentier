@@ -234,18 +234,22 @@ function Row({
 
 /**
  * The display sheet behind « Aa » (docs/DESIGN.md §4.8): text size, column,
- * focus mode, theme, reduced motion, each with its shortcut. Échap or a click
- * elsewhere closes it.
+ * focus mode, theme, reduced motion, each with its shortcut; under an engraved
+ * rule, the way to the app's settings (rule 1 of §5.0: visible everywhere).
+ * Échap or a click elsewhere closes it.
  */
 export function DisplaySheet({
   prefs,
   updatePrefs,
   shortcut,
+  onSettings,
   onClose,
 }: {
   readonly prefs: WritingPrefs;
   readonly updatePrefs: (update: PrefsUpdate) => void;
   readonly shortcut: (id: string) => string | undefined;
+  /** « Réglages de l'app… »: the sheet closes, the settings open (the command's own gesture). */
+  readonly onSettings: () => void;
   readonly onClose: (backToText: boolean) => void;
 }) {
   const { t } = useTranslation();
@@ -375,6 +379,15 @@ export function DisplaySheet({
           onChange={(typingSounds) => updatePrefs({ typingSounds })}
         />
       </Row>
+      <button
+        type="button"
+        className="ch-display-settings"
+        data-command="openSettings"
+        onClick={onSettings}
+      >
+        <span>{t('commands.openSettings')}</span>
+        {shortcut('openSettings') && <kbd>{shortcut('openSettings')}</kbd>}
+      </button>
     </div>
   );
 }
