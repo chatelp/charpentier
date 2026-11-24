@@ -2,7 +2,15 @@ import * as Y from 'yjs';
 import { describe, expect, it } from 'vitest';
 import type { DocumentHandle } from '@charpentier/platform';
 import { guids, variantFragment } from '@charpentier/schema';
-import { SceneTextReader } from './use-scene-words';
+import { SceneTextReader as Reader } from './use-scene-words';
+
+/** The reader, its texts alone. */
+class SceneTextReader extends Reader {
+  async texts(...args: Parameters<Reader['read']>) {
+    const read = await this.read(...args);
+    return read && new Map([...read].map(([id, scene]) => [id, scene.text]));
+  }
+}
 
 /** Scene documents in memory, counting each opening. */
 function documents() {
@@ -110,5 +118,28 @@ describe('reading the scenes’ texts for the overview', () => {
     docs.opened.length = 0;
     await reader.texts(scenes('a', 'b'));
     expect(docs.opened).toEqual(['a', 'b']);
+  });
+
+  it('reads the words of all the variants of a scene, in one opening', async () => {
+    const docs = documents();
+    docs.write('a', 'v1', 'Trois mots ici.');
+    docs.write('a', 'v2', 'Un.');
+    const reader = new Reader(docs.service, 'p1');
+    const variants = (...ids: string[]) => [
+      { id: 'a', activeVariantId: 'v3', variants: ids.map((id) => ({ id })) },
+    ];
+    const read = await reader.read(variants('v1', 'v2', 'v3'));
+    expect([...(read?.get('a')?.words ?? [])]).toEqual([
+      ['v1', 3],
+      ['v2', 1],
+      ['v3', 0],
+    ]);
+    expect(read?.get('a')?.text).toBe('');
+    expect(docs.opened).toEqual(['a']);
+    // A variant gone, or a new one: read again.
+    await reader.read(variants('v1', 'v2', 'v3'));
+    expect(docs.opened).toEqual(['a']);
+    await reader.read(variants('v1', 'v3'));
+    expect(docs.opened).toEqual(['a', 'a']);
   });
 });

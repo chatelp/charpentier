@@ -175,21 +175,22 @@ export interface AskFrom {
 
 /**
  * What a scene takes to the trash if it is a big piece (docs/DESIGN.md §4.7 « Les deux
- * appuis »): a scene that has text. Its words are its active variant's; a scene with several
- * variants counts as one that has text, the others' words not being at hand.
+ * appuis »): a scene that has text, a word at least in one of its variants (D-46). Not knowing
+ * yet is no reason to let it go: it asks.
  */
 export function sceneBigPiece(ctx: WorkspaceContext, sceneId: string): string | undefined {
   const scene = ctx.outline.flatMap((c) => c.scenes).find((s) => s.id === sceneId);
-  if (!scene) return undefined;
-  const words = ctx.sceneWords.get(sceneId) ?? 0;
-  if (words > 0)
-    return ctx.t('confirm.what.sceneWords', {
-      count: words,
-      formatted: new Intl.NumberFormat(ctx.language).format(words),
-    });
+  const hasText = ctx.sceneHasText(sceneId);
+  if (!scene || hasText === false) return undefined;
   if (scene.variants.length > 1)
     return ctx.t('confirm.what.sceneVariants', { count: scene.variants.length });
-  return undefined;
+  const words = hasText ? ctx.sceneWords.get(sceneId) : undefined;
+  return words
+    ? ctx.t('confirm.what.sceneWords', {
+        count: words,
+        formatted: new Intl.NumberFormat(ctx.language).format(words),
+      })
+    : ctx.t('confirm.what.scene');
 }
 
 /** A chapter that has scenes is a big piece: « chapitre et 4 scènes à la corbeille ». */

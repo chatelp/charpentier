@@ -1383,6 +1383,7 @@
     "left_one": "{{count}} s",
     "left_other": "{{count}} s",
     "what": {
+      "scene": "scène à la corbeille",
       "sceneWords_one": "scène de {{formatted}} mot à la corbeille",
       "sceneWords_other": "scène de {{formatted}} mots à la corbeille",
       "sceneVariants_one": "scène et sa variante à la corbeille",

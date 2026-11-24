@@ -229,12 +229,25 @@
   position: absolute;
   right: 0;
   bottom: calc(100% + 6px);
+  display: flex;
+  align-items: baseline;
   max-width: 100%;
   color: var(--ch-ink);
   background: var(--ch-lit-bg);
   box-shadow: var(--ch-lit);
   white-space: nowrap;
   pointer-events: auto;
+}
+
+/* A long name is cut at its end: « Confirmer », the key and the seconds stay whole. */
+.ch-confirm-what {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ch-footer-confirm > :not(.ch-confirm-what) {
+  flex: none;
 }
 
 /* A state message is read whole: a long one (a common scene's warning) wraps, right-aligned. */

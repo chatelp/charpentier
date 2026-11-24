@@ -418,7 +418,7 @@ export function ProjectWorkspace({
   );
   const syncStatus = useSyncExternalStore(subscribeSync, () => sync?.status() ?? 'off');
   const words = useWordCount(editor);
-  const storedTexts = useSceneTexts(platform, projectId, outline, sceneId);
+  const { texts: storedTexts, variantWords } = useSceneTexts(platform, projectId, outline, sceneId);
   const storedWords = useWordsOf(storedTexts);
   // The open scene's text is live (its word count changes with every edit).
   const sceneTexts = useMemo(
@@ -794,6 +794,19 @@ export function ProjectWorkspace({
     atelierLocation,
     sceneWords,
     sceneTexts,
+    sceneHasText: (id) => {
+      const read = variantWords(id);
+      // The open scene's active variant counts live, in its editor.
+      const live = id === sceneId && editor ? words : undefined;
+      if (live) return true;
+      // (Alone, it says it all: a scene just made is empty, read or not.)
+      if (live !== undefined && scene?.variants.length === 1) return false;
+      if (!read) return undefined;
+      const active = id === sceneId ? scene?.activeVariantId : undefined;
+      return [...read].some(
+        ([variant, n]) => (live !== undefined && variant === active ? 0 : n) > 0,
+      );
+    },
     shortcutLabel: (id) => registry.shortcutLabel(id),
     shortcutChord: (id) => registry.chord(id),
     menuOf: menu?.id ?? null,

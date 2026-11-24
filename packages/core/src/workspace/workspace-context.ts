@@ -56,6 +56,11 @@ export interface WorkspaceContext {
   openSheet(target: SheetTarget): void;
   /** Words of each scene (the open one live). */
   readonly sceneWords: ReadonlyMap<string, number>;
+  /**
+   * Whether a scene has a word in one of its variants; undefined while it is not known (its
+   * text not read yet): who asks then takes it for a scene that has text.
+   */
+  sceneHasText(sceneId: string): boolean | undefined;
   /** Plain text of each scene's active variant (as last read). */
   readonly sceneTexts: ReadonlyMap<string, string>;
   /** The Compagnon's intervention level for this project (D-19). */

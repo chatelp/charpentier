@@ -123,6 +123,42 @@ describe('the system line of the X250 (phase 5.3)', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
   });
 
+  it('in the settings too, ⏎ held on « oublier » is one press', async () => {
+    const system = createSimulatedSystem();
+    await start(system);
+    await userEvent.keyboard(sys(','));
+    const rail = await screen.findByRole('listbox', { name: 'Sections des réglages' });
+    await userEvent.click(within(rail).getByRole('option', { name: /Réseau/ }));
+    const page = await screen.findByRole('region', { name: 'Réseau' });
+    const known = () =>
+      system
+        .state()
+        .wifi.networks.filter((n) => n.known)
+        .map((n) => n.ssid);
+    const before = known();
+    (within(page).getAllByRole('button', { name: 'oublier' })[0] as HTMLElement).focus();
+    await userEvent.keyboard('{Enter>4/}');
+    await within(page).findByRole('button', { name: /^confirmer l’oubli de / });
+    expect(known()).toEqual(before);
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(known()).toHaveLength(before.length - 1));
+  });
+
+  it('in the Bluetooth settings as well', async () => {
+    const system = createSimulatedSystem();
+    await start(system);
+    await userEvent.keyboard(sys(','));
+    const rail = await screen.findByRole('listbox', { name: 'Sections des réglages' });
+    await userEvent.click(within(rail).getByRole('option', { name: /Bluetooth/ }));
+    const devices = () => system.state().bluetooth.devices.length;
+    const there = devices();
+    const bluetooth = await screen.findByRole('region', { name: 'Bluetooth' });
+    (within(bluetooth).getAllByRole('button', { name: 'oublier' })[0] as HTMLElement).focus();
+    await userEvent.keyboard('{Enter>4/}');
+    await within(bluetooth).findByRole('button', { name: /^confirmer l’oubli de / });
+    expect(devices()).toBe(there);
+  });
+
   it('answers the « : » of the command line: :lum 40, :wifi non', async () => {
     const system = createSimulatedSystem();
     await start(system);
@@ -593,7 +629,10 @@ describe('the updates of the X250 (phase 5.12)', () => {
     expect(system.simulate.calls).toContain('checkUpdate');
 
     const back = screen.getByRole('button', { name: 'revenir à 0.4.2…' });
-    await userEvent.click(back);
+    // Held down, ⏎ is one press: it asks, and does not confirm by itself (DESIGN §5.0, rule 5).
+    back.focus();
+    await userEvent.keyboard('{Enter>4/}');
+    expect(system.simulate.calls).not.toContain('bootVersion 0.4.2');
     expect(back.textContent).toContain('confirmer : redémarrer sur 0.4.2');
     expect(screen.getByText(/vos textes ne bougent pas/)).toBeTruthy();
     await userEvent.click(back);

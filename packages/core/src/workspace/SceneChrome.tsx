@@ -263,11 +263,12 @@ export function WritingFooter({
         <button
           type="button"
           className="ch-footer-button ch-footer-confirm"
+          title={t('confirm.ask', { what: confirm.what })}
           aria-keyshortcuts={confirm.keys}
           onMouseDown={(event) => event.preventDefault()}
           onClick={confirm.onConfirm}
         >
-          {t('confirm.ask', { what: confirm.what })}
+          <span className="ch-confirm-what">{t('confirm.ask', { what: confirm.what })}</span>
           {confirm.shortcut && <kbd>{confirm.shortcut}</kbd>}
           <span className="ch-confirm-left">{t('confirm.left', { count: confirm.left })}</span>
         </button>
