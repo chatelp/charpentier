@@ -30,6 +30,7 @@ import { useTranslation } from 'react-i18next';
 import { CompagnonBlocked } from '../mentor/Blocked';
 import { useMediaQuery } from '../hooks/use-media-query';
 import { usePlatform } from '../app/platform-context';
+import { announceCommand } from '../commands/announce';
 import { matchesCharacter, parseKeybinding } from '../commands/keybinding';
 import { Atelier, type AtelierLocation } from '../atelier/Atelier';
 import type { SheetTarget } from '../atelier/atelier-data';
@@ -675,7 +676,8 @@ export function ProjectWorkspace({
       setNavigatorOpen(false);
       setView(`view:${viewId}`);
     },
-    runCommand: (commandId) => registry.execute(commandId, ctx),
+    runCommand: async (commandId) =>
+      announceCommand({ id: commandId, from: 'control' }) && registry.execute(commandId, ctx),
     openLibrary: (creating = false) => onLibrary(creating),
     openProject: (id) => {
       if (id !== projectId) onOpenProject?.(id);
@@ -777,7 +779,7 @@ export function ProjectWorkspace({
       if (!command) return;
       event.preventDefault();
       event.stopPropagation();
-      void command.run(latest.current);
+      if (announceCommand({ id: command.id, from: 'key' })) void command.run(latest.current);
     };
     window.addEventListener('keydown', onKeyDown, true);
     return () => window.removeEventListener('keydown', onKeyDown, true);
@@ -820,7 +822,8 @@ export function ProjectWorkspace({
     const menu = platform.menu;
     if (!menu) return;
     return menu.onCommand((id) => {
-      if (!isCovered()) void registry.execute(id, latest.current);
+      if (!isCovered() && announceCommand({ id, from: 'control' }))
+        void registry.execute(id, latest.current);
     });
   }, [platform, registry]);
   const { uiSounds, typingSounds } = prefs;
@@ -929,7 +932,7 @@ export function ProjectWorkspace({
         ...(shortcut && { shortcut }),
         run: () => {
           rememberCommand(command.id);
-          void command.run(ctx);
+          if (announceCommand({ id: command.id, from: 'palette' })) void command.run(ctx);
         },
       };
     });
@@ -1094,7 +1097,7 @@ export function ProjectWorkspace({
               : undefined
           }
           onOutline={() => setNavigatorOpen(true)}
-          onVariants={() => void registry.execute('switchVariant', ctx)}
+          onVariants={() => void ctx.runCommand('switchVariant')}
         />
         <main
           className="ch-page"
@@ -1227,7 +1230,7 @@ export function ProjectWorkspace({
           onOpenSheet={(rail, target) => ctx.openAtelier({ rail, target })}
           onOpenStyleChoice={(entityId) => ctx.openSheet({ module: 'style', entityId })}
           {...(agentsStatus !== 'disabled' && {
-            onAnalyze: () => void registry.execute('analyzeScene', ctx),
+            onAnalyze: () => void ctx.runCommand('analyzeScene'),
             analyzeShortcut: registry.shortcutLabel('analyzeScene'),
           })}
           onClose={() => {
@@ -1353,7 +1356,7 @@ export function ProjectWorkspace({
             : {
                 text: t(`sync.status.${syncStatus}`),
                 ...(syncStatus === 'unauthorized' && {
-                  onClick: () => void registry.execute('syncSignIn', ctx),
+                  onClick: () => void ctx.runCommand('syncSignIn'),
                 }),
               }
         }
