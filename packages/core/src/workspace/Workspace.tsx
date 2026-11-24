@@ -58,6 +58,8 @@ import { knownWordsOf } from '../language/known-words';
 import { SceneEditor } from '../editor/SceneEditor';
 import { useDocSnapshot } from '../hooks/use-doc-snapshot';
 import { Navigator } from '../navigator/Navigator';
+import { ThingMenuHost } from '../menu/ThingMenuSheet';
+import type { MenuRequest } from '../menu/thing-menu';
 import { CommandPalette } from '../palette/CommandPalette';
 import type { PaletteRequest, PaletteScope } from '../palette/palette-request';
 import { lastScenePref, type ProjectSession } from './default-scene';
@@ -207,6 +209,13 @@ export function ProjectWorkspace({
   };
   // The display sheet behind « Aa ».
   const [displayOpen, setDisplayOpen] = useState(false);
+  // The menu of a thing (docs/DESIGN.md §4.7): one for the whole workspace, whatever opens it.
+  const [menu, setMenu] = useState<MenuRequest<WorkspaceContext> | null>(null);
+  // A command asked for a scene that was not the open one: it waits for that scene's documents.
+  const [pendingCommand, setPendingCommand] = useState<{
+    readonly sceneId: string;
+    readonly commandId: string;
+  } | null>(null);
   // First launch: the Compagnon's welcome, then (on request) the guided tour.
   const [welcome, setWelcome] = useState(false);
   const [touring, setTouring] = useState(false);
@@ -630,6 +639,8 @@ export function ProjectWorkspace({
 
   const openScene = useCallback(
     (id: string) => {
+      // Going elsewhere drops a command that waited for another scene.
+      setPendingCommand(null);
       setRequestedSceneId(id);
       void platform.preferences.set(lastScenePref(projectId), id);
     },
@@ -732,6 +743,17 @@ export function ProjectWorkspace({
     sceneWords,
     sceneTexts,
     shortcutLabel: (id) => registry.shortcutLabel(id),
+    shortcutChord: (id) => registry.chord(id),
+    menuOf: menu?.id ?? null,
+    openMenu: (request) => {
+      playSound('tic');
+      setMenu(request);
+    },
+    runOnScene: (id, commandId) => {
+      if (id === sceneId && sceneDocs) return void ctx.runCommand(commandId);
+      openScene(id);
+      setPendingCommand({ sceneId: id, commandId });
+    },
     notify,
     offerUndo,
     undoOffered,
@@ -746,6 +768,25 @@ export function ProjectWorkspace({
   const latest = useRef(ctx);
   const paletteOpenRef = useRef(false);
   const paletteOpen = palette !== null;
+  // The open menu, read again at every render: its entries follow the manuscript.
+  const menuModel = menu ? menu.build(ctx) : null;
+  const menuOpen = menuModel !== null;
+  const menuOpenRef = useRef(false);
+  const closeMenu = () => {
+    if (!menu) return;
+    playSound('toc');
+    setMenu(null);
+    // The thing's line has the focus again (synchronous: what was chosen may move it next).
+    if (menu.line?.isConnected) menu.line.focus();
+  };
+  // The command that waited for another scene runs once, when that scene's documents are there.
+  const ranPending = useRef<unknown>(null);
+  useEffect(() => {
+    if (!pendingCommand || ranPending.current === pendingCommand) return;
+    if (!sceneDocs || pendingCommand.sceneId !== sceneId) return;
+    ranPending.current = pendingCommand;
+    void latest.current.runCommand(pendingCommand.commandId);
+  }, [pendingCommand, sceneId, sceneDocs]);
   // The Compagnon's key, in the console and in the overview's strip (DESIGN 1.25).
   const toggleCompagnon = () => {
     playSound(mentorPanel ? 'toc' : 'tic');
@@ -754,6 +795,7 @@ export function ProjectWorkspace({
   useLayoutEffect(() => {
     latest.current = ctx;
     paletteOpenRef.current = paletteOpen;
+    menuOpenRef.current = menuOpen;
   });
   // Where the focus goes back when the command line closes (an Atelier field…).
   // A layout effect runs before the command line takes the focus.
@@ -763,6 +805,8 @@ export function ProjectWorkspace({
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.defaultPrevented || event.isComposing || paletteOpenRef.current) return;
+      // An open menu holds the keyboard: the keys it shows act on its thing, the others wait.
+      if (menuOpenRef.current) return;
       // Under a feature's cover (the X250 locked), no shortcut of the app.
       if (isCovered()) return;
       // ⌘Z right after something went to the trash brings it back, wherever the
@@ -1422,12 +1466,27 @@ export function ProjectWorkspace({
         <Navigator
           ctx={ctx}
           outline={outline}
-          active={palette === null}
+          active={palette === null && !menuOpen}
           signals={marks.openSignals}
           onClose={() => {
             playSound('toc');
             setNavigatorOpen(false);
             focusTextIfIdle();
+          }}
+        />
+      )}
+      {menu && (
+        <ThingMenuHost
+          key={menu.id}
+          menu={menuModel}
+          line={menu.line}
+          anchor={menu.anchor}
+          surface={menu.surface}
+          onGone={() => setMenu(null)}
+          onClose={closeMenu}
+          onChoose={(run) => {
+            closeMenu();
+            run();
           }}
         />
       )}

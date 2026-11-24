@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { MouseEvent, ReactNode, Ref } from 'react';
 import { CloseButton } from './CloseButton';
 import './icons.css';
 
@@ -126,22 +126,33 @@ export function Monogram({
  * context shortens first.
  */
 export function PanelTitle({
+  ref,
   picto,
   name,
   context,
   variant,
   onClose,
+  more,
+  onNameMenu,
 }: {
+  readonly ref?: Ref<HTMLDivElement>;
   readonly picto: PictogramName;
   readonly name: string;
   readonly context: ReactNode;
   readonly variant: 'mentor' | 'manuscript';
   readonly onClose?: () => void;
+  /** The « ⋯ » of what the panel shows (docs/DESIGN.md §4.7), right of its name. */
+  readonly more?: ReactNode;
+  /** A right click on the name: the same menu, at the pointer. */
+  readonly onNameMenu?: (event: MouseEvent) => void;
 }) {
   return (
-    <div className="ch-panel-title">
+    <div ref={ref} className="ch-panel-title">
       <Medallion name={picto} size={34} mentor={variant === 'mentor'} />
-      <p className={`ch-panel-title-name is-${variant}`}>{name}</p>
+      <p className={`ch-panel-title-name is-${variant}`} onContextMenu={onNameMenu}>
+        {name}
+      </p>
+      {more}
       <span className="ch-panel-title-context">{context}</span>
       {onClose && <CloseButton purpose="panel" onClose={onClose} />}
     </div>

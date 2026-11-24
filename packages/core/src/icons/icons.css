@@ -104,6 +104,11 @@
   white-space: nowrap;
 }
 
+/* The « ⋯ » of what the panel shows, beside its name. */
+.ch-panel-title .ch-more {
+  margin: 0 -6px;
+}
+
 .ch-panel-title .ch-close {
   margin-right: -6px;
 }

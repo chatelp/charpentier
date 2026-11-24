@@ -75,7 +75,8 @@
  * The focus carries the light in a list (docs/DESIGN.md §4.7): while it is on
  * another line, the open scene keeps only its vermilion rule and label.
  */
-.ch-nav-tree:has(.ch-nav-item:focus-visible) .ch-nav-item.is-current:not(:focus-visible) {
+.ch-nav-tree:has(.ch-nav-item:focus-visible) .ch-nav-item.is-current:not(:focus-visible),
+.ch-nav-tree:has(.ch-nav-variant:focus) .ch-nav-item.is-current {
   background: transparent;
   box-shadow: inset 3px 0 0 var(--ch-author);
 }
@@ -97,16 +98,43 @@
   color: var(--ch-muted);
 }
 
+/* One line per variant: its name, and its « ⋯ » at the right end (docs/DESIGN.md §4.7). */
+.ch-nav-variants {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ch-nav-variant-line {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ch-nav-variant-line .ch-more {
+  margin: -2px 0;
+}
+
 .ch-nav-variant {
-  display: block;
-  width: 100%;
-  padding: 3px 0;
+  flex: 1;
+  min-width: 0;
+  margin: 0 0 0 -6px;
+  padding: 3px 6px;
   border: 0;
+  border-radius: 6px;
   background: none;
   color: var(--ch-ink-2);
   font: inherit;
   text-align: left;
   cursor: pointer;
+  outline: none;
+}
+
+/* The line that has the focus is lit: there the keys are the variant's (§5.0, rule 6). */
+.ch-nav-variant:focus {
+  background: var(--ch-lit-bg);
+  box-shadow: var(--ch-lit);
+  color: var(--ch-ink);
 }
 
 .ch-nav-variant.is-active {
@@ -121,7 +149,10 @@
   line-height: 1.6;
 }
 
+/* The name takes the room and is cut first: the « ⋯ » keeps its place at the right end. */
 .ch-nav-name {
+  flex: 1 1 auto;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -151,6 +182,9 @@
   display: flex;
   justify-content: space-between;
   gap: 8px;
+}
+
+.ch-nav-checkpoint {
   margin: 0;
 }
 

@@ -68,6 +68,13 @@ export const SCREENS: Readonly<Record<string, () => Promise<unknown>>> = {
     await userEvent.keyboard(chord('j'));
     await screen.findByRole('complementary', { name: 'Plan du manuscrit' });
   },
+  'the menu of a scene': async () => {
+    await written();
+    await userEvent.keyboard(chord('j'));
+    await screen.findByRole('complementary', { name: 'Plan du manuscrit' });
+    await userEvent.click(screen.getByRole('button', { name: 'Actions de la scène La maison' }));
+    await screen.findByRole('menu', { name: 'Scène · La maison' });
+  },
   'the Compagnon panel': async () => {
     await written();
     await userEvent.keyboard(chord('l'));

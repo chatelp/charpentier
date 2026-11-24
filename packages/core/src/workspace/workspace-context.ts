@@ -5,6 +5,8 @@ import type { TFunction } from 'i18next';
 import type * as Y from 'yjs';
 import type { AtelierLocation } from '../atelier/Atelier';
 import type { SheetTarget } from '../atelier/atelier-data';
+import type { Chord } from '../commands/keybinding';
+import type { MenuRequest } from '../menu/thing-menu';
 import type { PaletteRequest } from '../palette/palette-request';
 import type { WorkRef } from '@charpentier/schema';
 import type { WorkState } from '../work/use-background-work';
@@ -61,6 +63,17 @@ export interface WorkspaceContext {
   /** Where the Atelier stands (or last stood). */
   readonly atelierLocation: AtelierLocation;
   shortcutLabel(commandId: string): string | undefined;
+  /** The chord behind that label, for a menu whose keys act while it is open. */
+  shortcutChord(commandId: string): Chord | undefined;
+  /** Opens the menu of a thing (docs/DESIGN.md §4.7), under its « ⋯ » or at the pointer. */
+  openMenu(request: MenuRequest<WorkspaceContext>): void;
+  /** The thing whose menu is open (`scene:<id>`), if any: its « ⋯ » stays lit. */
+  readonly menuOf: string | null;
+  /**
+   * Runs a command that acts on the open scene, for another one: that scene
+   * opens first, and the command runs once its documents are there.
+   */
+  runOnScene(sceneId: string, commandId: string): void;
   /** A short, discreet confirmation (read by screen readers). */
   notify(message: string): void;
   /**

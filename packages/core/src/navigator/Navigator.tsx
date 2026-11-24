@@ -14,9 +14,18 @@ import {
   type Signal,
   readProjectMeta,
 } from '@charpentier/schema';
-import { Fragment, useEffect, useRef, useState, type DragEvent, type KeyboardEvent } from 'react';
+import {
+  Fragment,
+  useEffect,
+  useRef,
+  useState,
+  type DragEvent,
+  type KeyboardEvent,
+  type MouseEvent,
+} from 'react';
 import {
   formatCheckpointDate,
+  promptRenameVariant,
   trashVariantOfScene,
   variantLabel,
 } from '../commands/variant-commands';
@@ -39,6 +48,16 @@ import {
 import type { WorkspaceContext } from '../workspace/workspace-context';
 import './navigator.css';
 import { useHostWords } from '../app/host-words';
+import { MoreButton } from '../menu/MoreButton';
+import type { ThingMenu } from '../menu/thing-menu';
+import {
+  chapterMenu,
+  DRAWER_KEYS,
+  manuscriptMenu,
+  sceneMenu,
+  variantMenu,
+  type DrawerHands,
+} from './navigator-menus';
 
 type Item =
   | {
@@ -58,7 +77,7 @@ type Item =
 export interface NavigatorProps {
   readonly ctx: WorkspaceContext;
   readonly outline: readonly OutlineChapter[];
-  /** False while the palette is open on top: focus comes back when it closes. */
+  /** False while the palette or a thing's menu is open on top: focus comes back when it closes. */
   readonly active: boolean;
   readonly onClose: () => void;
   /** Open remarks of the Compagnon (dots next to their scenes). */
@@ -103,8 +122,16 @@ export function Navigator({ ctx, outline, active, onClose, signals }: NavigatorP
   const focused =
     items.find((i) => i.id === focusedId) ?? items.find((i) => i.id === ctx.sceneId) ?? items[0];
 
+  // The last request of `focusItem` answered: a key that moves the focus is one.
+  const answered = useRef(-1);
   useEffect(() => {
-    if (active && focused) elements.current.get(focused.id)?.focus();
+    if (!active || !focused) return;
+    const asked = answered.current !== focusTick;
+    answered.current = focusTick;
+    // A variant's line that holds the focus keeps it until a key moves it: there, the keys
+    // are the variant's (docs/DESIGN.md §5.0, rule 6).
+    if (!asked && document.activeElement?.closest('[data-variant]')) return;
+    elements.current.get(focused.id)?.focus();
   }, [active, focused, focusTick]);
 
   const focusItem = (id: string | undefined) => {
@@ -118,11 +145,78 @@ export function Navigator({ ctx, outline, active, onClose, signals }: NavigatorP
     return (items[index + 1] ?? items[index - 1])?.id;
   };
 
-  const openItem = (item: Item) => {
-    const sceneId = item.kind === 'scene' ? item.id : outline[item.index]?.scenes[0]?.id;
-    if (!sceneId) return;
+  const openScene = (sceneId: string) => {
     ctx.openScene(sceneId);
     onClose();
+  };
+  const openItem = (item: Item) => {
+    const sceneId = item.kind === 'scene' ? item.id : outline[item.index]?.scenes[0]?.id;
+    if (sceneId) openScene(sceneId);
+  };
+
+  // ─── The menu of a thing (docs/DESIGN.md §4.7) ──────────────────────────
+  const hands: DrawerHands = { focus: focusItem, open: openScene };
+  const menuKey = host.key(DRAWER_KEYS.menu[0]);
+  /** Under the « ⋯ » of the thing's line, or at the pointer for a right click. */
+  const openMenu = (
+    id: string,
+    build: (c: WorkspaceContext) => ThingMenu | null,
+    line: HTMLElement | null,
+    more: HTMLElement | null | undefined,
+    pointer?: { readonly x: number; readonly y: number },
+  ) => {
+    const anchor = pointer
+      ? ({ kind: 'point', ...pointer } as const)
+      : more && ({ kind: 'button', element: more } as const);
+    if (anchor) ctx.openMenu({ id, anchor, surface: 'tool', line, build });
+  };
+  const menuOfItem = (item: Item) =>
+    item.kind === 'scene'
+      ? (c: WorkspaceContext) => sceneMenu(c, item.id, hands)
+      : (c: WorkspaceContext) => chapterMenu(c, item.id, hands);
+  const openItemMenu = (item: Item, pointer?: { x: number; y: number }) => {
+    const line = elements.current.get(item.id) ?? null;
+    openMenu(
+      `${item.kind}:${item.id}`,
+      menuOfItem(item),
+      line,
+      line?.querySelector<HTMLElement>('.ch-more'),
+      pointer,
+    );
+  };
+  /** `line`: the variant's line, its button (which takes the focus back) and its « ⋯ ». */
+  const openVariantMenu = (
+    variantId: string,
+    line: HTMLElement,
+    pointer?: { x: number; y: number },
+  ) =>
+    openMenu(
+      `variant:${variantId}`,
+      (c) => variantMenu(c, variantId, hands),
+      line.querySelector<HTMLElement>('.ch-nav-variant'),
+      line.querySelector<HTMLElement>('.ch-more'),
+      pointer,
+    );
+  const title = useRef<HTMLDivElement>(null);
+  const openManuscriptMenu = (pointer?: { x: number; y: number }) => {
+    const focusedId = focused?.id ?? ctx.sceneId;
+    openMenu(
+      'manuscript',
+      (c) => manuscriptMenu(c, focusedId, hands),
+      elements.current.get(focusedId) ?? null,
+      title.current?.querySelector<HTMLElement>('.ch-more'),
+      pointer,
+    );
+  };
+  /**
+   * A right click (Ctrl-click on a Mac) opens the thing's menu at the pointer, never the
+   * browser's; the menu key of a keyboard opens it under the « ⋯ », as `M` does.
+   */
+  const onMenuGesture = (event: MouseEvent, open: (pointer?: { x: number; y: number }) => void) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const byPointer = event.button === 2 || event.ctrlKey;
+    open(byPointer ? { x: event.clientX, y: event.clientY } : undefined);
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLUListElement>) => {
@@ -133,7 +227,22 @@ export function Navigator({ ctx, outline, active, onClose, signals }: NavigatorP
       event.preventDefault();
       event.stopPropagation();
     };
-    if ((key === 'ArrowDown' || key === 'ArrowUp') && event.altKey) {
+    const letter = (wanted: string) =>
+      key.toLowerCase() === wanted && !event.metaKey && !event.ctrlKey && !event.altKey;
+    // On a variant's line the keys are for the variant, never for its whole scene.
+    const variantLine = (event.target as HTMLElement).closest<HTMLElement>('[data-variant]');
+    const variantId = variantLine?.dataset['variant'];
+    if (letter('m') || (key === 'F10' && event.shiftKey)) {
+      handled();
+      if (variantLine && variantId) openVariantMenu(variantId, variantLine);
+      else openItemMenu(focused);
+    } else if (variantLine && variantId && key === 'Enter') {
+      handled();
+      setActiveVariant(ctx.root, ctx.sceneId, variantId);
+    } else if (variantLine && variantId && (key === 'F2' || letter('r'))) {
+      handled();
+      promptRenameVariant(ctx, variantId);
+    } else if ((key === 'ArrowDown' || key === 'ArrowUp') && event.altKey) {
       handled();
       const direction = key === 'ArrowDown' ? 1 : -1;
       if (focused.kind === 'scene') moveSceneStep(ctx.root, focused.id, direction);
@@ -197,14 +306,9 @@ export function Navigator({ ctx, outline, active, onClose, signals }: NavigatorP
           ctx.openScene(scene.id);
         },
       });
-    } else if (
-      (key === 'Delete' || key === 'Backspace') &&
-      (event.target as HTMLElement).closest('[data-variant]')
-    ) {
-      // On a variant's line the key is for the variant, never for its whole scene.
+    } else if ((key === 'Delete' || key === 'Backspace') && variantLine) {
       handled();
-      const line = (event.target as HTMLElement).closest<HTMLElement>('[data-variant]');
-      trashVariantOfScene(ctx, line?.dataset['variant']);
+      trashVariantOfScene(ctx, variantId);
       focusItem(focused.id);
     } else if (key === 'Delete' || key === 'Backspace') {
       handled();
@@ -261,10 +365,22 @@ export function Navigator({ ctx, outline, active, onClose, signals }: NavigatorP
   return (
     <aside className="ch-navigator ch-raised ch-tool" aria-label={t('navigator.label')}>
       <PanelTitle
+        ref={title}
         picto="manuscrit"
         variant="manuscript"
         onClose={onClose}
         name={t('navigator.title')}
+        // The manuscript's own menu: « ⋯ » beside the title, and the right click on it.
+        onNameMenu={(event) => onMenuGesture(event, openManuscriptMenu)}
+        more={
+          <MoreButton
+            label={t('thingMenu.actionsOf.manuscript', {
+              name: readProjectMeta(ctx.root)?.title ?? '',
+            })}
+            open={ctx.menuOf === 'manuscript'}
+            onOpen={() => openManuscriptMenu()}
+          />
+        }
         context={
           versionName ? (
             // A version active (DESIGN 1.20): no word count, and the novel's title is cut, not the version.
@@ -356,6 +472,7 @@ export function Navigator({ ctx, outline, active, onClose, signals }: NavigatorP
                 onDrop={(e) => onDrop(e, item)}
                 onFocus={() => setFocusedId(item.id)}
                 onClick={() => openItem(item)}
+                onContextMenu={(e) => onMenuGesture(e, (pointer) => openItemMenu(item, pointer))}
               >
                 <span className="ch-nav-name">
                   {item.kind === 'chapter' && (
@@ -379,6 +496,12 @@ export function Navigator({ ctx, outline, active, onClose, signals }: NavigatorP
                     <span>{t('navigator.variantCount', { count: scene.variants.length })}</span>
                   )}
                 </span>
+                <MoreButton
+                  label={t(`thingMenu.actionsOf.${item.kind}`, { name: item.title })}
+                  shortcut={menuKey}
+                  open={ctx.menuOf === `${item.kind}:${item.id}`}
+                  onOpen={() => openItemMenu(item)}
+                />
               </li>
               {item.id === ctx.sceneId && currentScene && (
                 // Variants and recent restore points of the open scene (⌥⌘V, ⌘S from the keyboard).
@@ -386,25 +509,47 @@ export function Navigator({ ctx, outline, active, onClose, signals }: NavigatorP
                   {currentScene.variants.length > 1 && (
                     <>
                       <p className="ch-nav-sub-title ch-label">{t('navigator.variants')}</p>
-                      {currentScene.variants.map((v, i) => (
-                        <button
-                          key={v.id}
-                          type="button"
-                          tabIndex={-1}
-                          data-variant={v.id}
-                          className={`ch-nav-variant${v.id === currentScene.activeVariantId ? ' is-active' : ''}`}
-                          onClick={() => setActiveVariant(ctx.root, currentScene.id, v.id)}
-                        >
-                          <span>
-                            {variantLetter(i)} · {variantLabel(t, currentScene, v.id)}
-                          </span>
-                          <span className="ch-nav-sub-meta">
-                            {v.id === currentScene.activeVariantId
-                              ? t('navigator.activeVariant')
-                              : ''}
-                          </span>
-                        </button>
-                      ))}
+                      <ul className="ch-nav-variants" role="none">
+                        {currentScene.variants.map((v, i) => (
+                          <li
+                            role="none"
+                            key={v.id}
+                            className="ch-nav-variant-line"
+                            data-variant={v.id}
+                            onContextMenu={(e) => {
+                              const line = e.currentTarget;
+                              onMenuGesture(e, (pointer) => openVariantMenu(v.id, line, pointer));
+                            }}
+                          >
+                            <button
+                              type="button"
+                              tabIndex={-1}
+                              className={`ch-nav-variant${v.id === currentScene.activeVariantId ? ' is-active' : ''}`}
+                              onClick={() => setActiveVariant(ctx.root, currentScene.id, v.id)}
+                            >
+                              <span>
+                                {variantLetter(i)} · {variantLabel(t, currentScene, v.id)}
+                              </span>
+                              <span className="ch-nav-sub-meta">
+                                {v.id === currentScene.activeVariantId
+                                  ? t('navigator.activeVariant')
+                                  : ''}
+                              </span>
+                            </button>
+                            <MoreButton
+                              label={t('thingMenu.actionsOf.variant', {
+                                name: variantLabel(t, currentScene, v.id),
+                              })}
+                              shortcut={menuKey}
+                              open={ctx.menuOf === `variant:${v.id}`}
+                              onOpen={(button) => {
+                                const line = button.closest<HTMLElement>('[data-variant]');
+                                if (line) openVariantMenu(v.id, line);
+                              }}
+                            />
+                          </li>
+                        ))}
+                      </ul>
                     </>
                   )}
                   {checkpoints.length > 0 && (

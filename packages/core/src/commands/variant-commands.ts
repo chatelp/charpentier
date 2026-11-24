@@ -85,7 +85,8 @@ function pickCheckpoint(
   });
 }
 
-function promptRenameVariant(ctx: Ctx, variantId: string): void {
+/** Asks for the name of a variant of the open scene, in the command line. */
+export function promptRenameVariant(ctx: Ctx, variantId: string): void {
   const current = scene(ctx);
   if (!current) return;
   ctx.openPalette({
@@ -96,16 +97,22 @@ function promptRenameVariant(ctx: Ctx, variantId: string): void {
   });
 }
 
-function newVariant(ctx: Ctx, copy: boolean): void {
+/**
+ * A new variant of the open scene, active at once, its name asked: empty, or
+ * the copy of one of its variants (the active one unless another is named).
+ */
+export function newVariant(ctx: Ctx, copy: boolean, from?: string): void {
   const current = scene(ctx);
   if (!current || !ctx.sceneDocs) return;
+  const copyOf = from ?? current.activeVariantId;
+  if (copy && !current.variants.some((v) => v.id === copyOf)) return;
   // In a working version, the variant takes the version's name (DESIGN 1.20).
   const inVersion = activeVersionId(ctx.root) !== MAIN_VERSION;
   const variantId = createVariant(ctx.root, ctx.sceneDocs.sceneDoc, current.id, {
     name: inVersion
       ? activeVersionLabel(ctx)
       : ctx.t('variants.defaultName', { n: current.variants.length + 1 }),
-    ...(copy && { copyOf: current.activeVariantId }),
+    ...(copy && { copyOf }),
     activate: true,
   });
   promptRenameVariant(ctx, variantId);
