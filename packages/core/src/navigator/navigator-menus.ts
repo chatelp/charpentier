@@ -86,7 +86,7 @@ const entry = (
   id: string,
   label: string,
   key: MenuKey,
-  action: Pick<MenuEntry, 'run' | 'choices' | 'command'>,
+  action: Pick<MenuEntry, 'run' | 'choices' | 'empty' | 'command'>,
   inert?: string | false,
 ): MenuEntry => ({ id, label, ...key, ...action, ...(inert && { disabled: inert }) });
 
@@ -103,6 +103,8 @@ function compagnonAway(ctx: Ctx): string | undefined {
   if (status === 'disabled') return ctx.t('mentor.unavailableOnHost');
   if (status === 'unconfigured') return ctx.t('mentor.blocked.unconfigured.lead');
   if (status === 'locked') return ctx.t('mentor.status.locked');
+  // Offline too (DESIGN 1.41): the four states of 1.32, each said in the tooltip.
+  if (status === 'offline') return ctx.t('thingMenu.inert.compagnonOffline');
   return undefined;
 }
 
@@ -214,6 +216,7 @@ export function sceneMenu(ctx: Ctx, sceneId: string, hands: DrawerHands): ThingM
             t('thingMenu.entry.moveToChapter'),
             NO_KEY,
             {
+              empty: t('thingMenu.noChapterNamed'),
               choices: outline
                 .map((c, i) => ({ c, i }))
                 .filter(({ c }) => c.id !== chapter.id)

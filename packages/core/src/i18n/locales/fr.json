@@ -1382,7 +1382,8 @@
       "manuscript": "Manuscrit"
     },
     "back": "‹ Retour",
-    "noMatch": "Rien de ce nom.",
+    "noMatch": "Aucun choix de ce nom.",
+    "noChapterNamed": "Aucun chapitre de ce nom.",
     "compagnon": "Le Compagnon",
     "entry": {
       "open": "Ouvrir",
@@ -1410,7 +1411,8 @@
       "firstChapter": "C’est déjà le premier chapitre.",
       "lastChapter": "C’est déjà le dernier chapitre.",
       "onlyChapter": "Le manuscrit n’a qu’un chapitre.",
-      "onlyVariant": "Une scène garde au moins une variante."
+      "onlyVariant": "Une scène garde au moins une variante.",
+      "compagnonOffline": "Le Compagnon est hors ligne."
     }
   }
 }

@@ -55,6 +55,8 @@ export interface MenuEntry {
   readonly keepOpen?: boolean | undefined;
   /** Replaces the sheet's content, « ‹ Retour » at its head: no cascading submenu. */
   readonly choices?: readonly MenuChoice[] | undefined;
+  /** Said in the sheet when the filter leaves none of the choices (« Aucun chapitre de ce nom. »). */
+  readonly empty?: string | undefined;
   /** Why the entry does not apply now: it keeps its place, inert, and says so in its tooltip. */
   readonly disabled?: string | undefined;
 }

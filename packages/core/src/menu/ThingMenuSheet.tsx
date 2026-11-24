@@ -276,7 +276,9 @@ export function ThingMenuSheet({
                 {choice.detail && <span className="ch-menu-detail">{choice.detail}</span>}
               </button>
             ))}
-            {choices.length === 0 && <p className="ch-menu-filter">{t('thingMenu.noMatch')}</p>}
+            {choices.length === 0 && (
+              <p className="ch-menu-filter">{parent?.empty ?? t('thingMenu.noMatch')}</p>
+            )}
           </div>
         </>
       ) : (
