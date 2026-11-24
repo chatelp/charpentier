@@ -69,38 +69,74 @@ export interface SeenRequest {
  * answers a scene analysis or a chat turn with canned JSON, and records what
  * it was sent.
  */
-export async function fakeAnthropic(answers: { analysis: object; chat: object }) {
+export async function fakeAnthropic(answers: {
+  analysis: object;
+  chat: object;
+  /** A chat turn stops after its first words until this says to go on. */
+  hold?: () => Promise<void>;
+}) {
   const seen: SeenRequest[] = [];
+  /** Requests whose client went away before the end (« Arrêter »). */
+  const aborted: SeenRequest[] = [];
   const server = http.createServer((req, res) => {
     let raw = '';
     req.on('data', (chunk: Buffer) => (raw += chunk.toString()));
     req.on('end', () => {
-      res.setHeader('content-type', 'application/json');
       if (req.method === 'GET' && req.url?.startsWith('/v1/models/')) {
+        res.setHeader('content-type', 'application/json');
         res.end(JSON.stringify({ type: 'model', id: 'claude-opus-5-5', display_name: 'Opus' }));
         return;
       }
       const body = JSON.parse(raw || '{}') as SeenRequest['body'];
-      seen.push({ headers: req.headers, body });
+      const request = { headers: req.headers, body };
+      seen.push(request);
+      res.on('close', () => {
+        if (!res.writableEnded) aborted.push(request);
+      });
       const isAnalysis = 'characters' in (body.output_config?.format?.schema.properties ?? {});
-      res.end(
-        JSON.stringify({
+      const text = JSON.stringify(isAnalysis ? answers.analysis : answers.chat);
+      // Streamed, as the API does when asked to (the provider always asks).
+      res.setHeader('content-type', 'text/event-stream');
+      const send = (event: { readonly type: string } & Record<string, unknown>) =>
+        res.write(`event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`);
+      const words = (delta: string) =>
+        send({
+          type: 'content_block_delta',
+          index: 0,
+          delta: { type: 'text_delta', text: delta },
+        });
+      send({
+        type: 'message_start',
+        message: {
           id: `msg_${seen.length}`,
           type: 'message',
           role: 'assistant',
           model: body.model,
-          content: [
-            { type: 'text', text: JSON.stringify(isAnalysis ? answers.analysis : answers.chat) },
-          ],
-          stop_reason: 'end_turn',
+          content: [],
+          stop_reason: null,
           stop_sequence: null,
-          usage: { input_tokens: 100, output_tokens: 50 },
-        }),
-      );
+          usage: { input_tokens: 100, output_tokens: 1 },
+        },
+      });
+      send({ type: 'content_block_start', index: 0, content_block: { type: 'text', text: '' } });
+      words(text.slice(0, 5));
+      void (async () => {
+        if (!isAnalysis) await answers.hold?.();
+        if (res.destroyed) return;
+        words(text.slice(5));
+        send({ type: 'content_block_stop', index: 0 });
+        send({
+          type: 'message_delta',
+          delta: { stop_reason: 'end_turn', stop_sequence: null },
+          usage: { output_tokens: 50 },
+        });
+        send({ type: 'message_stop' });
+        res.end();
+      })();
     });
   });
   servers.push(server);
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
   const { port } = server.address() as AddressInfo;
-  return { url: `http://127.0.0.1:${port}`, seen };
+  return { url: `http://127.0.0.1:${port}`, seen, aborted };
 }

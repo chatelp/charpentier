@@ -190,6 +190,55 @@ describe('desktop app', () => {
       .toBe(1);
   });
 
+  it('says where the Compagnon’s answer stands, and stops it (DESIGN 1.34)', async () => {
+    let goOn = () => {};
+    const anthropic = await fakeAnthropic({
+      analysis: {},
+      chat: { reply: 'Demandez-vous ce que veut votre personnage ici.', example: null },
+      hold: () => new Promise<void>((resolve) => (goOn = resolve)),
+    });
+    const { editor, window } = await launch(folders(), {
+      ANTHROPIC_BASE_URL: anthropic.url,
+      CHARPENTIER_ANTHROPIC_API_KEY: 'sk-ant-test',
+    });
+    await editor.click();
+    await window.keyboard.press('ControlOrMeta+K');
+    await window.keyboard.type('Parler au Compagnon');
+    await window.keyboard.press('Enter');
+    const question = window.getByRole('textbox', { name: 'Votre question au Compagnon' });
+    await question.fill('Que faire de cette scène ?');
+    await question.press('Enter');
+
+    // The first words arrive at the main process: the window is told, the words stay hidden.
+    const wait = window.locator('.ch-wait');
+    await expect
+      .poll(() => wait.textContent(), { timeout: 15_000 })
+      .toContain('Il écrit sa réponse…');
+    expect(await window.locator('.ch-transcript').textContent()).not.toContain('reply');
+
+    // Stopped: the request to the provider too, and nothing is written.
+    await question.press('ControlOrMeta+.');
+    await expect.poll(() => wait.count()).toBe(0);
+    await expect.poll(() => anthropic.aborted.length).toBe(1);
+    const again = window.getByRole('button', { name: 'Envoyer à nouveau' });
+    await again.waitFor();
+    expect(await window.locator('.ch-turn').count()).toBe(1);
+
+    // Sent again, the answer takes the block's place.
+    await again.click();
+    await expect
+      .poll(() => wait.textContent(), { timeout: 15_000 })
+      .toContain('Il écrit sa réponse…');
+    goOn();
+    await expect
+      .poll(() => window.getByText('Demandez-vous ce que veut votre personnage ici.').count(), {
+        timeout: 15_000,
+      })
+      .toBe(1);
+    expect(await wait.count()).toBe(0);
+    expect(await window.locator('.ch-turn').count()).toBe(2);
+  });
+
   it('runs as a writing device with --appliance (phase 5.2)', async () => {
     const dirs = folders();
     // On Linux, the device's own system runs: a device whose first start is behind it,
